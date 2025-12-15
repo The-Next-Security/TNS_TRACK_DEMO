@@ -1,0 +1,24 @@
+servicios\node_modules
+servicios\src\config\jsons
+servicios\src\config\token_id.txt
+# ============================================
+# PUSH NOTIFICATIONS - Archivos sensibles
+# ============================================
+# Añadir estas líneas a tu .gitignore principal
+
+# Claves VAPID generadas
+vapid-keys.txt
+vapid-keys.json
+*.vapid
+
+# Logs de testing de push notifications
+push-notification-test.log
+
+# Variables de entorno con claves privadas
+.env.push
+.env.vapid
+# Archivos de sistema
+.claude
+.github
+.playwright-mcp
+.specify
