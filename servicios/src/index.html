@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <title>TNS Track by The Next Security</title>
+
+    <!-- PWA META TAGS -->
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="/TNSTrack/manifest.json">
+
+    <!-- Theme Color -->
+    <meta name="theme-color" content="#6b9fd4">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#6b9fd4">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#5a8ec3">
+
+    <!-- Apple Touch Icons -->
+    <link rel="apple-touch-icon" href="/TNSTrack/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="/TNSTrack/icons/icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="96x96" href="/TNSTrack/icons/icon-96x96.png">
+    <link rel="apple-touch-icon" sizes="128x128" href="/TNSTrack/icons/icon-128x128.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="/TNSTrack/icons/icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="/TNSTrack/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="192x192" href="/TNSTrack/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" sizes="512x512" href="/TNSTrack/icons/icon-512x512.png">
+
+    <!-- Apple Web App Capable -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="TNS Track">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/TNSTrack/favicon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/TNSTrack/icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/TNSTrack/icons/icon-16x16.png">
+
+    <!-- Microsoft Tiles -->
+    <meta name="msapplication-TileColor" content="#6b9fd4">
+    <meta name="msapplication-TileImage" content="/TNSTrack/icons/icon-144x144.png">
+    <meta name="msapplication-config" content="/TNSTrack/browserconfig.xml">
+
+    <!-- Mobile Optimization -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="format-detection" content="telephone=no">
+
+    <!-- Description -->
+    <meta name="description" content="Sistema integral de monitoreo de consumo eléctrico, temperatura y localización en tiempo real para The Next Security">
+
+    <!-- Service Worker Registration - CRÍTICO para iOS -->
+    <script>
+        // Registrar Service Worker INMEDIATAMENTE para iOS
+        // NOTA: Debe estar ANTES del bundle.js para que esté disponible desde el inicio
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/TNSTrack/service-worker.js', {
+                scope: '/TNSTrack/'
+            })
+            .then(function(registration) {
+                console.log('[PWA] ✅ Service Worker registrado desde HTML:', registration.scope);
+            })
+            .catch(function(error) {
+                console.error('[PWA] ❌ Error registrando Service Worker desde HTML:', error);
+            });
+        } else {
+            console.error('[PWA] ❌ Service Worker NO disponible en navigator');
+        }
+    </script>
+
+    <!-- Microsoft Clarity - Analytics & Session Replay -->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "tr621k9gk9");
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>

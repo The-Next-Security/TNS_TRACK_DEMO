@@ -25,3 +25,4 @@ push-notification-test.log
 servicios/node_modules/
 servicios/public/
 servicios\src\config\token_id.txt
+servicios/src/config/token_id.txt
