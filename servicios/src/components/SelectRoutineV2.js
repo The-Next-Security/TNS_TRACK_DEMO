@@ -129,6 +129,12 @@ const getDescriptionText = (title) => {
     "Parámetros Temperatura Cámaras": "Configuración de alertas y límites",
     "📄 Reportes Temperatura": "Generar informes ejecutivos en PDF",
     "🤖 Análisis AI Cámaras": "Análisis inteligente con IA de datos históricos",
+    "Interior Ubicación en Tiempo Real": "Visualización en vivo de ubicación por beacons",
+    "Interior Búsqueda Histórica Ubicación": "Historial de permanencia por sectores",
+    "Exterior Ubicación Tiempo Real": "Última ubicación GPS en mapa",
+    "Exterior Búsqueda Histórica Ubicación": "Ruta histórica GPS por rango horario",
+    "Puertas Status Cierre / Apertura": "Matriz y tendencias de estado por reefer",
+    "Análisis de Deshielo": "Análisis térmico y generación de reportes",
   };
   return descriptions[title] || "Explorar funcionalidad";
 };
@@ -190,17 +196,7 @@ const routines = [
     permission: "view_temperature_data_intelligence",
   },
 
-/*
- {
-    title: "Puertas Status Cierre / Apertura",
-    image: doorStatusImage,
-    route: "/door-status-matrix",
-    permission: "view_door_status",
-  },*/
-  //  { title: "Datos Análisis Forense", image: dataIntelligenceImage, route: "/inteligencia-de-datos", permission: "view_data_intelligence" },
-  //  { title: "Parametrización", image: configurationImage, route: "/configuracion", permission: "view_configuration" },
-
-  /*
+  // Rutinas previamente ocultas (solo se habilitan si existe su pantalla V2)
   {
     title: "Interior Ubicación en Tiempo Real",
     image: ubicaciontiemporealinteriorImage,
@@ -225,13 +221,21 @@ const routines = [
     route: "/consulta-historica-movimientos",
     permission: "search_exterior",
   },
+  {
+    title: "Puertas Status Cierre / Apertura",
+    image: doorStatusImage,
+    route: "/door-status-matrix",
+    permission: "view_door_status",
+  },
+  //  { title: "Datos Análisis Forense", image: dataIntelligenceImage, route: "/inteligencia-de-datos", permission: "view_data_intelligence" },
+  //  { title: "Parametrización", image: configurationImage, route: "/configuracion", permission: "view_configuration" },
 
   {
     title: "Análisis de Deshielo",
     image: frostIcon,
     route: "/analisis-deshielo",
     permission: "view_defrost_analysis",
-  } */,
+  },
 
 
   {

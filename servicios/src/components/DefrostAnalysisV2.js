@@ -1,14 +1,15 @@
 /**
  * @file DefrostAnalysisV2.js
- * @description Componente de análisis de temperatura migrado a Shadcn/UI v2.0
- * Preserva 100% de la funcionalidad existente con una interfaz modernizada
- * @version 2.0.0
+ * @description Componente de análisis de temperatura - Premium UI
+ * Preserva 100% de la funcionalidad existente con efectos premium
+ * @version 2.1.0 - Premium UI Enhancement
  */
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment-timezone";
 import DatePicker from "react-datepicker";
+import { motion } from "framer-motion";
 import "react-datepicker/dist/react-datepicker.css";
 
 // Shadcn/UI Components
@@ -464,339 +465,479 @@ const DefrostAnalysisV2 = () => {
   );
 
   return (
-    <div className={cn(
-      "w-full min-h-screen",
-      "bg-gradient-to-b from-gray-50 to-gray-100"
-    )}>
-      <HeaderV2 title="Análisis de Temperatura" />
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={cn(
+        "w-full min-h-screen relative",
+        "bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100",
+        "dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900"
+      )}
+    >
+      {/* Patrón de grid sutil */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      {/* Controls Section */}
-      <div className={cn(
-        "flex flex-col items-center",
-        "gap-4 w-full max-w-4xl",
-        "mx-auto p-6"
-      )}>
-        <Card className="w-full">
-          <CardHeader>
-            <CardTitle>Configuración del Análisis</CardTitle>
-            <CardDescription>
-              Seleccione una cámara y un domingo para realizar el análisis de temperatura
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className={cn(
-              "grid gap-4",
-              "md:grid-cols-3 md:gap-6"
+      {/* Contenido */}
+      <div className="relative z-10">
+        <HeaderV2 title="Análisis de Temperatura" />
+
+        {/* Controls Section */}
+        <div className={cn(
+          "flex flex-col items-center",
+          "gap-4 w-full max-w-4xl",
+          "mx-auto p-6"
+        )}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="w-full"
+          >
+            <Card className={cn(
+              "w-full",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl hover:shadow-2xl",
+              "transition-all duration-300"
             )}>
-              {/* Camera Select */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Cámara
-                </label>
-                <Select
-                  value={selectedCamera}
-                  onValueChange={setSelectedCamera}
-                  disabled={loading}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Seleccionar Cámara" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {cameras.map((camera) => (
-                      <SelectItem
-                        key={camera.channel_id}
-                        value={camera.channel_id}
-                      >
-                        {camera.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <CardHeader>
+                <CardTitle>Configuración del Análisis</CardTitle>
+                <CardDescription>
+                  Seleccione una cámara y un domingo para realizar el análisis de temperatura
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className={cn(
+                  "grid gap-4",
+                  "md:grid-cols-3 md:gap-6"
+                )}>
+                  {/* Camera Select */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Cámara
+                    </label>
+                    <Select
+                      value={selectedCamera}
+                      onValueChange={setSelectedCamera}
+                      disabled={loading}
+                    >
+                      <SelectTrigger className={cn(
+                        "w-full",
+                        "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                        "transition-all duration-200"
+                      )}>
+                        <SelectValue placeholder="Seleccionar Cámara" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cameras.map((camera) => (
+                          <SelectItem
+                            key={camera.channel_id}
+                            value={camera.channel_id}
+                          >
+                            {camera.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Date Picker */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Fecha (Domingo)
-                </label>
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={setSelectedDate}
-                  filterDate={(date) => moment(date).day() === 0}
-                  dateFormat="dd/MM/yyyy"
-                  placeholderText="Seleccionar Domingo"
-                  className={cn(
-                    "w-full px-3 py-2",
-                    "border border-gray-300 rounded-md",
-                    "focus:outline-none focus:ring-2",
-                    "focus:ring-blue-500 focus:border-transparent",
-                    "disabled:opacity-50 disabled:cursor-not-allowed"
-                  )}
-                  disabled={loading}
-                />
-              </div>
+                  {/* Date Picker */}
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Fecha (Domingo)
+                    </label>
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={setSelectedDate}
+                      filterDate={(date) => moment(date).day() === 0}
+                      dateFormat="dd/MM/yyyy"
+                      placeholderText="Seleccionar Domingo"
+                      className={cn(
+                        "w-full px-3 py-2",
+                        "border border-gray-300 rounded-md",
+                        "focus:outline-none focus:ring-2",
+                        "focus:ring-[#6B9FD4]/50 focus:border-transparent",
+                        "disabled:opacity-50 disabled:cursor-not-allowed",
+                        "transition-all duration-200"
+                      )}
+                      disabled={loading}
+                    />
+                  </div>
 
-              {/* Analyze Button */}
-              <div className="flex items-end">
-                <Button
-                  onClick={handleAnalyze}
-                  disabled={loading || !selectedCamera || !selectedDate}
-                  className={cn(
-                    "w-full",
-                    "bg-green-600 hover:bg-green-700",
-                    "text-white font-medium",
-                    "transition-colors duration-200"
-                  )}
+                  {/* Analyze Button */}
+                  <div className="flex items-end">
+                    <Button
+                      onClick={handleAnalyze}
+                      disabled={loading || !selectedCamera || !selectedDate}
+                      className={cn(
+                        "w-full",
+                        "bg-green-600 hover:bg-green-700",
+                        "text-white font-medium",
+                        "shadow-md shadow-green-600/30",
+                        "hover:shadow-lg hover:shadow-green-600/40",
+                        "hover:scale-105",
+                        "transition-all duration-200",
+                        "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                      )}
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <Skeleton className="h-4 w-4 rounded-full animate-spin" />
+                          Analizando...
+                        </span>
+                      ) : (
+                        "Analizar"
+                      )}
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+
+        {/* Daily Preview Section */}
+        {preview && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="max-w-6xl mx-auto px-6 pb-6"
+          >
+            <Card className={cn(
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl",
+              "transition-all duration-300"
+            )}>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-xl">Vista Previa Diaria</CardTitle>
+                  <Badge variant="outline" className="text-sm">
+                    Análisis Diario
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className={cn(
+                  "grid gap-6",
+                  "lg:grid-cols-2"
+                )}>
+                  {/* Current Sunday Data */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
+                  >
+                    <Card className={cn(
+                      "border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50",
+                      "dark:from-blue-900/20 dark:to-cyan-900/20",
+                      "shadow-lg hover:shadow-xl",
+                      "hover:shadow-blue-500/20",
+                      "transition-all duration-300"
+                    )}>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-blue-900 dark:text-blue-100">
+                          Domingo {moment(selectedDate).format("DD/MM/YYYY")}
+                        </CardTitle>
+                        <Badge className={cn(
+                          "w-fit bg-blue-600",
+                          "drop-shadow-[0_0_6px_rgba(37,99,235,0.6)]"
+                        )}>
+                          Semana Actual
+                        </Badge>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <StatItem
+                          label="Temperatura Promedio"
+                          value={preview.current.promedio.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Desviación Estándar"
+                          value={preview.current.desv_std.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Temperatura Máxima"
+                          value={preview.current.max.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Temperatura Mínima"
+                          value={preview.current.min.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Total de Registros"
+                          value={preview.current.registros}
+                          unit="count"
+                        />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  {/* Previous Sunday Data */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                  >
+                    <Card className={cn(
+                      "border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50",
+                      "dark:from-gray-800/30 dark:to-slate-800/30",
+                      "shadow-lg hover:shadow-xl",
+                      "hover:shadow-gray-400/20",
+                      "transition-all duration-300"
+                    )}>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-gray-700 dark:text-gray-300">
+                          Domingo {moment(selectedDate).subtract(7, "days").format("DD/MM/YYYY")}
+                        </CardTitle>
+                        <Badge variant="secondary" className="w-fit">
+                          Semana Anterior
+                        </Badge>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <StatItem
+                          label="Temperatura Promedio"
+                          value={preview.previous.promedio.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Desviación Estándar"
+                          value={preview.previous.desv_std.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Temperatura Máxima"
+                          value={preview.previous.max.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Temperatura Mínima"
+                          value={preview.previous.min.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Total de Registros"
+                          value={preview.previous.registros}
+                          unit="count"
+                        />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </div>
+
+                {/* Generate Report Button */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.5 }}
+                  className="mt-6 flex justify-center"
                 >
-                  {loading ? (
-                    <span className="flex items-center gap-2">
-                      <Skeleton className="h-4 w-4 rounded-full animate-spin" />
-                      Analizando...
-                    </span>
-                  ) : (
-                    "Analizar"
-                  )}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+                  <Button
+                    onClick={handleGenerateReport}
+                    disabled={loading}
+                    size="lg"
+                    className={cn(
+                      "bg-green-600 hover:bg-green-700",
+                      "text-white font-medium",
+                      "px-8",
+                      "shadow-md shadow-green-600/30",
+                      "hover:shadow-lg hover:shadow-green-600/40",
+                      "hover:scale-105",
+                      "transition-all duration-200",
+                      "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    )}
+                  >
+                    Generar Informe PDF
+                  </Button>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Weekly Preview Section */}
+        {weeklyPreview && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="max-w-6xl mx-auto px-6 pb-6"
+          >
+            <Card className={cn(
+              "border-t-4 border-t-indigo-500",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl",
+              "transition-all duration-300"
+            )}>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-xl">Análisis Semanal</CardTitle>
+                  <Badge className={cn(
+                    "text-sm bg-indigo-600",
+                    "drop-shadow-[0_0_6px_rgba(99,102,241,0.6)]"
+                  )}>
+                    Vista Semanal
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className={cn(
+                  "grid gap-6",
+                  "lg:grid-cols-2"
+                )}>
+                  {/* Current Week Data */}
+                  <motion.div
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                  >
+                    <Card className={cn(
+                      "border-indigo-200 bg-gradient-to-br from-indigo-50 to-purple-50",
+                      "dark:from-indigo-900/20 dark:to-purple-900/20",
+                      "shadow-lg hover:shadow-xl",
+                      "hover:shadow-indigo-500/20",
+                      "transition-all duration-300"
+                    )}>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-indigo-900 dark:text-indigo-100">
+                          Semana del {moment(selectedDate).subtract(6, "days").format("DD/MM/YYYY")}
+                          {" al "}{moment(selectedDate).format("DD/MM/YYYY")}
+                        </CardTitle>
+                        <Badge className={cn(
+                          "w-fit bg-indigo-600",
+                          "drop-shadow-[0_0_6px_rgba(99,102,241,0.6)]"
+                        )}>
+                          Semana Actual
+                        </Badge>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <StatItem
+                          label="Temperatura Promedio"
+                          value={weeklyPreview.current.promedio.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Desviación Estándar"
+                          value={weeklyPreview.current.desv_std.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Temperatura Máxima"
+                          value={weeklyPreview.current.max.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Temperatura Mínima"
+                          value={weeklyPreview.current.min.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Total de Registros"
+                          value={weeklyPreview.current.registros}
+                          unit="count"
+                        />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+
+                  {/* Previous Week Data */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, delay: 0.5 }}
+                  >
+                    <Card className={cn(
+                      "border-gray-200 bg-gradient-to-br from-gray-50 to-slate-50",
+                      "dark:from-gray-800/30 dark:to-slate-800/30",
+                      "shadow-lg hover:shadow-xl",
+                      "hover:shadow-gray-400/20",
+                      "transition-all duration-300"
+                    )}>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg text-gray-700 dark:text-gray-300">
+                          Semana del {moment(selectedDate).subtract(13, "days").format("DD/MM/YYYY")}
+                          {" al "}{moment(selectedDate).subtract(7, "days").format("DD/MM/YYYY")}
+                        </CardTitle>
+                        <Badge variant="secondary" className="w-fit">
+                          Semana Anterior
+                        </Badge>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <StatItem
+                          label="Temperatura Promedio"
+                          value={weeklyPreview.previous.promedio.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Desviación Estándar"
+                          value={weeklyPreview.previous.desv_std.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Temperatura Máxima"
+                          value={weeklyPreview.previous.max.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Temperatura Mínima"
+                          value={weeklyPreview.previous.min.toFixed(2)}
+                        />
+                        <StatItem
+                          label="Total de Registros"
+                          value={weeklyPreview.previous.registros}
+                          unit="count"
+                        />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                </div>
+
+                {/* Generate Weekly Report Button */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.6 }}
+                  className="mt-6 flex justify-center"
+                >
+                  <Button
+                    onClick={handleGenerateWeeklyReport}
+                    disabled={loading}
+                    size="lg"
+                    className={cn(
+                      "bg-indigo-600 hover:bg-indigo-700",
+                      "text-white font-medium",
+                      "px-8",
+                      "shadow-md shadow-indigo-600/30",
+                      "hover:shadow-lg hover:shadow-indigo-600/40",
+                      "hover:scale-105",
+                      "transition-all duration-200",
+                      "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                    )}
+                  >
+                    Generar Informe Semanal PDF
+                  </Button>
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Empty State - when no analysis has been performed */}
+        {!preview && !weeklyPreview && !loading && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="max-w-4xl mx-auto px-6"
+          >
+            <Alert className="border-blue-200 bg-blue-50 dark:bg-blue-900/20">
+              <AlertTitle className="text-blue-900 dark:text-blue-100">
+                Información
+              </AlertTitle>
+              <AlertDescription className="text-blue-700 dark:text-blue-300">
+                Seleccione una cámara y un domingo para comenzar el análisis de temperatura.
+                El sistema analizará los datos del día seleccionado y generará comparativas
+                con el domingo anterior.
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
       </div>
-
-      {/* Daily Preview Section */}
-      {preview && (
-        <div className="max-w-6xl mx-auto px-6 pb-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xl">Vista Previa Diaria</CardTitle>
-                <Badge variant="outline" className="text-sm">
-                  Análisis Diario
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className={cn(
-                "grid gap-6",
-                "lg:grid-cols-2"
-              )}>
-                {/* Current Sunday Data */}
-                <Card className="border-blue-200 bg-blue-50/30">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg text-blue-900">
-                      Domingo {moment(selectedDate).format("DD/MM/YYYY")}
-                    </CardTitle>
-                    <Badge className="w-fit bg-blue-600">
-                      Semana Actual
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <StatItem
-                      label="Temperatura Promedio"
-                      value={preview.current.promedio.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Desviación Estándar"
-                      value={preview.current.desv_std.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Temperatura Máxima"
-                      value={preview.current.max.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Temperatura Mínima"
-                      value={preview.current.min.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Total de Registros"
-                      value={preview.current.registros}
-                      unit="count"
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* Previous Sunday Data */}
-                <Card className="border-gray-200 bg-gray-50/30">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg text-gray-700">
-                      Domingo {moment(selectedDate).subtract(7, "days").format("DD/MM/YYYY")}
-                    </CardTitle>
-                    <Badge variant="secondary" className="w-fit">
-                      Semana Anterior
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <StatItem
-                      label="Temperatura Promedio"
-                      value={preview.previous.promedio.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Desviación Estándar"
-                      value={preview.previous.desv_std.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Temperatura Máxima"
-                      value={preview.previous.max.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Temperatura Mínima"
-                      value={preview.previous.min.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Total de Registros"
-                      value={preview.previous.registros}
-                      unit="count"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Generate Report Button */}
-              <div className="mt-6 flex justify-center">
-                <Button
-                  onClick={handleGenerateReport}
-                  disabled={loading}
-                  size="lg"
-                  className={cn(
-                    "bg-green-600 hover:bg-green-700",
-                    "text-white font-medium",
-                    "px-8"
-                  )}
-                >
-                  Generar Informe PDF
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Weekly Preview Section */}
-      {weeklyPreview && (
-        <div className="max-w-6xl mx-auto px-6 pb-6">
-          <Card className="border-t-4 border-t-indigo-500">
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xl">Análisis Semanal</CardTitle>
-                <Badge className="text-sm bg-indigo-600">
-                  Vista Semanal
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className={cn(
-                "grid gap-6",
-                "lg:grid-cols-2"
-              )}>
-                {/* Current Week Data */}
-                <Card className="border-indigo-200 bg-indigo-50/30">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg text-indigo-900">
-                      Semana del {moment(selectedDate).subtract(6, "days").format("DD/MM/YYYY")}
-                      {" al "}{moment(selectedDate).format("DD/MM/YYYY")}
-                    </CardTitle>
-                    <Badge className="w-fit bg-indigo-600">
-                      Semana Actual
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <StatItem
-                      label="Temperatura Promedio"
-                      value={weeklyPreview.current.promedio.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Desviación Estándar"
-                      value={weeklyPreview.current.desv_std.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Temperatura Máxima"
-                      value={weeklyPreview.current.max.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Temperatura Mínima"
-                      value={weeklyPreview.current.min.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Total de Registros"
-                      value={weeklyPreview.current.registros}
-                      unit="count"
-                    />
-                  </CardContent>
-                </Card>
-
-                {/* Previous Week Data */}
-                <Card className="border-gray-200 bg-gray-50/30">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg text-gray-700">
-                      Semana del {moment(selectedDate).subtract(13, "days").format("DD/MM/YYYY")}
-                      {" al "}{moment(selectedDate).subtract(7, "days").format("DD/MM/YYYY")}
-                    </CardTitle>
-                    <Badge variant="secondary" className="w-fit">
-                      Semana Anterior
-                    </Badge>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <StatItem
-                      label="Temperatura Promedio"
-                      value={weeklyPreview.previous.promedio.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Desviación Estándar"
-                      value={weeklyPreview.previous.desv_std.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Temperatura Máxima"
-                      value={weeklyPreview.previous.max.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Temperatura Mínima"
-                      value={weeklyPreview.previous.min.toFixed(2)}
-                    />
-                    <StatItem
-                      label="Total de Registros"
-                      value={weeklyPreview.previous.registros}
-                      unit="count"
-                    />
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Generate Weekly Report Button */}
-              <div className="mt-6 flex justify-center">
-                <Button
-                  onClick={handleGenerateWeeklyReport}
-                  disabled={loading}
-                  size="lg"
-                  className={cn(
-                    "bg-indigo-600 hover:bg-indigo-700",
-                    "text-white font-medium",
-                    "px-8"
-                  )}
-                >
-                  Generar Informe Semanal PDF
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {/* Empty State - when no analysis has been performed */}
-      {!preview && !weeklyPreview && !loading && (
-        <div className="max-w-4xl mx-auto px-6">
-          <Alert className="border-blue-200 bg-blue-50">
-            <AlertTitle className="text-blue-900">
-              Información
-            </AlertTitle>
-            <AlertDescription className="text-blue-700">
-              Seleccione una cámara y un domingo para comenzar el análisis de temperatura.
-              El sistema analizará los datos del día seleccionado y generará comparativas
-              con el domingo anterior.
-            </AlertDescription>
-          </Alert>
-        </div>
-      )}
-    </div>
+    </motion.div>
   );
 };
 

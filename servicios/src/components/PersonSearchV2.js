@@ -1,6 +1,6 @@
 /**
- * PersonSearchV2.js - Componente de Búsqueda Histórica de Ubicación Interiores
- * Migrado a Shadcn/UI v2.0
+ * PersonSearchV2.js - Componente de Búsqueda Histórica de Ubicación Interiores - Premium UI
+ * Migrado a Shadcn/UI v2.1 con efectos premium
  *
  * @module PersonSearchV2
  * @description Componente para búsqueda histórica de ubicación de personal en interiores.
@@ -14,17 +14,21 @@
  * - Sistema de semáforo (verde/amarillo/rojo) según umbrales configurables
  * - Identificación visual de sectores mediante colores
  * - Soporte para múltiples íconos de personal
+ * - Efectos premium: glassmorphism, animaciones, glow
  *
  * @dependencies
  * - React hooks (useState, useEffect, useRef)
  * - axios para peticiones HTTP
+ * - framer-motion para animaciones
  * - Shadcn/UI components
  * - HeaderV2 component
  * - Imágenes de recursos locales
+ * @version 2.1.0 - Premium UI Enhancement
  */
 
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { motion } from "framer-motion";
 import HeaderV2 from "./HeaderV2";
 import { cn } from "../lib/utils";
 
@@ -329,192 +333,309 @@ function PersonSearchV2() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <HeaderV2 title="Busqueda Histórica Ubicación Interiores" />
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={cn(
+        "min-h-screen w-full relative p-5",
+        "bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100",
+        "dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900"
+      )}
+    >
+      {/* Patrón de grid sutil */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      <div className="container mx-auto p-5">
-        {/* Plano de Sectores */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex justify-center">
-              <img
-                src={planoSectores}
-                alt="Plano Sectores"
-                className="w-full h-auto max-w-[600px] rounded-lg shadow-md"
-              />
-            </div>
-          </CardContent>
-        </Card>
+      {/* Contenido */}
+      <div className="relative z-10">
+        <HeaderV2 title="Búsqueda Histórica Ubicación Interiores" />
 
-        {/* Panel de Búsqueda */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Parámetros de Búsqueda</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Selección de Dispositivo */}
-            <div className="w-full max-w-md mx-auto">
-              <Label htmlFor="device-select" className="mb-2 block">
-                Dispositivo
-              </Label>
-              <Select value={selectedDeviceId} onValueChange={handleDeviceChange}>
-                <SelectTrigger id="device-select" className="w-full">
-                  <SelectValue placeholder="Seleccionar Dispositivo..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {devices.map((device) => (
-                    <SelectItem key={device.id} value={device.id}>
-                      {device.device_asignado}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="container mx-auto p-5">
+          {/* Plano de Sectores */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <Card className={cn(
+              "mb-6",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl hover:shadow-2xl",
+              "transition-all duration-300"
+            )}>
+              <CardContent className="p-6">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.98 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                  className="flex justify-center"
+                >
+                  <img
+                    src={planoSectores}
+                    alt="Plano Sectores"
+                    className="w-full h-auto max-w-[600px] rounded-lg shadow-md"
+                  />
+                </motion.div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-            {/* Selección de Fecha y Hora */}
-            <div className="flex flex-wrap gap-4 justify-center">
-              <div className="flex-1 min-w-[200px] max-w-[250px]">
-                <Label htmlFor="day-input" className="mb-2 block">
-                  Seleccionar Día:
-                </Label>
-                <Input
-                  id="day-input"
-                  type="date"
-                  value={selectedDay}
-                  onChange={(e) => setSelectedDay(e.target.value)}
-                  max={today.current}
-                  className="w-full"
-                />
-              </div>
+          {/* Panel de Búsqueda */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className={cn(
+              "mb-6",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl hover:shadow-2xl",
+              "transition-all duration-300"
+            )}>
+              <CardHeader>
+                <CardTitle>Parámetros de Búsqueda</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Selección de Dispositivo */}
+                <div className="w-full max-w-md mx-auto">
+                  <Label htmlFor="device-select" className="mb-2 block">
+                    Dispositivo
+                  </Label>
+                  <Select value={selectedDeviceId} onValueChange={handleDeviceChange}>
+                    <SelectTrigger id="device-select" className={cn(
+                      "w-full",
+                      "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                      "transition-all duration-200"
+                    )}>
+                      <SelectValue placeholder="Seleccionar Dispositivo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {devices.map((device) => (
+                        <SelectItem key={device.id} value={device.id}>
+                          {device.device_asignado}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-              <div className="flex-1 min-w-[150px] max-w-[200px]">
-                <Label htmlFor="start-time" className="mb-2 block">
-                  Hora Inicio:
-                </Label>
-                <Input
-                  id="start-time"
-                  type="time"
-                  value={startTime}
-                  onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full"
-                />
-              </div>
+                {/* Selección de Fecha y Hora */}
+                <div className="flex flex-wrap gap-4 justify-center">
+                  <div className="flex-1 min-w-[200px] max-w-[250px]">
+                    <Label htmlFor="day-input" className="mb-2 block">
+                      Seleccionar Día:
+                    </Label>
+                    <Input
+                      id="day-input"
+                      type="date"
+                      value={selectedDay}
+                      onChange={(e) => setSelectedDay(e.target.value)}
+                      max={today.current}
+                      className={cn(
+                        "w-full",
+                        "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                        "transition-all duration-200"
+                      )}
+                    />
+                  </div>
 
-              <div className="flex-1 min-w-[150px] max-w-[200px]">
-                <Label htmlFor="end-time" className="mb-2 block">
-                  Hora Fin:
-                </Label>
-                <Input
-                  id="end-time"
-                  type="time"
-                  value={endTime}
-                  onChange={(e) => setEndTime(e.target.value)}
-                  min={startTime}
-                  className="w-full"
-                />
-              </div>
-            </div>
+                  <div className="flex-1 min-w-[150px] max-w-[200px]">
+                    <Label htmlFor="start-time" className="mb-2 block">
+                      Hora Inicio:
+                    </Label>
+                    <Input
+                      id="start-time"
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      className={cn(
+                        "w-full",
+                        "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                        "transition-all duration-200"
+                      )}
+                    />
+                  </div>
 
-            {/* Botón de Búsqueda */}
-            <div className="flex justify-center">
-              <Button
-                onClick={handleSearch}
-                className="px-8"
-                size="lg"
-              >
-                Buscar
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+                  <div className="flex-1 min-w-[150px] max-w-[200px]">
+                    <Label htmlFor="end-time" className="mb-2 block">
+                      Hora Fin:
+                    </Label>
+                    <Input
+                      id="end-time"
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      min={startTime}
+                      className={cn(
+                        "w-full",
+                        "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                        "transition-all duration-200"
+                      )}
+                    />
+                  </div>
+                </div>
 
-        {/* Tabla de Resultados */}
-        {searchResults.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Resultados de Búsqueda</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="bg-[#6b9fd4] text-white">
-                      <th className="border border-gray-300 p-2 text-left">Imagen</th>
-                      <th className="border border-gray-300 p-2 text-left">Nombre</th>
-                      <th className="border border-gray-300 p-2 text-left">Sector</th>
-                      <th className="border border-gray-300 p-2 text-left">Desde Detección</th>
-                      <th className="border border-gray-300 p-2 text-left">Permanencia</th>
-                      <th className="border border-gray-300 p-2 text-left">Estado</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {searchResults.map((result, index) => {
-                      const sector = getSector(result.beaconId);
-                      const permanence = calculatePermanence(
-                        result.entrada,
-                        result.salida
-                      );
-                      const permanenceMinutes =
-                        (new Date(result.salida ? result.salida : new Date()) -
-                          new Date(result.entrada)) /
-                        (1000 * 60);
-                      const semaphoreClass = getSemaphoreClass(permanenceMinutes);
-                      const personalInfo = getPersonalInfo(selectedDeviceId);
+                {/* Botón de Búsqueda */}
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleSearch}
+                    size="lg"
+                    className={cn(
+                      "px-8",
+                      "bg-[#6B9FD4] hover:bg-[#5A8DC4]",
+                      "text-white font-medium",
+                      "shadow-md shadow-[#6B9FD4]/30",
+                      "hover:shadow-lg hover:shadow-[#6B9FD4]/40",
+                      "hover:scale-105",
+                      "transition-all duration-200"
+                    )}
+                  >
+                    Buscar
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-                      return (
-                        <tr
-                          key={index}
-                          className={cn(
-                            "border-b border-gray-200",
-                            index % 2 === 1 && "bg-gray-50"
-                          )}
-                        >
-                          <td className="border border-gray-300 p-2">
-                            <div className="flex justify-center items-center">
-                              {personalInfo.image && (
-                                <img
-                                  src={personalInfo.image}
-                                  alt={personalInfo.name}
-                                  className="max-w-[50px] max-h-[50px] object-contain"
-                                />
-                              )}
-                            </div>
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {personalInfo.name}
-                          </td>
-                          <td className={cn("border border-gray-300 p-2", sector.className)}>
-                            {sector.text}
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {formatDate(result.entrada)}
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            {permanence}
-                          </td>
-                          <td className="border border-gray-300 p-2">
-                            <Badge
-                              variant={getBadgeVariant(semaphoreClass)}
+          {/* Tabla de Resultados */}
+          {searchResults.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              <Card className={cn(
+                "bg-white/80 dark:bg-gray-800/80",
+                "backdrop-blur-md",
+                "border border-white/20 dark:border-gray-700/30",
+                "shadow-xl",
+                "transition-all duration-300"
+              )}>
+                <CardHeader>
+                  <CardTitle>Resultados de Búsqueda</CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className={cn(
+                          "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]",
+                          "text-white"
+                        )}>
+                          <th className="border border-gray-300/20 p-2 text-left">Imagen</th>
+                          <th className="border border-gray-300/20 p-2 text-left">Nombre</th>
+                          <th className="border border-gray-300/20 p-2 text-left">Sector</th>
+                          <th className="border border-gray-300/20 p-2 text-left">Desde Detección</th>
+                          <th className="border border-gray-300/20 p-2 text-left">Permanencia</th>
+                          <th className="border border-gray-300/20 p-2 text-left">Estado</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {searchResults.map((result, index) => {
+                          const sector = getSector(result.beaconId);
+                          const permanence = calculatePermanence(
+                            result.entrada,
+                            result.salida
+                          );
+                          const permanenceMinutes =
+                            (new Date(result.salida ? result.salida : new Date()) -
+                              new Date(result.entrada)) /
+                            (1000 * 60);
+                          const semaphoreClass = getSemaphoreClass(permanenceMinutes);
+                          const personalInfo = getPersonalInfo(selectedDeviceId);
+
+                          return (
+                            <motion.tr
+                              key={index}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{
+                                duration: 0.3,
+                                delay: index * 0.05,
+                                ease: "easeOut"
+                              }}
                               className={cn(
-                                semaphoreClass === "green" && "bg-[#4CAF50] text-white",
-                                semaphoreClass === "yellow" && "bg-[#dada2d] text-black",
-                                semaphoreClass === "red" && "bg-[#be4a4a] text-white"
+                                "border-b border-gray-200/50",
+                                "transition-all duration-200",
+                                "hover:bg-muted/50 hover:scale-[1.01]",
+                                index % 2 === 1 && "bg-gray-50/50 dark:bg-gray-800/30"
                               )}
                             >
-                              {getStatusText(semaphoreClass)}
-                            </Badge>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                              <td className="border border-gray-300/20 p-2">
+                                <div className="flex justify-center items-center">
+                                  {personalInfo.image && (
+                                    <img
+                                      src={personalInfo.image}
+                                      alt={personalInfo.name}
+                                      className={cn(
+                                        "max-w-[50px] max-h-[50px] object-contain",
+                                        "ring-2 ring-[#6B9FD4]/30",
+                                        "rounded-full",
+                                        "transition-all duration-200",
+                                        "hover:ring-[#6B9FD4]/60"
+                                      )}
+                                    />
+                                  )}
+                                </div>
+                              </td>
+                              <td className="border border-gray-300/20 p-2 font-medium">
+                                {personalInfo.name}
+                              </td>
+                              <td className={cn(
+                                "border border-gray-300/20 p-2",
+                                "font-semibold",
+                                sector.className
+                              )}>
+                                {sector.text}
+                              </td>
+                              <td className="border border-gray-300/20 p-2">
+                                {formatDate(result.entrada)}
+                              </td>
+                              <td className="border border-gray-300/20 p-2 font-mono">
+                                {permanence}
+                              </td>
+                              <td className="border border-gray-300/20 p-2">
+                                <Badge
+                                  variant={getBadgeVariant(semaphoreClass)}
+                                  className={cn(
+                                    "font-bold transition-all duration-200",
+                                    semaphoreClass === "green" && [
+                                      "bg-[#4CAF50] text-white",
+                                      "drop-shadow-[0_0_8px_rgba(76,175,80,0.7)]",
+                                      "hover:drop-shadow-[0_0_12px_rgba(76,175,80,0.9)]"
+                                    ],
+                                    semaphoreClass === "yellow" && [
+                                      "bg-[#dada2d] text-black",
+                                      "drop-shadow-[0_0_8px_rgba(218,218,45,0.7)]",
+                                      "hover:drop-shadow-[0_0_12px_rgba(218,218,45,0.9)]"
+                                    ],
+                                    semaphoreClass === "red" && [
+                                      "bg-[#be4a4a] text-white",
+                                      "drop-shadow-[0_0_8px_rgba(190,74,74,0.7)]",
+                                      "hover:drop-shadow-[0_0_12px_rgba(190,74,74,0.9)]"
+                                    ]
+                                  )}
+                                >
+                                  {getStatusText(semaphoreClass)}
+                                </Badge>
+                              </td>
+                            </motion.tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
