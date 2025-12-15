@@ -1,7 +1,7 @@
 {
-  "name": "shelly-javascript",
+  "name": "TNS Track Demo",
   "version": "1.0.0",
-  "description": "Monitor de dispositivo Shelly",
+  "description": "Demo de TNS Track",
   "main": "src/js/main.js",
   "scripts": {
     "start": "webpack serve --mode development",
