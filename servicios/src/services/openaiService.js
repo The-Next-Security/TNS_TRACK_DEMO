@@ -1,24 +1,29 @@
 const OpenAI = require('openai');
+const configLoader = require('../config/js_files/config-loader');
 
 class OpenAIService {
   constructor() {
     this.client = null;
+    const config = configLoader.getConfig();
     // Use DeepSeek for more cost-effective AI analysis ($0.28/$0.42 per 1M tokens)
     // Compatible with OpenAI SDK, just requires different baseURL
-    this.model = process.env.OPENAI_MODEL || 'deepseek-chat';
-    this.maxTokens = parseInt(process.env.OPENAI_MAX_TOKENS) || 2000;
+    this.model = config.OpenAI_API?.OPENAI_MODEL || 'deepseek-chat';
+    this.maxTokens = parseInt(config.OpenAI_API?.OPENAI_MAX_TOKENS) || 2000;
     this._initializeClient();
   }
 
   _initializeClient() {
-    if (!process.env.OPENAI_API_KEY) {
-      console.warn('[OpenAIService] WARNING: OPENAI_API_KEY not set in environment variables');
+    const config = configLoader.getConfig();
+    const apiKey = config.OpenAI_API?.OPENAI_API_KEY;
+
+    if (!apiKey) {
+      console.warn('[OpenAIService] WARNING: OPENAI_API_KEY not set in configuration');
       return; // Client will be null, will fail gracefully in analyzeChamberData
     }
     
     try {
       this.client = new OpenAI({
-        apiKey: process.env.OPENAI_API_KEY,
+        apiKey: apiKey,
         baseURL: 'https://api.deepseek.com'
       });
       console.log(`[OpenAIService] ✅ Initialized with DeepSeek model: ${this.model} (max_tokens: ${this.maxTokens})`);
@@ -30,7 +35,7 @@ class OpenAIService {
 
   async analyzeChamberData(query, historicalData) {
     if (!this.client) {
-      throw new Error('DeepSeek client not initialized. Please set OPENAI_API_KEY environment variable.');
+      throw new Error('DeepSeek client not initialized. Please set OPENAI_API_KEY in configuration.');
     }
 
     try {

@@ -133,6 +133,7 @@ class ConfigLoader extends BaseConfigLoader {
       const dbHostProd = process.env.DB_PROD_HOST || unifiedConfig.database?.production?.host;
       const dbUserProd = process.env.DB_PROD_USER || unifiedConfig.database?.production?.username;
       // Añadir más variables de entorno según sea necesario (ej. Twilio SID/Token)
+      const openaiApiKey = process.env.OPENAI_API_KEY || unifiedConfig.OpenAI_API?.OPENAI_API_KEY;
 
       // Construir objeto de configuración usando valores de entorno si existen
       this.config = {
@@ -167,6 +168,10 @@ class ConfigLoader extends BaseConfigLoader {
         appInfo: unifiedConfig.appInfo,
         pushNotifications: unifiedConfig.pushNotifications, // Configuración de Push Notifications PWA
         reports_module_config: unifiedConfig.reports_module_config, // Configuración del módulo de reportes
+        OpenAI_API: {
+          ...(unifiedConfig.OpenAI_API ?? {}),
+          OPENAI_API_KEY: openaiApiKey
+        },
         environment: { // Guardar el entorno resuelto
           current: currentEnv,
           name: envLabel
