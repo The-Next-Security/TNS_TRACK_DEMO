@@ -577,6 +577,7 @@ const DoorStatusMatrixV2 = () => {
                       selected={selectedDate}
                       onChange={handleDateChange}
                       dateFormat="yyyy-MM-dd"
+                      maxDate={new Date()}
                       popperClassName="z-[9999]"
                       portalId="root"
                       className={cn(
