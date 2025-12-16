@@ -1,0 +1,145 @@
+/**
+ * Responsive Table Styles
+ * Custom CSS for smooth transitions and animations
+ */
+
+/* Smooth transitions between breakpoints */
+.responsive-table-wrapper {
+  @apply transition-all duration-200 ease-in-out;
+}
+
+/* Card animations for mobile */
+.report-card-enter {
+  @apply opacity-0 translate-y-2;
+}
+
+.report-card-enter-active {
+  @apply opacity-100 translate-y-0 transition-all duration-300;
+}
+
+/* Table row hover enhancements */
+@media (min-width: 1024px) {
+  .report-table-row {
+    @apply transition-colors duration-150;
+  }
+
+  .report-table-row:hover {
+    @apply bg-accent/50;
+  }
+}
+
+/* Enhance touch targets on mobile */
+@media (max-width: 639px) {
+  .mobile-action-button {
+    min-height: 44px;
+    min-width: 44px;
+    @apply flex items-center justify-center;
+  }
+}
+
+/* Prevent text selection on action buttons */
+.action-button {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Custom scrollbar for table on desktop */
+@media (min-width: 1024px) {
+  .table-scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  }
+
+  .table-scroll-container::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+
+  .table-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .table-scroll-container::-webkit-scrollbar-thumb {
+    background-color: rgba(156, 163, 175, 0.3);
+    border-radius: 3px;
+  }
+
+  .table-scroll-container::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(156, 163, 175, 0.5);
+  }
+}
+
+/* Loading skeleton animations */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.skeleton-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Badge status indicators */
+.badge-new {
+  @apply relative;
+}
+
+.badge-new::after {
+  content: '';
+  @apply absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Responsive typography */
+@media (max-width: 639px) {
+  .report-title {
+    @apply text-sm font-medium;
+  }
+
+  .report-meta {
+    @apply text-xs text-muted-foreground;
+  }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .report-title {
+    @apply text-sm font-semibold;
+  }
+
+  .report-meta {
+    @apply text-sm text-muted-foreground;
+  }
+}
+
+@media (min-width: 1024px) {
+  .report-title {
+    @apply text-base font-medium;
+  }
+
+  .report-meta {
+    @apply text-sm text-muted-foreground;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .report-table {
+    border: 1px solid #000;
+  }
+
+  .report-table th,
+  .report-table td {
+    border: 1px solid #666;
+    padding: 8px;
+  }
+}

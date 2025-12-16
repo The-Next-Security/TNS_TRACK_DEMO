@@ -1,0 +1,61 @@
+MIGRATION GUIDE: UserRegistration to UserRegistrationV2
+=======================================================
+
+To use the new UserRegistrationV2 component (Shadcn/UI version), update your imports:
+
+BEFORE:
+-------
+import UserRegistration from "./UserRegistration";
+
+AFTER:
+------
+import UserRegistrationV2 from "./UserRegistrationV2";
+
+In AppContent.js, update line 18 and 102:
+-----------------------------------------
+Line 18:
+  import UserRegistrationV2 from "./UserRegistrationV2";
+
+Line 102:
+  <UserRegistrationV2 />
+
+FEATURES PRESERVED:
+------------------
+✓ Authentication check with localStorage token
+✓ User list fetching from /api/usuarios/users
+✓ User dropdown for selecting existing users or creating new
+✓ Form fields: username, password (new users only), email
+✓ 18 permission checkboxes in table format
+✓ Submit logic for both creation and update modes
+✓ Success/error message display
+✓ Auto-navigation to /select-routine after 2 seconds
+✓ 401 error handling with redirect to login
+
+NEW SHADCN COMPONENTS USED:
+---------------------------
+• Card, CardHeader, CardTitle, CardContent - for container
+• Input - for text fields
+• Label - for form labels
+• Button - for submit button
+• Alert, AlertDescription - for messages
+• Select components - for user dropdown
+• Checkbox - custom Radix-based checkbox
+• HeaderV2 - updated header component
+
+STYLING IMPROVEMENTS:
+--------------------
+• Clean Tailwind CSS utility classes
+• Responsive design ready
+• Consistent spacing with space-y utilities
+• Semantic color system
+• Improved table styling with alternating rows
+• Better accessibility with ARIA labels
+
+DEPENDENCIES ADDED:
+------------------
+• @radix-ui/react-checkbox (installed via npm)
+
+FILES CREATED:
+-------------
+• /servicios/src/components/ui/checkbox.jsx - Radix checkbox component
+• /servicios/src/components/UserRegistrationV2.js - Main migrated component

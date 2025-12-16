@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test de Orientación - AlertMetricsDashboardV2</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .test-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .info-box {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        .warning {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+        .error {
+            background: #ffebee;
+            color: #c62828;
+        }
+        code {
+            background: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-size: 14px;
+        }
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #1565c0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔄 Test de Sugerencia de Rotación</h1>
+
+        <div class="test-section">
+            <h3>Estado del Dispositivo</h3>
+            <div id="device-info" class="info-box"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Condiciones de Activación</h3>
+            <div id="conditions" class="info-box"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Simulación de Estados</h3>
+            <button onclick="simulatePortraitMobile()">Simular Móvil Portrait</button>
+            <button onclick="simulateLandscape()">Simular Landscape</button>
+            <button onclick="clearSession()">Limpiar SessionStorage</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Checklist de Implementación</h3>
+            <div id="checklist"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Resumen de la Implementación</h3>
+            <div class="info-box success">
+                <h4>✅ Funcionalidad Implementada:</h4>
+                <ul>
+                    <li><strong>Hook useOrientation:</strong> Detecta si el dispositivo está en portrait o landscape</li>
+                    <li><strong>Componente OrientationSuggestion:</strong> Alert azul con sugerencia de rotación</li>
+                    <li><strong>Lógica de activación:</strong> Solo en móvil + portrait + períodos largos (month/quarter)</li>
+                    <li><strong>Persistencia de sesión:</strong> Usa sessionStorage para recordar si el usuario cerró el mensaje</li>
+                    <li><strong>Animaciones:</strong> Usa Framer Motion para transiciones suaves</li>
+                    <li><strong>Accesibilidad:</strong> Botón touch-friendly, aria-labels correctos</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function updateDeviceInfo() {
+            const info = document.getElementById('device-info');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const orientation = width > height ? 'landscape' : 'portrait';
+            const isMobile = width < 768;
+            const isDismissed = sessionStorage.getItem('orientation-suggestion-dismissed') === 'true';
+
+            info.innerHTML = `
+                <strong>Dimensiones:</strong> ${width}x${height}px<br>
+                <strong>Orientación:</strong> ${orientation}<br>
+                <strong>Es móvil (< 768px):</strong> ${isMobile ? 'Sí' : 'No'}<br>
+                <strong>Sugerencia cerrada:</strong> ${isDismissed ? 'Sí' : 'No'}
+            `;
+        }
+
+        function updateConditions() {
+            const conditions = document.getElementById('conditions');
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const orientation = width > height ? 'landscape' : 'portrait';
+            const isMobile = width < 768;
+            const isDismissed = sessionStorage.getItem('orientation-suggestion-dismissed') === 'true';
+
+            // Simular que el período es 'month' o 'quarter'
+            const isPeriodLong = true; // En producción esto vendría del state dateRange.type
+
+            const showSuggestion = isMobile && orientation === 'portrait' && isPeriodLong && !isDismissed;
+
+            conditions.innerHTML = `
+                <div class="${isMobile ? 'success' : 'error'}">
+                    ✓ Es móvil: ${isMobile}
+                </div>
+                <div class="${orientation === 'portrait' ? 'success' : 'warning'}">
+                    ✓ Está en portrait: ${orientation === 'portrait'}
+                </div>
+                <div class="${isPeriodLong ? 'success' : 'error'}">
+                    ✓ Período largo (month/quarter): ${isPeriodLong}
+                </div>
+                <div class="${!isDismissed ? 'success' : 'warning'}">
+                    ✓ No se ha cerrado antes: ${!isDismissed}
+                </div>
+                <br>
+                <strong>¿Mostrar sugerencia?</strong> ${showSuggestion ? '✅ SÍ' : '❌ NO'}
+            `;
+        }
+
+        function updateChecklist() {
+            const checklist = document.getElementById('checklist');
+            checklist.innerHTML = `
+                <div class="info-box">
+                    <strong>Archivos modificados:</strong><br>
+                    ✅ <code>AlertMetricsDashboardV2.js</code> - Componente principal<br>
+                    ✅ <code>ui/alert.jsx</code> - Componente Alert de Shadcn/UI (ya existía)<br>
+                    <br>
+                    <strong>Cambios implementados:</strong><br>
+                    ✅ Import de Alert, AlertTitle, AlertDescription<br>
+                    ✅ Import de iconos RotateCw y X de Lucide<br>
+                    ✅ Hook useOrientation() añadido<br>
+                    ✅ Componente OrientationSuggestion creado<br>
+                    ✅ Estado showOrientationSuggestion añadido<br>
+                    ✅ useEffect para manejar la lógica de mostrar/ocultar<br>
+                    ✅ Callback handleDismissOrientationSuggestion<br>
+                    ✅ Renderizado condicional del componente en el JSX<br>
+                    ✅ Estilos con Tailwind CSS<br>
+                    ✅ Animaciones con Framer Motion<br>
+                </div>
+            `;
+        }
+
+        function simulatePortraitMobile() {
+            alert('Para simular móvil portrait:\n1. Abre las DevTools (F12)\n2. Activa el modo dispositivo móvil (Ctrl+Shift+M)\n3. Selecciona un dispositivo móvil\n4. Asegúrate de estar en orientación vertical');
+            updateAll();
+        }
+
+        function simulateLandscape() {
+            alert('Para simular landscape:\n1. En las DevTools, rota el dispositivo\n2. O redimensiona la ventana para que sea más ancha que alta');
+            updateAll();
+        }
+
+        function clearSession() {
+            sessionStorage.removeItem('orientation-suggestion-dismissed');
+            alert('SessionStorage limpiado. La sugerencia se mostrará de nuevo si se cumplen las condiciones.');
+            updateAll();
+        }
+
+        function updateAll() {
+            updateDeviceInfo();
+            updateConditions();
+            updateChecklist();
+        }
+
+        // Actualizar al cargar y al cambiar el tamaño
+        window.addEventListener('load', updateAll);
+        window.addEventListener('resize', updateAll);
+        window.addEventListener('orientationchange', updateAll);
+    </script>
+</body>
+</html>
