@@ -1,7 +1,6 @@
 servicios/node_modules/
 servicios/src/config/jsons/
 servicios/src/config/token_id.txt
-servicios/public/
 
 # ============================================
 # PUSH NOTIFICATIONS - Archivos sensibles
