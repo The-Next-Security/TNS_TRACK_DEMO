@@ -1,9 +1,10 @@
 /**
- * @fileoverview LastKnownPositionV2 - Componente de última posición conocida migrado a Shadcn/UI
+ * @fileoverview LastKnownPositionV2 - Componente de última posición conocida - Premium UI
  * @module LastKnownPositionV2
  * @requires mapbox-gl - Biblioteca para renderizado de mapas
  * @requires axios - Cliente HTTP para peticiones API
  * @requires moment - Manejo de fechas y timestamps
+ * @requires framer-motion - Animaciones premium
  * @requires react - React hooks y componentes
  *
  * @description
@@ -15,14 +16,16 @@
  * - Tabla de información detallada al hacer clic en marcador
  * - Auto-actualización de datos con botón de refresh
  * - Manejo de estados de carga y error
+ * - Efectos premium: glassmorphism, animaciones, glow
  *
- * Migrado a Shadcn/UI v2.0 con componentes:
- * - Card para contenedores
- * - Button para acciones
+ * Migrado a Shadcn/UI v2.1 con componentes premium:
+ * - Card para contenedores con glassmorphism
+ * - Button para acciones con efectos
  * - Select para selección de dispositivos
  * - Alert para mensajes de error
- * - Badge para indicadores de estado
- * - Skeleton para estados de carga
+ * - Badge para indicadores de estado con glow
+ * - Skeleton para estados de carga mejorados
+ * @version 2.1.0 - Premium UI Enhancement
  */
 
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -31,6 +34,7 @@ import React, { useState, useEffect, useRef } from "react";
 import MapboxGL from "mapbox-gl";
 import axios from "axios";
 import moment from "moment";
+import { motion } from "framer-motion";
 import HeaderV2 from "./HeaderV2";
 import { cn } from "@/lib/utils";
 
@@ -250,165 +254,265 @@ function LastKnownPositionV2({ showHeader = true }) {
 
   // ============= RENDER =============
   return (
-    <div className="min-h-screen bg-background">
-      {showHeader && <HeaderV2 title="Ubicación Exteriores Tiempo Real" />}
-
-      {/* Error Alert usando Shadcn Alert */}
-      {error && (
-        <Alert variant="destructive" className="mx-4 mt-4">
-          <AlertTitle>Error</AlertTitle>
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={cn(
+        "min-h-screen w-full relative",
+        "bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100",
+        "dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900"
       )}
+    >
+      {/* Patrón de grid sutil */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      {/* Device Selection Card - Reemplaza device-selection-popup */}
-      <Card className={cn(
-        "absolute z-50",
-        "top-24 left-1/2 -translate-x-1/2",
-        "w-80 shadow-lg"
-      )}>
-        <CardHeader>
-          <CardTitle>Seleccionar Dispositivo</CardTitle>
-          <CardDescription>
-            Elige un dispositivo para ver su última posición conocida
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <Select
-            value={selectedDeviceId}
-            onValueChange={(value) => {
-              setSelectedDeviceId(value);
-              setError(null);
-              setShowTable(false);
-            }}
+      {/* Contenido */}
+      <div className="relative z-10">
+        {showHeader && <HeaderV2 title="Ubicación Exteriores Tiempo Real" />}
+
+        {/* Error Alert usando Shadcn Alert */}
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Seleccionar..." />
-            </SelectTrigger>
-            <SelectContent>
-              {devices.map((device) => (
-                <SelectItem key={device.id} value={device.id}>
-                  {device.device_asignado}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Button
-            onClick={fetchLastKnownPosition}
-            disabled={!selectedDeviceId || isLoading}
-            className="w-full"
-            variant={isLoading ? "secondary" : "default"}
-          >
-            {isLoading ? (
-              <>
-                <span className="mr-2">⟳</span>
-                Actualizando...
-              </>
-            ) : (
-              "Actualizar Datos"
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Map Container - Preservando estilo original */}
-      <div
-        id="map"
-        className={cn(
-          "h-[800px] w-full",
-          showHeader ? "mt-[150px]" : "mt-0"
+            <Alert variant="destructive" className="mx-4 mt-4">
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          </motion.div>
         )}
-      />
 
-      {/* No Data Message */}
-      {selectedDeviceId && positions.length === 0 && !error && (
-        <Alert className="mx-4 mt-4">
-          <AlertDescription>
-            Sin datos disponibles para el dispositivo seleccionado.
-          </AlertDescription>
-        </Alert>
-      )}
+        {/* Device Selection Card - Con blur fuerte */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card className={cn(
+            "absolute z-50",
+            "top-24 left-1/2 -translate-x-1/2",
+            "w-80",
+            "bg-white/90 dark:bg-gray-800/90",
+            "backdrop-blur-lg",
+            "border border-white/30 dark:border-gray-700/40",
+            "shadow-2xl shadow-[#6B9FD4]/20",
+            "transition-all duration-300"
+          )}>
+            <CardHeader>
+              <CardTitle>Seleccionar Dispositivo</CardTitle>
+              <CardDescription>
+                Elige un dispositivo para ver su última posición conocida
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Select
+                value={selectedDeviceId}
+                onValueChange={(value) => {
+                  setSelectedDeviceId(value);
+                  setError(null);
+                  setShowTable(false);
+                }}
+              >
+                <SelectTrigger className={cn(
+                  "w-full",
+                  "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                  "transition-all duration-200"
+                )}>
+                  <SelectValue placeholder="Seleccionar..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {devices.map((device) => (
+                    <SelectItem key={device.id} value={device.id}>
+                      {device.device_asignado}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-      {/* Position Information Table - Migrada a Card con estilos Tailwind */}
-      {showTable && selectedPosition && (
-        <Card className="mx-4 mt-6">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              Información de Última Posición
-              <Badge
-                variant={selectedPosition.isRecent ? "default" : "destructive"}
+              <Button
+                onClick={fetchLastKnownPosition}
+                disabled={!selectedDeviceId || isLoading}
                 className={cn(
-                  selectedPosition.isRecent
-                    ? "bg-green-500 hover:bg-green-600"
-                    : "bg-red-500 hover:bg-red-600"
+                  "w-full",
+                  "bg-[#6B9FD4] hover:bg-[#5A8DC4]",
+                  "text-white font-medium",
+                  "shadow-md shadow-[#6B9FD4]/30",
+                  "hover:shadow-lg hover:shadow-[#6B9FD4]/40",
+                  "hover:scale-105",
+                  "transition-all duration-200",
+                  "disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 )}
               >
-                {selectedPosition.isRecent ? "Actualización Reciente" : "Actualización Antigua"}
-              </Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="border-b">
-                    <th className={cn(
-                      "text-left p-3",
-                      "bg-secondary text-secondary-foreground",
-                      "font-semibold"
-                    )}>
-                      Información
-                    </th>
-                    <th className={cn(
-                      "text-left p-3",
-                      "bg-secondary text-secondary-foreground",
-                      "font-semibold"
-                    )}>
-                      Valor
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className={cn(
-                    "border-b",
-                    selectedPosition.isRecent
-                      ? "bg-green-50 dark:bg-green-950/20"
-                      : "bg-red-50 dark:bg-red-950/20"
-                  )}>
-                    <td className="p-3 font-medium">Última Actualización</td>
-                    <td className="p-3">{selectedPosition.time}</td>
-                  </tr>
-                  <tr className="border-b hover:bg-muted/50 transition-colors">
-                    <td className="p-3 font-medium">Latitud</td>
-                    <td className="p-3 font-mono">{selectedPosition.lat.toFixed(6)}</td>
-                  </tr>
-                  <tr className="border-b hover:bg-muted/50 transition-colors">
-                    <td className="p-3 font-medium">Longitud</td>
-                    <td className="p-3 font-mono">{selectedPosition.lng.toFixed(6)}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Loading Skeleton para mejorar UX */}
-      {isLoading && (
-        <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center">
-          <Card className="w-64">
-            <CardContent className="pt-6">
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
+                {isLoading ? (
+                  <>
+                    <span className="mr-2">⟳</span>
+                    Actualizando...
+                  </>
+                ) : (
+                  "Actualizar Datos"
+                )}
+              </Button>
             </CardContent>
           </Card>
-        </div>
-      )}
-    </div>
+        </motion.div>
+
+        {/* Map Container - Con fade-in */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          id="map"
+          className={cn(
+            "h-[800px] w-full",
+            "rounded-lg overflow-hidden",
+            showHeader ? "mt-[150px]" : "mt-0"
+          )}
+        />
+
+        {/* No Data Message */}
+        {selectedDeviceId && positions.length === 0 && !error && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            <Alert className="mx-4 mt-4">
+              <AlertDescription>
+                Sin datos disponibles para el dispositivo seleccionado.
+              </AlertDescription>
+            </Alert>
+          </motion.div>
+        )}
+
+        {/* Position Information Table - Con glassmorphism */}
+        {showTable && selectedPosition && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+          >
+            <Card className={cn(
+              "mx-4 mt-6",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl",
+              "transition-all duration-300"
+            )}>
+              <CardHeader>
+                <CardTitle className="flex items-center justify-between">
+                  Información de Última Posición
+                  <Badge
+                    variant={selectedPosition.isRecent ? "default" : "destructive"}
+                    className={cn(
+                      "font-bold transition-all duration-200",
+                      selectedPosition.isRecent ? [
+                        "bg-green-500 hover:bg-green-600 text-white",
+                        "drop-shadow-[0_0_8px_rgba(34,197,94,0.7)]",
+                        "hover:drop-shadow-[0_0_12px_rgba(34,197,94,0.9)]"
+                      ] : [
+                        "bg-red-500 hover:bg-red-600 text-white",
+                        "drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]",
+                        "hover:drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]"
+                      ]
+                    )}
+                  >
+                    {selectedPosition.isRecent ? "Actualización Reciente" : "Actualización Antigua"}
+                  </Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse">
+                    <thead>
+                      <tr className="border-b">
+                        <th className={cn(
+                          "text-left p-3",
+                          "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]",
+                          "text-white",
+                          "font-semibold"
+                        )}>
+                          Información
+                        </th>
+                        <th className={cn(
+                          "text-left p-3",
+                          "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]",
+                          "text-white",
+                          "font-semibold"
+                        )}>
+                          Valor
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className={cn(
+                        "border-b transition-all duration-200",
+                        "hover:bg-muted/50",
+                        selectedPosition.isRecent
+                          ? "bg-green-50/50 dark:bg-green-950/20"
+                          : "bg-red-50/50 dark:bg-red-950/20"
+                      )}>
+                        <td className="p-3 font-medium">Última Actualización</td>
+                        <td className="p-3">{selectedPosition.time}</td>
+                      </tr>
+                      <tr className="border-b hover:bg-muted/50 transition-all duration-200">
+                        <td className="p-3 font-medium">Latitud</td>
+                        <td className="p-3 font-mono">{selectedPosition.lat.toFixed(6)}</td>
+                      </tr>
+                      <tr className="border-b hover:bg-muted/50 transition-all duration-200">
+                        <td className="p-3 font-medium">Longitud</td>
+                        <td className="p-3 font-mono">{selectedPosition.lng.toFixed(6)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Loading Skeleton mejorado */}
+        {isLoading && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 flex items-center justify-center"
+          >
+            <Card className={cn(
+              "w-64",
+              "bg-white/90 dark:bg-gray-800/90",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl"
+            )}>
+              <CardContent className="pt-6">
+                <div className="space-y-2">
+                  <Skeleton className={cn(
+                    "h-4 w-full",
+                    "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200",
+                    "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"
+                  )} />
+                  <Skeleton className={cn(
+                    "h-4 w-3/4",
+                    "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200",
+                    "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"
+                  )} />
+                  <Skeleton className={cn(
+                    "h-4 w-1/2",
+                    "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200",
+                    "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"
+                  )} />
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </div>
+    </motion.div>
   );
 }
 

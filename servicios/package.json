@@ -1,7 +1,7 @@
 {
-  "name": "shelly-javascript",
-  "version": "1.0.0",
-  "description": "Monitor de dispositivo Shelly",
+  "name": "TNS Track Demo",
+  "version": "0.1.0",
+  "description": "Demo de TNS Track",
   "main": "src/js/main.js",
   "scripts": {
     "start": "webpack serve --mode development",
@@ -103,6 +103,7 @@
     "@babel/preset-react": "^7.27.1",
     "autoprefixer": "^10.4.21",
     "babel-loader": "^10.0.0",
+    "baseline-browser-mapping": "^2.9.7",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "concurrently": "^9.1.2",

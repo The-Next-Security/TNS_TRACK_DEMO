@@ -1,17 +1,20 @@
 /**
- * @fileoverview Componente de ubicación en tiempo real para interiores
+ * @fileoverview Componente de ubicación en tiempo real para interiores - Premium UI
  * Muestra la ubicación del personal dentro del almacén usando beacons BLE
- * Versión migrada a Shadcn/UI v2.0
+ * Versión migrada a Shadcn/UI v2.1 con efectos premium
  *
  * @component
  * @requires axios
  * @requires moment
+ * @requires framer-motion
  * @requires Shadcn/UI components
+ * @version 2.1.0 - Premium UI Enhancement
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import moment from 'moment';
+import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 
 // Componentes Shadcn/UI
@@ -248,154 +251,262 @@ const UbicacionTiempoRealInteriorV2 = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <HeaderV2 title="Ubicación Tiempo Real Interiores" />
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={cn(
+        "min-h-screen w-full relative p-5",
+        "bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100",
+        "dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900"
+      )}
+    >
+      {/* Patrón de grid sutil */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Botón de actualización */}
-        <div className="flex justify-center mb-6">
-          <Button
-            onClick={handleRefresh}
-            className="bg-blue-500 hover:bg-blue-600 text-white"
-            disabled={isLoading}
+      {/* Contenido */}
+      <div className="relative z-10">
+        <HeaderV2 title="Ubicación Tiempo Real Interiores" />
+
+        <div className="container mx-auto px-4 py-6">
+          {/* Botón de actualización */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="flex justify-center mb-6"
           >
-            {isLoading ? 'Actualizando...' : 'Actualizar Datos'}
-          </Button>
-        </div>
+            <Button
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className={cn(
+                "bg-[#6B9FD4] hover:bg-[#5A8DC4]",
+                "text-white font-medium",
+                "shadow-md shadow-[#6B9FD4]/30",
+                "hover:shadow-lg hover:shadow-[#6B9FD4]/40",
+                "hover:scale-105",
+                "transition-all duration-200"
+              )}
+            >
+              {isLoading ? 'Actualizando...' : 'Actualizar Datos'}
+            </Button>
+          </motion.div>
 
-        {/* Mensaje de error si existe */}
-        {error && (
-          <Alert className="mb-6 max-w-4xl mx-auto" variant="destructive">
-            <AlertDescription>{error}</AlertDescription>
-          </Alert>
-        )}
+          {/* Mensaje de error si existe */}
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Alert className="mb-6 max-w-4xl mx-auto" variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
 
-        {/* Tabla de personal */}
-        <Card className="mb-8 max-w-6xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Estado del Personal</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b bg-blue-500 text-white">
-                    <th className="px-4 py-3 text-center font-medium">Personal</th>
-                    <th className="px-4 py-3 text-center font-medium">Nombre</th>
-                    <th className="px-4 py-3 text-center font-medium">Sector</th>
-                    <th className="px-4 py-3 text-center font-medium">Hora Entrada</th>
-                    <th className="px-4 py-3 text-center font-medium">Permanencia (hh:mm)</th>
-                    <th className="px-4 py-3 text-center font-medium">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {isLoading ? (
-                    <tr>
-                      <td colSpan="6" className="px-4 py-8">
-                        <div className="flex flex-col items-center gap-3">
-                          <Skeleton className="h-8 w-32" />
-                          <Skeleton className="h-8 w-48" />
-                          <Skeleton className="h-8 w-24" />
-                        </div>
-                      </td>
-                    </tr>
-                  ) : personal.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">
-                        No hay personal registrado
-                      </td>
-                    </tr>
-                  ) : (
-                    personal.map((persona) => {
-                      const sectorInfo = latestSectors[persona.id_dispositivo_asignado] || {};
-                      const horaEntrada = sectorInfo.timestamp
-                        ? moment(sectorInfo.timestamp, 'YYYY-MM-DD HH:mm:ss').format('HH:mm')
-                        : '-';
-                      const permanencia = calculatePermanencia(sectorInfo.timestamp);
-                      const semaphoreClass = getSemaphoreClass(sectorInfo.beacon_id, sectorInfo.timestamp);
-                      const semaphoreText = getSemaphoreText(semaphoreClass);
-
-                      return (
-                        <tr
-                          key={persona.id_personal}
-                          className={cn(
-                            "border-b transition-colors",
-                            "hover:bg-muted/50",
-                            "even:bg-gray-50"
-                          )}
-                        >
-                          <td className="px-4 py-3 text-center">
-                            <div className="flex justify-center">
-                              <img
-                                src={getPersonalIcon(persona.imagen_asignado)}
-                                alt={persona.Nombre_Personal}
-                                className="h-9 w-auto rounded-full"
-                              />
+          {/* Tabla de personal */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className={cn(
+              "mb-8 max-w-6xl mx-auto",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl hover:shadow-2xl",
+              "transition-all duration-300"
+            )}>
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Estado del Personal</CardTitle>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className={cn(
+                        "border-b",
+                        "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]",
+                        "text-white"
+                      )}>
+                        <th className="px-4 py-3 text-center font-medium">Personal</th>
+                        <th className="px-4 py-3 text-center font-medium">Nombre</th>
+                        <th className="px-4 py-3 text-center font-medium">Sector</th>
+                        <th className="px-4 py-3 text-center font-medium">Hora Entrada</th>
+                        <th className="px-4 py-3 text-center font-medium">Permanencia (hh:mm)</th>
+                        <th className="px-4 py-3 text-center font-medium">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {isLoading ? (
+                        <tr>
+                          <td colSpan="6" className="px-4 py-8">
+                            <div className="flex flex-col items-center gap-3">
+                              <Skeleton className={cn(
+                                "h-8 w-32",
+                                "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200",
+                                "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"
+                              )} />
+                              <Skeleton className={cn(
+                                "h-8 w-48",
+                                "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200",
+                                "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"
+                              )} />
+                              <Skeleton className={cn(
+                                "h-8 w-24",
+                                "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200",
+                                "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"
+                              )} />
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-center font-medium">
-                            {persona.Nombre_Personal}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            {sectorInfo.sector || (
-                              <span className="text-muted-foreground">Cargando...</span>
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            {horaEntrada}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            {sectorInfo.timeSinceDetection || '00:00'}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <Badge
-                              variant={getBadgeVariant(semaphoreClass)}
-                              className={cn(
-                                "font-bold",
-                                semaphoreClass === 'green' && "bg-green-500 hover:bg-green-600 text-white",
-                                semaphoreClass === 'yellow' && "bg-yellow-500 hover:bg-yellow-600 text-black",
-                                semaphoreClass === 'red' && "bg-red-500 hover:bg-red-600 text-white"
-                              )}
-                            >
-                              {semaphoreText}
-                            </Badge>
+                        </tr>
+                      ) : personal.length === 0 ? (
+                        <tr>
+                          <td colSpan="6" className="px-4 py-8 text-center text-muted-foreground">
+                            No hay personal registrado
                           </td>
                         </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                      ) : (
+                        personal.map((persona, index) => {
+                          const sectorInfo = latestSectors[persona.id_dispositivo_asignado] || {};
+                          const horaEntrada = sectorInfo.timestamp
+                            ? moment(sectorInfo.timestamp, 'YYYY-MM-DD HH:mm:ss').format('HH:mm')
+                            : '-';
+                          const permanencia = calculatePermanencia(sectorInfo.timestamp);
+                          const semaphoreClass = getSemaphoreClass(sectorInfo.beacon_id, sectorInfo.timestamp);
+                          const semaphoreText = getSemaphoreText(semaphoreClass);
 
-        {/* Plano del almacén */}
-        <Card className="max-w-6xl mx-auto">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Mapa de Ubicación</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="flex justify-center items-center h-96">
-                <Skeleton className="h-full w-full" />
-              </div>
-            ) : (
-              <div className="relative w-full flex justify-center">
-                <div className="relative inline-block" style={{ width: '60%' }}>
-                  <img
-                    src={planoBase}
-                    alt="Plano de la Oficina"
-                    className="w-full h-auto"
-                  />
-                  {renderPersonnelIcons()}
+                          return (
+                            <motion.tr
+                              key={persona.id_personal}
+                              initial={{ opacity: 0, x: -20 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{
+                                duration: 0.3,
+                                delay: index * 0.05,
+                                ease: "easeOut"
+                              }}
+                              className={cn(
+                                "border-b transition-all duration-200",
+                                "hover:bg-muted/50 hover:scale-[1.01]",
+                                "even:bg-gray-50/50 dark:even:bg-gray-800/30"
+                              )}
+                            >
+                              <td className="px-4 py-3 text-center">
+                                <div className="flex justify-center">
+                                  <img
+                                    src={getPersonalIcon(persona.imagen_asignado)}
+                                    alt={persona.Nombre_Personal}
+                                    className={cn(
+                                      "h-9 w-auto rounded-full",
+                                      "ring-2 ring-[#6B9FD4]/30",
+                                      "hover:ring-[#6B9FD4]/60",
+                                      "transition-all duration-200"
+                                    )}
+                                  />
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-center font-medium">
+                                {persona.Nombre_Personal}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                {sectorInfo.sector || (
+                                  <span className="text-muted-foreground">Cargando...</span>
+                                )}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                {horaEntrada}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                {sectorInfo.timeSinceDetection || '00:00'}
+                              </td>
+                              <td className="px-4 py-3 text-center">
+                                <Badge
+                                  variant={getBadgeVariant(semaphoreClass)}
+                                  className={cn(
+                                    "font-bold transition-all duration-200",
+                                    semaphoreClass === 'green' && [
+                                      "bg-green-500 hover:bg-green-600 text-white",
+                                      "drop-shadow-[0_0_8px_rgba(34,197,94,0.7)]",
+                                      "hover:drop-shadow-[0_0_12px_rgba(34,197,94,0.9)]"
+                                    ],
+                                    semaphoreClass === 'yellow' && [
+                                      "bg-yellow-500 hover:bg-yellow-600 text-black",
+                                      "drop-shadow-[0_0_8px_rgba(234,179,8,0.7)]",
+                                      "hover:drop-shadow-[0_0_12px_rgba(234,179,8,0.9)]"
+                                    ],
+                                    semaphoreClass === 'red' && [
+                                      "bg-red-500 hover:bg-red-600 text-white",
+                                      "drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]",
+                                      "hover:drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]"
+                                    ]
+                                  )}
+                                >
+                                  {semaphoreText}
+                                </Badge>
+                              </td>
+                            </motion.tr>
+                          );
+                        })
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Plano del almacén */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+          >
+            <Card className={cn(
+              "max-w-6xl mx-auto",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl hover:shadow-2xl",
+              "transition-all duration-300"
+            )}>
+              <CardHeader>
+                <CardTitle className="text-xl font-semibold">Mapa de Ubicación</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-96">
+                    <Skeleton className={cn(
+                      "h-full w-full",
+                      "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200",
+                      "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700"
+                    )} />
+                  </div>
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.4 }}
+                    className="relative w-full flex justify-center"
+                  >
+                    <div className="relative inline-block" style={{ width: '60%' }}>
+                      <img
+                        src={planoBase}
+                        alt="Plano de la Oficina"
+                        className="w-full h-auto rounded-lg"
+                      />
+                      {renderPersonnelIcons()}
+                    </div>
+                  </motion.div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

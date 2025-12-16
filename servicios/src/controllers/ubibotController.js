@@ -534,37 +534,84 @@ class UbibotController {
   async getTemperatureRangeData(req, res) {
     console.log("[UbibotController] getTemperatureRangeData: Solicitud recibida.");
     try {
-      const { startDate, endDate, deviceId } = req.query;
-      // Validar entradas
-      if (!startDate || !endDate || !deviceId ||
+      const { startDate, endDate, sector } = req.query;
+      
+      // Validar fechas obligatorias (sector es opcional)
+      if (!startDate || !endDate ||
         !moment(startDate, 'YYYY-MM-DD', true).isValid() ||
         !moment(endDate, 'YYYY-MM-DD', true).isValid()) {
         console.warn(`[UbibotController] getTemperatureRangeData: Parámetros inválidos:`, req.query);
-        return res.status(400).json({ error: "Faltan datos o formato inválido (startDate, endDate YYYY-MM-DD, deviceId)" });
+        return res.status(400).json({ error: "Faltan datos o formato inválido (startDate, endDate YYYY-MM-DD requeridos)" });
       }
 
       const start = moment(startDate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
       const end = moment(endDate).endOf('day').format('YYYY-MM-DD HH:mm:ss');
 
-      console.log(`[UbibotController] getTemperatureRangeData: Buscando datos para ${deviceId} entre ${start} y ${end}`);
+      // Si sector está presente, retornar datos de un solo sector
+      if (sector) {
+        console.log(`[UbibotController] getTemperatureRangeData: Buscando datos para sector "${sector}" entre ${start} y ${end}`);
 
-      const query = `
-          SELECT sr.channel_id, sr.external_temperature, sr.external_temperature_timestamp
-          FROM sensor_readings_ubibot sr
-          WHERE sr.channel_id = ?
-          AND sr.external_temperature_timestamp BETWEEN ? AND ?
-          ORDER BY sr.external_temperature_timestamp ASC
+        const query = `
+          SELECT sector, temperature, timestamp
+          FROM door_status
+          WHERE sector = ?
+          AND timestamp BETWEEN ? AND ?
+          ORDER BY timestamp ASC
         `;
 
-      const rows = await databaseService.query(query, [deviceId, start, end]);
-      console.log(`[UbibotController] getTemperatureRangeData: ${rows.length} registros encontrados.`);
+        const rows = await databaseService.query(query, [sector, start, end]);
+        console.log(`[UbibotController] getTemperatureRangeData: ${rows.length} registros encontrados.`);
 
-      const data = rows.map((item) => ({
-        timestamp: item.external_temperature_timestamp,
-        external_temperature: item.external_temperature !== null ? parseFloat(item.external_temperature) : null,
+        // Retornar en el mismo formato que cuando no hay sector (array con name y data)
+        const data = rows.map((item) => ({
+          timestamp: item.timestamp,
+          external_temperature: item.temperature !== null ? parseFloat(item.temperature) : null,
+        }));
+
+        const result = [{
+          name: sector,
+          data: data
+        }];
+
+        return res.json(result);
+      }
+
+      // Si NO hay sector, retornar datos de TODOS los sectores agrupados
+      console.log(`[UbibotController] getTemperatureRangeData: Buscando datos de TODOS los sectores entre ${start} y ${end}`);
+
+      const query = `
+        SELECT 
+          ds.sector,
+          ds.temperature,
+          ds.timestamp
+        FROM door_status ds
+        WHERE ds.timestamp BETWEEN ? AND ?
+        ORDER BY ds.sector, ds.timestamp ASC
+      `;
+
+      const rows = await databaseService.query(query, [start, end]);
+      console.log(`[UbibotController] getTemperatureRangeData: ${rows.length} registros encontrados para todos los sectores.`);
+
+      // Agrupar por sector
+      const groupedData = {};
+      rows.forEach((item) => {
+        const sectorName = item.sector;
+        if (!groupedData[sectorName]) {
+          groupedData[sectorName] = [];
+        }
+        groupedData[sectorName].push({
+          timestamp: item.timestamp,
+          external_temperature: item.temperature !== null ? parseFloat(item.temperature) : null,
+        });
+      });
+
+      // Convertir a array de objetos con name y data
+      const result = Object.keys(groupedData).map(name => ({
+        name,
+        data: groupedData[name]
       }));
 
-      res.json(data); // Devolver array vacío si no hay datos
+      res.json(result);
     } catch (error) {
       console.error("❌ Ubibot: Error al obtener datos de rango de temperatura:", error.message);
       res.status(500).json({ error: "Error del servidor al obtener rango de temperatura." });

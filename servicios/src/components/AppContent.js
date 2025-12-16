@@ -221,6 +221,14 @@ function AppContent() {
             </PrivateRoute>
           }
         />
+        <Route
+          path="/ubicaciones-interior"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <UbicacionTiempoRealInteriores />
+            </PrivateRoute>
+          }
+        />
         
 
         <Route

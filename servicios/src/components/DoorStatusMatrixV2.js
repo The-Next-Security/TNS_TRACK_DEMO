@@ -1,15 +1,17 @@
 /**
- * DoorStatusMatrixV2.js - Migrado a Shadcn/UI v2.0
+ * DoorStatusMatrixV2.js - Migrado a Shadcn/UI v2.1 - Premium UI
  *
  * Componente de matriz de estado de puertas por Reefer con visualización
  * en tiempo real, gráficos interactivos y gestión de temperatura.
  *
  * @module DoorStatusMatrixV2
+ * @version 2.1.0 - Premium UI Enhancement
  */
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
+import { motion } from "framer-motion";
 import {
   PieChart,
   Pie,
@@ -32,6 +34,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import HeaderV2 from "./HeaderV2";
 
@@ -64,6 +73,9 @@ const DoorStatusMatrixV2 = () => {
   /** @type {[string|null, Function]} Sector actualmente seleccionado */
   const [selectedSector, setSelectedSector] = useState(null);
 
+  /** @type {[Array, Function]} Lista de sectores disponibles */
+  const [availableSectors, setAvailableSectors] = useState([]);
+
   /** @type {[Object, Function]} Intervalo de tiempo seleccionado */
   const [selectedInterval, setSelectedInterval] = useState({
     start: dayjs().set("hour", 8).set("minute", 0),
@@ -87,12 +99,19 @@ const DoorStatusMatrixV2 = () => {
   // ============================================
 
   /**
-   * Effect: Actualizar datos cuando cambia la fecha seleccionada
+   * Effect: Cargar sectores disponibles al montar el componente
+   */
+  useEffect(() => {
+    fetchAvailableSectors();
+  }, []);
+
+  /**
+   * Effect: Actualizar datos cuando cambia la fecha o el sector seleccionado
    */
   useEffect(() => {
     fetchDataForSelectedDate(selectedDate);
     fetchTemperatureData(selectedDate);
-  }, [selectedDate]);
+  }, [selectedDate, selectedSector]);
 
   /**
    * Effect: Actualizar gráfico de línea cuando cambian los parámetros
@@ -120,13 +139,35 @@ const DoorStatusMatrixV2 = () => {
    * @param {Date} date - Fecha para obtener datos
    * @returns {Promise<void>}
    */
+  /**
+   * Obtener lista de sectores disponibles
+   */
+  const fetchAvailableSectors = async () => {
+    try {
+      const response = await axios.get("/api/sectores/listar-sectores");
+      console.log("[DoorStatusMatrix] Sectores cargados:", response.data.length);
+      setAvailableSectors(response.data);
+    } catch (error) {
+      console.error("[DoorStatusMatrix] Error cargando sectores:", error);
+      setAvailableSectors([]);
+    }
+  };
+
   const fetchTemperatureData = async (date) => {
     const startDate = dayjs(date).startOf("day").format("YYYY-MM-DD");
     const endDate = dayjs(date).endOf("day").format("YYYY-MM-DD");
 
     try {
+      // Incluir sector en los parámetros si está seleccionado (no null, no vacío, no __all__)
+      const params = { startDate, endDate };
+      if (selectedSector && selectedSector !== "" && selectedSector !== "__all__") {
+        params.sector = selectedSector;
+      }
+
+      console.log("[DoorStatusMatrix] Fetching temperature data:", params);
+
       const response = await axios.get("/api/ubibot/temperature-range-data", {
-        params: { startDate, endDate },
+        params,
       });
 
       // Organizar los datos por sector y timestamp
@@ -149,7 +190,20 @@ const DoorStatusMatrixV2 = () => {
 
       setTemperatureData(tempsByTime);
     } catch (error) {
-      console.error("Error fetching temperature data:", error);
+      // Silenciar errores 400 (Bad Request) - probablemente no hay datos para esa fecha
+      if (error.response?.status === 400) {
+        console.log(
+          `[DoorStatusMatrix] Sin datos de temperatura para: ${startDate}`
+        );
+        setTemperatureData({}); // Limpiar datos anteriores
+      } else {
+        // Solo mostrar otros errores
+        console.error("[DoorStatusMatrix] Error fetching temperature data:", {
+          status: error.response?.status,
+          message: error.message,
+          date: startDate,
+        });
+      }
     }
   };
 
@@ -384,7 +438,7 @@ const DoorStatusMatrixV2 = () => {
               <tbody>
                 {minuteRanges.map((range, index) => (
                   <tr key={index}>
-                    <td className="text-xs text-gray-600 px-2 py-1 text-center border-b last:border-b-0">
+                    <td className="text-xs text-gray-600 px-2 h-10 text-center border-b last:border-b-0 align-middle">
                       {range}
                     </td>
                   </tr>
@@ -467,124 +521,225 @@ const DoorStatusMatrixV2 = () => {
   // ============================================
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <HeaderV2 title="Estado de Puertas por Reefer" />
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={cn(
+        "min-h-screen w-full relative",
+        "bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100",
+        "dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900"
+      )}
+    >
+      {/* Patrón de grid sutil */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      <div className="container mx-auto px-4 py-6">
-        {/* Título y Subtítulo */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
-            Estado de Puertas por Reefer
-          </h1>
-          <p className="text-gray-600">
-            al término de cada tramo de tiempo
-          </p>
-        </div>
+      {/* Contenido */}
+      <div className="relative z-10">
+        <HeaderV2 title="Estado de Puertas por Reefer" />
 
-        {/* Controles */}
-        <Card className="mb-6">
-          <CardContent className="p-6">
-            <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-              {/* Date Picker */}
-              <div className="flex items-center gap-2">
-                <label className="text-sm font-medium text-gray-700">
-                  Fecha:
-                </label>
-                <DatePicker
-                  selected={selectedDate}
-                  onChange={handleDateChange}
-                  dateFormat="yyyy-MM-dd"
-                  className={cn(
-                    "px-3 py-2 border rounded-md",
-                    "focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  )}
-                />
-              </div>
+        <div className="container mx-auto px-4 py-6 max-w-full">
+          {/* Subtítulo */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="text-center mb-4"
+          >
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              al término de cada tramo de tiempo
+            </p>
+          </motion.div>
 
-              {/* Leyendas */}
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-red-600/80 rounded"></div>
-                  <span className="text-sm text-gray-700">Puerta Abierta</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 bg-green-500/80 rounded"></div>
-                  <span className="text-sm text-gray-700">Puerta Cerrada</span>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Matriz de Estados */}
-        <Card className="mb-8 overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse min-w-[1200px]">
-                <thead>
-                  <tr className="bg-blue-500 text-white">
-                    <th className="border px-4 py-3 text-sm font-semibold w-32">
-                      Sector
-                    </th>
-                    <th className="border px-4 py-3 text-sm font-semibold w-24">
-                      Minutos hasta
-                    </th>
-                    {Array.from({ length: 24 }, (_, i) => (
-                      <th key={i} className="border px-2 py-3 text-sm font-semibold w-12">
-                        {`${i.toString().padStart(2, "0")}:00`}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>{matrix}</tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Gráficos */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Gráfico de Torta */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-center">Resumen de Estados</CardTitle>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-              <PieChart width={400} height={300}>
-                <Pie
-                  data={pieChartData}
-                  cx={200}
-                  cy={150}
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  label={({ name, percentage }) => `${name}: ${percentage}%`}
-                >
-                  {pieChartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
+          {/* Controles */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+            className="relative z-50"
+          >
+            <Card className={cn(
+              "mb-6",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl hover:shadow-2xl",
+              "transition-all duration-300"
+            )}>
+              <CardContent className="p-6">
+                <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+                  {/* Date Picker */}
+                  <div className="flex items-center gap-2 relative z-50">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Fecha:
+                    </label>
+                    <DatePicker
+                      selected={selectedDate}
+                      onChange={handleDateChange}
+                      dateFormat="yyyy-MM-dd"
+                      maxDate={new Date()}
+                      popperClassName="z-[9999]"
+                      portalId="root"
+                      className={cn(
+                        "px-3 py-2 border rounded-md",
+                        "focus:outline-none focus:ring-2 focus:ring-[#6B9FD4]/50",
+                        "transition-all duration-200"
+                      )}
                     />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </CardContent>
-          </Card>
+                  </div>
 
-          {/* Gráfico de Línea */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-center">
-                Estado de la Puerta del Tramo de Tiempo
-              </CardTitle>
-              <p className="text-center text-sm text-gray-600 mt-2">
-                Escoja tramo en la matriz
-              </p>
-            </CardHeader>
-            <CardContent>
+                  {/* Selector de Sector */}
+                  <div className="flex items-center gap-2 relative z-50">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Sector:
+                    </label>
+                    <Select
+                      value={selectedSector || "__all__"}
+                      onValueChange={(value) => setSelectedSector(value === "__all__" ? null : value)}
+                    >
+                      <SelectTrigger className={cn(
+                        "w-[200px]",
+                        "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                        "transition-all duration-200"
+                      )}>
+                        <SelectValue placeholder="Todos los sectores" />
+                      </SelectTrigger>
+                      <SelectContent className="z-[9999]">
+                        <SelectItem value="__all__">Todos los sectores</SelectItem>
+                        {availableSectors.map((sector) => (
+                          <SelectItem key={sector.id} value={sector.nombre}>
+                            {sector.nombre}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Leyendas */}
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-red-600/80 rounded drop-shadow-[0_0_4px_rgba(220,38,38,0.6)]"></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Puerta Abierta</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 bg-green-500/80 rounded drop-shadow-[0_0_4px_rgba(34,197,94,0.6)]"></div>
+                      <span className="text-sm text-gray-700 dark:text-gray-300">Puerta Cerrada</span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Matriz de Estados */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.3 }}
+            className="w-full"
+          >
+            <Card className={cn(
+              "mb-8",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl",
+              "transition-all duration-300"
+            )}>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto overflow-y-visible">
+                  <table className="w-full border-collapse min-w-[1200px]">
+                    <thead>
+                      <tr className={cn(
+                        "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]",
+                        "text-white"
+                      )}>
+                        <th className="border border-white/20 px-4 py-3 text-sm font-semibold w-32">
+                          Sector
+                        </th>
+                        <th className="border border-white/20 px-4 py-3 text-sm font-semibold w-24">
+                          Minutos hasta
+                        </th>
+                        {Array.from({ length: 24 }, (_, i) => (
+                          <th key={i} className="border border-white/20 px-2 py-3 text-sm font-semibold w-12">
+                            {`${i.toString().padStart(2, "0")}:00`}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>{matrix}</tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Gráficos */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Gráfico de Torta */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+            >
+              <Card className={cn(
+                "bg-white/80 dark:bg-gray-800/80",
+                "backdrop-blur-md",
+                "border border-white/20 dark:border-gray-700/30",
+                "shadow-xl hover:shadow-2xl",
+                "transition-all duration-300"
+              )}>
+                <CardHeader>
+                  <CardTitle className="text-center">Resumen de Estados</CardTitle>
+                </CardHeader>
+                <CardContent className="flex justify-center">
+                  <PieChart width={400} height={300}>
+                    <Pie
+                      data={pieChartData}
+                      cx={200}
+                      cy={150}
+                      labelLine={false}
+                      outerRadius={80}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percentage }) => `${name}: ${percentage}%`}
+                    >
+                      {pieChartData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={COLORS[index % COLORS.length]}
+                        />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Gráfico de Línea */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.5 }}
+            >
+              <Card className={cn(
+                "bg-white/80 dark:bg-gray-800/80",
+                "backdrop-blur-md",
+                "border border-white/20 dark:border-gray-700/30",
+                "shadow-xl hover:shadow-2xl",
+                "transition-all duration-300"
+              )}>
+                <CardHeader>
+                  <CardTitle className="text-center">
+                    Estado de la Puerta del Tramo de Tiempo
+                  </CardTitle>
+                  <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-2">
+                    Escoja tramo en la matriz
+                  </p>
+                </CardHeader>
+                <CardContent>
               <ResponsiveContainer width="100%" height={350}>
                 <LineChart
                   data={lineChartData}
@@ -669,11 +824,13 @@ const DoorStatusMatrixV2 = () => {
                   />
                 </LineChart>
               </ResponsiveContainer>
-            </CardContent>
-          </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

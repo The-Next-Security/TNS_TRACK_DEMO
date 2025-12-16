@@ -66,6 +66,27 @@ class DatabaseService {
   }
 
   /**
+   * Obtiene una conexión del pool
+   * @returns {Promise<Object>} - Conexión a la base de datos
+   */
+  async getConnection() {
+    if (!this.pool) {
+      throw new Error('El pool de conexiones no ha sido inicializado');
+    }
+    return await this.pool.getConnection();
+  }
+
+  /**
+   * Libera una conexión de vuelta al pool
+   * @param {Object} connection - Conexión a liberar
+   */
+  async releaseConnection(connection) {
+    if (connection) {
+      connection.release();
+    }
+  }
+
+  /**
    * Cierra el pool de conexiones a la base de datos
    * @returns {Promise<boolean>} - true si se cerró correctamente
    */

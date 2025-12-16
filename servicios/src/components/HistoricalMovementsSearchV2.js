@@ -1,5 +1,5 @@
 /**
- * HistoricalMovementsSearchV2.js - Migrado a Shadcn/UI v2.0
+ * HistoricalMovementsSearchV2.js - Migrado a Shadcn/UI v2.1 - Premium UI
  *
  * Componente para búsqueda y visualización de movimientos históricos GPS
  * Permite seleccionar un dispositivo, fecha y rango de horas para visualizar
@@ -8,12 +8,15 @@
  * @component
  * @requires mapbox-gl
  * @requires axios
+ * @requires framer-motion
  * @requires shadcn/ui
+ * @version 2.1.0 - Premium UI Enhancement
  */
 
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import mapboxgl from "mapbox-gl";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -224,168 +227,264 @@ const HistoricalMovementsSearchV2 = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <HeaderV2 title="Ubicación Exteriores Tiempo Real" />
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={cn(
+        "min-h-screen w-full relative",
+        "bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100",
+        "dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900"
+      )}
+    >
+      {/* Patrón de grid sutil */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]" />
 
-      <div className="p-5">
-        {/* Formulario de búsqueda */}
-        <Card className="mb-5">
-          <CardHeader>
-            <CardTitle>Búsqueda de Movimientos Históricos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Selector de dispositivo */}
-              <div className="w-full">
-                <Label htmlFor="device-select">Dispositivo</Label>
-                <Select value={device} onValueChange={setDevice}>
-                  <SelectTrigger id="device-select" className="w-full md:w-[300px]">
-                    <SelectValue placeholder="Seleccione un dispositivo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {devices.map((device) => (
-                      <SelectItem key={device.id} value={device.id}>
-                        {device.device_asignado}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+      {/* Contenido */}
+      <div className="relative z-10">
+        <HeaderV2 title="Búsqueda Histórica Movimientos" />
 
-              {/* Selección de fecha y hora */}
-              <div className="space-y-4 md:space-y-0 md:flex md:flex-col md:gap-4">
-                {/* Selector de fecha */}
-                <div className="flex flex-col space-y-2">
-                  <Label htmlFor="date-picker">Fecha</Label>
-                  <Input
-                    id="date-picker"
-                    type="date"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    max={today.current}
-                    className="w-full md:w-auto"
-                  />
-                </div>
-
-                {/* Selectores de hora */}
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex flex-col space-y-2">
-                    <Label htmlFor="start-time">Hora de inicio</Label>
-                    <Input
-                      id="start-time"
-                      type="time"
-                      value={startHour}
-                      onChange={(e) => setStartHour(e.target.value)}
-                      className="w-full"
-                    />
+        <div className="p-5">
+          {/* Formulario de búsqueda */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+          >
+            <Card className={cn(
+              "mb-5",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl hover:shadow-2xl",
+              "transition-all duration-300"
+            )}>
+              <CardHeader>
+                <CardTitle>Búsqueda de Movimientos Históricos</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  {/* Selector de dispositivo */}
+                  <div className="w-full">
+                    <Label htmlFor="device-select">Dispositivo</Label>
+                    <Select value={device} onValueChange={setDevice}>
+                      <SelectTrigger id="device-select" className={cn(
+                        "w-full md:w-[300px]",
+                        "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                        "transition-all duration-200"
+                      )}>
+                        <SelectValue placeholder="Seleccione un dispositivo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {devices.map((device) => (
+                          <SelectItem key={device.id} value={device.id}>
+                            {device.device_asignado}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
 
-                  <div className="flex flex-col space-y-2">
-                    <Label htmlFor="end-time">Hora de fin</Label>
-                    <Input
-                      id="end-time"
-                      type="time"
-                      value={endHour}
-                      onChange={(e) => setEndHour(e.target.value)}
-                      className="w-full"
-                    />
+                  {/* Selección de fecha y hora */}
+                  <div className="space-y-4 md:space-y-0 md:flex md:flex-col md:gap-4">
+                    {/* Selector de fecha */}
+                    <div className="flex flex-col space-y-2">
+                      <Label htmlFor="date-picker">Fecha</Label>
+                      <Input
+                        id="date-picker"
+                        type="date"
+                        value={date}
+                        onChange={(e) => setDate(e.target.value)}
+                        max={today.current}
+                        className={cn(
+                          "w-full md:w-auto",
+                          "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                          "transition-all duration-200"
+                        )}
+                      />
+                    </div>
+
+                    {/* Selectores de hora */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                      <div className="flex flex-col space-y-2">
+                        <Label htmlFor="start-time">Hora de inicio</Label>
+                        <Input
+                          id="start-time"
+                          type="time"
+                          value={startHour}
+                          onChange={(e) => setStartHour(e.target.value)}
+                          className={cn(
+                            "w-full",
+                            "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                            "transition-all duration-200"
+                          )}
+                        />
+                      </div>
+
+                      <div className="flex flex-col space-y-2">
+                        <Label htmlFor="end-time">Hora de fin</Label>
+                        <Input
+                          id="end-time"
+                          type="time"
+                          value={endHour}
+                          onChange={(e) => setEndHour(e.target.value)}
+                          className={cn(
+                            "w-full",
+                            "focus:ring-2 focus:ring-[#6B9FD4]/50",
+                            "transition-all duration-200"
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
 
-              {/* Botón de búsqueda */}
-              <Button
-                type="submit"
-                className={cn(
-                  "w-full md:w-auto",
-                  "bg-blue-600 hover:bg-blue-700",
-                  "text-white font-medium"
-                )}
-              >
-                Buscar
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                  {/* Botón de búsqueda */}
+                  <Button
+                    type="submit"
+                    className={cn(
+                      "w-full md:w-auto",
+                      "bg-[#6B9FD4] hover:bg-[#5A8DC4]",
+                      "text-white font-medium",
+                      "shadow-md shadow-[#6B9FD4]/30",
+                      "hover:shadow-lg hover:shadow-[#6B9FD4]/40",
+                      "hover:scale-105",
+                      "transition-all duration-200"
+                    )}
+                  >
+                    Buscar
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        {/* Mensajes de error */}
-        {errorMessage && (
-          <Alert variant="destructive" className="mb-5">
-            <AlertDescription className="font-semibold">
-              {errorMessage}
-            </AlertDescription>
-          </Alert>
-        )}
+          {/* Mensajes de error */}
+          {errorMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Alert variant="destructive" className="mb-5">
+                <AlertDescription className="font-semibold">
+                  {errorMessage}
+                </AlertDescription>
+              </Alert>
+            </motion.div>
+          )}
 
-        {/* Mapa */}
-        <Card className="mb-5">
-          <CardContent className="p-0">
-            <div
-              id="map"
-              className={cn(
-                "w-full h-[500px]",
-                "rounded-lg overflow-hidden"
-              )}
-            />
-          </CardContent>
-        </Card>
+          {/* Mapa */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Card className={cn(
+              "mb-5",
+              "bg-white/80 dark:bg-gray-800/80",
+              "backdrop-blur-md",
+              "border border-white/20 dark:border-gray-700/30",
+              "shadow-xl",
+              "transition-all duration-300"
+            )}>
+              <CardContent className="p-0">
+                <div
+                  id="map"
+                  className={cn(
+                    "w-full h-[500px]",
+                    "rounded-lg overflow-hidden"
+                  )}
+                />
+              </CardContent>
+            </Card>
+          </motion.div>
 
-        {/* Tabla de resultados */}
-        {data.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Datos de Ubicación</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse">
-                  <thead>
-                    <tr className="border-b">
-                      <th className={cn(
-                        "text-left p-3",
-                        "bg-gray-50 font-semibold",
-                        "border border-gray-200"
-                      )}>
-                        Hora
-                      </th>
-                      <th className={cn(
-                        "text-left p-3",
-                        "bg-gray-50 font-semibold",
-                        "border border-gray-200"
-                      )}>
-                        Latitud
-                      </th>
-                      <th className={cn(
-                        "text-left p-3",
-                        "bg-gray-50 font-semibold",
-                        "border border-gray-200"
-                      )}>
-                        Longitud
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50 transition-colors">
-                        <td className="p-3 border border-gray-200">
-                          {item.timestamp}
-                        </td>
-                        <td className="p-3 border border-gray-200">
-                          {item.latitude}
-                        </td>
-                        <td className="p-3 border border-gray-200">
-                          {item.longitude}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+          {/* Tabla de resultados */}
+          {data.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+            >
+              <Card className={cn(
+                "bg-white/80 dark:bg-gray-800/80",
+                "backdrop-blur-md",
+                "border border-white/20 dark:border-gray-700/30",
+                "shadow-xl",
+                "transition-all duration-300"
+              )}>
+                <CardHeader>
+                  <CardTitle>Datos de Ubicación</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr className="border-b">
+                          <th className={cn(
+                            "text-left p-3",
+                            "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]",
+                            "text-white font-semibold",
+                            "border border-white/20"
+                          )}>
+                            Hora
+                          </th>
+                          <th className={cn(
+                            "text-left p-3",
+                            "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]",
+                            "text-white font-semibold",
+                            "border border-white/20"
+                          )}>
+                            Latitud
+                          </th>
+                          <th className={cn(
+                            "text-left p-3",
+                            "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]",
+                            "text-white font-semibold",
+                            "border border-white/20"
+                          )}>
+                            Longitud
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.map((item, index) => (
+                          <motion.tr
+                            key={index}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{
+                              duration: 0.3,
+                              delay: index * 0.05,
+                              ease: "easeOut"
+                            }}
+                            className={cn(
+                              "transition-all duration-200",
+                              "hover:bg-muted/50 hover:scale-[1.01]",
+                              index % 2 === 1 && "bg-gray-50/50 dark:bg-gray-800/30"
+                            )}
+                          >
+                            <td className="p-3 border border-gray-200/50">
+                              {item.timestamp}
+                            </td>
+                            <td className="p-3 border border-gray-200/50 font-mono">
+                              {item.latitude}
+                            </td>
+                            <td className="p-3 border border-gray-200/50 font-mono">
+                              {item.longitude}
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

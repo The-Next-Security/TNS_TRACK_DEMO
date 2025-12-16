@@ -1,5 +1,6 @@
 const databaseService = require('./database-service');
-const pricing = require('../config/ai-pricing.json');
+const pricing = require('../config/jsons/ai-pricing.json');
+const configLoader = require('../config/js_files/config-loader');
 
 class AICostTracker {
   constructor() {
@@ -22,10 +23,11 @@ class AICostTracker {
     try {
       // Use pool directly to get insertId
       const connection = await databaseService.pool.getConnection();
+      const config = configLoader.getConfig();
       try {
         const [result] = await connection.execute(
           'INSERT INTO ai_session_costs (user_id, model_used) VALUES (?, ?)',
-          [userId, process.env.OPENAI_MODEL || 'deepseek-chat']
+          [userId, config.OpenAI_API?.OPENAI_MODEL || 'deepseek-chat']
         );
         
         const sessionId = result.insertId;
