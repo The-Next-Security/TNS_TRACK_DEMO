@@ -88,7 +88,7 @@ class Server {
     console.log("[Server] setupMiddleware: Configurando middleware...");
     const corsOptions = {
       // Ajustar origins según sea necesario para producción
-      origin: ["http://localhost:3000", "http://localhost:8080", /* añadir URL de producción */],
+      origin: ["http://localhost:3000", "http://localhost:8080", "https://tns.thenextsecurity.cl" ],
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
