@@ -156,9 +156,10 @@ class Server {
     });
 
     // Servir archivos estáticos desde 'public'
+    // Se sirven en ambas rutas: / y /TNSTrack/ para compatibilidad
     console.log("[Server] setupMiddleware: Sirviendo estáticos desde 'public'");
     this.app.use(express.static(path.join(__dirname, "public")));
-    // La línea 'this.app.use;' solitaria no tiene efecto, la elimino.
+    this.app.use("/TNSTrack", express.static(path.join(__dirname, "public")));
 
     // Configuración de CSP
     this.setupContentSecurityPolicy();
@@ -221,9 +222,6 @@ class Server {
     mountApiRoute('/api/v1/ai-analysis', aiAnalysisRoutes); // AI Cold Chamber Analysis (Feature 005)
 
     console.log("[Server] setupRoutes: Rutas API montadas (en / y /TNSTrack).");
-
-    // Servir archivos estáticos (ya configurado en setupMiddleware, pero redundante no daña)
-    this.app.use(express.static(path.join(__dirname, "public")));
 
     // Ruta específica para /TNSTrack (SPA entry point)
     this.app.get("/TNSTrack", (req, res) => {
