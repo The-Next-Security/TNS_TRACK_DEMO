@@ -8,6 +8,17 @@ const cors = require("cors");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 
+// ============================================================================
+// CONFIGURACIÓN DE ENTORNO
+// ============================================================================
+const isProduction = process.env.NODE_ENV === "production";
+const isDevelopment = !isProduction;
+
+// Log del entorno al inicio
+console.log(`\n${"=".repeat(60)}`);
+console.log(`🌍 ENTORNO: ${isProduction ? "PRODUCCIÓN" : "DESARROLLO"}`);
+console.log(`${"=".repeat(60)}\n`);
+
 // Importar Collectors y Servicios principales
 const ShellyCollector = require("./collectors/shelly-collector");
 const UbibotCollector = require("./collectors/ubibot-collector");
@@ -86,22 +97,35 @@ class Server {
    */
   setupMiddleware() {
     console.log("[Server] setupMiddleware: Configurando middleware...");
+    
+    // =========================================================================
+    // CORS: Configuración condicional por entorno
+    // =========================================================================
+    const corsOrigins = isProduction
+      ? ["https://tns.thenextsecurity.cl"] // Solo dominios de producción
+      : ["http://localhost:3000", "http://localhost:8080", "https://tns.thenextsecurity.cl"]; // Incluir localhost en desarrollo
+    
     const corsOptions = {
-      // Ajustar origins según sea necesario para producción
-      origin: ["http://localhost:3000", "http://localhost:8080", "https://tns.thenextsecurity.cl" ],
+      origin: corsOrigins,
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
     };
+    
+    console.log(`[Server] CORS origins configurados: ${corsOrigins.join(", ")}`);
     this.app.use(cors(corsOptions));
     this.app.use(express.json()); // Para parsear JSON bodies
     this.app.use(cookieParser());
 
-    // 🔥 Logging básico de requests (ANTES de todo para capturar TODAS las requests)
-    this.app.use((req, res, next) => {
-      console.log(`[1] [Request] 🔥 ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`); // Usar originalUrl
-      next();
-    });
+    // =========================================================================
+    // LOGGING: Solo en desarrollo (en producción usar herramientas como PM2/Morgan)
+    // =========================================================================
+    if (isDevelopment) {
+      this.app.use((req, res, next) => {
+        console.log(`[Request] 🔥 ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`);
+        next();
+      });
+    }
 
     // Header Content-Type para rutas API (ya se hace en setupRoutes implícitamente con express.json,
     // pero mantener si hay alguna razón específica)
@@ -182,14 +206,14 @@ class Server {
 
     // Ruta específica para /TNSTrack (SPA entry point)
     this.app.get("/TNSTrack", (req, res) => {
-      console.log("[Server] Sirviendo /TNSTrack -> index.html");
+      if (isDevelopment) console.log("[Server] Sirviendo /TNSTrack -> index.html");
       res.sendFile(path.join(__dirname, "public", "index.html"));
     });
 
     // Ruta específica para /TNSTrack/* (subrutas de la SPA)
     // Express 5.x requiere nombres explícitos en wildcards
     this.app.get("/TNSTrack/*path", (req, res) => {
-      console.log(`[Server] Sirviendo ${req.url} -> index.html`);
+      if (isDevelopment) console.log(`[Server] Sirviendo ${req.url} -> index.html`);
       res.sendFile(path.join(__dirname, "public", "index.html"));
     });
 
@@ -198,11 +222,11 @@ class Server {
     // Ref: https://github.com/pillarjs/path-to-regexp/blob/master/History.md#800--2024-01-01
     this.app.get("/*path", (req, res, next) => {
       // Si la petición busca explícitamente un archivo estático conocido o una ruta API, no enviar index.html
-      if (req.url.startsWith("/api/") || req.url.includes('.') || req.url.startsWith("/static/")) { // Ajustar patrones según necesidad
+      if (req.url.startsWith("/api/") || req.url.includes('.') || req.url.startsWith("/static/")) {
         return next(); // Pasar al siguiente middleware (probablemente un 404 si no coincide nada más)
       }
       // Para cualquier otra ruta GET, enviar el index.html para que React Router maneje el frontend routing
-      console.log(`[Server] Catch-all: Sirviendo index.html para la ruta ${req.url}`);
+      if (isDevelopment) console.log(`[Server] Catch-all: Sirviendo index.html para la ruta ${req.url}`);
       res.sendFile(path.join(__dirname, "public", "index.html"));
     });
     console.log("[Server] setupRoutes: Rutas configuradas (incluyendo catch-all).");
