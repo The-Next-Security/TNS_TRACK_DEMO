@@ -7,16 +7,37 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const cookieParser = require("cookie-parser");
+const fs = require("fs");
 
 // ============================================================================
-// CONFIGURACIÓN DE ENTORNO
+// CONFIGURACIÓN DE ENTORNO (desde unified-config.json)
 // ============================================================================
-const isProduction = process.env.NODE_ENV === "production";
-const isDevelopment = !isProduction;
+function detectEnvironment() {
+  try {
+    const configPath = path.resolve(__dirname, "src/config/jsons/unified-config.json");
+    const configData = fs.readFileSync(configPath, "utf8");
+    const config = JSON.parse(configData);
+    const envIndex = config.environment?.current ?? 0;
+    const envLabels = config.environment?.labels ?? ["development", "production"];
+    return {
+      isProduction: envIndex === 1,
+      isDevelopment: envIndex === 0,
+      label: envLabels[envIndex] || "development"
+    };
+  } catch (error) {
+    console.warn("⚠️ No se pudo leer unified-config.json, usando desarrollo por defecto");
+    return { isProduction: false, isDevelopment: true, label: "development" };
+  }
+}
+
+const environment = detectEnvironment();
+const isProduction = environment.isProduction;
+const isDevelopment = environment.isDevelopment;
 
 // Log del entorno al inicio
 console.log(`\n${"=".repeat(60)}`);
 console.log(`🌍 ENTORNO: ${isProduction ? "PRODUCCIÓN" : "DESARROLLO"}`);
+console.log(`📄 Detectado desde: unified-config.json (environment.current: ${isProduction ? 1 : 0})`);
 console.log(`${"=".repeat(60)}\n`);
 
 // Importar Collectors y Servicios principales

@@ -60,8 +60,8 @@ module.exports = (env, argv) => {
       // Cache busting con hash en producción
       filename: isProduction ? "bundle.[contenthash].js" : "bundle.js",
       publicPath: "/TNSTrack/",
-      // Limpiar carpeta de salida en cada build de producción
-      clean: isProduction,
+      // NO usar clean porque output y archivos fuente PWA están en la misma carpeta
+      // La limpieza de bundles antiguos se hace con: npm run clean
     },
 
     module: {
