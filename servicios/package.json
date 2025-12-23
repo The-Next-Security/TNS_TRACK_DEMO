@@ -7,13 +7,10 @@
     "start": "webpack serve --mode development",
     "start-server": "node server.js",
     "start-all": "concurrently \"npm run start\" \"npm run start-server\"",
-    "build": "webpack --mode development",
-    "build:prod": "webpack --mode production",
-    "clean": "rimraf dist public/bundle.*.js",
+    "build": "webpack",
+    "clean": "rimraf dist",
     "install-deps": "npm install",
-    "comenzar": "npm run clean && npm run install-deps && npm run build:prod && node server.js",
-    "comenzar:dev": "npm run clean && npm run install-deps && npm run build && npm run start-all",
-    "deploy": "npm run clean && npm run build:prod"
+    "comenzar": "npm run clean && npm run install-deps && npm run build && npm run start-all"
   },
   "keywords": [
     "shelly",
