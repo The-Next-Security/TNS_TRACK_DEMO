@@ -44,6 +44,7 @@ const configLoader = require('./src/config/js_files/config-loader');
 // Importar servicios de notificación (asegurarse de importar los correctos después de la refactorización)
 const emailService = require("./src/services/email/emailService");
 const smsService = require("./src/services/sms/smsService");
+const pushNotificationService = require("./src/services/push/pushNotificationService");
 const notificationController = require("./src/controllers/notificationController.js");
 
 // Importar job de agregación de métricas de alertas
@@ -291,6 +292,21 @@ class Server {
         console.log("  [Server] SmsService inicializado."); // Log 16
       }
 
+      // 5b. Inicializar PushNotificationService (usa la instancia importada)
+      console.log("  [Server] Inicializando PushNotificationService...");
+      try {
+        await pushNotificationService.initialize(); // Asume que initialize es async o devuelve Promise
+        if (!pushNotificationService.initialized) { // Chequeo adicional
+          console.warn("  [Server] PushNotificationService no se inicializó correctamente (ver logs anteriores).");
+          // No lanzar error - push notifications no es crítico para el funcionamiento del servidor
+        } else {
+          console.log("  [Server] PushNotificationService inicializado.");
+        }
+      } catch (pushError) {
+        console.error("  [Server] ⚠️ Error al inicializar PushNotificationService:", pushError);
+        // No lanzar error - push notifications no es crítico para el funcionamiento del servidor
+        console.warn("  [Server] El servidor continuará sin push notifications.");
+      }
 
       // 6. Inicializar Collectors (pueden depender de config o servicios)
       // console.log("  [Server] Iniciando ShellyCollector...");

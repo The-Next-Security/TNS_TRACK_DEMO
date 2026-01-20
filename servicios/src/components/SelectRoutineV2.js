@@ -197,7 +197,7 @@ const routines = [
   },
 
   // Rutinas previamente ocultas (solo se habilitan si existe su pantalla V2)
-  {
+  /*{
     title: "Interior Ubicación en Tiempo Real",
     image: ubicaciontiemporealinteriorImage,
     route: "/ubicaciones-interior",
@@ -226,7 +226,7 @@ const routines = [
     image: doorStatusImage,
     route: "/door-status-matrix",
     permission: "view_door_status",
-  },
+  },*/
   //  { title: "Datos Análisis Forense", image: dataIntelligenceImage, route: "/inteligencia-de-datos", permission: "view_data_intelligence" },
   //  { title: "Parametrización", image: configurationImage, route: "/configuracion", permission: "view_configuration" },
 
