@@ -44,6 +44,7 @@ const configLoader = require('./src/config/js_files/config-loader');
 // Importar servicios de notificación (asegurarse de importar los correctos después de la refactorización)
 const emailService = require("./src/services/email/emailService");
 const smsService = require("./src/services/sms/smsService");
+const pushNotificationService = require("./src/services/push/pushNotificationService");
 const notificationController = require("./src/controllers/notificationController.js");
 
 // Importar job de agregación de métricas de alertas
@@ -88,7 +89,7 @@ class Server {
     console.log("[Server] setupMiddleware: Configurando middleware...");
     const corsOptions = {
       // Ajustar origins según sea necesario para producción
-      origin: ["http://localhost:3000", "http://localhost:8080", /* añadir URL de producción */],
+      origin: ["http://localhost:3000", "http://localhost:8080", "https://tns.thenextsecurity.cl" ],
       credentials: true,
       methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
@@ -113,7 +114,7 @@ class Server {
     // Servir archivos estáticos desde 'public'
     console.log("[Server] setupMiddleware: Sirviendo estáticos desde 'public'");
     this.app.use(express.static(path.join(__dirname, "public")));
-    // La línea 'this.app.use;' solitaria no tiene efecto, la elimino.
+    this.app.use("/TNSTrack", express.static(path.join(__dirname, "public")));
 
     // Configuración de CSP
     this.setupContentSecurityPolicy();
@@ -144,32 +145,38 @@ class Server {
     console.log("[Server] setupRoutes: Configurando rutas...");
     // Las rutas ya se importaron arriba
 
-    // Montar rutas de la API
-    this.app.use("/api/devices", deviceRoutes);
-    this.app.use("/api/config", configRoutes);
-    this.app.use("/api/totals", totalesRoutes);
-    this.app.use("/api/analysis", analysisRoutes);
-    this.app.use("/api/usuarios", usuariosRoutes);
-    this.app.use("/api/personal", personalRoutes);
-    this.app.use("/api/sms", smsRoutes);
-    this.app.use("/api/sectores", sectoresRoutes);
-    this.app.use("/api/powerAnalysis", powerAnalysisRoutes);
-    this.app.use("/api/gps", gpsRoutes);
-    this.app.use("/api/beacons", beaconsRoutes);
-    this.app.use("/api/ubibot", ubibotRoutes);
-    this.app.use("/api/blindspot", blindSpotRoutes);
-    this.app.use("/gps-data", gpsDataRoutes); // ¿Debería estar bajo /api?
+    // ✅ Función helper para montar rutas en ambos paths (raíz y /TNSTrack)
+    const mountApiRoute = (path, router) => {
+      this.app.use(path, router);
+      this.app.use(`/TNSTrack${path}`, router); // También bajo /TNSTrack para producción
+    };
+
+    // Montar rutas de la API (en ambos paths)
+    mountApiRoute("/api/devices", deviceRoutes);
+    mountApiRoute("/api/config", configRoutes);
+    mountApiRoute("/api/totals", totalesRoutes);
+    mountApiRoute("/api/analysis", analysisRoutes);
+    mountApiRoute("/api/usuarios", usuariosRoutes);
+    mountApiRoute("/api/personal", personalRoutes);
+    mountApiRoute("/api/sms", smsRoutes);
+    mountApiRoute("/api/sectores", sectoresRoutes);
+    mountApiRoute("/api/powerAnalysis", powerAnalysisRoutes);
+    mountApiRoute("/api/gps", gpsRoutes);
+    mountApiRoute("/api/beacons", beaconsRoutes);
+    mountApiRoute("/api/ubibot", ubibotRoutes);
+    mountApiRoute("/api/blindspot", blindSpotRoutes);
+    mountApiRoute("/gps-data", gpsDataRoutes); // ¿Debería estar bajo /api?
     
     const authRoutes = require("./src/routes/authRoutes");
-    this.app.use("/api/auth", authRoutes);
-    this.app.use('/api/consumo', consumoCategoriaRoutes); // paraa las categorias de consumo electrico
-    this.app.use('/api/push', pushNotificationRoutes); // Push Notifications PWA
-    this.app.use('/api/alerts', alertTrackingRoutes); // Sistema de gestión de alertas
-    this.app.use('/api', presetsRoutes); // Sistema de gestión de presets de temperatura
-    this.app.use('/api/reports', reportsRoutes); // Sistema de generación de reportes (Feature 004)
-    this.app.use('/api/v1/ai-analysis', aiAnalysisRoutes); // AI Cold Chamber Analysis (Feature 005)
+    mountApiRoute("/api/auth", authRoutes);
+    mountApiRoute('/api/consumo', consumoCategoriaRoutes); // paraa las categorias de consumo electrico
+    mountApiRoute('/api/push', pushNotificationRoutes); // Push Notifications PWA
+    mountApiRoute('/api/alerts', alertTrackingRoutes); // Sistema de gestión de alertas
+    mountApiRoute('/api', presetsRoutes); // Sistema de gestión de presets de temperatura
+    mountApiRoute('/api/reports', reportsRoutes); // Sistema de generación de reportes (Feature 004)
+    mountApiRoute('/api/v1/ai-analysis', aiAnalysisRoutes); // AI Cold Chamber Analysis (Feature 005)
 
-    console.log("[Server] setupRoutes: Rutas API montadas.");
+    console.log("[Server] setupRoutes: Rutas API montadas (en / y /TNSTrack).");
 
     // Servir archivos estáticos (ya configurado en setupMiddleware, pero redundante no daña)
     this.app.use(express.static(path.join(__dirname, "public")));
@@ -285,6 +292,21 @@ class Server {
         console.log("  [Server] SmsService inicializado."); // Log 16
       }
 
+      // 5b. Inicializar PushNotificationService (usa la instancia importada)
+      console.log("  [Server] Inicializando PushNotificationService...");
+      try {
+        await pushNotificationService.initialize(); // Asume que initialize es async o devuelve Promise
+        if (!pushNotificationService.initialized) { // Chequeo adicional
+          console.warn("  [Server] PushNotificationService no se inicializó correctamente (ver logs anteriores).");
+          // No lanzar error - push notifications no es crítico para el funcionamiento del servidor
+        } else {
+          console.log("  [Server] PushNotificationService inicializado.");
+        }
+      } catch (pushError) {
+        console.error("  [Server] ⚠️ Error al inicializar PushNotificationService:", pushError);
+        // No lanzar error - push notifications no es crítico para el funcionamiento del servidor
+        console.warn("  [Server] El servidor continuará sin push notifications.");
+      }
 
       // 6. Inicializar Collectors (pueden depender de config o servicios)
       // console.log("  [Server] Iniciando ShellyCollector...");

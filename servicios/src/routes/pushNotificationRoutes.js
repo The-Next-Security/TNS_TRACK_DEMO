@@ -6,11 +6,52 @@ const router = express.Router();
 const pushNotificationService = require('../services/push/pushNotificationService');
 
 /**
+ * Helper para asegurar que el servicio esté inicializado antes de usarlo
+ * @param {Object} res - Objeto response de Express (opcional, para retornar error HTTP)
+ * @returns {Promise<boolean>} true si está inicializado, false si falló
+ */
+async function ensureInitialized(res = null) {
+    if (pushNotificationService.initialized) {
+        return true;
+    }
+
+    console.warn('[PushRoutes] Servicio no inicializado, intentando inicializar...');
+    try {
+        await pushNotificationService.initialize();
+        if (pushNotificationService.initialized) {
+            console.log('[PushRoutes] Servicio inicializado exitosamente.');
+            return true;
+        } else {
+            throw new Error('Servicio no se pudo inicializar (initialized flag sigue siendo false)');
+        }
+    } catch (error) {
+        console.error('[PushRoutes] Error al inicializar servicio:', error.message);
+        if (res) {
+            res.status(503).json({
+                success: false,
+                message: 'Servicio de push notifications no disponible',
+                error: error.message
+            });
+        }
+        return false;
+    }
+}
+
+/**
  * GET /api/push/vapid-public-key
  * Obtiene la clave pública VAPID necesaria para suscribirse
  */
 router.get('/vapid-public-key', async (req, res) => {
     try {
+        // Verificar inicialización (aunque getPublicVapidKey puede funcionar sin ella)
+        // Si no está inicializado, intentar inicializar
+        if (!pushNotificationService.initialized) {
+            const isInitialized = await ensureInitialized(res);
+            if (!isInitialized) {
+                return; // ensureInitialized ya envió la respuesta HTTP 503
+            }
+        }
+
         const publicKey = pushNotificationService.getPublicVapidKey();
 
         if (!publicKey) {
@@ -42,6 +83,12 @@ router.get('/vapid-public-key', async (req, res) => {
  */
 router.post('/subscribe', async (req, res) => {
     try {
+        // Verificar y asegurar que el servicio esté inicializado
+        const isInitialized = await ensureInitialized(res);
+        if (!isInitialized) {
+            return; // ensureInitialized ya envió la respuesta HTTP 503
+        }
+
         const { subscription, userId, userEmail, existingSubscriptionId } = req.body;
 
         if (!subscription || !subscription.endpoint || !subscription.keys) {
@@ -54,29 +101,21 @@ router.post('/subscribe', async (req, res) => {
         // ✅ NUEVO: Verificar si hay subscriptionId existente válido
         if (existingSubscriptionId) {
             try {
-                const existingSubs = await pushNotificationService.pool.query(
-                    'SELECT subscription_id, endpoint FROM push_subscriptions WHERE subscription_id = ?',
-                    [existingSubscriptionId]
-                );
+                // Usar método del servicio en lugar de acceso directo al pool
+                const allSubs = await pushNotificationService.getActiveSubscriptions();
+                const existing = allSubs.find(sub => sub.subscription_id === existingSubscriptionId);
 
-                if (existingSubs[0] && existingSubs[0].length > 0) {
-                    const existing = existingSubs[0][0];
+                if (existing && existing.endpoint === subscription.endpoint) {
+                    // El método saveSubscription() actualiza last_seen_at automáticamente,
+                    // pero como solo queremos actualizar last_seen sin cambiar las keys,
+                    // podemos simplemente confirmar que la suscripción existe y está activa
+                    console.log(`[PushRoutes] Suscripción existente validada: ${existingSubscriptionId}`);
 
-                    // Si el endpoint coincide, solo actualizar last_seen
-                    if (existing.endpoint === subscription.endpoint) {
-                        await pushNotificationService.pool.query(
-                            'UPDATE push_subscriptions SET last_seen_at = NOW() WHERE subscription_id = ?',
-                            [existingSubscriptionId]
-                        );
-
-                        console.log(`[PushRoutes] Suscripción existente validada: ${existingSubscriptionId}`);
-
-                        return res.json({
-                            success: true,
-                            message: 'Suscripción ya existe y está activa',
-                            subscriptionId: existingSubscriptionId
-                        });
-                    }
+                    return res.json({
+                        success: true,
+                        message: 'Suscripción ya existe y está activa',
+                        subscriptionId: existingSubscriptionId
+                    });
                 }
             } catch (error) {
                 console.error('[PushRoutes] Error verificando suscripción existente:', error);
@@ -119,6 +158,12 @@ router.post('/subscribe', async (req, res) => {
  */
 router.post('/unsubscribe', async (req, res) => {
     try {
+        // Verificar y asegurar que el servicio esté inicializado
+        const isInitialized = await ensureInitialized(res);
+        if (!isInitialized) {
+            return; // ensureInitialized ya envió la respuesta HTTP 503
+        }
+
         const { endpoint, hardDelete = false } = req.body;
 
         if (!endpoint) {
@@ -183,6 +228,12 @@ router.get('/stats', async (req, res) => {
  */
 router.post('/test-notification', async (req, res) => {
     try {
+        // Verificar y asegurar que el servicio esté inicializado
+        const isInitialized = await ensureInitialized(res);
+        if (!isInitialized) {
+            return; // ensureInitialized ya envió la respuesta HTTP 503
+        }
+
         const { title = 'Notificación de Prueba', body = 'Esto es una prueba', userId } = req.body;
 
         const filters = userId ? { userId } : {};
@@ -228,6 +279,12 @@ router.post('/test-notification', async (req, res) => {
  */
 router.post('/cleanup', async (req, res) => {
     try {
+        // Verificar y asegurar que el servicio esté inicializado
+        const isInitialized = await ensureInitialized(res);
+        if (!isInitialized) {
+            return; // ensureInitialized ya envió la respuesta HTTP 503
+        }
+
         const { daysInactive = 90 } = req.body;
 
         const deactivated = await pushNotificationService.cleanupInactiveSubscriptions(daysInactive);
@@ -257,6 +314,12 @@ router.post('/cleanup', async (req, res) => {
  */
 router.get('/subscriptions', async (req, res) => {
     try {
+        // Verificar y asegurar que el servicio esté inicializado
+        const isInitialized = await ensureInitialized(res);
+        if (!isInitialized) {
+            return; // ensureInitialized ya envió la respuesta HTTP 503
+        }
+
         const { userId, deviceType } = req.query;
 
         const filters = {};
@@ -308,6 +371,12 @@ router.get('/subscriptions', async (req, res) => {
  */
 router.get('/preferences/:subscriptionId', async (req, res) => {
     try {
+        // Verificar y asegurar que el servicio esté inicializado
+        const isInitialized = await ensureInitialized(res);
+        if (!isInitialized) {
+            return; // ensureInitialized ya envió la respuesta HTTP 503
+        }
+
         const { subscriptionId } = req.params;
 
         // Validar subscriptionId
@@ -362,6 +431,12 @@ router.get('/preferences/:subscriptionId', async (req, res) => {
  */
 router.post('/preferences/:subscriptionId', async (req, res) => {
     try {
+        // Verificar y asegurar que el servicio esté inicializado
+        const isInitialized = await ensureInitialized(res);
+        if (!isInitialized) {
+            return; // ensureInitialized ya envió la respuesta HTTP 503
+        }
+
         const { subscriptionId } = req.params;
         const preferences = req.body;
 
@@ -447,6 +522,12 @@ router.post('/preferences/:subscriptionId', async (req, res) => {
  */
 router.delete('/preferences/:subscriptionId', async (req, res) => {
     try {
+        // Verificar y asegurar que el servicio esté inicializado
+        const isInitialized = await ensureInitialized(res);
+        if (!isInitialized) {
+            return; // ensureInitialized ya envió la respuesta HTTP 503
+        }
+
         const { subscriptionId } = req.params;
 
         // Validar subscriptionId
