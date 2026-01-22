@@ -13,9 +13,27 @@
 ### Labels Disponibles
 | Label | Color | Descripción |
 |-------|-------|-------------|
+| `analytics` | 🟢 #28a745 | Analytics y métricas |
+| `architecture` | 🟠 #ff6600 | Arquitectura y diseño del sistema |
+| `back-end` | 🔵 #0366d6 | Backend y servicios |
+| `bug` | 🔴 #d73a4a | Algo no funciona correctamente |
+| `bug-prevention` | 🟡 #fbca04 | Prevención de bugs futuros |
+| `dependencies` | 🟣 #8b00ff | Gestión de dependencias |
 | `documentation` | 🔵 #0075ca | Mejoras o adiciones de documentación |
+| `duplicate` | ⚪ #cfd3d7 | Issue o PR duplicado |
+| `enhancement` | 🟢 #a2eeef | Nueva funcionalidad o mejora |
+| `front-end` | 🟦 #1d76db | Frontend y UI |
 | `good first issue` | 🟣 #7057ff | Bueno para principiantes |
-| `SQL` | 🔴 #ec5e39 | Issues relacionados con base de datos |
+| `help wanted` | 🟢 #008672 | Se necesita ayuda externa |
+| `invalid` | ⚫ #e4e669 | No es válido o no procede |
+| `npm` | 🔴 #cb3837 | Gestión de paquetes npm |
+| `question` | 🟣 #d876e3 | Pregunta o consulta |
+| `refactoring` | 🟠 #ff9933 | Refactorización de código |
+| `Release` | 🟢 #00ff00 | Release y versionado |
+| `security` | 🔴 #ee0701 | Seguridad y vulnerabilidades |
+| `SQL - BBDD` | 🔴 #ec5e39 | Base de datos y SQL |
+| `technical-debt` | 🟤 #b60205 | Deuda técnica |
+| `wontfix` | ⚪ #ffffff | No se trabajará en esto |
 
 ### Formato de Issues
 
@@ -42,12 +60,14 @@
 - **Documentación**: `[DOCS] Qué documentar`
 - **Refactor**: `[REFACTOR] Qué mejorar`
 - **SQL/BD**: `[SQL] Descripción del cambio`
+- **Release**: `[RELEASE] Paso a producción [v.XX.YY.ZZ]`
 
 **Ejemplos**:
 - ✅ `[DOCS] Documentación Inicial`
 - ✅ `[SQL] Creación de la base de datos desde cero`
 - ✅ `[FEATURE] Sistema de alertas v4.0`
 - ✅ `[BUG] Error en cálculo de promedios de temperatura`
+- ✅ `[RELEASE] Paso a producción [v.0.2.0]`
 
 ---
 
@@ -61,7 +81,9 @@
 - `dev` → Desarrollo activo (rama por defecto actualmente)
 
 ### Ramas de Feature/Fix
-**Formato**: `tipo/issue-numero-descripcion-corta`
+**Formato**: `tipo/descripcion-corta`
+
+> **Nota**: El número de issue NO va en el nombre de la rama. Debe estar incorporado en cada mensaje de commit.
 
 **Tipos de rama**:
 - `feature/` → Nuevas funcionalidades
@@ -69,24 +91,28 @@
 - `docs/` → Cambios de documentación
 - `refactor/` → Refactorización de código
 - `hotfix/` → Fixes urgentes en producción
+- `chore/` → Tareas de mantenimiento
 
 **Ejemplos**:
 ```bash
-feature/2-documentacion-inicial
-feature/1-creacion-base-datos
+feature/documentacion-inicial
+feature/creacion-base-datos
 fix/alertas-duplicadas
 docs/actualizar-readme
 refactor/collectors-pattern
 hotfix/critical-db-connection
+chore/actualizar-dependencias
 ```
 
 ### Reglas de Branches
 1. ✅ Crear rama desde `dev` (salvo hotfixes desde `main`)
-2. ✅ Nombre debe referenciar issue cuando aplique
+2. ✅ Número de issue DEBE estar en cada commit, NO en el nombre de rama
 3. ✅ Usar kebab-case
 4. ✅ Eliminar rama después de merge
-5. ❌ NO commitear directamente a `main`
+5. ❌ NO commitear directamente a `main` (SOLO acceso vía PR)
 6. ❌ NO commitear directamente a `dev` sin PR (excepto emergencias)
+
+> **Importante**: `main` es la rama más protegida. Solo se accede a través de Pull Requests aprobados por @felipecleverox O @TNSTRACK (al menos uno).
 
 ---
 
@@ -103,8 +129,9 @@ hotfix/critical-db-connection
    ```bash
    git checkout dev
    git pull origin dev
-   git checkout -b feature/2-documentacion-inicial
+   git checkout -b feature/documentacion-inicial
    ```
+   > Nota: El número de issue (#2) irá en los mensajes de commit, no en el nombre de la rama.
 
 3. **Desarrollo**
    - Commits frecuentes y descriptivos
@@ -116,7 +143,7 @@ hotfix/critical-db-connection
 
 5. **Push y PR**
    ```bash
-   git push origin feature/2-documentacion-inicial
+   git push origin feature/documentacion-inicial
    # Crear PR en GitHub
    ```
 
@@ -178,8 +205,9 @@ Refs: #45"
 1. ✅ Verbos en infinitivo ("agregar", "corregir")
 2. ✅ Primera línea <= 72 caracteres
 3. ✅ Referenciar issue: `Refs: #numero` o `Closes: #numero`
-4. ❌ NO commits genéricos ("cambios", "fix")
-5. ❌ NO mezclar múltiples propósitos
+4. ✅ **Un commit por cada archivo creado/eliminado/modificado** con explicación del porqué
+5. ❌ NO commits genéricos ("cambios", "fix")
+6. ❌ NO mezclar múltiples propósitos o archivos en un mismo commit
 
 ---
 
@@ -226,43 +254,22 @@ Closes #[numero]
 ### Issues Abiertos
 
 #### Issue #2: Documentación Inicial
+- **Enlace**: https://github.com/andresTNS/TNS_TRACK_DEMO/issues/2
 - **Estado**: OPEN
 - **Asignados**: Bufigol, andresTNS
 - **Labels**: `documentation`, `good first issue`
-- **Archivos**:
-  - ✅ README.md
-  - ✅ Base_de_Datos.md
-  - ✅ Apis_externas.md
-  - ✅ Info_Github.md
-- **Branch**: `docs/2-documentacion-inicial`
+- **Branch**: `chore/documentacion-inicial`
 
 #### Issue #1: Creación de la base de datos desde cero
+- **Enlace**: https://github.com/andresTNS/TNS_TRACK_DEMO/issues/1
 - **Estado**: OPEN
 - **Asignados**: Bufigol, andresTNS
-- **Labels**: `good first issue`, `SQL`
-- **Branch**: `feature/1-creacion-base-datos`
+- **Labels**: `good first issue`, `SQL - BBDD`
+- **Branch**: (aún no tiene rama específica)
 
 ---
 
-## 🏷️ Versionado (SemVer)
-
-### Formato
-`vMAJOR.MINOR.PATCH`
-
-- **MAJOR**: Cambios incompatibles
-- **MINOR**: Funcionalidad compatible
-- **PATCH**: Bug fixes compatibles
-
-### Prefijos Pre-release
-- `v0.x.x` → Desarrollo inicial
-- `v1.x.x-beta` → Beta testing
-- `v1.x.x-rc.1` → Release candidate
-
-### Milestones Recomendados
-- `v0.1.0` → Documentación inicial
-- `v0.2.0` → Base de datos creada
-- `v0.3.0` → Sistema de alertas funcional
-- `v1.0.0` → Primera versión en producción
+> **Nota sobre Versionado**: El versionado del proyecto se documenta en [README.md](README.md) y se gestiona mediante [CHANGELOG.md](CHANGELOG.md) siguiendo [Semantic Versioning](https://semver.org/) y [Keep a Changelog](https://keepachangelog.com/).
 
 ---
 
@@ -322,12 +329,14 @@ Thumbs.db
    - Crear PRs
    - Merge a dev
 
-### Protección de Branches (Recomendado)
+### Protección de Branches
 
-**Para `main`**:
-- [ ] Requiere PR
-- [ ] Requiere 1 aprobación
-- [ ] Requiere CI/CD passing
+> **Nota**: Las recomendaciones detalladas de protección de branches se documentarán en un issue separado.
+
+**Para `main` (rama principal de producción)**:
+- ✅ **SOLO acceso vía Pull Requests**
+- ✅ **Requiere aprobación de @felipecleverox O @TNSTRACK** (al menos uno)
+- [ ] Requiere CI/CD passing (pendiente configuración)
 - [ ] Prohibir force push
 - [ ] Prohibir delete
 
@@ -337,24 +346,7 @@ Thumbs.db
 
 ---
 
-## 📞 Comunicación
-
-### Canales
-- **Issues**: Discusión técnica
-- **PRs**: Code review
-- **[Otro]**: Comunicación general
-
-### Convenciones de Comentarios
-
-**En Issues**:
-- Usar @menciones
-- Agregar contexto
-- Cerrar con resumen
-
-**En PRs**:
-- Comentarios constructivos
-- Sugerir cambios específicos
-- Aprobar cuando esté listo
+> **Nota sobre Comunicación**: Las convenciones de comunicación están integradas en cada sección anterior (Issues, PRs, Commits). Usar @menciones, agregar contexto relevante y mantener comentarios constructivos en todas las interacciones.
 
 ---
 
@@ -369,6 +361,5 @@ Thumbs.db
 
 ---
 
-**Última actualización**: 2025-01-21  
-**Versión**: 1.0.0  
-**Mantenido por**: Equipo TNS (Bufigol, andresTNS)
+**Última actualización**: 2026-01-22
+**Versión**: 2.0.0
