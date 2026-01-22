@@ -5,12 +5,17 @@ Sistema integral de monitoreo y control inteligente para gestión de temperatura
 
 ## 🎯 Propósito del Proyecto
 
-**TNS Track** es una plataforma web desarrollada por **The Next Security** para el monitoreo y control en tiempo real de:
+**TNS Track** es un **sistema de demostración** desarrollado por **The Next Security** que sirve como:
+
+1. **Demo para posibles clientes**: Showcase completo de capacidades de monitoreo y control inteligente
+2. **Base sólida para futuras implementaciones**: Arquitectura probada y lista para replicar en proyectos productivos
+
+El sistema demuestra monitoreo y control en tiempo real de:
 
 - **Temperatura**: Monitoreo de cámaras frigoríficas y ambientes controlados
 - **Consumo Eléctrico**: Tracking de consumo energético de dispositivos
 - **GPS/Ubicación**: Seguimiento de personal y activos en tiempo real
-- **Alertas Inteligentes**: Sistema de notificaciones multi-canal (email, SMS, push)
+- **Alertas Inteligentes**: Sistema de notificaciones multi-canal (email, push)
 - **Reportes Ejecutivos**: Generación automática de informes en PDF
 
 ### Objetivos Principales
@@ -28,7 +33,7 @@ Sistema integral de monitoreo y control inteligente para gestión de temperatura
 - Sistema de alertas para situaciones críticas
 
 ### Público Objetivo
-Sistema de uso interno para el equipo de **The Next Security** y sus clientes.
+**Uso exclusivo del equipo interno de The Next Security**.
 
 ---
 
@@ -37,18 +42,22 @@ Sistema de uso interno para el equipo de **The Next Security** y sus clientes.
 ### Nomenclatura de Código
 
 #### Archivos JavaScript
-- **Archivos generales**: camelCase (ej: `shellyCollector.js`, `emailService.js`)
-- **Componentes React**: PascalCase + sufijo V2 (ej: `DashboardTemperaturaV2.js`)
-- **Servicios**: kebab-case + "-service" (ej: `database-service.js`, `total-energy-service.js`)
+⚠️ **REGLA UNIVERSAL**: Todos los archivos deben seguir **camelCase + sufijo según tipo**
+
+- **Collectors**: camelCase + "Collector" (ej: `shellyCollector.js`, `ubibotCollector.js`)
+- **Servicios**: camelCase + "Service" (ej: `emailService.js`, `databaseService.js`)
 - **Rutas**: camelCase + "Routes" (ej: `deviceRoutes.js`, `ubibotRoutes.js`)
 - **Controladores**: camelCase + "Controller" (ej: `alertScheduleController.js`)
-- **Collectors**: PascalCase + "Collector" (ej: `ShellyCollector`, `UbibotCollector`)
+- **Componentes React**: camelCase + sufijo descriptivo (ej: `dashboardTemperaturaV2.js`)
+- **Archivos CSS**: camelCase + ".css" (ej: `mainStyles.css`)
+- **Utilidades**: camelCase + "Utils" o "Helper" (ej: `dateUtils.js`, `apiHelper.js`)
+
+**Nota**: Estamos en proceso de refactorización para estandarizar toda la nomenclatura a esta convención.
 
 #### Nomenclatura de Variables
 - **Variables y funciones**: camelCase (ej: `userData`, `calculateTotal()`)
 - **Constantes**: UPPER_SNAKE_CASE (ej: `MAX_RETRIES`, `API_TIMEOUT`)
-- **Componentes React**: PascalCase (ej: `UserProfile`, `AlertCard`)
-- **Archivos CSS**: kebab-case (ej: `main-styles.css`)
+- **Clases y Componentes**: PascalCase (ej: `UserProfile`, `AlertCard`)
 
 ### Estructura de Carpetas
 
@@ -68,7 +77,6 @@ TNS_TRACK_DEMO/
 │   │   ├── services/                   # Servicios backend
 │   │   │   ├── api/                    # Adapters de APIs externas
 │   │   │   ├── email/                  # Servicio de emails
-│   │   │   ├── sms/                    # Servicio de SMS
 │   │   │   ├── push/                   # Push notifications
 │   │   │   └── reports/                # Generación de reportes
 │   │   ├── controllers/                # Controladores de rutas
@@ -76,7 +84,7 @@ TNS_TRACK_DEMO/
 │   │   ├── middlewares/                # Middlewares de Express
 │   │   ├── config/                     # Archivos de configuración
 │   │   │   ├── js_files/               # Loaders y configuración JS
-│   │   │   └── jsons/                  # unified-config.json
+│   │   │   └── jsons/                  # ⚠️ LEGACY - Migrando a BD
 │   │   ├── migrations/                 # Migraciones de BD
 │   │   ├── jobs/                       # Cron jobs y tareas programadas
 │   │   └── utils/                      # Utilidades compartidas
@@ -84,7 +92,7 @@ TNS_TRACK_DEMO/
 │   │   ├── service-worker.js           # Service Worker para PWA
 │   │   ├── manifest.json               # Manifest de PWA
 │   │   └── bundle.js                   # Bundle generado por Webpack
-│   ├── specs/                          # Especificaciones de features
+│   ├── specs/                          # ⚠️ DEPRECADO - Usar GitHub Issues
 │   ├── server.js                       # Servidor Express principal
 │   ├── package.json                    # Dependencias del proyecto
 │   └── webpack.config.js               # Configuración de Webpack
@@ -111,9 +119,11 @@ Ver detalles completos en [Base_de_Datos.md](./Base_de_Datos.md)
 
 ### Convenciones Git/GitHub
 - **Branches**: `tipo/issue-numero-descripcion` (ej: `feature/2-documentacion-inicial`)
-- **Commits**: Conventional Commits (ej: `feat(alertas): agregar sistema SMS`)
+- **Commits**: Conventional Commits (ej: `feat(alertas): agregar sistema de notificaciones`)
+- **Autoría**: **SIEMPRE reconocer la autoría de IAs y cualquier colaborador** que haya contribuido al commit
 - **PRs**: Requieren aprobación antes de merge
 - **Issues**: Usar labels apropiados (`documentation`, `SQL`, etc.)
+- **Especificaciones**: Usar GitHub Issues en lugar de carpeta `/specs`
 
 Ver detalles completos en [Info_Github.md](./Info_Github.md)
 
@@ -124,7 +134,8 @@ Ver detalles completos en [Info_Github.md](./Info_Github.md)
 ### Backend
 - **Runtime**: Node.js
 - **Framework**: Express 5.1.0
-- **Base de Datos**: MySQL/MariaDB (Driver: mysql2 ^3.15.2)
+- **Base de Datos**: MySQL (Driver: mysql2 ^3.15.2)
+- **Zona Horaria Base**: America/Santiago (Chile) - **SIEMPRE**
 - **Autenticación**:
   - JSON Web Tokens (jsonwebtoken ^9.0.2)
   - Encriptación: Argon2 ^0.44.0 + Bcrypt ^6.0.0
@@ -170,7 +181,6 @@ Ver detalles completos en [Info_Github.md](./Info_Github.md)
   - OpenAI SDK 6.8.1
   - Tiktoken 1.0.22 (conteo de tokens)
 - **Email**: SendGrid Mail 8.1.4
-- **SMS**: Twilio 5.4.2
 - **Push Notifications**: Web Push 3.6.7
 - **CSV Parsing**: csv-parser 3.2.0
 - **Fechas**:
@@ -233,7 +243,6 @@ El sistema utiliza un patrón de **Collectors** para recolectar datos de fuentes
 
 #### Servicios de Notificaciones
 - `email/emailService.js` - Envío de emails (SendGrid)
-- `sms/smsService.js` - Envío de SMS (Twilio)
 - `push/pushNotificationService.js` - Push notifications (Web Push)
 - `notificationService.js` - Orquestador de notificaciones
 - `baseAlertService.js` - Lógica base de alertas (v4.0.0)
@@ -281,77 +290,32 @@ Los controladores manejan la lógica de negocio y validación de endpoints:
 
 ### Rutas API
 
-El sistema expone múltiples endpoints REST:
+El sistema expone múltiples endpoints REST. Para el inventario completo y detallado de todos los endpoints, ver:
 
-- `/api/auth` - Autenticación (login, registro, reset password)
-- `/api/usuarios` - Gestión de usuarios
-- `/api/devices` - Dispositivos Shelly
-- `/api/ubibot` - Sensores Ubibot
-- `/api/config` - Configuración del sistema
-- `/api/totales` - Totales de energía
-- `/api/analysis` - Análisis de datos
-- `/api/power-analysis` - Análisis de consumo
-- `/api/gps` - Datos GPS
-- `/api/gps-data` - Histórico GPS
-- `/api/beacons` - Beacons de ubicación
-- `/api/blind-spots` - Zonas de puntos ciegos
-- `/api/personal` - Personal en terreno
-- `/api/sms` - Envío de SMS
-- `/api/sectores` - Sectores/zonas
-- `/api/consumo-categoria` - Consumo por categoría
-- `/api/push-notifications` - Push notifications
-- `/api/alert-tracking` - Tracking de alertas
-- `/api/alert-schedule` - Horarios de alertas
-- `/api/presets` - Presets de usuario
-- `/api/reports` - Generación de reportes
-- `/api/ai-analysis` - Análisis con IA
-- `/api/dashboard` - Datos de dashboards
+**[Endpoints_API.md](./Endpoints_API.md)** - Documentación completa de todos los endpoints internos
 
-Ver documentación completa en código de cada ruta.
+### Sistema de Configuración
 
-### Sistema de Configuración Unificado
+⚠️ **IMPORTANTE - EN MIGRACIÓN A BASE DE DATOS**
 
-Todo el sistema se configura mediante `unified-config.json`:
+El sistema está migrando de archivos de configuración a base de datos centralizada.
 
+**Estado Actual (LEGACY)**:
+- Carpeta: `/servicios/src/config/jsons/` - ⚠️ En proceso de eliminación
+- Archivo: `unified-config.json` - Se está migrando a BD
+- Solo quedará información que no pueda almacenarse en BD
+
+**Configuración Vigente**:
 ```javascript
-{
-  "server": {
-    "port": 1337,
-    "cors": ["http://localhost:3000"]
-  },
-  "database": {
-    "host": "localhost",
-    "user": "root",
-    "database": "tns_cool_track",
-    "charset": "utf8mb4",
-    "timezone": "America/Santiago"
-  },
-  "api": {
-    "shelly_cloud": {
-      "url": "https://shelly-33-eu.shelly.cloud/device/status",
-      "auth_key": "YOUR_TOKEN"
-    },
-    "ubibot": {
-      "url": "https://api.ubibot.com/channels/",
-      "account_key": "YOUR_KEY"
-    }
-  },
-  "email": {
-    "SENDGRID_API_KEY": "SG.xxx",
-    "from": "alertas@thenextsecurity.cl"
-  },
-  "sms": {
-    "TWILIO_ACCOUNT_SID": "ACxxx",
-    "TWILIO_AUTH_TOKEN": "xxx",
-    "TWILIO_PHONE_NUMBER": "+56xxx"
-  },
-  "collection": {
-    "intervalSeconds": 10
-  }
-}
+// config-loader.js - SIGUE VIGENTE
+// Revisa periódicamente la BD para cambios de configuración
+const configLoader = require('./src/config/js_files/config-loader');
 ```
 
-**Loader**: `src/config/js_files/config-loader.js`
+**Decisión Técnica**: Por diseño, **NO se utilizan variables de entorno** (`.env`).
+Toda configuración se gestiona desde base de datos.
+
+Ver detalles en [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md)
 
 ---
 
@@ -371,18 +335,13 @@ Todo el sistema se configura mediante `unified-config.json`:
 - **Gestión GitHub**: [Info_Github.md](./Info_Github.md) - Workflow y convenciones
 
 ### Recursos Técnicos
-- **Shelly API Docs**: https://shelly-api-docs.shelly.cloud/
-- **Ubibot**: https://www.ubibot.com/
-- **SendGrid Docs**: https://docs.sendgrid.com/
-- **Twilio Docs**: https://www.twilio.com/docs
-- **Mapbox Docs**: https://docs.mapbox.com/
-- **PostHog Docs**: https://posthog.com/docs
+Ver documentación completa en [Recursos_Tecnicos.md](./Recursos_Tecnicos.md)
 
 ---
 
 ## 🔌 APIs Externas (Resumen)
 
-El proyecto integra **9 APIs externas**:
+El proyecto integra **8 APIs externas**:
 
 | API | Propósito | Criticidad |
 |-----|-----------|------------|
@@ -390,7 +349,6 @@ El proyecto integra **9 APIs externas**:
 | Ubibot | Datos de temperatura | ⚠️ CRÍTICA |
 | OnPremise TNS | API interna legacy | 🔶 ALTA (deshabilitada) |
 | SendGrid | Emails | 🔶 ALTA |
-| Twilio | SMS | 🔶 ALTA |
 | DeepSeek | Análisis IA | 🟢 MEDIA |
 | QuickChart | Gráficos PDF | 🟢 MEDIA |
 | Mapbox | Mapas GPS | 🟡 BAJA |
@@ -424,159 +382,26 @@ Ver esquema completo en [Base_de_Datos.md](./Base_de_Datos.md)
 
 ## 🚦 Decisiones Técnicas Clave
 
-### 1. Arquitectura Modular por Collectors
-**Decisión**: Separar recolección de datos en Collectors independientes
+### Principios de Desarrollo
 
-**Razón**:
-- Separación de responsabilidades por fuente de datos
-- Facilita mantenimiento y testing
-- Permite escalar fuentes de datos independientemente
+1. **KISS (Keep It Simple, Stupid)** - Priorizar simplicidad sobre complejidad
+2. **DRY (Don't Repeat Yourself)** - Evitar duplicación de código mediante modularización
+3. **Modularización Máxima** - Separar responsabilidades en módulos independientes
 
-**Impacto**:
-- Mayor claridad en el código
-- Facilita agregar nuevas fuentes de datos
-- Permite configurar intervalos diferentes por fuente
+### Decisiones Arquitectónicas
 
----
+1. **Arquitectura Modular por Collectors**
+2. **Migración de Configuración a Base de Datos** ⚠️ EN PROGRESO
+3. **Sistema de Alertas v4.0.0 Modular**
+4. **PWA con Service Workers**
+5. **Reportes PDF con Templates Ejecutivos**
+6. **React 19.2.0 + TailwindCSS**
+7. **Express 5.1.0** (versión moderna)
+8. **NO uso de Variables de Entorno** (por diseño)
+9. **Zona Horaria Base: America/Santiago** (siempre)
+10. **DeepSeek como Provider de IA**
 
-### 2. Sistema de Configuración Unificado (`unified-config.json`)
-**Decisión**: Centralizar toda configuración en un único archivo JSON
-
-**Razón**:
-- Evitar hardcodeo de credenciales en código
-- Facilitar cambios de configuración sin modificar código
-- Simplificar despliegue en diferentes entornos
-
-**Impacto**:
-- Configuración más mantenible
-- Riesgo: archivo debe estar protegido (no versionarlo con keys reales)
-- Facilita onboarding de nuevos desarrolladores
-
----
-
-### 3. Sistema de Alertas v4.0.0 Modular
-**Decisión**: Crear `baseAlertService.js` como clase base para email/SMS/push
-
-**Razón**:
-- Reutilización de lógica común (horarios, destinatarios, cooldown)
-- Consistencia entre canales
-- Reducción de duplicación de código
-
-**Impacto**:
-- Código más DRY
-- Facilita agregar nuevos canales de notificación
-- Mantenimiento centralizado de lógica de alertas
-
----
-
-### 4. PWA con Service Workers
-**Decisión**: Implementar Progressive Web App con service workers
-
-**Razón**:
-- Experiencia nativa en dispositivos móviles
-- Push notifications sin app nativa
-- Funcionamiento offline parcial
-
-**Impacto**:
-- Mejor UX en móviles
-- Push notifications funcionan en iOS/Android
-- Mayor engagement de usuarios
-
-**Archivos**:
-- `public/service-worker.js`
-- `public/manifest.json`
-
----
-
-### 5. Reportes PDF con Templates Ejecutivos
-**Decisión**: Sistema de reportes con templates especializados por tipo
-
-**Razón**:
-- Automatización de generación de reportes
-- Consistencia visual
-- Profesionalización de outputs
-
-**Impacto**:
-- Reducción de trabajo manual
-- Reportes programables automáticamente
-- Mejor presentación a clientes
-
-**Templates**:
-- `executiveAlertsTemplate.js`
-- `executiveConsumptionTemplate.js`
-- `executiveTemperatureTemplate.js`
-
----
-
-### 6. React 19.2.0 + TailwindCSS
-**Decisión**: Stack moderno de frontend
-
-**Razón**:
-- React 19: Últimas optimizaciones de performance
-- TailwindCSS: Desarrollo rápido y consistencia visual
-- Componentes Radix UI: Accesibilidad out-of-the-box
-
-**Impacto**:
-- Desarrollo más rápido
-- UI más consistente
-- Mejor performance del frontend
-
----
-
-### 7. Express 5.1.0 (versión moderna)
-**Decisión**: Usar Express 5 en lugar de versiones anteriores
-
-**Razón**:
-- Mejor manejo de promesas (no necesita wrappers)
-- Performance mejorado
-- Router más robusto
-
-**Impacto**:
-- Menos boilerplate en async/await
-- Código más limpio en controladores
-
----
-
-### 8. Múltiples Librerías de Fechas
-**Decisión**: Usar date-fns, dayjs, luxon y moment-timezone simultáneamente
-
-**Estado**: ⚠️ Posible punto de mejora
-
-**Razón** (histórica):
-- Diferentes necesidades en diferentes partes del código
-- Migraciones incompletas entre librerías
-
-**Impacto**:
-- Bundle más pesado
-- Posible inconsistencia en manejo de zonas horarias
-- **Recomendación futura**: Estandarizar en una sola (date-fns o luxon)
-
----
-
-### 9. Argon2 + Bcrypt para Passwords
-**Decisión**: Doble librería de hashing
-
-**Razón posible**:
-- Transición entre sistemas
-- Compatibilidad con usuarios legacy
-
-**Impacto**:
-- Mayor seguridad
-- Flexibilidad en autenticación
-
----
-
-### 10. DeepSeek como Provider de IA
-**Decisión**: Usar DeepSeek en lugar de OpenAI directamente
-
-**Razón**:
-- API compatible con OpenAI
-- Posible ventaja de costo
-- Mantenimiento de flexibilidad (fácil cambiar a OpenAI)
-
-**Impacto**:
-- SDK OpenAI funciona directamente
-- Tracking de costos implementado
+**Ver detalles completos de cada decisión en:** [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md)
 
 ---
 
@@ -584,7 +409,7 @@ Ver esquema completo en [Base_de_Datos.md](./Base_de_Datos.md)
 
 ### Prerrequisitos
 - Node.js >= 18.x
-- MySQL/MariaDB >= 8.x
+- MySQL >= 8.x
 - npm >= 9.x
 
 ### Instalación
@@ -601,17 +426,20 @@ npm install
 # 1. Crear base de datos (ver SQL_FILES/01_creacion_desde_cero/)
 mysql -u root -p < ../SQL_FILES/01_creacion_desde_cero/01_tablas_base.sql
 
-# 2. Configurar unified-config.json
+# 2. Configurar unified-config.json (⚠️ LEGACY - migrando a BD)
 cp src/config/jsons/unified-config.example.json src/config/jsons/unified-config.json
-# Editar con tus credenciales
-
-# 3. Configurar variables de entorno (opcional)
-cp .env.example .env
-# Editar con tus valores
+# Editar con tus credenciales de base de datos
 ```
 
 ### Ejecución en Desarrollo
 
+**⚠️ MÉTODO RECOMENDADO**:
+```bash
+# Comando completo: limpia, instala dependencias, build y arranca todo
+npm run comenzar
+```
+
+**Opciones alternativas**:
 ```bash
 # Opción 1: Iniciar todo (webpack dev + backend)
 npm run start-all
@@ -625,7 +453,7 @@ npm run start-server
 ```
 
 **Acceso**:
-- Frontend: http://localhost:3000
+- **Aplicación**: [http://localhost:3000/tns_cool_track](http://localhost:3000/tns_cool_track)
 - Backend API: http://localhost:1337
 
 ### Ejecución en Producción
@@ -676,9 +504,11 @@ npm run comenzar
 
 **The Next Security**
 
-**Desarrolladores Asignados:**
+**Estructura del Equipo:**
+- **andresTNS** - Jefe de Desarrolladores / Owner del Repositorio
 - **Bufigol** - Developer
-- **andresTNS** - Developer / Owner del Repositorio
+- **TNSTRACK** - Product Owner
+- **felipecleverox** - Product Owner
 
 ---
 
@@ -686,11 +516,15 @@ npm run comenzar
 
 ### Documentos del Proyecto
 - **[Base de Datos](./Base_de_Datos.md)** - Esquema completo, tablas, stored procedures, triggers
-- **[APIs Externas](./Apis_externas.md)** - Documentación detallada de las 9 APIs utilizadas
+- **[APIs Externas](./Apis_externas.md)** - Documentación detallada de las 8 APIs utilizadas
 - **[Gestión GitHub](./Info_Github.md)** - Workflow, convenciones de commits, branches y PRs
+- **[Decisiones Técnicas](./Decisiones_Tecnicas.md)** - Decisiones arquitectónicas detalladas
+- **[Endpoints API](./Endpoints_API.md)** - Inventario completo de endpoints internos
+- **[Recursos Técnicos](./Recursos_Tecnicos.md)** - Enlaces y recursos técnicos
+- **[Troubleshooting](./Troubleshooting.md)** - Guía de resolución de problemas
 
 ### Documentos Técnicos Internos
-- `/servicios/specs/` - Especificaciones de features
+- ~~`/servicios/specs/`~~ - ⚠️ **DEPRECADO** - Usar GitHub Issues
 - `/servicios/src/components/alerts/README.md` - Sistema de alertas v4.0
 - `/servicios/src/components/reports/UX_TESTING_GUIDE.md` - Guía de testing UX
 
@@ -709,9 +543,10 @@ npm run comenzar
 
 ### Variables Sensibles
 ⚠️ **IMPORTANTE**: Nunca versionar en Git:
-- `unified-config.json` con keys reales
-- `.env` con credenciales
+- `unified-config.json` con keys reales (⚠️ LEGACY - migrando a BD)
 - Archivos con tokens/secrets
+
+**Nota**: Por decisión técnica, **NO se utilizan variables de entorno** (`.env`). Toda configuración se gestiona desde base de datos.
 
 ### CORS
 Configurado en `server.js`:
@@ -726,62 +561,25 @@ corsOptions = {
 
 ## 🐛 Troubleshooting
 
-### Problema: "Cannot connect to database"
-**Solución**:
-1. Verificar que MySQL esté corriendo
-2. Verificar credenciales en `unified-config.json`
-3. Verificar que base de datos `tns_cool_track` existe
+Para la guía completa de resolución de problemas, ver:
 
-### Problema: "API key invalid" (Shelly/Ubibot)
-**Solución**:
-1. Verificar keys en `unified-config.json`
-2. Verificar formato de la key (no debe tener espacios)
-3. Verificar que key tenga permisos adecuados
-
-### Problema: "Port 1337 already in use"
-**Solución**:
-```bash
-# Encontrar proceso
-lsof -i :1337
-
-# Matar proceso
-kill -9 <PID>
-
-# O cambiar puerto en unified-config.json
-```
-
-### Problema: Webpack dev server no arranca
-**Solución**:
-```bash
-# Limpiar node_modules y reinstalar
-rm -rf node_modules package-lock.json
-npm install
-```
+**[Troubleshooting.md](./Troubleshooting.md)** - Guía detallada con soluciones a problemas comunes
 
 ---
 
 ## 📝 Notas de Versión
 
-### v0.1.0 (Actual)
-- ✅ Documentación inicial completada
-- ✅ Sistema de Collectors implementado
-- ✅ Sistema de Alertas v4.0.0 funcional
-- ✅ Reportes PDF con templates ejecutivos
-- ✅ PWA con push notifications
-- ⏳ Base de datos en proceso de documentación completa (Issue #1)
+Para el historial completo de cambios, ver:
+
+**[CHANGELOG.md](./CHANGELOG.md)** - Registro detallado de todas las versiones y cambios
 
 ---
 
 ## 🚀 Roadmap Futuro
 
-### Próximas Mejoras
-- [ ] Estandarizar librería de fechas (eliminar redundancia)
-- [ ] Implementar tests unitarios (Jest)
-- [ ] Implementar tests E2E (Cypress/Playwright)
-- [ ] Dockerizar aplicación
-- [ ] CI/CD con GitHub Actions
-- [ ] Documentación de API con Swagger/OpenAPI
-- [ ] Secrets manager para producción (AWS Secrets Manager / HashiCorp Vault)
+Para el plan de desarrollo y seguimiento de issues, ver:
+
+**[ROADMAP.md](./ROADMAP.md)** - Planificación de features y tracking de progreso
 
 ---
 
@@ -793,6 +591,6 @@ Este proyecto es de uso interno exclusivo para The Next Security y sus clientes 
 
 ---
 
-**Última actualización**: 2025-01-21
-**Versión de documentación**: 1.0.0
-**Mantenido por**: Equipo TNS (Bufigol, andresTNS)
+**Última actualización**: 2026-01-22
+**Versión de documentación**: 2.0.0
+**Mantenido por**: Equipo TNS (andresTNS - Jefe de Desarrolladores, Bufigol - Developer)
