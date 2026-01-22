@@ -25,6 +25,7 @@
 | `front-end` | 🟦 #1d76db | Frontend y UI |
 | `good first issue` | 🟣 #7057ff | Bueno para principiantes |
 | `help wanted` | 🟢 #008672 | Se necesita ayuda externa |
+| `IMPORTANT` | 🔴 #ff0000 | ⚠️ PRIORIDAD MÁXIMA - Issues que requieren atención inmediata |
 | `invalid` | ⚫ #e4e669 | No es válido o no procede |
 | `npm` | 🔴 #cb3837 | Gestión de paquetes npm |
 | `question` | 🟣 #d876e3 | Pregunta o consulta |
