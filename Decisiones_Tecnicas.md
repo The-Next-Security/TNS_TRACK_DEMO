@@ -2,7 +2,7 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-22
+> **Última actualización**: 2026-01-26
 > **Versión**: 2.0.0
 > **Propósito**: Documentar todas las decisiones arquitectónicas y técnicas del proyecto
 
@@ -12,7 +12,7 @@
 
 1. [Arquitectura Modular por Collectors](#1-arquitectura-modular-por-collectors)
 2. [Migración de Configuración a Base de Datos](#2-migración-de-configuración-a-base-de-datos)
-3. [Sistema de Alertas v4.0.0 Modular](#3-sistema-de-alertas-v400-modular)
+3. [Sistema de Alertas Modular](#3-sistema-de-alertas-modular)
 4. [PWA con Service Workers](#4-pwa-con-service-workers)
 5. [Reportes PDF con Templates Ejecutivos](#5-reportes-pdf-con-templates-ejecutivos)
 6. [React 19.2.0 + TailwindCSS](#6-react-1920--tailwindcss)
@@ -110,13 +110,15 @@ const configLoader = require('./src/config/js_files/config-loader');
 
 ---
 
-## 3. Sistema de Alertas v4.0.0 Modular
+## 3. Sistema de Alertas Modular
+
+> **Nota**: Esta sección será actualizada con detalles específicos cuando se completen Issues #1 (Creación de BD) y #3 (Tabla de configuración).
 
 ### Contexto
 Las versiones anteriores del sistema de alertas eran monolíticas y difíciles de extender. Se necesitaba un sistema flexible que soportara múltiples tipos de alertas, canales de notificación y condiciones complejas.
 
 ### Decisión
-Implementar **Sistema de Alertas v4.0.0** con arquitectura modular basada en:
+Implementar **Sistema de Alertas Modular** con arquitectura modular basada en:
 - **Plantillas reutilizables**
 - **Canales de notificación independientes**
 - **Condiciones configurables**
@@ -138,10 +140,7 @@ Implementar **Sistema de Alertas v4.0.0** con arquitectura modular basada en:
 - ✅ Programación flexible (cron-based)
 
 ### Estado Actual
-✅ **Implementado y funcional** - v4.0.0 en producción
-
-### Documentación Técnica
-Ver `/servicios/src/components/alerts/README.md` para detalles completos de implementación.
+✅ **Implementado y funcional** - en producción
 
 ---
 
@@ -409,8 +408,11 @@ Usar **MySQL** (NO MariaDB) como base de datos principal.
 
 ## 📝 Historial de Cambios
 
+> **Nota**: Para historial detallado de cambios del proyecto, ver [CHANGELOG.md](./CHANGELOG.md)
+
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-01-26 | Documentación actualizada según feedback Issue #2 | andresTNS, Bufigol |
 | 2026-01-22 | Documentación completa de decisiones técnicas | andresTNS, Bufigol |
 | 2026-01-15 | Eliminación de SMS/Twilio | andresTNS |
 | 2026-01-10 | Migración a BD iniciada | andresTNS |
@@ -419,9 +421,11 @@ Usar **MySQL** (NO MariaDB) como base de datos principal.
 
 ## 🔄 Decisiones en Revisión
 
-Ninguna decisión está en revisión actualmente.
+| Decisión | Estado | Issue | Posible Impacto |
+|----------|--------|-------|-----------------|
+| _Ninguna decisión en revisión actualmente_ | - | - | - |
 
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-22
+**Última revisión**: 2026-01-26
