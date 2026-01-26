@@ -2,7 +2,7 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-22
+> **Última actualización**: 2026-01-26
 > **Versión**: 2.0.0
 > **Propósito**: Enlaces y recursos técnicos del proyecto
 
@@ -10,12 +10,37 @@
 
 ## 📋 Índice
 
-1. [Documentación Oficial de Tecnologías](#documentación-oficial-de-tecnologías)
-2. [APIs Externas](#apis-externas)
-3. [Librerías y Frameworks](#librerías-y-frameworks)
-4. [Herramientas de Desarrollo](#herramientas-de-desarrollo)
-5. [Recursos Internos del Proyecto](#recursos-internos-del-proyecto)
+1. [Recursos Internos del Proyecto](#recursos-internos-del-proyecto)
+2. [Documentación Oficial de Tecnologías](#documentación-oficial-de-tecnologías)
+3. [APIs Externas](#apis-externas)
+4. [Librerías y Frameworks](#librerías-y-frameworks)
+5. [Herramientas de Desarrollo](#herramientas-de-desarrollo)
 6. [Tutoriales y Guías](#tutoriales-y-guías)
+
+---
+
+## Recursos Internos del Proyecto
+
+### Documentación del Proyecto
+
+#### Documentación Principal
+- **[README.md](./README.md)** - Documentación general del proyecto
+- **[Base_de_Datos.md](./Base_de_Datos.md)** - Esquema de base de datos, tablas, stored procedures, triggers
+- **[Apis_externas.md](./Apis_externas.md)** - Documentación de las 8 APIs externas utilizadas
+- **[Info_Github.md](./Info_Github.md)** - Workflow Git, convenciones de commits, branches y PRs
+
+#### Documentación Técnica
+- **[Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md)** - Decisiones arquitectónicas y técnicas
+- **[Endpoints_API.md](./Endpoints_API.md)** - Inventario completo de endpoints internos
+- **[Troubleshooting.md](./Troubleshooting.md)** - Guía de resolución de problemas
+- **[CHANGELOG.md](./CHANGELOG.md)** - Historial de cambios
+- **[ROADMAP.md](./ROADMAP.md)** - Planificación de features
+
+---
+
+### Scripts SQL
+- **`/SQL_FILES/01_creacion_desde_cero/`** - Scripts de creación de base de datos
+- **`/SQL_FILES/02_actualizaciones/`** - Scripts de actualización de esquema
 
 ---
 
@@ -275,56 +300,6 @@
 
 ---
 
-## Recursos Internos del Proyecto
-
-### Documentación del Proyecto
-
-#### Documentación Principal
-- **[README.md](./README.md)** - Documentación general del proyecto
-- **[Base_de_Datos.md](./Base_de_Datos.md)** - Esquema de base de datos, tablas, stored procedures, triggers
-- **[Apis_externas.md](./Apis_externas.md)** - Documentación de las 8 APIs externas utilizadas
-- **[Info_Github.md](./Info_Github.md)** - Workflow Git, convenciones de commits, branches y PRs
-
-#### Documentación Técnica
-- **[Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md)** - Decisiones arquitectónicas y técnicas
-- **[Endpoints_API.md](./Endpoints_API.md)** - Inventario completo de endpoints internos
-- **[Troubleshooting.md](./Troubleshooting.md)** - Guía de resolución de problemas
-- **[CHANGELOG.md](./CHANGELOG.md)** - Historial de cambios
-- **[ROADMAP.md](./ROADMAP.md)** - Planificación de features
-
-#### Documentación de Componentes
-- **`/servicios/src/components/alerts/README.md`** - Sistema de alertas v4.0.0
-- **`/servicios/src/components/reports/UX_TESTING_GUIDE.md`** - Guía de testing UX para reportes
-
----
-
-### Archivos de Configuración
-
-#### Configuración de Dependencias
-- **`/servicios/package.json`** - Dependencias del proyecto
-- **`/servicios/package-lock.json`** - Lockfile de npm
-
-#### Configuración de Build
-- **`/servicios/webpack.config.js`** - Configuración de Webpack
-- **`/servicios/.babelrc`** - Configuración de Babel (si existe)
-- **`/servicios/tailwind.config.js`** - Configuración de TailwindCSS
-- **`/servicios/postcss.config.js`** - Configuración de PostCSS
-
-#### Configuración del Sistema (LEGACY - Migrando a BD)
-- **⚠️ `/servicios/src/config/jsons/unified-config.json`** - Configuración unificada (en proceso de migración)
-- **⚠️ `/servicios/src/config/jsons/unified-config.example.json`** - Ejemplo de configuración
-
-#### Configuración en Base de Datos
-- **`/servicios/src/config/js_files/config-loader.js`** - Cargador de configuración desde BD
-
----
-
-### Scripts SQL
-- **`/SQL_FILES/01_creacion_desde_cero/`** - Scripts de creación de base de datos
-- **`/SQL_FILES/02_actualizaciones/`** - Scripts de actualización de esquema
-
----
-
 ## Tutoriales y Guías
 
 ### Tutoriales de Node.js + Express
@@ -406,7 +381,7 @@
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-22
+**Última revisión**: 2026-01-26
 
 ---
 
