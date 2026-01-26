@@ -5,7 +5,7 @@
 - **Nombre**: `tns_cool_track`
 - **Charset**: utf8mb4
 - **Collation**: utf8mb4_unicode_ci
-- **DBMS**: MySQL/MariaDB
+- **DBMS**: MySQL 8.0+
 - **Driver Node.js**: mysql2 (versión ^3.15.2)
 - **Zona Horaria**: America/Santiago (Chile)
 
@@ -72,6 +72,8 @@ USE tns_cool_track;
   - Timestamps opcionales (`updated_at`, `deleted_at`)
   - Referencias opcionales (Foreign Keys que pueden ser nulos)
   - Campos calculados o derivados
+
+> **Nota**: Las convenciones de nomenclatura serán formalizadas y estandarizadas en Issues #1 (Creación de BD) y #3 (Tabla de configuración).
 
 ---
 
@@ -761,105 +763,6 @@ SET NEW.updated_at = NOW();
 
 ---
 
-## 📍 Migraciones
-
-**Ubicación**: `/servicios/src/migrations/`
-
-### Migraciones Identificadas
-
-#### `20251023_create_kpi_view.js`
-- **Fecha**: 2025-10-23
-- **Propósito**: Creación de vista agregada de KPIs
-- **Impacto**: Performance mejorado en dashboards principales
-- **Reversible**: Sí (DROP VIEW)
-
----
-
-#### `20251110_restore_device_names.js`
-- **Fecha**: 2025-11-10
-- **Propósito**: Restauración de nombres de dispositivos
-- **Contexto**: Recuperación tras posible pérdida de datos
-- **Impacto**: Datos de configuración de dispositivos
-
----
-
-### Convenciones de Migraciones
-
-**Naming**: `YYYYMMDD_descripcion_cambio.js`
-
-**Estructura esperada**:
-```javascript
-module.exports = {
-  up: async (connection) => {
-    // SQL de aplicación del cambio
-    await connection.query(`
-      ALTER TABLE ...
-    `);
-  },
-  down: async (connection) => {
-    // SQL de reversión (si es posible)
-    await connection.query(`
-      ALTER TABLE ...
-    `);
-  }
-};
-```
-
----
-
-## 🔐 Seguridad
-
-### Encriptación de Contraseñas
-
-**Tabla**: `usuarios.password`
-**Algoritmos**: Argon2 (preferido) + Bcrypt (legacy)
-
-**Librerías**:
-- `argon2` ^0.44.0
-- `bcrypt` ^6.0.0
-
-**Servicio**: Autenticación implementada en `usuariosController.js`
-
-**Formato de hash**:
-- Argon2: `$argon2id$v=19$m=...`
-- Bcrypt: `$2b$10$...`
-
----
-
-### Tokens JWT
-
-**Servicio**: `jwt-service.js`
-**Expiración**: Configurable via `unified-config.json`
-**Storage**:
-- Backend: Cookies HTTP-only
-- No almacenados en BD (stateless)
-
-**Refresh Tokens**: No implementados actualmente (considerar para futuro)
-
----
-
-### SQL Injection Protection
-
-**Método**: Prepared Statements via mysql2
-**Servicio**: `database-service.js` usa pool con placeholders `?`
-
-**Ejemplo correcto**:
-```javascript
-await connection.query(
-  'SELECT * FROM usuarios WHERE email = ?',
-  [email]
-);
-```
-
-**❌ Nunca hacer**:
-```javascript
-await connection.query(
-  `SELECT * FROM usuarios WHERE email = '${email}'`
-);
-```
-
----
-
 ## 📊 Backup y Mantenimiento
 
 ### Scripts SQL
@@ -925,51 +828,6 @@ WHERE timestamp < DATE_SUB(NOW(), INTERVAL 1 YEAR);
 
 ---
 
-## 🔗 Conexiones y Pool
-
-### Configuración de Conexión
-
-**Servicio**: `database-service.js`
-**Pool**: `mysql2/promise` con pool de conexiones
-
-**Configuración estimada**:
-```javascript
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: '***',
-  database: 'tns_cool_track',
-  charset: 'utf8mb4',
-  timezone: 'America/Santiago',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
-});
-```
-
-**Fuente de configuración**: `unified-config.json` o variables de entorno
-
----
-
-### Ejemplo de Configuración
-
-**unified-config.json**:
-```json
-{
-  "database": {
-    "host": "localhost",
-    "user": "tns_user",
-    "password": "secure_password_here",
-    "database": "tns_cool_track",
-    "charset": "utf8mb4",
-    "timezone": "America/Santiago",
-    "connectionLimit": 10
-  }
-}
-```
-
----
-
 ## 📝 Notas Importantes
 
 ### ⚠️ Verificación Pendiente
@@ -1031,7 +889,7 @@ Este issue se encargará de:
 
 ---
 
-**Última actualización**: 2025-01-21
+**Última actualización**: 2026-01-26
 **Versión**: 1.0.0 (basada en análisis de código)
 **Estado**: ⚠️ Requiere verificación contra BD real
 **Mantenido por**: Equipo TNS
