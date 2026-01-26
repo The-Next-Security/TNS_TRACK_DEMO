@@ -20,6 +20,8 @@ push-notification-test.log
 
 # Archivos de sistema
 .claude
-.github
 .playwright-mcp
 .specify
+
+# Lecciones aprendidas del proyecto
+LECCIONES_APRENDIDAS.md
