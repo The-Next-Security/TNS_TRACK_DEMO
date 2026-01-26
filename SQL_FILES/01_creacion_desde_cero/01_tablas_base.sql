@@ -81,6 +81,15 @@ CREATE TABLE `gen_feriados_cl` (
   UNIQUE KEY `uk_fecha` (`fecha`)
 ) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de feriados legales en Chile';
 
+CREATE TABLE `gen_ubicaciones_reales` (
+  `id_ubicacion_real` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre de la ubicación real',
+  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Descripción de la ubicación real',
+  `activo` tinyint DEFAULT '1',
+  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de ubicaciones reales';
+
 CREATE TABLE `rep_report_type` (
   `id_report_type` int NOT NULL AUTO_INCREMENT,
   `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre del tipo de reporte',
@@ -129,3 +138,220 @@ CREATE TABLE `rep_scheduled_reports` (
   PRIMARY KEY (`id_scheduled_report`),
   UNIQUE KEY `uk_nombre` (`nombre`)
 ) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de reportes programados';
+
+CREATE TABLE `rep_schedule_execution_log` (
+  `id_schedule_execution_log` int NOT NULL AUTO_INCREMENT,
+  `id_scheduled_report` int NOT NULL COMMENT 'FK a rep_scheduled_reports.id_scheduled_report',
+  `id_generated_report` int NULL COMMENT 'FK a rep_generated_reports.id_generated_report',
+  `execution_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de ejecución del reporte programado',
+  `execution_status` enum('success','failed','skipped') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Estado de ejecución del reporte programado',
+  `execution_duration_seconds` INT NOT NULL COMMENT 'Tiempo de ejecución del reporte programado',
+  `execution_error` TEXT COMMENT 'Error de ejecución del reporte programado',
+  PRIMARY KEY (`id_schedule_execution_log`),
+  INDEX `idx_schedule_execution_log_id_scheduled_report` (`id_scheduled_report`),
+  INDEX `idx_schedule_execution_log_id_generated_report` (`id_generated_report`),
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de log de ejecución de reportes programados';
+
+CREATE TABLE `ubi_channel` (
+  `id_channel` int NOT NULL AUTO_INCREMENT,
+  `id_ubicacion_real` int NOT NULL COMMENT 'FK a gen_ubicaciones_reales.id_ubicacion_real',
+  `channel_id` int NOT NULL COMMENT 'ID del canal',
+  `product_id` int NOT NULL COMMENT 'ID del producto',
+  `device_id` int NOT NULL COMMENT 'ID del dispositivo',
+  `latitude` decimal(10,8) NOT NULL COMMENT 'Latitud del canal',
+  `longitude` decimal(11,8) NOT NULL COMMENT 'Longitud del canal',
+  `firmware` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Firmware del canal',
+  `mac_address` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'MAC address del canal',
+  `is_online` tinyint DEFAULT '1' COMMENT 'Indica si el canal está en línea',
+  `threshold_min_temperature` decimal(10,2) NOT NULL COMMENT 'Umbral mínimo de temperatura del canal',
+  `threshold_max_temperature` decimal(10,2) NOT NULL COMMENT 'Umbral máximo de temperatura del canal',
+  `threshold_updated_at` timestamp NULL DEFAULT NULL COMMENT 'Fecha de última actualización del umbral de temperatura',
+  `threshold_updated_by` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Usuario que actualizó el umbral de temperatura',
+  `last_alert_sent` timestamp NULL DEFAULT NULL COMMENT 'Fecha de último alerta enviada',
+  `activo` tinyint DEFAULT '1' COMMENT 'Indica si el canal está activo',
+  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del canal',
+  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de actualización del canal',
+  PRIMARY KEY (`id_channel`),
+  UNIQUE KEY `uk_channel_id` (`channel_id`),
+  INDEX `idx_channel_id` (`channel_id`),
+  INDEX `idx_ubicacion_real_id` (`id_ubicacion_real`),
+  CONSTRAINT `fk_ubi_channel_id_ubicacion_real` FOREIGN KEY (`id_ubicacion_real`) REFERENCES `gen_ubicaciones_reales` (`id_ubicacion_real`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de canales ubibot';
+
+CREATE TABLE `ubi_sensor_readings` (
+  `id_sensor_reading` int NOT NULL AUTO_INCREMENT,
+  `id_channel` int NOT NULL COMMENT 'FK a ubi_channel.id_channel',
+  `temperature` decimal(10,2) NOT NULL COMMENT 'Temperatura del sensor',
+  `humidity` decimal(10,2) NOT NULL COMMENT 'Humedad del sensor',
+  `light` decimal(10,2) NOT NULL COMMENT 'Luz del sensor',
+  `voltage` decimal(10,2) NOT NULL COMMENT 'Voltaje del sensor',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del registro de lectura',
+  PRIMARY KEY (`id_sensor_reading`),
+  INDEX `idx_channel_id` (`id_channel`),
+  CONSTRAINT `fk_ubi_sensor_reading_id_channel` FOREIGN KEY (`id_channel`) REFERENCES `ubi_channel` (`id_channel`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de lecturas de sensores ubibot';
+
+-- teltonika.ai_query_logs definition
+
+CREATE TABLE `ai_query_logs` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT 'Unique query log identifier',
+  `session_id` bigint NOT NULL COMMENT 'Parent session reference',
+  `id_usuario` int NOT NULL COMMENT 'User who executed this query',
+  `query_text` text NOT NULL COMMENT 'User natural language question',
+  `chambers` text COMMENT 'JSON array of channel IDs queried',
+  `date_range_start` date DEFAULT NULL COMMENT 'Query start date filter',
+  `date_range_end` date DEFAULT NULL COMMENT 'Query end date filter',
+  `response_summary` text COMMENT 'First 500 chars of AI response',
+  `input_tokens` int DEFAULT '0' COMMENT 'Input tokens for this query',
+  `output_tokens` int DEFAULT '0' COMMENT 'Output tokens for this query',
+  `cost_usd` decimal(10,4) DEFAULT '0.0000' COMMENT 'Cost for this query in USD',
+  `execution_time_ms` int DEFAULT NULL COMMENT 'Total query time including data fetch + AI',
+  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Query execution timestamp',
+  PRIMARY KEY (`id`),
+  KEY `idx_session` (`session_id`) COMMENT 'Session query history',
+  KEY `idx_user` (`user_id`) COMMENT 'User query history',
+  KEY `idx_created` (`created_at` DESC) COMMENT 'Recent queries',
+  KEY `idx_performance` (`execution_time_ms`) COMMENT 'Performance analysis',
+  FULLTEXT KEY `idx_query_text` (`query_text`) COMMENT 'Search queries by content',
+  CONSTRAINT `ai_query_logs_ibfk_1` FOREIGN KEY (`session_id`) REFERENCES `ai_session_costs` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `ai_query_logs_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Audit log of AI queries for security and observability (Principle III, NFR-003, NFR-008)';
+
+-- teltonika.ai_session_costs definition
+
+CREATE TABLE `ai_session_costs` (
+  `id_session` bigint NOT NULL AUTO_INCREMENT COMMENT 'Unique session identifier',
+  `id_usuario` int NOT NULL COMMENT 'User who created this session',
+  `session_start` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Session start time',
+  `session_end` timestamp NULL DEFAULT NULL COMMENT 'Session end time (NULL = active)',
+  `model_used` varchar(50) NOT NULL COMMENT 'AI model name (e.g., gpt-4o-mini)',
+  `total_input_tokens` int DEFAULT '0' COMMENT 'Cumulative input tokens across all queries',
+  `total_output_tokens` int DEFAULT '0' COMMENT 'Cumulative output tokens across all queries',
+  `total_cost_usd` decimal(10,4) DEFAULT '0.0000' COMMENT 'Cumulative cost in USD',
+  `query_count` int DEFAULT '0' COMMENT 'Number of queries in this session',
+  `chambers_queried` text COMMENT 'JSON array of chamber names accessed',
+  `success` tinyint(1) DEFAULT '1' COMMENT 'Session completed successfully',
+  `error_message` text COMMENT 'Error details if success=FALSE',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_date` (`user_id`,`session_start`) COMMENT 'User session history lookup',
+  KEY `idx_cost` (`total_cost_usd` DESC) COMMENT 'Cost analysis queries',
+  KEY `idx_active` (`session_end`) COMMENT 'Find active sessions (NULL)',
+  KEY `idx_model` (`model_used`) COMMENT 'Model usage statistics',
+  CONSTRAINT `ai_session_costs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='AI analysis session costs for budget tracking (FR-028, SC-011, SC-012)';
+
+-- teltonika.sem_tipos_parametros definition
+
+CREATE TABLE `sem_tipos_parametros` (
+  `id_tipos_parametros` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `descripcion` text COLLATE utf8mb4_unicode_ci,
+  `tipo_dato` enum('ENTERO','DECIMAL','TEXTO','BOOLEANO','JSON') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reglas_validacion` json DEFAULT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_tipo_parametro_nombre` (`nombre`)
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Catálogo de tipos de parámetros del sistema';
+
+
+CREATE TABLE `sem_configuracion` (
+  `id_configuracion` int NOT NULL AUTO_INCREMENT,
+  `tipo_parametro_id` int NOT NULL,
+  `valor` text NOT NULL,
+  `activo` tinyint(1) DEFAULT '1',
+  `valido_desde` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `valido_hasta` timestamp NULL DEFAULT NULL,
+  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_tipo_parametro` (`tipo_parametro_id`),
+  KEY `idx_configuracion_validez` (`valido_desde`,`valido_hasta`,`activo`),
+  CONSTRAINT `fk_configuracion_tipo_parametro` FOREIGN KEY (`tipo_parametro_id`) REFERENCES `sem_tipos_parametros` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+
+-- teltonika.sem_totales_hora definition
+
+CREATE TABLE `sem_totales_hora` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `shelly_id` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `hora_local` timestamp(6) NOT NULL,
+  `energia_activa_total` decimal(15,3) NOT NULL,
+  `energia_reactiva_total` decimal(15,3) DEFAULT NULL,
+  `potencia_maxima` decimal(10,2) DEFAULT NULL,
+  `potencia_minima` decimal(10,2) DEFAULT NULL,
+  `precio_kwh_periodo` decimal(10,2) NOT NULL,
+  `costo_total` decimal(15,2) NOT NULL,
+  `lecturas_validas` int NOT NULL,
+  `calidad_datos` decimal(5,2) DEFAULT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lecturas_limite_apagado` int DEFAULT '0',
+  `lecturas_consumo_bajo` int DEFAULT '0',
+  `lecturas_consumo_medio` int DEFAULT '0',
+  `lecturas_consumo_alto` int DEFAULT '0',
+  `cantidad_datos` int DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_totales_hora_shelly_fecha` (`shelly_id`,`hora_local`),
+  UNIQUE KEY `idx_unique_shelly_hora` (`shelly_id`,`hora_local`),
+  KEY `idx_totales_hora_dispositivo` (`shelly_id`),
+  KEY `idx_hora_local` (`hora_local`),
+  KEY `idx_calidad` (`calidad_datos`),
+  KEY `idx_totales_hora_completo` (`shelly_id`,`hora_local`,`energia_activa_total`),
+  CONSTRAINT `fk_totales_hora_shelly` FOREIGN KEY (`shelly_id`) REFERENCES `sem_dispositivos` (`shelly_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=316292 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales horarios de consumo energético';
+
+CREATE TABLE `sem_totales_dia` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `shelly_id` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fecha_local` date NOT NULL,
+  `energia_activa_total` decimal(15,3) NOT NULL,
+  `energia_reactiva_total` decimal(15,3) DEFAULT NULL,
+  `potencia_maxima` decimal(10,2) DEFAULT NULL,
+  `potencia_minima` decimal(10,2) DEFAULT NULL,
+  `precio_kwh_promedio` decimal(10,2) NOT NULL,
+  `costo_total` decimal(15,2) NOT NULL,
+  `horas_con_datos` int NOT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lecturas_limite_apagado` int DEFAULT '0',
+  `lecturas_consumo_bajo` int DEFAULT '0',
+  `lecturas_consumo_medio` int DEFAULT '0',
+  `lecturas_consumo_alto` int DEFAULT '0',
+  `cantidad_datos` int DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_totales_dia_shelly_fecha` (`shelly_id`,`fecha_local`),
+  KEY `idx_totales_dia_dispositivo` (`shelly_id`),
+  KEY `idx_fecha_local` (`fecha_local`),
+  CONSTRAINT `fk_totales_dia_shelly` FOREIGN KEY (`shelly_id`) REFERENCES `sem_dispositivos` (`shelly_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=17267 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales diarios de consumo energético';
+
+-- teltonika.sem_totales_mes definition
+
+CREATE TABLE `sem_totales_mes` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `shelly_id` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `año` int NOT NULL,
+  `mes` int NOT NULL,
+  `energia_activa_total` decimal(15,3) NOT NULL,
+  `energia_reactiva_total` decimal(15,3) DEFAULT NULL,
+  `potencia_maxima` decimal(10,2) DEFAULT NULL,
+  `potencia_minima` decimal(10,2) DEFAULT NULL,
+  `precio_kwh_promedio` decimal(10,2) NOT NULL,
+  `costo_total` decimal(15,2) NOT NULL,
+  `dias_con_datos` int NOT NULL,
+  `horas_con_datos` int NOT NULL,
+  `fecha_creacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `lecturas_limite_apagado` int DEFAULT '0',
+  `lecturas_consumo_bajo` int DEFAULT '0',
+  `lecturas_consumo_medio` int DEFAULT '0',
+  `lecturas_consumo_alto` int DEFAULT '0',
+  `cantidad_datos` int DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `idx_año_mes_dispositivo` (`shelly_id`,`año`,`mes`),
+  KEY `idx_totales_mes_dispositivo` (`shelly_id`),
+  KEY `idx_año_mes` (`año`,`mes`),
+  CONSTRAINT `fk_totales_mes_shelly` FOREIGN KEY (`shelly_id`) REFERENCES `sem_dispositivos` (`shelly_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8690 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales mensuales de consumo energético';
