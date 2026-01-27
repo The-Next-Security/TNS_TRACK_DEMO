@@ -2,7 +2,7 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-22
+> **Última actualización**: 2026-01-26
 > **Versión**: 2.0.0
 > **Propósito**: Soluciones a problemas comunes del sistema
 
@@ -10,16 +10,237 @@
 
 ## 📋 Índice
 
-1. [Problemas de Base de Datos](#problemas-de-base-de-datos)
-2. [Problemas de APIs Externas](#problemas-de-apis-externas)
-3. [Problemas de Puerto y Servidor](#problemas-de-puerto-y-servidor)
-4. [Problemas de Build y Webpack](#problemas-de-build-y-webpack)
-5. [Problemas de Autenticación](#problemas-de-autenticación)
-6. [Problemas de Push Notifications](#problemas-de-push-notifications)
-7. [Problemas de Reportes PDF](#problemas-de-reportes-pdf)
-8. [Problemas de Configuración](#problemas-de-configuración)
-9. [Errores Comunes de Node.js](#errores-comunes-de-nodejs)
-10. [Diagnóstico General](#diagnóstico-general)
+### Problemas de Instalación
+- [Dependencias faltantes (npm install)](#-problema-module-not-found-durante-build)
+- [Errores de compilación nativa (gyp)](#-error-gyp-err-build-error)
+- [Permisos denegados (EACCES)](#-error-eacces-permission-denied)
+
+### Problemas de Desarrollo
+- [Puerto en uso (1337, 3000)](#problemas-de-puerto-y-servidor)
+- [Webpack no arranca](#-problema-webpack-dev-server-no-arranca)
+- [Out of memory durante build](#-problema-out-of-memory-durante-build)
+- [Configuración no se carga](#-problema-configuración-no-se-carga)
+
+### Problemas de Producción
+- [Rendimiento lento](#diagnóstico-general)
+- [Conexión BD perdida](#-problema-cannot-connect-to-database)
+- [Tokens expiran rápido](#-problema-session-expires-too-quickly)
+- [Reportes PDF fallan](#-problema-pdf-generation-fails)
+
+### Problemas de Base de Datos
+- [Cannot connect to database](#-problema-cannot-connect-to-database)
+- [Access denied for user](#-problema-access-denied-for-user)
+- [Table doesn't exist](#-problema-table-doesnt-exist)
+
+### Problemas de APIs Externas
+- [Shelly API key invalid](#-problema-api-key-invalid-shelly)
+- [Ubibot API key invalid](#-problema-api-key-invalid-ubibot)
+- [SendGrid email not sending](#-problema-sendgrid-email-not-sending)
+
+### Problemas de Autenticación
+- [Invalid token / Token expired](#-problema-invalid-token--token-expired)
+- [Session expires too quickly](#-problema-session-expires-too-quickly)
+
+### Otros Problemas Comunes
+- [Push Notifications](#problemas-de-push-notifications)
+- [Errores de Node.js](#errores-comunes-de-nodejs)
+- [Diagnóstico General](#diagnóstico-general)
+
+---
+
+## Problemas de Instalación
+
+### ❌ Problema: "Module not found" durante build
+
+**Síntomas**:
+- Error: `Module not found: Error: Can't resolve 'module-name'`
+
+**Solución**:
+
+```bash
+# Instalar dependencia faltante
+npm install module-name
+
+# O si es devDependency
+npm install module-name --save-dev
+
+# Verificar package.json para asegurar que esté listada
+```
+
+---
+
+### ❌ Error: "gyp ERR! build error"
+
+**Síntomas**:
+- Error al instalar dependencias nativas (bcrypt, argon2, etc.)
+
+**Solución**:
+
+**Linux**:
+```bash
+sudo apt-get install build-essential python3
+```
+
+**Mac**:
+```bash
+xcode-select --install
+```
+
+**Windows**:
+```bash
+npm install --global windows-build-tools
+```
+
+---
+
+### ❌ Error: "EACCES: permission denied"
+
+**Solución**:
+```bash
+# NO usar sudo para instalar paquetes
+# En su lugar, configurar npm para usar directorio local:
+mkdir ~/.npm-global
+npm config set prefix '~/.npm-global'
+echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.profile
+source ~/.profile
+```
+
+---
+
+### ❌ Error: "Cannot find module"
+
+**Solución**:
+```bash
+npm install
+# o específicamente:
+npm install nombre-del-modulo
+```
+
+---
+
+## Problemas de Desarrollo
+
+### ❌ Problema: "Webpack dev server no arranca"
+
+**Síntomas**:
+- Error: `Cannot find module 'webpack'`
+- Error: `Compilation failed`
+
+**Solución**:
+
+1. **Limpiar node_modules y reinstalar**:
+```bash
+cd servicios
+rm -rf node_modules package-lock.json
+npm install
+```
+
+2. **Verificar versiones de Node y npm**:
+```bash
+node --version  # Debe ser >= 18.x
+npm --version   # Debe ser >= 9.x
+```
+
+3. **Limpiar caché de npm**:
+```bash
+npm cache clean --force
+```
+
+4. **Reinstalar específicamente webpack**:
+```bash
+npm install webpack webpack-cli webpack-dev-server --save-dev
+```
+
+---
+
+### ❌ Problema: "Out of memory" durante build
+
+**Síntomas**:
+- Error: `FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory`
+
+**Solución**:
+
+```bash
+# Incrementar límite de memoria de Node.js
+export NODE_OPTIONS="--max-old-space-size=4096"
+
+# O editar script en package.json:
+{
+  "scripts": {
+    "build": "node --max-old-space-size=4096 node_modules/.bin/webpack"
+  }
+}
+```
+
+---
+
+### ❌ Problema: "Configuración no se carga"
+
+**Síntomas**:
+- Sistema usa valores por defecto
+- Cambios en configuración no se reflejan
+
+**Solución**:
+
+**Si estás en migración a BD**:
+1. Verificar que `config-loader.js` esté leyendo de BD
+2. Verificar conexión a BD funcionando
+3. Verificar tabla de configuración existe
+
+**Si usas unified-config.json (LEGACY)**:
+```bash
+# Verificar sintaxis JSON válida
+cat servicios/src/config/jsons/unified-config.json | python -m json.tool
+
+# Verificar permisos de lectura
+chmod 644 servicios/src/config/jsons/unified-config.json
+
+# Reiniciar servidor después de cambios
+npm run start-server
+```
+
+---
+
+## Problemas de Producción
+
+### 🔍 Checklist de Diagnóstico
+
+Cuando encuentres un error en producción, sigue estos pasos:
+
+1. **Ver logs del servidor**:
+```bash
+# Logs de Node.js (servidor backend)
+npm run start-server
+# Ver console completo
+
+# Logs de Webpack Dev Server
+npm start
+```
+
+2. **Ver logs del navegador**:
+- Abrir DevTools (F12)
+- Tab Console
+- Tab Network (para errores de API)
+
+3. **Verificar estado de servicios**:
+```bash
+# MySQL
+sudo systemctl status mysql
+
+# Node.js procesos
+ps aux | grep node
+
+# Puertos en uso
+lsof -i :1337
+lsof -i :3000
+```
+
+4. **Verificar conexión a APIs externas**:
+```bash
+# Test de conectividad
+ping api.shelly.cloud
+ping api.ubibot.com
+```
 
 ---
 
@@ -224,8 +445,6 @@ curl -X POST "https://api.sendgrid.com/v3/mail/send" \
 
 ---
 
-## Problemas de Puerto y Servidor
-
 ### ❌ Problema: "Port 1337 already in use"
 
 **Síntomas**:
@@ -274,81 +493,6 @@ kill -9 <PID>
 
 # O cambiar puerto en webpack.config.js
 # devServer.port = 3001
-```
-
----
-
-## Problemas de Build y Webpack
-
-### ❌ Problema: "Webpack dev server no arranca"
-
-**Síntomas**:
-- Error: `Cannot find module 'webpack'`
-- Error: `Compilation failed`
-
-**Solución**:
-
-1. **Limpiar node_modules y reinstalar**:
-```bash
-cd servicios
-rm -rf node_modules package-lock.json
-npm install
-```
-
-2. **Verificar versiones de Node y npm**:
-```bash
-node --version  # Debe ser >= 18.x
-npm --version   # Debe ser >= 9.x
-```
-
-3. **Limpiar caché de npm**:
-```bash
-npm cache clean --force
-```
-
-4. **Reinstalar específicamente webpack**:
-```bash
-npm install webpack webpack-cli webpack-dev-server --save-dev
-```
-
----
-
-### ❌ Problema: "Module not found" durante build
-
-**Síntomas**:
-- Error: `Module not found: Error: Can't resolve 'module-name'`
-
-**Solución**:
-
-```bash
-# Instalar dependencia faltante
-npm install module-name
-
-# O si es devDependency
-npm install module-name --save-dev
-
-# Verificar package.json para asegurar que esté listada
-```
-
----
-
-### ❌ Problema: "Out of memory" durante build
-
-**Síntomas**:
-- Error: `FATAL ERROR: Ineffective mark-compacts near heap limit Allocation failed - JavaScript heap out of memory`
-
-**Solución**:
-
-```bash
-# Incrementar límite de memoria de Node.js
-export NODE_OPTIONS="--max-old-space-size=4096"
-
-# O editar script en package.json:
-{
-  "scripts": {
-    "build": "node --max-old-space-size=4096 node_modules/.bin/webpack"
-  }
-}
 ```
 
 ---
@@ -409,6 +553,8 @@ const REFRESH_TTL_SECONDS = 1209600;  // 14 días
 ```
 
 ---
+
+## Problemas de Puerto y Servidor
 
 ## Problemas de Push Notifications
 
@@ -510,134 +656,7 @@ doc.end();
 
 ---
 
-## Problemas de Configuración
-
-### ❌ Problema: "Configuración no se carga"
-
-**Síntomas**:
-- Sistema usa valores por defecto
-- Cambios en configuración no se reflejan
-
-**Solución**:
-
-**Si estás en migración a BD**:
-1. Verificar que `config-loader.js` esté leyendo de BD
-2. Verificar conexión a BD funcionando
-3. Verificar tabla de configuración existe
-
-**Si usas unified-config.json (LEGACY)**:
-```bash
-# Verificar sintaxis JSON válida
-cat servicios/src/config/jsons/unified-config.json | python -m json.tool
-
-# Verificar permisos de lectura
-chmod 644 servicios/src/config/jsons/unified-config.json
-
-# Reiniciar servidor después de cambios
-npm run start-server
-```
-
----
-
-## Errores Comunes de Node.js
-
-### ❌ Error: "Cannot find module"
-
-**Solución**:
-```bash
-npm install
-# o específicamente:
-npm install nombre-del-modulo
-```
-
----
-
-### ❌ Error: "EACCES: permission denied"
-
-**Solución**:
-```bash
-# NO usar sudo para instalar paquetes
-# En su lugar, configurar npm para usar directorio local:
-mkdir ~/.npm-global
-npm config set prefix '~/.npm-global'
-echo 'export PATH=~/.npm-global/bin:$PATH' >> ~/.profile
-source ~/.profile
-```
-
----
-
-### ❌ Error: "gyp ERR! build error"
-
-**Síntomas**:
-- Error al instalar dependencias nativas (bcrypt, argon2, etc.)
-
-**Solución**:
-
-**Linux**:
-```bash
-sudo apt-get install build-essential python3
-```
-
-**Mac**:
-```bash
-xcode-select --install
-```
-
-**Windows**:
-```bash
-npm install --global windows-build-tools
-```
-
----
-
 ## Diagnóstico General
-
-### 🔍 Checklist de Diagnóstico
-
-Cuando encuentres un error, sigue estos pasos:
-
-1. **Ver logs del servidor**:
-```bash
-# Logs de Node.js (servidor backend)
-npm run start-server
-# Ver console completo
-
-# Logs de Webpack Dev Server
-npm start
-```
-
-2. **Ver logs del navegador**:
-- Abrir DevTools (F12)
-- Tab Console
-- Tab Network (para errores de API)
-
-3. **Verificar estado de servicios**:
-```bash
-# MySQL
-sudo systemctl status mysql
-
-# Node.js procesos
-ps aux | grep node
-
-# Puertos en uso
-lsof -i :1337
-lsof -i :3000
-```
-
-4. **Verificar variables de entorno** (si aplica):
-```bash
-printenv | grep NODE
-printenv | grep PORT
-```
-
-5. **Verificar conexión a APIs externas**:
-```bash
-# Test de conectividad
-ping api.shelly.cloud
-ping api.ubibot.com
-```
-
----
 
 ### 🛠️ Herramientas Útiles
 
@@ -725,4 +744,4 @@ SELECT COUNT(*) FROM devices;
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-22
+**Última revisión**: 2026-01-26

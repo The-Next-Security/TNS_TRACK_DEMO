@@ -2,13 +2,28 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-22
+> **Última actualización**: 2026-01-26
 > **Versión**: 2.0.0
-> **Base URL**: `http://localhost:1337` (desarrollo)
 
 ---
 
-## 📋 Índice
+## 📋 URLs del Sistema
+
+### Backend API
+- **Base URL**: `http://localhost:1337/TNS_Cool_Track/api/`
+- **Puerto**: 1337
+- **Prefijo de Ruta**: `/TNS_Cool_Track/api/`
+
+### Frontend
+- **URL**: `http://localhost:3000/tns_cool_track`
+- **Puerto**: 3000 (con proxy a backend en 1337)
+- **Prefijo de Ruta**: `/tns_cool_track`
+
+> **Nota**: Todas las rutas del sistema utilizan el prefijo `/TNS_Cool_Track/` (backend) o `/tns_cool_track` (frontend) de forma estándar.
+
+---
+
+## 📋 Índice de Endpoints
 
 1. [Información General](#información-general)
 2. [Autenticación](#autenticación)
@@ -27,17 +42,16 @@
 
 ## Información General
 
-### Estructura de Rutas
-
-Todos los endpoints están disponibles en **dos paths** para compatibilidad:
-- **Desarrollo**: `http://localhost:1337/api/...`
-- **Producción**: `http://localhost:1337/TNSTrack/api/...`
-
 ### Autenticación
 
-La mayoría de los endpoints requieren **autenticación vía JWT**. Los tokens se envían automáticamente vía **HTTP-only cookies**:
-- `access`: Access token (corta duración)
-- `refresh`: Refresh token (larga duración)
+La mayoría de los endpoints requieren **autenticación vía JWT Bearer Token**. Los tokens se envían automáticamente vía **HTTP-only cookies**:
+- `access`: Access token (duración: **1 hora**)
+- `refresh`: Refresh token (duración: 7 días)
+
+**Headers**:
+```
+Authorization: Bearer <access_token>
+```
 
 ### Formato de Respuestas
 
@@ -63,7 +77,7 @@ Todas las respuestas siguen formato JSON:
 
 ## Autenticación
 
-### POST `/api/auth/refresh`
+### POST `/TNS_Cool_Track/api/auth/refresh`
 Renueva tokens usando el refresh token.
 
 **Cookies Requeridas**: `refresh`
@@ -79,7 +93,7 @@ Renueva tokens usando el refresh token.
 
 ---
 
-### POST `/api/auth/logout`
+### POST `/TNS_Cool_Track/api/auth/logout`
 Cierra sesión y limpia cookies de autenticación.
 
 **Response**:
@@ -91,7 +105,7 @@ Cierra sesión y limpia cookies de autenticación.
 
 ---
 
-### GET `/api/auth/me`
+### GET `/TNS_Cool_Track/api/auth/me`
 Obtiene perfil del usuario autenticado.
 
 **Headers**: Requiere autenticación
@@ -111,7 +125,7 @@ Obtiene perfil del usuario autenticado.
 
 ---
 
-### GET `/api/auth/validate`
+### GET `/TNS_Cool_Track/api/auth/validate`
 Valida sesión actual y retorna metadata de sesión.
 
 **Headers**: Requiere autenticación
@@ -139,7 +153,7 @@ Valida sesión actual y retorna metadata de sesión.
 
 ---
 
-### POST `/api/auth/extend-session`
+### POST `/TNS_Cool_Track/api/auth/extend-session`
 Extiende sesión actual renovando tokens (token rotation).
 
 **Cookies Requeridas**: `refresh`
@@ -158,7 +172,7 @@ Extiende sesión actual renovando tokens (token rotation).
 
 ## Usuarios
 
-### Base Path: `/api/usuarios`
+### Base Path: `/TNS_Cool_Track/api/usuarios`
 
 _(Detalles de endpoints de usuarios a completar según usuariosRoutes.js)_
 
@@ -166,7 +180,7 @@ _(Detalles de endpoints de usuarios a completar según usuariosRoutes.js)_
 
 ## Dispositivos
 
-### Base Path: `/api/devices`
+### Base Path: `/TNS_Cool_Track/api/devices`
 
 Gestión de dispositivos IoT (Shelly, Ubibot, etc.)
 
@@ -174,7 +188,7 @@ _(Detalles de endpoints de dispositivos a completar según deviceRoutes.js)_
 
 ---
 
-### Base Path: `/api/ubibot`
+### Base Path: `/TNS_Cool_Track/api/ubibot`
 
 Endpoints específicos para dispositivos Ubibot.
 
@@ -184,7 +198,7 @@ _(Detalles de endpoints de Ubibot a completar según ubibotRoutes.js)_
 
 ## Configuración
 
-### Base Path: `/api/config`
+### Base Path: `/TNS_Cool_Track/api/config`
 
 Gestión de configuración del sistema (migrando a BD desde unified-config.json).
 
@@ -194,7 +208,7 @@ _(Detalles de endpoints de configuración a completar según configRoutes.js)_
 
 ## Análisis y Datos
 
-### Base Path: `/api/analysis`
+### Base Path: `/TNS_Cool_Track/api/analysis`
 
 Análisis de datos de sensores y dispositivos.
 
@@ -202,7 +216,7 @@ _(Detalles de endpoints de análisis a completar según analysisRoutes.js)_
 
 ---
 
-### Base Path: `/api/totals`
+### Base Path: `/TNS_Cool_Track/api/totals`
 
 Totales y estadísticas agregadas.
 
@@ -210,7 +224,7 @@ _(Detalles de endpoints de totales a completar según totalesRoutes.js)_
 
 ---
 
-### Base Path: `/api/powerAnalysis`
+### Base Path: `/TNS_Cool_Track/api/powerAnalysis`
 
 Análisis de consumo eléctrico.
 
@@ -218,7 +232,7 @@ _(Detalles de endpoints de powerAnalysis a completar según powerAnalysisRoutes.
 
 ---
 
-### Base Path: `/api/consumo`
+### Base Path: `/TNS_Cool_Track/api/consumo`
 
 Categorías de consumo eléctrico.
 
@@ -228,7 +242,7 @@ _(Detalles de endpoints de consumo a completar según consumoCategoriaRoutes.js)
 
 ## Alertas
 
-### Base Path: `/api/alerts`
+### Base Path: `/TNS_Cool_Track/api/alerts`
 
 Sistema de gestión de alertas v4.0.0 (temperatura, humedad, conectividad).
 
@@ -248,7 +262,7 @@ _(Detalles de endpoints de presets a completar según presetsRoutes.js)_
 
 ## Reportes
 
-### Base Path: `/api/reports`
+### Base Path: `/TNS_Cool_Track/api/reports`
 
 Sistema de generación de reportes PDF con templates ejecutivos.
 
@@ -262,7 +276,7 @@ _(Detalles de endpoints de reportes a completar según reportsRoutes.js)_
 
 ## GPS y Ubicación
 
-### Base Path: `/api/gps`
+### Base Path: `/TNS_Cool_Track/api/gps`
 
 Gestión de datos GPS.
 
@@ -278,7 +292,7 @@ _(Detalles de endpoints de GPS data a completar según gpsDataRoutes.js)_
 
 ---
 
-### Base Path: `/api/beacons`
+### Base Path: `/TNS_Cool_Track/api/beacons`
 
 Gestión de beacons de ubicación.
 
@@ -286,7 +300,7 @@ _(Detalles de endpoints de beacons a completar según beaconsRoutes.js)_
 
 ---
 
-### Base Path: `/api/blindspot`
+### Base Path: `/TNS_Cool_Track/api/blindspot`
 
 Gestión de zonas ciegas (blind spots).
 
@@ -296,7 +310,7 @@ _(Detalles de endpoints de blind spots a completar según blindSpotRoutes.js)_
 
 ## Push Notifications
 
-### Base Path: `/api/push`
+### Base Path: `/TNS_Cool_Track/api/push`
 
 Sistema de Push Notifications para PWA (Web Push).
 
@@ -308,7 +322,7 @@ _(Detalles de endpoints de push notifications a completar según pushNotificatio
 
 ## IA y Análisis Avanzado
 
-### Base Path: `/api/v1/ai-analysis`
+### Base Path: `/TNS_Cool_Track/api/v1/ai-analysis`
 
 AI Cold Chamber Analysis - Análisis de cámaras frías con IA.
 
@@ -321,7 +335,7 @@ _(Detalles de endpoints de IA a completar según aiAnalysisRoutes.js)_
 
 ## Otros
 
-### Base Path: `/api/personal`
+### Base Path: `/TNS_Cool_Track/api/personal`
 
 Gestión de personal.
 
@@ -329,7 +343,7 @@ _(Detalles de endpoints de personal a completar según personalRoutes.js)_
 
 ---
 
-### Base Path: `/api/sectores`
+### Base Path: `/TNS_Cool_Track/api/sectores`
 
 Gestión de sectores/áreas.
 

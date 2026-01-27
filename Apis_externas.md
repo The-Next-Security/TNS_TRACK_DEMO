@@ -1,29 +1,27 @@
 # APIs Externas - TNS Track
 
-## ⚠️ ADVERTENCIA IMPORTANTE - TWILIO/SMS LEGACY
+## 📋 Resumen Ejecutivo
 
-**La funcionalidad SMS/Twilio ha sido eliminada del desarrollo inicial.**
+### APIs Activas (8)
 
-- ✅ La dependencia se mantiene en `package.json` por si es necesaria en el futuro
-- ❌ El servicio SMS NO está implementado ni activo
-- 🔄 Todas las notificaciones críticas se envían por **Email + Push Notifications**
-- 📋 Criticidad: **BAJA/NULA** - Marcado como **LEGACY**
+| Criticidad | API | Propósito | Tipo | Sección |
+|------------|-----|-----------|------|---------|
+| ⚠️ **CRÍTICA** | [Shelly Cloud](#️-shelly-cloud-api) | Datos eléctricos | REST | [Ver detalles](#️-shelly-cloud-api) |
+| ⚠️ **CRÍTICA** | [Ubibot](#️-ubibot-api) | Datos temperatura | REST | [Ver detalles](#️-ubibot-api) |
+| 🔶 **ALTA** | [OnPremise TNS](#️-onpremise-api-tns-interna) | API interna (Ubibot) | REST | [Ver detalles](#️-onpremise-api-tns-interna) |
+| 🔶 **ALTA** | [SendGrid](#️-sendgrid-api) | Envío emails | REST/SDK | [Ver detalles](#️-sendgrid-api) |
+| 🟢 **MEDIA** | [DeepSeek](#️-deepseek-api-ia) | Análisis IA | REST | [Ver detalles](#️-deepseek-api-ia) |
+| 🟢 **MEDIA** | [QuickChart](#️-quickchart-api) | Gráficos PDF | REST | [Ver detalles](#️-quickchart-api) |
+| 🟡 **BAJA** | [Mapbox](#️-mapbox-api) | Mapas GPS | REST/GL | [Ver detalles](#️-mapbox-api) |
+| 🟡 **BAJA** | [PostHog](#️-posthog-analytics) | Analytics | SDK | [Ver detalles](#️-posthog-analytics) |
 
----
+### APIs Legacy / Deshabilitadas (1)
 
-## 📋 Resumen de APIs Utilizadas
+| API | Estado | Razón | Sección |
+|-----|--------|-------|---------|
+| ~~Twilio SMS~~ | ⚠️ **LEGACY** | NO implementado - Reemplazado por Email + Push | [Ver detalles](#️-twilio-sms-api--legacy) |
 
-| API | Propósito | Tipo | Criticidad | Documentación |
-|-----|-----------|------|------------|---------------|
-| Shelly Cloud | Datos eléctricos | REST | ⚠️ CRÍTICA | https://shelly-api-docs.shelly.cloud/ |
-| Ubibot | Datos temperatura | REST | ⚠️ CRÍTICA | https://www.ubibot.com/platform-api/1232/quick-start/ |
-| OnPremise TNS | API interna (Ubibot) | REST | 🔶 ALTA (deshabilitada) | http://tns.thenextsecurity.cl:8443 |
-| SendGrid | Envío emails | REST/SDK | 🔶 ALTA | https://docs.sendgrid.com/ |
-| ~~Twilio~~ | ~~Envío SMS~~ | REST/SDK | 🟢 BAJA/NULA ⚠️ LEGACY | https://www.twilio.com/docs |
-| DeepSeek | Análisis IA | REST | 🟢 MEDIA | https://api.deepseek.com |
-| QuickChart | Gráficos PDF | REST | 🟢 MEDIA | https://quickchart.io/documentation/ |
-| Mapbox | Mapas GPS | REST/GL | 🟡 BAJA | https://docs.mapbox.com/ |
-| PostHog | Analytics | SDK | 🟡 BAJA | https://posthog.com/docs |
+> **Nota**: La funcionalidad SMS/Twilio fue eliminada del desarrollo inicial. Todas las notificaciones críticas se envían por **Email + Push Notifications**.
 
 ---
 
@@ -67,7 +65,7 @@ Recolección de datos de consumo eléctrico en tiempo real de dispositivos Shell
 - **Retry Delay**: 5 segundos
 - **Timeout**: Configurable
 
-> **Nota**: Los intervalos de recolección se configuran desde la base de datos. Ver [Base_de_Datos.md](Base_de_Datos.md) para detalles del esquema.
+> **Nota**: Los intervalos de recolección son **configurables desde la base de datos** (no hardcodeados). Ver Issue [#3](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3) (Tabla de configuración) para detalles de implementación.
 
 ### Impacto en el Proyecto
 **Funcionalidades Depend ientes**:
@@ -124,7 +122,7 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 - **Intervalo**: Configurable desde base de datos (predeterminado: 1 minuto)
 - **Retención**: 7 días en memoria
 
-> **Nota**: Los intervalos de recolección se configuran desde la base de datos. Ver [Base_de_Datos.md](Base_de_Datos.md) para detalles del esquema.
+> **Nota**: Los intervalos de recolección son **configurables desde la base de datos** (no hardcodeados). Ver Issue #3 (Tabla de configuración) para detalles de implementación.
 
 ### Impacto en el Proyecto
 **Funcionalidades Dependientes**:
@@ -144,16 +142,16 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 - **Proveedor**: The Next Security (interno)
 - **URL Base**: `http://tns.thenextsecurity.cl:8443`
 - **Tipo**: REST API (basada en Ubibot)
-- **Autenticación**: N/A (red interna)
+- **Autenticación**: Requiere autenticación (Account Key + Token ID)
 - **Estado**: ⚠️ DESHABILITADO (no completamente implementado)
 
 ### Propósito
-- API interna que utiliza el mismo protocolo Ubibot pero con proceso diferente
+- API interna que utiliza el mismo protocolo Ubibot pero con **proceso diferente** al Cloud API
 - Recolección de datos desde servidor on-premise TNS
 - Integración con sistemas legacy de TNS
 - Recolección de datos de canales específicos
 
-> **Nota**: Esta API sigue siendo Ubibot, solo que es un proceso diferente al Cloud API. Actualmente está deshabilitada al no estar del todo implementada.
+> **Nota**: Esta API sigue siendo Ubibot, solo que es un proceso diferente. Requiere autenticación igual que Ubibot Cloud. Actualmente está deshabilitada al no estar del todo implementada.
 
 ### Configuración
 ```json
@@ -222,37 +220,7 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 
 ---
 
-## 5️⃣ ~~Twilio SMS API~~ ⚠️ LEGACY
-
-### ⚠️ ESTADO: LEGACY - NO IMPLEMENTADO
-
-**Esta funcionalidad ha sido eliminada del desarrollo inicial.**
-
-### Información General
-- **Proveedor**: Twilio
-- **Tipo**: REST API / SDK Node.js (twilio ^5.4.2)
-- **Autenticación**: Account SID + Auth Token
-- **Documentación**: https://www.twilio.com/docs/sms
-- **Estado Actual**:
-  - ❌ Servicio NO activo
-  - ✅ Dependencia mantenida en `package.json` para uso futuro
-  - 🔄 Notificaciones críticas se envían por **Email + Push**
-
-### Propósito Original (Deshabilitado)
-- ~~Envío de alertas críticas por SMS~~
-- ~~Notificaciones de emergencia~~
-- ~~Confirmaciones de acciones críticas~~
-
-### Archivos Involucrados (Comentados/Eliminados)
-- ~~**Service**: `/servicios/src/services/sms/smsService.js`~~
-- ~~**Routes**: `/servicios/src/routes/smsRoutes.js`~~
-- ~~**Controller**: `/servicios/src/controllers/notificationController.js`~~
-
-> **Nota**: Si se requiere SMS en el futuro, la dependencia Twilio está disponible en `package.json`.
-
----
-
-## 6️⃣ DeepSeek API (IA)
+## 5️⃣ DeepSeek API (IA)
 
 ### Información General
 - **Proveedor**: DeepSeek
@@ -308,7 +276,7 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 
 ---
 
-## 7️⃣ QuickChart API
+## 6️⃣ QuickChart API
 
 ### Información General
 - **Proveedor**: QuickChart.io
@@ -335,7 +303,7 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 
 ---
 
-## 8️⃣ Mapbox API
+## 7️⃣ Mapbox API
 
 ### Información General
 - **Proveedor**: Mapbox
@@ -368,7 +336,7 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 
 ---
 
-## 9️⃣ PostHog Analytics
+## 8️⃣ PostHog Analytics
 
 ### Información General
 - **Proveedor**: PostHog
@@ -403,33 +371,74 @@ posthog.init('phc_xxxxxxxxxxxxxxxx', {
 
 ---
 
+## 📦 APIs Legacy
+
+### 9️⃣ ~~Twilio SMS API~~ ⚠️ LEGACY
+
+#### ⚠️ ESTADO: LEGACY - NO IMPLEMENTADO
+
+**Esta funcionalidad ha sido eliminada del desarrollo inicial.**
+
+#### Información General
+- **Proveedor**: Twilio
+- **Tipo**: REST API / SDK Node.js (twilio ^5.4.2)
+- **Autenticación**: Account SID + Auth Token
+- **Documentación**: https://www.twilio.com/docs/sms
+- **Estado Actual**:
+  - ❌ Servicio NO activo
+  - ✅ Dependencia mantenida en `package.json` para uso futuro
+  - 🔄 Notificaciones críticas se envían por **Email + Push**
+
+#### Propósito Original (Deshabilitado)
+- ~~Envío de alertas críticas por SMS~~
+- ~~Notificaciones de emergencia~~
+- ~~Confirmaciones de acciones críticas~~
+
+#### Archivos Involucrados (Comentados/Eliminados)
+- ~~**Service**: `/servicios/src/services/sms/smsService.js`~~
+- ~~**Routes**: `/servicios/src/routes/smsRoutes.js`~~
+- ~~**Controller**: `/servicios/src/controllers/notificationController.js`~~
+
+> **Nota**: Si se requiere SMS en el futuro, la dependencia Twilio está disponible en `package.json`.
+
+---
+
 ## 🔐 Gestión de API Keys
 
 ### ⚠️ MIGRACIÓN EN PROGRESO A BASE DE DATOS
 
-**Estado Actual**: Las API Keys se están migrando desde archivos JSON a la base de datos para mayor seguridad y gestión centralizada.
+**Estado Actual**: Las API Keys se están migrando desde archivos JSON (OBSOLETOS) a la base de datos para mayor seguridad y gestión centralizada.
 
-### Ubicación Actual (LEGACY)
-- **Archivo Principal**: `/servicios/src/config/jsons/unified-config.json` ⚠️ LEGACY
+### Ubicación Actual (⚠️ OBSOLETO)
+- **Archivo Principal**: `/servicios/src/config/jsons/unified-config.json` ⚠️ **OBSOLETO**
 - **Loader**: `/servicios/src/config/js_files/config-loader.js` (revisa BD periódicamente)
 
-### Ubicación Futura (EN DESARROLLO)
-- **Base de Datos MySQL**: Ver esquema en [Base_de_Datos.md](Base_de_Datos.md)
+> **Nota**: Los archivos JSON están siendo reemplazados por configuración en base de datos. Ver Issue #3 (Tabla de configuración) para detalles de implementación.
+
+### Ubicación Futura (EN DESARROLLO - Issue #3)
+- **Base de Datos MySQL**: Tabla de configuración centralizada
 - **Config Loader**: Consulta periódica a BD para cambios de configuración
+- **Beneficios**: Gestión centralizada, cambios sin redeploy, auditabilidad
 
-### 🚫 NO SE UTILIZAN VARIABLES DE ENTORNO
+### 🚫 NO SE UTILIZAN VARIABLES DE ENTORNO (Por Diseño)
 
-**Por diseño del proyecto, NO se utilizan archivos `.env` ni variables de entorno.**
+**Decisión arquitectónica: El proyecto NO utiliza archivos `.env` ni variables de entorno para configuración.**
 
+**Razones**:
 - Todas las configuraciones se manejan vía base de datos
-- Esto permite gestión centralizada y cambios sin redeploy
-- Mayor control y auditabilidad de cambios de configuración
+- Permite gestión centralizada desde UI de administración
+- Cambios de configuración sin necesidad de redeploy
+- Mayor control y auditabilidad de cambios
+- Configuración dinámica en tiempo real
+
+> **Importante**: Esta es una decisión de diseño intencional documentada en [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md). NO es un error o falta de implementación.
 
 ### ⚠️ SEGURIDAD CRÍTICA
 **NUNCA versionar en Git**:
-- `unified-config.json` con keys reales (actualmente LEGACY)
+- `unified-config.json` con keys reales ⚠️ **OBSOLETO** (siendo migrado a BD)
 - Archivos con tokens/secrets
 - Credenciales de base de datos (manejadas por el sistema)
+- Archivos `.env` (no utilizados en este proyecto)
 
 ### Troubleshooting
 
@@ -456,9 +465,11 @@ Para problemas con API Keys, consultar [Troubleshooting.md](Troubleshooting.md) 
 ## 📝 Mantenimiento y Troubleshooting
 
 ### Checklist al Agregar Nueva API
-- [ ] Actualizar este documento
+- [ ] Actualizar este documento (Apis_externas.md)
 - [ ] Crear service adapter en `/servicios/src/services/api/`
-- [ ] Agregar configuración en base de datos (no en archivos JSON)
+- [ ] Agregar configuración en **base de datos** (NO en archivos JSON ⚠️ OBSOLETO)
+- [ ] Documentar en Issue #3 si requiere nueva columna en tabla de configuración
+- [ ] Actualizar [Troubleshooting.md](./Troubleshooting.md) con errores comunes de la nueva API
 - [ ] Implementar manejo de errores y reintentos
 - [ ] Agregar métricas de uso
 - [ ] Documentar rate limits
@@ -482,5 +493,5 @@ Para troubleshooting detallado de APIs externas, consultar:
 - [Base_de_Datos.md](./Base_de_Datos.md)
 - [Info_Github.md](./Info_Github.md)
 
-**Última actualización**: 2026-01-22
+**Última actualización**: 2026-01-26
 **Versión**: 2.0.0
