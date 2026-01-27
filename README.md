@@ -8,7 +8,8 @@ Sistema integral de monitoreo y control inteligente para gestión de temperatura
 **TNS Track** es un **sistema de demostración** desarrollado por **The Next Security** que sirve como:
 
 1. **Demo para posibles clientes**: Showcase completo de capacidades de monitoreo y control inteligente
-2. **Base sólida para futuras implementaciones**: Arquitectura probada y lista para replicar en proyectos productivos
+2. **Base sólida replicable**: Arquitectura probada y lista para replicar en proyectos productivos de clientes
+3. **Referencia interna**: Plantilla de desarrollo y buenas prácticas para el equipo TNS
 
 El sistema demuestra monitoreo y control en tiempo real de:
 
@@ -115,12 +116,15 @@ TNS_TRACK_DEMO/
 - **Primary Keys**: `id` (AUTO_INCREMENT)
 - **Foreign Keys**: `{tabla}_id` (ej: `user_id`, `device_id`)
 
+> **Nota**: Las convenciones de nomenclatura serán formalizadas y estandarizadas en Issues #1 (Creación de BD) y #3 (Tabla de configuración).
+
 Ver detalles completos en [Base_de_Datos.md](./Base_de_Datos.md)
 
 ### Convenciones Git/GitHub
 - **Branches**: `tipo/issue-numero-descripcion` (ej: `feature/2-documentacion-inicial`)
 - **Commits**: Conventional Commits (ej: `feat(alertas): agregar sistema de notificaciones`)
-- **Autoría**: **SIEMPRE reconocer la autoría de IAs y cualquier colaborador** que haya contribuido al commit
+- **Autoría**: **SIEMPRE reconocer la autoría de IAs** (Claude Code, ChatGPT, etc.) **y cualquier colaborador** que haya contribuido al commit
+- **Co-Authored-By**: Incluir SIEMPRE en commits asistidos por IA: `Co-Authored-By: Claude <noreply@anthropic.com>`
 - **PRs**: Requieren aprobación antes de merge
 - **Issues**: Usar labels apropiados (`documentation`, `SQL`, etc.)
 - **Especificaciones**: Usar GitHub Issues en lugar de carpeta `/specs`
@@ -134,7 +138,7 @@ Ver detalles completos en [Info_Github.md](./Info_Github.md)
 ### Backend
 - **Runtime**: Node.js
 - **Framework**: Express 5.1.0
-- **Base de Datos**: MySQL (Driver: mysql2 ^3.15.2)
+- **Base de Datos**: MySQL 8.0+ (Driver: mysql2 ^3.15.2)
 - **Zona Horaria Base**: America/Santiago (Chile) - **SIEMPRE**
 - **Autenticación**:
   - JSON Web Tokens (jsonwebtoken ^9.0.2)
@@ -312,10 +316,15 @@ El sistema está migrando de archivos de configuración a base de datos centrali
 const configLoader = require('./src/config/js_files/config-loader');
 ```
 
-**Decisión Técnica**: Por diseño, **NO se utilizan variables de entorno** (`.env`).
-Toda configuración se gestiona desde base de datos.
+**🚫 Decisión Técnica Crítica**: Por diseño arquitectónico, **NO se utilizan variables de entorno** (`.env`).
 
-Ver detalles en [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md)
+**Razones**:
+- Toda configuración se gestiona desde base de datos de forma centralizada
+- Permite gestión dinámica desde UI de administración sin redeploy
+- Mayor control, auditabilidad y trazabilidad de cambios
+- Configuración en tiempo real sin reinicios
+
+Ver detalles completos en [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md)
 
 ---
 
@@ -361,7 +370,7 @@ Ver detalles completos en [Apis_externas.md](./Apis_externas.md)
 ## 🗄️ Base de Datos (Resumen)
 
 - **Nombre**: `tns_cool_track`
-- **Tipo**: MySQL/MariaDB
+- **Tipo**: MySQL 8.0+
 - **Charset**: utf8mb4_unicode_ci
 - **Zona Horaria**: America/Santiago
 
@@ -384,9 +393,22 @@ Ver esquema completo en [Base_de_Datos.md](./Base_de_Datos.md)
 
 ### Principios de Desarrollo
 
-1. **KISS (Keep It Simple, Stupid)** - Priorizar simplicidad sobre complejidad
-2. **DRY (Don't Repeat Yourself)** - Evitar duplicación de código mediante modularización
-3. **Modularización Máxima** - Separar responsabilidades en módulos independientes
+El proyecto sigue estrictamente estos principios fundamentales:
+
+1. **KISS (Keep It Simple, Stupid)**
+   - Priorizar soluciones simples sobre complejidad innecesaria
+   - Evitar over-engineering y abstracciones prematuras
+   - Código fácil de entender = código fácil de mantener
+
+2. **DRY (Don't Repeat Yourself)**
+   - Evitar duplicación de código mediante modularización inteligente
+   - Extraer lógica repetida a servicios reutilizables
+   - Centralizar configuración y constantes
+
+3. **Modularización Máxima**
+   - Separar responsabilidades en módulos independientes
+   - Un archivo = una responsabilidad clara
+   - Facilitar testing y mantenimiento
 
 ### Decisiones Arquitectónicas
 
@@ -409,7 +431,7 @@ Ver esquema completo en [Base_de_Datos.md](./Base_de_Datos.md)
 
 ### Prerrequisitos
 - Node.js >= 18.x
-- MySQL >= 8.x
+- MySQL 8.0+
 - npm >= 9.x
 
 ### Instalación
@@ -433,18 +455,18 @@ cp src/config/jsons/unified-config.example.json src/config/jsons/unified-config.
 
 ### Ejecución en Desarrollo
 
-**⚠️ MÉTODO RECOMENDADO**:
+**⚠️ COMANDO RECOMENDADO - USAR ESTE**:
 ```bash
-# Comando completo: limpia, instala dependencias, build y arranca todo
+# Comando único: limpia, instala dependencias, build y arranca todo
 npm run comenzar
 ```
 
-**Opciones alternativas**:
+**Opciones alternativas** (solo si necesitas ejecutar por separado):
 ```bash
-# Opción 1: Iniciar todo (webpack dev + backend)
+# Opción 1: Iniciar todo (webpack dev + backend) SIN clean ni build
 npm run start-all
 
-# Opción 2: Iniciar por separado
+# Opción 2: Iniciar por separado manualmente
 # Terminal 1 - Webpack Dev Server (frontend)
 npm start
 
@@ -454,7 +476,7 @@ npm run start-server
 
 **Acceso**:
 - **Aplicación**: [http://localhost:3000/tns_cool_track](http://localhost:3000/tns_cool_track)
-- Backend API: http://localhost:1337
+- **Backend API**: http://localhost:1337/TNS_Cool_Track/api/
 
 ### Ejecución en Producción
 
@@ -546,7 +568,15 @@ npm run comenzar
 - `unified-config.json` con keys reales (⚠️ LEGACY - migrando a BD)
 - Archivos con tokens/secrets
 
-**Nota**: Por decisión técnica, **NO se utilizan variables de entorno** (`.env`). Toda configuración se gestiona desde base de datos.
+**🚫 Decisión Técnica**: Por diseño arquitectónico, **NO se utilizan variables de entorno** (`.env`).
+
+**Razones**:
+- Toda configuración se gestiona desde base de datos de forma centralizada
+- Permite gestión dinámica desde UI de administración sin redeploy
+- Mayor control, auditabilidad y trazabilidad de cambios
+- Configuración en tiempo real sin reinicios
+
+Esta es una **decisión intencional documentada** en [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md), NO un error o falta de implementación.
 
 ### CORS
 Configurado en `server.js`:
@@ -591,6 +621,6 @@ Este proyecto es de uso interno exclusivo para The Next Security y sus clientes 
 
 ---
 
-**Última actualización**: 2026-01-22
+**Última actualización**: 2026-01-26
 **Versión de documentación**: 2.0.0
 **Mantenido por**: Equipo TNS (andresTNS - Jefe de Desarrolladores, Bufigol - Developer)
