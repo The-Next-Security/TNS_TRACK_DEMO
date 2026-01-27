@@ -1,315 +1,243 @@
-# Roadmap - Planificación de Features
+# Roadmap - Planificación de Desarrollo
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-22
-> **Versión**: 2.0.0
-> **Propósito**: Planificación de desarrollo y tracking de progreso
+> **Última actualización**: 2026-01-26
+> **Versión**: 2.1.0
+> **Propósito**: Planificación realista basada en GitHub Issues
 
 ---
 
 ## 📋 Índice
 
-1. [Resumen Ejecutivo](#resumen-ejecutivo)
-2. [Estado Actual](#estado-actual)
-3. [Fases de Desarrollo](#fases-de-desarrollo)
-4. [Features por Prioridad](#features-por-prioridad)
+1. [Visión del Proyecto](#visión-del-proyecto)
+2. [Estado Actual del Proyecto](#estado-actual-del-proyecto)
+3. [FASE 0: Planificación y Fundamentos](#fase-0-planificación-y-fundamentos) (🟡 EN PROGRESO)
+4. [Fases Futuras](#fases-futuras)
 5. [Tracking de Issues](#tracking-de-issues)
-6. [Métricas de Progreso](#métricas-de-progreso)
+6. [Principios de Desarrollo](#principios-de-desarrollo)
 
 ---
 
-## Resumen Ejecutivo
+## Visión del Proyecto
 
-### Visión del Proyecto
-TNS Track Demo es un **sistema de demostración** que sirve como:
-1. **Demo para posibles clientes** - Showcase completo de capacidades
-2. **Base sólida para futuras implementaciones** - Arquitectura lista para replicar
+### Propósito
+TNS Track Demo es un **sistema de demostración** desarrollado por **The Next Security** que sirve como:
 
-### Objetivos 2026
-- ✅ Documentación exhaustiva completada
-- 🟡 Migración de configuración a base de datos
-- 🟡 Estandarización de nomenclatura de código
-- 🔴 Testing automatizado (unitario + E2E)
-- 🔴 Dockerización y CI/CD
+1. **Demo para posibles clientes**: Showcase completo de capacidades de monitoreo y control inteligente
+2. **Base sólida replicable**: Arquitectura probada y lista para replicar en proyectos productivos de clientes
+3. **Referencia interna**: Plantilla de desarrollo y buenas prácticas para el equipo TNS
 
----
-
-## Estado Actual
-
-### ✅ Completado (v0.2.0)
-
-- [x] Sistema de Collectors modular (Shelly, Ubibot)
-- [x] Sistema de Alertas v4.0.0
-- [x] Reportes PDF con templates ejecutivos
-- [x] PWA con push notifications
-- [x] Autenticación JWT robusta
-- [x] Documentación exhaustiva (README, Base_de_Datos, APIs, Decisiones, etc.)
-- [x] Eliminación de SMS/Twilio
-- [x] Actualización de stack tecnológico (React 19.2.0, Express 5.1.0)
-
-### 🟡 En Progreso
-
-- [ ] **Migración de Configuración a BD** (Issue #TBD)
-  - Status: 40% completado
-  - Bloqueador: Definir estructura final de tabla `config`
-  - ETA: 2026-02-15
-
-- [ ] **Estandarización de Nomenclatura** (Issue #TBD)
-  - Status: 20% completado
-  - Convención definida: camelCase + sufijo
-  - Archivos por refactorizar: ~150
-  - ETA: 2026-03-01
-
-### 🔴 Pendiente
-
-Ver [Fases de Desarrollo](#fases-de-desarrollo) abajo para features planificados.
+### Alcance Actual
+El proyecto demuestra capacidades de monitoreo en tiempo real de:
+- Temperatura (cámaras frigoríficas, ambientes controlados)
+- Consumo eléctrico (dispositivos inteligentes)
+- GPS/Ubicación (personal y activos)
+- Alertas inteligentes (multi-canal: email + push)
+- Reportes ejecutivos (PDF automatizados)
 
 ---
 
-## Fases de Desarrollo
+## Estado Actual del Proyecto
 
-### 📊 Fase 0: Fundación (COMPLETADA ✅)
+### 🚧 Proyecto en FASE 0 - Sin Releases Oficiales
 
-**Timeline**: 2026-01-01 → 2026-01-22
-**Objetivo**: Establecer base sólida y documentación
+**⚠️ IMPORTANTE**: El proyecto NO tiene releases oficiales aún.
 
-- [x] Sistema de Collectors implementado
-- [x] Sistema de Alertas v4.0.0 funcional
-- [x] Reportes PDF con templates ejecutivos
-- [x] PWA con push notifications
-- [x] Documentación exhaustiva creada
-- [x] Decisiones técnicas documentadas
+Aunque existen features implementadas (Collectors, Alertas v4.0, Reportes PDF, PWA, JWT), el proyecto está en **FASE 0: Planificación y Fundamentos** enfocada en:
+- Establecer convenciones y estándares
+- Documentar arquitectura existente
+- Definir alcance y prioridades
+- Crear fundamentos sólidos para desarrollo futuro
 
-**Resultado**: Base sólida establecida ✅
+**Primer Release (v0.1.0)**: Después de completar FASE 0
 
----
+Ver [CHANGELOG.md](./CHANGELOG.md) para detalles de estado de releases.
 
-### 🔧 Fase 1: Refactorización y Estabilización (EN PROGRESO 🟡)
+### Stack Tecnológico Actual
 
-**Timeline**: 2026-01-23 → 2026-03-31
-**Objetivo**: Consolidar código y eliminar deuda técnica
+**Sin Release Formal** - Arquitectura existente:
 
-#### Features Principales
+- **Backend**: Node.js + Express 5.1.0 + MySQL 8.0+
+- **Frontend**: React 19.2.0 + TailwindCSS 3.4.18 + Webpack 5.102.1
+- **Autenticación**: JWT (jsonwebtoken 9.0.2) + Argon2 + Bcrypt
+- **Notificaciones**: SendGrid (email) + Web Push
+- **Reportes**: PDFKit + Puppeteer + QuickChart.js
+- **IA**: DeepSeek (vía OpenAI SDK 6.8.1)
+- **APIs Externas**: Shelly Cloud + Ubibot + Mapbox + PostHog
 
-- [ ] **Migración de Configuración a BD** (Priority: HIGH 🔴)
-  - Migrar `unified-config.json` completamente a MySQL
-  - Implementar UI de administración de config
-  - Eliminar archivos JSON legacy
-  - Auditoría de cambios de configuración
-  - **Issue**: #TBD
+### Características Implementadas (Sin Release)
 
-- [ ] **Estandarización de Nomenclatura** (Priority: MEDIUM 🟡)
-  - Renombrar ~150 archivos a camelCase + sufijo
-  - Actualizar imports en todo el proyecto
-  - Verificar que no rompa funcionalidad
-  - **Issue**: #TBD
-
-- [ ] **Estandarizar Librería de Fechas** (Priority: MEDIUM 🟡)
-  - Eliminar redundancia: moment, luxon, date-fns, dayjs
-  - Decidir librería única (recomendado: date-fns o luxon)
-  - Migrar todo el código a librería elegida
-  - **Issue**: #TBD
-
-- [ ] **Cleanup de Código Legacy** (Priority: LOW 🟢)
-  - Eliminar carpeta `/specs` (usar GitHub Issues)
-  - Limpiar comentarios obsoletos
-  - Remover código comentado no utilizado
-  - **Issue**: #TBD
-
-**Métrica de Éxito**:
-- ✅ Zero archivos con nomenclatura no estándar
-- ✅ Zero configuración en archivos JSON
-- ✅ Una sola librería de fechas
+- Sistema de collectors modulares (Shelly, Ubibot)
+- Sistema de alertas v4.0.0 multi-canal
+- Generación de reportes PDF ejecutivos
+- PWA con Service Workers y Push Notifications
+- Autenticación JWT con token rotation
+- Base de datos MySQL con 50+ tablas
+- Zona horaria: America/Santiago (Chile) - SIEMPRE
+- 🚫 NO usa variables de entorno (configuración en BD por diseño)
 
 ---
 
-### 🧪 Fase 2: Testing y Calidad (PENDIENTE 🔴)
+## FASE 0: Planificación y Fundamentos
 
-**Timeline**: 2026-04-01 → 2026-06-30
-**Objetivo**: Implementar testing automatizado completo
+**Estado**: 🟡 EN PROGRESO
+**Completitud**: 0/7 sub-issues completados (0%)
+**Milestone**: [FASE 0 - Planificación y Fundamentos](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/9)
+**Issue Principal**: #9
 
-#### Features Principales
+### Objetivo de FASE 0
 
-- [ ] **Tests Unitarios con Jest** (Priority: HIGH 🔴)
-  - Setup de Jest + configuración
-  - Tests para servicios críticos (emailService, databaseService, etc.)
-  - Tests para collectors (shellyCollector, ubibotCollector)
-  - Tests para controllers principales
-  - **Objetivo**: 80% cobertura en código crítico
-  - **Issue**: #TBD
+Establecer fundamentos sólidos ANTES del primer release (v0.1.0):
+- Convenciones de nomenclatura formalizadas
+- Documentación completa y actualizada
+- Configuración migrada a base de datos
+- Alcance del proyecto definido claramente
+- Roadmap y prioridades establecidas
 
-- [ ] **Tests de Integración** (Priority: HIGH 🔴)
-  - Tests de endpoints API
-  - Tests de flujos completos (login, alertas, reportes)
-  - Tests de integración con APIs externas (mocked)
-  - **Issue**: #TBD
+### Sub-Issues de FASE 0
 
-- [ ] **Tests E2E con Cypress/Playwright** (Priority: MEDIUM 🟡)
-  - Setup de Cypress o Playwright
-  - Tests de flujos de usuario críticos
-  - Tests de PWA y push notifications
-  - Tests de generación de reportes
-  - **Issue**: #TBD
+| # | Issue | Estado | Prioridad | Blocker |
+|---|-------|--------|-----------|---------|
+| #1 | Creación de base de datos desde cero | 🔴 OPEN | S (Máxima) | **BLOCKER** para #3 |
+| #2 | Documentación inicial | 🟡 EN PROGRESO | S (Máxima) | - |
+| #3 | Tabla de configuración centralizada | 🔴 OPEN | S (Máxima) | Depende de #1 |
+| #4 | Análisis y definición de alcance completo | 🔴 OPEN | M (Alta) | - |
+| #5 | Configuración de entorno de desarrollo | 🔴 OPEN | M (Alta) | - |
+| #6 | Revisión de arquitectura actual | 🔴 OPEN | L (Media) | - |
+| #8 | Establecer roadmap y prioridades | 🔴 OPEN | M (Alta) | - |
 
-- [ ] **Linting y Code Quality** (Priority: LOW 🟢)
-  - Setup de ESLint con reglas estrictas
-  - Setup de Prettier para formato consistente
-  - Pre-commit hooks con Husky
-  - **Issue**: #TBD
+### Orden de Implementación Recomendado
 
-**Métrica de Éxito**:
-- ✅ 80%+ cobertura de tests en código crítico
-- ✅ Suite de tests E2E pasando en CI
-- ✅ Zero errores de linting
+**Secuencia óptima basada en dependencias**:
 
----
+1. **Issue #1** (BLOCKER) - Creación de BD desde cero
+   - **Por qué primero**: Issue #3 depende de esto
+   - **Impacto**: Formaliza estructura y convenciones de BD
+   - **Owner**: andresTNS
 
-### 🐳 Fase 3: Infraestructura y DevOps (PENDIENTE 🔴)
+2. **Issue #2** (EN PROGRESO) - Documentación inicial
+   - **Estado actual**: 90% completado (8/9 archivos)
+   - **Pendiente**: ROADMAP.md reformateo (este archivo)
+   - **Owner**: Claude Code + andresTNS
 
-**Timeline**: 2026-07-01 → 2026-09-30
-**Objetivo**: Dockerizar y automatizar deployment
+3. **Issue #3** - Tabla de configuración
+   - **Depende de**: #1 (estructura BD formalizada)
+   - **Impacto**: Elimina JSONs legacy, centraliza config
+   - **Owner**: andresTNS
 
-#### Features Principales
+4. **Issue #4** - Análisis y definición de alcance
+   - **Por qué después de doc**: Requiere contexto completo
+   - **Impacto**: Define límites claros del demo
+   - **Owner**: TNSTRACK + felipecleverox (POs)
 
-- [ ] **Dockerización** (Priority: HIGH 🔴)
-  - Dockerfile para backend (Node.js + MySQL)
-  - Dockerfile para frontend (build estático)
-  - docker-compose.yml para desarrollo local
-  - Multi-stage builds para optimización
-  - **Issue**: #TBD
+5. **Issue #5** - Configuración de entorno dev
+   - **Por qué después de #1 y #3**: Requiere BD y config finales
+   - **Impacto**: Onboarding de nuevos developers
+   - **Owner**: andresTNS
 
-- [ ] **CI/CD con GitHub Actions** (Priority: HIGH 🔴)
-  - Pipeline de tests automatizados
-  - Pipeline de build y deployment
-  - Deployment automático a staging en push a `dev`
-  - Deployment manual a producción en tag
-  - **Issue**: #TBD
+6. **Issue #6** - Revisión de arquitectura
+   - **Por qué después de todo**: Requiere contexto completo
+   - **Impacto**: Valida decisiones técnicas actuales
+   - **Owner**: andresTNS
 
-- [ ] **Secrets Manager** (Priority: MEDIUM 🟡)
-  - Implementar AWS Secrets Manager o HashiCorp Vault
-  - Migrar API keys y credenciales
-  - Rotación automática de secrets
-  - **Issue**: #TBD
+7. **Issue #8** - Roadmap y prioridades
+   - **Por qué al final**: Requiere alcance definido (#4)
+   - **Impacto**: Define trabajo post-FASE 0
+   - **Owner**: andresTNS + POs
 
-- [ ] **Monitoreo y Logging** (Priority: MEDIUM 🟡)
-  - Implementar Winston para logging estructurado
-  - Integración con Sentry para error tracking
-  - Dashboards de monitoreo (Grafana/Prometheus)
-  - **Issue**: #TBD
+### Criterios de Aceptación para Completar FASE 0
 
-**Métrica de Éxito**:
-- ✅ Deployment automatizado funcionando
-- ✅ Zero secrets en código
-- ✅ Error tracking activo
+**Para cerrar Issue #9 y avanzar a v0.1.0, TODOS estos deben cumplirse**:
 
----
+- ✅ Base de datos creada con convenciones formalizadas (Issue #1)
+- ✅ Documentación completa actualizada y aprobada (Issue #2)
+- ✅ Configuración 100% migrada a BD, JSONs eliminados (Issue #3)
+- ✅ Alcance del demo claramente definido y documentado (Issue #4)
+- ✅ Entorno de desarrollo documentado y reproducible (Issue #5)
+- ✅ Arquitectura revisada y decisiones validadas (Issue #6)
+- ✅ Roadmap post-FASE 0 definido con prioridades (Issue #8)
 
-### 📚 Fase 4: Documentación Avanzada (PENDIENTE 🔴)
+### Métricas de Éxito FASE 0
 
-**Timeline**: 2026-10-01 → 2026-11-30
-**Objetivo**: Documentación interactiva y automatizada
+- ⭐ **0 ambigüedades** en alcance del proyecto
+- ⭐ **100% convenciones** documentadas (BD, código, Git)
+- ⭐ **0 configuración** en archivos JSON (todo en BD)
+- ⭐ **Documentación aprobada** por andresTNS y POs
+- ⭐ **Arquitectura validada** técnicamente
 
-#### Features Principales
+### Progreso Actual FASE 0
 
-- [ ] **Swagger/OpenAPI Spec** (Priority: HIGH 🔴)
-  - Generar spec automáticamente desde código
-  - UI interactiva de documentación de API
-  - Ejemplos de requests/responses
-  - **Issue**: #TBD
+**Completitud Global**: 0/7 issues cerrados
 
-- [ ] **Storybook para Componentes React** (Priority: MEDIUM 🟡)
-  - Setup de Storybook
-  - Stories para componentes principales
-  - Documentación interactiva de UI
-  - **Issue**: #TBD
+**Issue #2 (Documentación) - 90% completado**:
+- ✅ Decisiones_Tecnicas.md
+- ✅ Recursos_Tecnicos.md
+- ✅ Troubleshooting.md
+- ✅ Base_de_Datos.md
+- ✅ Apis_externas.md
+- ✅ Endpoints_API.md
+- ✅ README.md
+- ✅ CHANGELOG.md
+- 🔄 ROADMAP.md (este archivo - en progreso)
 
-- [ ] **Guías de Deployment** (Priority: LOW 🟢)
-  - Guía de deployment a producción
-  - Guía de rollback
-  - Runbooks para operaciones comunes
-  - **Issue**: #TBD
-
-**Métrica de Éxito**:
-- ✅ API docs generada automáticamente
-- ✅ Storybook con 100% de componentes
-- ✅ Runbooks documentados
+**Issues restantes**: 6 de 7 (86% del trabajo de FASE 0)
 
 ---
 
-### 🚀 Fase 5: Features Avanzados (FUTURO)
+## Fases Futuras
 
-**Timeline**: 2026-12-01 → 2027-03-31
-**Objetivo**: Expandir capacidades del sistema
+**⚠️ IMPORTANTE**: Las fases siguientes están PENDIENTES de definición formal en Issue #8.
 
-#### Features Planificados
+La planificación detallada de fases post-FASE 0 se realizará una vez completado Issue #8 (Establecer roadmap y prioridades) como parte del cierre de FASE 0.
 
-- [ ] **Multi-tenancy** (Priority: MEDIUM 🟡)
-  - Soporte para múltiples clientes en misma instancia
-  - Aislamiento de datos por tenant
-  - Configuración por tenant
-  - **Issue**: #TBD
+### Áreas de Trabajo Identificadas (No Priorizadas Aún)
 
-- [ ] **Webhooks** (Priority: LOW 🟢)
-  - Sistema de webhooks salientes
-  - Subscripciones a eventos
-  - Reintentos automáticos
-  - **Issue**: #TBD
+Las siguientes áreas han sido identificadas como posibles trabajos futuros, pero **NO tienen issues creados ni prioridades asignadas**:
 
-- [ ] **API Rate Limiting Avanzado** (Priority: LOW 🟢)
-  - Rate limiting por usuario
-  - Rate limiting por endpoint
-  - Throttling inteligente
-  - **Issue**: #TBD
+#### Refactorización y Limpieza
+- Migración de configuración a BD (⚠️ EN PROGRESO como parte de Issue #3)
+- Estandarización de nomenclatura a camelCase + sufijo
+- Unificación de librería de fechas (4 librerías actuales: moment, luxon, date-fns, dayjs)
+- Limpieza de carpeta `/specs` (usar GitHub Issues)
+- Remoción de código comentado y obsoleto
 
-- [ ] **Analytics Dashboard** (Priority: LOW 🟢)
-  - Dashboard de uso del sistema
-  - Métricas de APIs externas
-  - Análisis de rendimiento
-  - **Issue**: #TBD
+#### Testing y Calidad
+- Tests unitarios (Jest)
+- Tests de integración
+- Tests E2E (Cypress/Playwright - decisión pendiente)
+- Linting automatizado (ESLint + Prettier)
+- Pre-commit hooks (Husky)
 
-**Métrica de Éxito**:
-- ✅ Multi-tenancy funcional
-- ✅ Webhooks en producción
-- ✅ Analytics dashboard operativo
+#### Infraestructura y DevOps
+- Dockerización (Dockerfile + docker-compose)
+- CI/CD (GitHub Actions)
+- Secrets manager (AWS Secrets Manager / HashiCorp Vault - decisión pendiente)
+- Monitoreo y logging (Winston/Pino - decisión pendiente)
+- APM Tool (New Relic / Datadog / Sentry - decisión pendiente)
 
----
+#### Documentación Avanzada
+- Swagger/OpenAPI spec automatizada
+- Storybook para componentes React
+- Guías de deployment y rollback
+- Runbooks operacionales
 
-## Features por Prioridad
+#### Features Avanzados
+- Multi-tenancy (múltiples clientes en misma instancia)
+- Webhooks salientes
+- Rate limiting avanzado por usuario/endpoint
+- Analytics dashboard interno
 
-### 🔴 Prioridad ALTA (Crítico)
+**Timeline**: TBD (se definirá en Issue #8 al completar FASE 0)
 
-| Feature | Fase | ETA | Issue |
-|---------|------|-----|-------|
-| Migración de Configuración a BD | 1 | 2026-02-15 | #TBD |
-| Tests Unitarios (Jest) | 2 | 2026-05-31 | #TBD |
-| Tests de Integración | 2 | 2026-06-15 | #TBD |
-| Dockerización | 3 | 2026-08-31 | #TBD |
-| CI/CD con GitHub Actions | 3 | 2026-09-15 | #TBD |
-| Swagger/OpenAPI Spec | 4 | 2026-10-31 | #TBD |
-
-### 🟡 Prioridad MEDIA (Importante)
-
-| Feature | Fase | ETA | Issue |
-|---------|------|-----|-------|
-| Estandarización de Nomenclatura | 1 | 2026-03-01 | #TBD |
-| Estandarizar Librería de Fechas | 1 | 2026-03-15 | #TBD |
-| Tests E2E (Cypress/Playwright) | 2 | 2026-06-30 | #TBD |
-| Secrets Manager | 3 | 2026-08-15 | #TBD |
-| Monitoreo y Logging | 3 | 2026-09-30 | #TBD |
-| Storybook para Componentes | 4 | 2026-11-15 | #TBD |
-| Multi-tenancy | 5 | 2027-02-28 | #TBD |
-
-### 🟢 Prioridad BAJA (Deseable)
-
-| Feature | Fase | ETA | Issue |
-|---------|------|-----|-------|
-| Cleanup de Código Legacy | 1 | 2026-03-31 | #TBD |
-| Linting y Code Quality | 2 | 2026-06-30 | #TBD |
-| Guías de Deployment | 4 | 2026-11-30 | #TBD |
-| Webhooks | 5 | 2027-01-31 | #TBD |
-| API Rate Limiting Avanzado | 5 | 2027-02-28 | #TBD |
-| Analytics Dashboard | 5 | 2027-03-31 | #TBD |
+**Decisiones Técnicas Pendientes**:
+| Decisión | Responsable | Opciones |
+|----------|-------------|----------|
+| Framework testing E2E | andresTNS | Cypress vs Playwright |
+| Secrets Manager | andresTNS | AWS Secrets Manager vs HashiCorp Vault |
+| Logging Solution | andresTNS | Winston vs Pino |
+| APM Tool | andresTNS | New Relic vs Datadog vs Sentry |
+| Librería de fechas única | andresTNS | date-fns vs Luxon vs Day.js |
 
 ---
 
@@ -317,125 +245,115 @@ Ver [Fases de Desarrollo](#fases-de-desarrollo) abajo para features planificados
 
 ### Convención de Labels
 
-Usar estos labels en GitHub Issues para tracking:
+**Prioridades**:
+- **S (Máxima)**: Bloqueadores, fundamentos críticos
+- **M (Alta)**: Importante, debe hacerse pronto
+- **L (Media)**: Deseable, puede esperar
+- **XL (Baja)**: Nice to have, largo plazo
 
-- **`priority:high`** 🔴 - Crítico, debe hacerse pronto
-- **`priority:medium`** 🟡 - Importante, planificado
-- **`priority:low`** 🟢 - Deseable, nice to have
+**Fases**:
+- `phase:0-foundation` - FASE 0: Planificación y Fundamentos
+- `phase:1-refactor` - Refactorización y limpieza (futuro)
+- `phase:2-testing` - Testing y calidad (futuro)
+- `phase:3-infra` - Infraestructura DevOps (futuro)
+- `phase:4-docs` - Documentación avanzada (futuro)
+- `phase:5-advanced` - Features avanzados (futuro)
 
-- **`phase:1-refactor`** - Parte de Fase 1: Refactorización
-- **`phase:2-testing`** - Parte de Fase 2: Testing
-- **`phase:3-infra`** - Parte de Fase 3: Infraestructura
-- **`phase:4-docs`** - Parte de Fase 4: Documentación
-- **`phase:5-advanced`** - Parte de Fase 5: Features Avanzados
+**Tipos**:
+- `type:feature` - Nueva funcionalidad
+- `type:refactor` - Refactorización
+- `type:docs` - Documentación
+- `type:bug` - Corrección de bug
+- `type:chore` - Tareas de mantenimiento
 
-- **`type:feature`** - Nueva funcionalidad
-- **`type:refactor`** - Refactorización de código existente
-- **`type:docs`** - Documentación
-- **`type:bug`** - Corrección de bug
-- **`type:chore`** - Tareas de mantenimiento
+### Milestone Actual
 
-### Milestone Planning
+**Único milestone activo**:
+- **FASE 0 - Planificación y Fundamentos** (Issue #9)
+  - Estado: 🟡 EN PROGRESO
+  - Completitud: 0/7 sub-issues (0%)
+  - Blocker: Issue #1
 
-Crear milestones en GitHub para cada fase:
-
-- **Milestone: Fase 1 - Refactorización** (2026-Q1)
-- **Milestone: Fase 2 - Testing** (2026-Q2)
-- **Milestone: Fase 3 - Infraestructura** (2026-Q3)
-- **Milestone: Fase 4 - Documentación** (2026-Q4)
-- **Milestone: Fase 5 - Features Avanzados** (2027-Q1)
-
----
-
-## Métricas de Progreso
-
-### Objetivos Q1 2026 (Enero - Marzo)
-
-- [x] ✅ Documentación exhaustiva completada (100%)
-- [ ] 🟡 Migración de configuración a BD (40%)
-- [ ] 🟡 Estandarización de nomenclatura (20%)
-- [ ] 🔴 Librería de fechas estandarizada (0%)
-
-**Progreso General Q1**: 40%
-
-### Objetivos Q2 2026 (Abril - Junio)
-
-- [ ] 🔴 Tests unitarios implementados (0%)
-- [ ] 🔴 Tests de integración implementados (0%)
-- [ ] 🔴 Tests E2E implementados (0%)
-
-**Progreso General Q2**: 0%
-
-### Objetivos Q3 2026 (Julio - Septiembre)
-
-- [ ] 🔴 Dockerización completada (0%)
-- [ ] 🔴 CI/CD implementado (0%)
-- [ ] 🔴 Secrets manager configurado (0%)
-
-**Progreso General Q3**: 0%
-
-### Objetivos Q4 2026 (Octubre - Diciembre)
-
-- [ ] 🔴 Swagger/OpenAPI spec generada (0%)
-- [ ] 🔴 Storybook implementado (0%)
-
-**Progreso General Q4**: 0%
+**Milestones futuros**: Se definirán en Issue #8 al completar FASE 0
 
 ---
 
-## Decisiones Pendientes
+## Principios de Desarrollo
 
-Issues que requieren decisión técnica antes de implementar:
+### Metodología
 
-| Decisión | Responsable | Deadline | Opciones |
-|----------|-------------|----------|----------|
-| Librería de fechas única | andresTNS | 2026-02-01 | date-fns vs Luxon vs Day.js |
-| Framework de testing E2E | andresTNS | 2026-04-01 | Cypress vs Playwright |
-| Secrets Manager | andresTNS | 2026-07-01 | AWS Secrets Manager vs HashiCorp Vault |
-| Logging Solution | andresTNS | 2026-07-15 | Winston vs Pino |
-| APM Tool | andresTNS | 2026-08-01 | New Relic vs Datadog vs Sentry |
+Todos los cambios al proyecto deben seguir:
 
----
+1. **KISS (Keep It Simple, Stupid)**
+   - Priorizar soluciones simples sobre complejidad innecesaria
+   - Evitar over-engineering y abstracciones prematuras
+   - Código fácil de entender = código fácil de mantener
 
-## Notas de Implementación
+2. **DRY (Don't Repeat Yourself)**
+   - Evitar duplicación mediante modularización inteligente
+   - Extraer lógica repetida a servicios reutilizables
+   - Centralizar configuración y constantes
 
-### Principios de Desarrollo
+3. **Modularización Máxima**
+   - Separar responsabilidades en módulos independientes
+   - Un archivo = una responsabilidad clara
+   - Facilitar testing y mantenimiento
 
-Todos los features deben seguir:
-1. **KISS** - Keep It Simple, Stupid
-2. **DRY** - Don't Repeat Yourself
-3. **Modularización Máxima** - Separar responsabilidades
-
-Ver [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md) para detalles.
+Ver [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md) para decisiones arquitectónicas completas.
 
 ### Definition of Done
 
-Un feature se considera completo cuando:
-- ✅ Código implementado y revisado
-- ✅ Tests escritos y pasando
+Un issue se considera completo cuando:
+- ✅ Código implementado (si aplica)
+- ✅ Tests escritos y pasando (cuando haya suite de tests)
 - ✅ Documentación actualizada
 - ✅ Code review aprobado por andresTNS
-- ✅ Deployed a staging
-- ✅ Validado por POs (TNSTRACK/felipecleverox)
+- ✅ Validado por Product Owners (si aplica)
+- ✅ Issue cerrado en GitHub
+
+### Convenciones de Commits
+
+**Formato obligatorio**:
+```
+tipo(módulo): descripción corta
+
+Detalles de cambios realizados.
+Explicación técnica si es necesario.
+
+Issue: #123
+PR: #456 (si aplica)
+
+🤖 Generado con Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>
+```
+
+**Autoría IA**: SIEMPRE reconocer cuando Claude Code u otra IA contribuyó al commit.
+
+Ver [Info_Github.md](./Info_Github.md) para convenciones completas.
 
 ---
 
 ## Referencias
 
 - **GitHub Issues**: https://github.com/andresTNS/TNS_TRACK_DEMO/issues
+- **Milestone FASE 0**: [Issue #9](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/9)
 - **Decisiones Técnicas**: [Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md)
 - **Changelog**: [CHANGELOG.md](./CHANGELOG.md)
+- **Info GitHub**: [Info_Github.md](./Info_Github.md)
+
+---
+
+## 📞 Feedback y Sugerencias
+
+Para proponer cambios al roadmap:
+1. Crear issue en GitHub con label `type:feature-request`
+2. Discutir con andresTNS (Jefe de Desarrolladores)
+3. Validar con Product Owners (TNSTRACK, felipecleverox) si aplica
+
+**Nota**: Durante FASE 0, el foco está en completar fundamentos. Features nuevos se evaluarán después de Issue #8.
 
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-22
-
----
-
-## 📞 Feedback
-
-Para sugerencias de features o cambios al roadmap:
-- Crear issue en GitHub con label `type:feature-request`
-- Contactar a andresTNS (Jefe de Desarrolladores)
-- Discutir con POs (TNSTRACK, felipecleverox)
+**Última revisión**: 2026-01-26
