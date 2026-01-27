@@ -65,7 +65,7 @@ Recolección de datos de consumo eléctrico en tiempo real de dispositivos Shell
 - **Retry Delay**: 5 segundos
 - **Timeout**: Configurable
 
-> **Nota**: Los intervalos de recolección son **configurables desde la base de datos** (no hardcodeados). Ver Issue #3 (Tabla de configuración) para detalles de implementación.
+> **Nota**: Los intervalos de recolección son **configurables desde la base de datos** (no hardcodeados). Ver Issue [#3](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3) (Tabla de configuración) para detalles de implementación.
 
 ### Impacto en el Proyecto
 **Funcionalidades Depend ientes**:
