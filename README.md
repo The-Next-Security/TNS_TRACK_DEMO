@@ -45,20 +45,25 @@ El sistema demuestra monitoreo y control en tiempo real de:
 #### Archivos JavaScript
 ⚠️ **REGLA UNIVERSAL**: Todos los archivos deben seguir **camelCase + sufijo según tipo**
 
-- **Collectors**: camelCase + "Collector" (ej: `shellyCollector.js`, `ubibotCollector.js`)
-- **Servicios**: camelCase + "Service" (ej: `emailService.js`, `databaseService.js`)
-- **Rutas**: camelCase + "Routes" (ej: `deviceRoutes.js`, `ubibotRoutes.js`)
-- **Controladores**: camelCase + "Controller" (ej: `alertScheduleController.js`)
-- **Componentes React**: camelCase + sufijo descriptivo (ej: `dashboardTemperaturaV2.js`)
-- **Archivos CSS**: camelCase + ".css" (ej: `mainStyles.css`)
-- **Utilidades**: camelCase + "Utils" o "Helper" (ej: `dateUtils.js`, `apiHelper.js`)
+| Nombre | Tipo | Ejemplo |
+|--------|------|---------|
+| Collector | camelCase + "Collector" | `shellyCollector.js`, `ubibotCollector.js` |
+| Service | camelCase + "Service" | `emailService.js`, `databaseService.js` |
+| Routes | camelCase + "Routes" | `deviceRoutes.js`, `ubibotRoutes.js` |
+| Controller | camelCase + "Controller" | `alertScheduleController.js` |
+| Component | camelCase + sufijo descriptivo | `dashboardTemperaturaV2.js` |
+| CSS | camelCase + ".css" | `mainStyles.css` |
+| Utils/Helper | camelCase + "Utils" o "Helper" | `dateUtils.js`, `apiHelper.js` |
 
 **Nota**: Estamos en proceso de refactorización para estandarizar toda la nomenclatura a esta convención.
 
 #### Nomenclatura de Variables
-- **Variables y funciones**: camelCase (ej: `userData`, `calculateTotal()`)
-- **Constantes**: UPPER_SNAKE_CASE (ej: `MAX_RETRIES`, `API_TIMEOUT`)
-- **Clases y Componentes**: PascalCase (ej: `UserProfile`, `AlertCard`)
+
+| Nombre | Tipo | Ejemplo |
+|--------|------|---------|
+| Variables y funciones | camelCase | `userData`, `calculateTotal()` |
+| Constantes | UPPER_SNAKE_CASE | `MAX_RETRIES`, `API_TIMEOUT` |
+| Clases y Componentes | PascalCase | `UserProfile`, `AlertCard` |
 
 ### Estructura de Carpetas
 
