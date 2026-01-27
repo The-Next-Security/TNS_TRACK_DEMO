@@ -179,13 +179,19 @@ chore/actualizar-dependencias
 
 ## 💬 Convenciones de Commits
 
-### Formato: Conventional Commits
+### Formato Obligatorio
 ```
-tipo(ámbito): descripción corta
+tipo(módulo): descripción corta
 
-Descripción detallada (opcional)
+Detalles de cambios realizados.
+Explicación técnica si es necesario.
 
-Refs: #numero-issue
+Issue: #123
+PR: #456 (si aplica)
+
+🤖 Generado con Claude Code
+
+Co-Authored-By: Claude <noreply@anthropic.com>
 ```
 
 ### Tipos de Commit
@@ -200,30 +206,17 @@ Refs: #numero-issue
 | `chore` | Mantenimiento | `chore(deps): actualizar dependencias` |
 | `perf` | Performance | `perf(collectors): optimizar polling` |
 
-### Ejemplos Completos
-```bash
-# Feature simple
-git commit -m "feat(docs): agregar documentación inicial
-
-Creación de README.md, Base_de_Datos.md, Apis_externas.md e Info_Github.md
-
-Refs: #2"
-
-# Fix con contexto
-git commit -m "fix(email): corregir formato de destinatarios
-
-El servicio no manejaba arrays vacíos correctamente.
-
-Refs: #45"
-```
+### Autoría IA
+⚠️ **SIEMPRE reconocer cuando Claude Code u otra IA contribuyó al commit.**
 
 ### Reglas
 1. ✅ Verbos en infinitivo ("agregar", "corregir")
 2. ✅ Primera línea <= 72 caracteres
-3. ✅ Referenciar issue: `Refs: #numero` o `Closes: #numero`
+3. ✅ Referenciar issue: `Issue: #numero` o `Closes: #numero`
 4. ✅ **Un commit por cada archivo creado/eliminado/modificado** con explicación del porqué
-5. ❌ NO commits genéricos ("cambios", "fix")
-6. ❌ NO mezclar múltiples propósitos o archivos en un mismo commit
+5. ✅ Incluir autoría IA cuando aplique
+6. ❌ NO commits genéricos ("cambios", "fix")
+7. ❌ NO mezclar múltiples propósitos o archivos en un mismo commit
 
 ---
 
