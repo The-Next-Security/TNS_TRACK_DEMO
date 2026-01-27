@@ -9,227 +9,130 @@
 
 ## [Unreleased]
 
-### En Progreso
-- Migración de configuración de `unified-config.json` a base de datos
-- Estandarización de nomenclatura de archivos (camelCase + sufijo)
-- Documentación completa de endpoints API
+### 🚧 Estado del Proyecto
+
+**El proyecto NO tiene releases oficiales aún.**
+
+Este es un sistema de demostración en desarrollo activo. Antes del primer release (v0.1.0), debemos completar la **FASE 0: Planificación y Fundamentos** documentada en [ROADMAP.md](./ROADMAP.md).
+
+### En Progreso (FASE 0)
+
+**Ver Issue #9 para tracking completo de FASE 0**
+
+Trabajos actuales en desarrollo:
+- **Issue #1**: Creación de base de datos desde cero (convenciones y estructura)
+- **Issue #2**: Documentación inicial del proyecto (en progreso)
+- **Issue #3**: Tabla de configuración centralizada (migración desde JSONs)
+- **Issue #4**: Análisis y definición de alcance completo
+- **Issue #5**: Configuración de entorno de desarrollo
+- **Issue #6**: Revisión de arquitectura actual
+- **Issue #8**: Establecer roadmap y prioridades
+
+### Cambios Recientes (Sin Release)
+
+#### Documentación (Issue #2 - En Progreso)
+- ✅ `Decisiones_Tecnicas.md` - Decisiones arquitectónicas documentadas
+- ✅ `Recursos_Tecnicos.md` - Enlaces a documentación técnica
+- ✅ `Troubleshooting.md` - Guía de resolución de problemas
+- ✅ `Base_de_Datos.md` - Documentación de estructura BD
+- ✅ `Apis_externas.md` - Documentación de 8 APIs externas
+- ✅ `Endpoints_API.md` - Inventario de endpoints internos
+- 🔄 `README.md` - Actualización con 22 correcciones (2026-01-26)
+- 🔄 `CHANGELOG.md` - Este archivo (reformateado 2026-01-26)
+- ⏳ `ROADMAP.md` - Pendiente de reformateo
+
+#### Arquitectura Actual
+**Stack Técnico (Sin Release Formal)**:
+- **Backend**: Node.js + Express 5.1.0 + MySQL 8.0+
+- **Frontend**: React 19.2.0 + TailwindCSS 3.4.18
+- **Autenticación**: JWT (jsonwebtoken 9.0.2) + Argon2 + Bcrypt
+- **Notificaciones**: SendGrid (email) + Web Push
+- **Reportes**: PDFKit + Puppeteer + QuickChart.js
+- **IA**: DeepSeek (vía OpenAI SDK 6.8.1)
+- **Collectors**: Shelly Cloud API + Ubibot API
+
+**Características Implementadas (Sin Release)**:
+- Sistema de collectors modulares (Shelly, Ubibot)
+- Sistema de alertas v4.0.0 multi-canal
+- Generación de reportes PDF ejecutivos
+- PWA con Service Workers y Push Notifications
+- Autenticación JWT con token rotation
+- Base de datos MySQL con 50+ tablas
+
+**Migraciones en Progreso**:
+- ⚠️ Configuración: De `unified-config.json` → Base de datos (Issue #3)
+- ⚠️ Nomenclatura: Estandarización a camelCase + sufijo
+- ⚠️ Especificaciones: De carpeta `/specs/` → GitHub Issues
+
+**Decisiones Técnicas Críticas**:
+- 🚫 **NO se utilizan variables de entorno** (`.env`) por diseño
+- ✅ Toda configuración centralizada en base de datos
+- ✅ Zona horaria: America/Santiago (Chile) - SIEMPRE
+- ✅ Autoría IA reconocida en todos los commits
 
 ---
 
-## [0.2.0] - 2026-01-22
+## 📅 Roadmap de Releases Futuros
 
-### Added (Agregado)
-- **Documentación exhaustiva del proyecto**:
-  - `Decisiones_Tecnicas.md` - 12+ decisiones arquitectónicas documentadas
-  - `Endpoints_API.md` - Inventario completo de 19 categorías de endpoints
-  - `Recursos_Tecnicos.md` - Enlaces a documentación de todas las tecnologías
-  - `Troubleshooting.md` - Guía completa de resolución de problemas
-  - `CHANGELOG.md` - Este archivo
-  - `ROADMAP.md` - Planificación de features
+### [0.1.0] - Primer Release Oficial
 
-- **Mejoras en autenticación**:
-  - Endpoint `/api/auth/validate` - Validación de sesión con metadata
-  - Endpoint `/api/auth/extend-session` - Extensión de sesión (token rotation)
-  - Headers de no-cache en `/validate` para SessionManager
-  - Lectura de `ai_analysis` desde BD en tiempo real (no solo JWT)
+**Prerrequisitos**: Completar FASE 0 (Issue #9)
 
-### Changed (Cambiado)
-- **README.md completamente reescrito**:
-  - Propósito actualizado: Demo para clientes + base para implementaciones
-  - Público objetivo: Solo equipo interno TNS
-  - Estructura de equipo actualizada con roles (Jefe Dev, POs, Developers)
-  - Migración de secciones largas a archivos independientes
-  - Zona horaria especificada: America/Santiago (Chile) - SIEMPRE
-  - Documentación de convenciones Git con reconocimiento de IA
+**Contenido planeado**:
+- Base de datos creada y documentada (Issue #1)
+- Configuración migrada completamente a BD (Issue #3)
+- Documentación completa y validada (Issue #2)
+- Convenciones establecidas y documentadas
+- Entorno de desarrollo configurado (Issue #5)
+- Arquitectura revisada y aprobada (Issue #6)
 
-- **Stack Tecnológico actualizado**:
-  - Base de datos especificada como MySQL (no MariaDB)
-  - Express actualizado a 5.1.0 (versión moderna)
-  - React actualizado a 19.2.0
+**Fecha**: TBD (depende de completar FASE 0)
 
-- **Nomenclatura universal establecida**:
-  - Regla aplicada: TODOS los archivos deben seguir camelCase + sufijo
-  - Ejemplos: `shellyCollector.js`, `emailService.js`, `deviceRoutes.js`
-
-### Removed (Eliminado)
-- **SMS/Twilio completamente removido**:
-  - Dependencia `twilio` eliminada de `package.json`
-  - Servicio `sms/smsService.js` removido
-  - Endpoint `/api/sms` removido
-  - Referencias en documentación eliminadas
-  - Canales soportados: Solo Email (SendGrid) + Push (Web Push)
-
-- **Variables de entorno (.env)**:
-  - Por decisión técnica, NO se utilizan variables de entorno
-  - Toda configuración se gestiona desde base de datos
-
-### Deprecated (Deprecado)
-- **`/servicios/src/config/jsons/unified-config.json`**:
-  - Marcado como LEGACY
-  - En proceso de migración a base de datos
-  - Solo quedará información que no pueda almacenarse en BD
-
-- **`/servicios/specs/` folder**:
-  - Marcado como DEPRECADO
-  - Usar GitHub Issues en su lugar
+Ver [ROADMAP.md](./ROADMAP.md) para planificación completa.
 
 ---
 
-## [0.1.0] - 2026-01-15
+## 📖 Tipos de Cambios
 
-### Added (Agregado)
-- **Sistema de Collectors modular**:
-  - `shellyCollector.js` - Integración con dispositivos Shelly
-  - `ubibotCollector.js` - Integración con dispositivos Ubibot
-  - Arquitectura extensible para futuros collectors
-
-- **Sistema de Alertas v4.0.0**:
-  - Alertas configurables por tipo (temperatura, humedad, conectividad)
-  - Múltiples canales de notificación (email, push)
-  - Plantillas reutilizables
-  - Programación flexible (cron-based)
-  - Documentación completa en `/servicios/src/components/alerts/README.md`
-
-- **Sistema de Reportes PDF**:
-  - Generación de PDFs con templates ejecutivos
-  - Gráficos embebidos con QuickChart.js
-  - Branding corporativo (logo, colores)
-  - Templates modulares por tipo de reporte
-  - Guía UX en `/servicios/src/components/reports/UX_TESTING_GUIDE.md`
-
-- **PWA (Progressive Web App)**:
-  - Service Workers implementados
-  - Manifest para instalación
-  - Push Notifications funcionales
-  - Funcionalidad offline
-
-- **Autenticación JWT**:
-  - Tokens con rotación automática
-  - HTTP-only cookies (protección XSS)
-  - Refresh tokens con expiración configurable
-  - Middleware de autenticación robusto
-
-- **Base de datos MySQL**:
-  - Esquema completo con 50+ tablas
-  - Stored procedures para lógica de negocio
-  - Triggers para auditoría y validación
-  - Scripts de creación en `/SQL_FILES/01_creacion_desde_cero/`
-
-- **Documentación inicial**:
-  - `README.md` - Documentación general del proyecto
-  - `Base_de_Datos.md` - Esquema completo de base de datos
-  - `Apis_externas.md` - Documentación de 8 APIs externas
-  - `Info_Github.md` - Workflow Git y convenciones
-
-### Technical Stack (Stack Técnico Inicial)
-- **Backend**:
-  - Node.js >= 18.x
-  - Express 5.1.0
-  - MySQL 8.x (driver: mysql2 3.15.2)
-
-- **Frontend**:
-  - React 19.2.0
-  - TailwindCSS 3.4.18
-  - Webpack 5.102.1
-  - Radix UI components
-
-- **Notificaciones**:
-  - Email: SendGrid Mail 8.1.4
-  - Push: Web Push 3.6.7
-
-- **Seguridad**:
-  - JWT: jsonwebtoken 9.0.2
-  - Passwords: Argon2 0.44.0 + Bcrypt 6.0.0
-
-- **Reportes**:
-  - PDFKit 0.16.0
-  - Puppeteer 24.26.1
-  - QuickChart.js 3.1.3
-
-- **IA**:
-  - Provider: DeepSeek
-  - OpenAI SDK: 6.8.1
-
----
-
-## [0.0.1] - 2026-01-01
-
-### Added (Agregado)
-- Inicialización del proyecto
-- Estructura básica de carpetas
-- Configuración inicial de Node.js + Express
-- Setup inicial de base de datos MySQL
-
----
-
-## Tipos de Cambios
+Este changelog sigue [Keep a Changelog](https://keepachangelog.com/en/1.0.0/):
 
 - **Added** (Agregado): Nueva funcionalidad
 - **Changed** (Cambiado): Cambios en funcionalidad existente
-- **Deprecated** (Deprecado): Funcionalidad que será removida en futuras versiones
+- **Deprecated** (Deprecado): Funcionalidad que será removida
 - **Removed** (Eliminado): Funcionalidad removida
 - **Fixed** (Corregido): Corrección de bugs
-- **Security** (Seguridad): Cambios relacionados con vulnerabilidades
+- **Security** (Seguridad): Cambios de seguridad
 
 ---
 
-## Versionado Semántico
+## 🔢 Versionado Semántico
 
-El proyecto sigue [Semantic Versioning](https://semver.org/):
+El proyecto seguirá [Semantic Versioning](https://semver.org/) desde v0.1.0:
 
 - **MAJOR** (X.0.0): Cambios incompatibles con versiones anteriores
-- **MINOR** (0.X.0): Nueva funcionalidad compatible con versiones anteriores
-- **PATCH** (0.0.X): Correcciones de bugs compatibles con versiones anteriores
+- **MINOR** (0.X.0): Nueva funcionalidad compatible
+- **PATCH** (0.0.X): Correcciones de bugs compatibles
 
 ---
 
-## Fechas de Release
+## 📝 Notas
 
-| Versión | Fecha | Destacados |
-|---------|-------|------------|
-| **0.2.0** | 2026-01-22 | Documentación exhaustiva, eliminación SMS/Twilio, actualización stack |
-| **0.1.0** | 2026-01-15 | Sistema de Collectors, Alertas v4.0.0, Reportes PDF, PWA funcional |
-| **0.0.1** | 2026-01-01 | Inicialización del proyecto |
-
----
-
-## Próximos Releases (Planificados)
-
-### [0.3.0] - TBD
-- Finalización de migración de configuración a BD
-- Estandarización completa de nomenclatura
-- Tests unitarios (Jest)
-- Documentación completa de endpoints con ejemplos
-
-### [0.4.0] - TBD
-- Tests E2E (Cypress/Playwright)
-- Dockerización de aplicación
-- CI/CD con GitHub Actions
-
-### [1.0.0] - TBD
-- Primera versión estable para producción
-- Documentación completa de API (Swagger/OpenAPI)
-- Secrets manager (AWS Secrets Manager / HashiCorp Vault)
-
-Ver [ROADMAP.md](./ROADMAP.md) para detalles completos de planificación.
+- **Estado actual**: Sin releases oficiales (en desarrollo de FASE 0)
+- **Zona horaria**: America/Santiago (Chile)
+- **Autoría**: Commits incluyen reconocimiento de IA y colaboradores
+- **Convenciones**: Ver [Info_Github.md](./Info_Github.md) para detalles
 
 ---
 
-## Notas
-
-- **Zona horaria**: Todos los timestamps en este changelog usan America/Santiago (Chile)
-- **Autoría**: Commits incluyen reconocimiento de IA y colaboradores cuando aplica
-- **Convenciones**: Ver [Info_Github.md](./Info_Github.md) para convenciones de commits
-
----
-
-**Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última actualización**: 2026-01-22
-
----
-
-## Referencias
+## 🔗 Referencias
 
 - **Formato**: https://keepachangelog.com/en/1.0.0/
 - **Versionado**: https://semver.org/
 - **Conventional Commits**: https://www.conventionalcommits.org/
+- **Roadmap**: [ROADMAP.md](./ROADMAP.md)
+- **Issue Tracking**: [GitHub Issues](https://github.com/andresTNS/TNS_TRACK_DEMO/issues)
+
+---
+
+**Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
+**Última actualización**: 2026-01-26
