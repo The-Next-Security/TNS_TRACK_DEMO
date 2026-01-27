@@ -12,10 +12,9 @@
 
 1. [Visión del Proyecto](#visión-del-proyecto)
 2. [Estado Actual del Proyecto](#estado-actual-del-proyecto)
-3. [FASE 0: Planificación y Fundamentos](#fase-0-planificación-y-fundamentos) (🟡 EN PROGRESO)
-4. [Fases Futuras](#fases-futuras)
-5. [Tracking de Issues](#tracking-de-issues)
-6. [Principios de Desarrollo](#principios-de-desarrollo)
+3. [FASE 0: Planificación y Fundamentos](#fase-0-planificación-y-fundamentos)
+4. [Tracking de Issues](#tracking-de-issues)
+5. [Principios de Desarrollo](#principios-de-desarrollo)
 
 ---
 
@@ -185,62 +184,6 @@ Establecer fundamentos sólidos ANTES del primer release (v0.1.0):
 
 ---
 
-## Fases Futuras
-
-**⚠️ IMPORTANTE**: Las fases siguientes están PENDIENTES de definición formal en Issue #8.
-
-La planificación detallada de fases post-FASE 0 se realizará una vez completado Issue #8 (Establecer roadmap y prioridades) como parte del cierre de FASE 0.
-
-### Áreas de Trabajo Identificadas (No Priorizadas Aún)
-
-Las siguientes áreas han sido identificadas como posibles trabajos futuros, pero **NO tienen issues creados ni prioridades asignadas**:
-
-#### Refactorización y Limpieza
-- Migración de configuración a BD (⚠️ EN PROGRESO como parte de Issue #3)
-- Estandarización de nomenclatura a camelCase + sufijo
-- Unificación de librería de fechas (4 librerías actuales: moment, luxon, date-fns, dayjs)
-- Limpieza de carpeta `/specs` (usar GitHub Issues)
-- Remoción de código comentado y obsoleto
-
-#### Testing y Calidad
-- Tests unitarios (Jest)
-- Tests de integración
-- Tests E2E (Cypress/Playwright - decisión pendiente)
-- Linting automatizado (ESLint + Prettier)
-- Pre-commit hooks (Husky)
-
-#### Infraestructura y DevOps
-- Dockerización (Dockerfile + docker-compose)
-- CI/CD (GitHub Actions)
-- Secrets manager (AWS Secrets Manager / HashiCorp Vault - decisión pendiente)
-- Monitoreo y logging (Winston/Pino - decisión pendiente)
-- APM Tool (New Relic / Datadog / Sentry - decisión pendiente)
-
-#### Documentación Avanzada
-- Swagger/OpenAPI spec automatizada
-- Storybook para componentes React
-- Guías de deployment y rollback
-- Runbooks operacionales
-
-#### Features Avanzados
-- Multi-tenancy (múltiples clientes en misma instancia)
-- Webhooks salientes
-- Rate limiting avanzado por usuario/endpoint
-- Analytics dashboard interno
-
-**Timeline**: TBD (se definirá en Issue #8 al completar FASE 0)
-
-**Decisiones Técnicas Pendientes**:
-| Decisión | Responsable | Opciones |
-|----------|-------------|----------|
-| Framework testing E2E | andresTNS | Cypress vs Playwright |
-| Secrets Manager | andresTNS | AWS Secrets Manager vs HashiCorp Vault |
-| Logging Solution | andresTNS | Winston vs Pino |
-| APM Tool | andresTNS | New Relic vs Datadog vs Sentry |
-| Librería de fechas única | andresTNS | date-fns vs Luxon vs Day.js |
-
----
-
 ## Tracking de Issues
 
 ### Convención de Labels
@@ -253,11 +196,6 @@ Las siguientes áreas han sido identificadas como posibles trabajos futuros, per
 
 **Fases**:
 - `phase:0-foundation` - FASE 0: Planificación y Fundamentos
-- `phase:1-refactor` - Refactorización y limpieza (futuro)
-- `phase:2-testing` - Testing y calidad (futuro)
-- `phase:3-infra` - Infraestructura DevOps (futuro)
-- `phase:4-docs` - Documentación avanzada (futuro)
-- `phase:5-advanced` - Features avanzados (futuro)
 
 **Tipos**:
 - `type:feature` - Nueva funcionalidad
@@ -310,27 +248,6 @@ Un issue se considera completo cuando:
 - ✅ Code review aprobado por andresTNS
 - ✅ Validado por Product Owners (si aplica)
 - ✅ Issue cerrado en GitHub
-
-### Convenciones de Commits
-
-**Formato obligatorio**:
-```
-tipo(módulo): descripción corta
-
-Detalles de cambios realizados.
-Explicación técnica si es necesario.
-
-Issue: #123
-PR: #456 (si aplica)
-
-🤖 Generado con Claude Code
-
-Co-Authored-By: Claude <noreply@anthropic.com>
-```
-
-**Autoría IA**: SIEMPRE reconocer cuando Claude Code u otra IA contribuyó al commit.
-
-Ver [Info_Github.md](./Info_Github.md) para convenciones completas.
 
 ---
 
