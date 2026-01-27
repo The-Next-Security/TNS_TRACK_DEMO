@@ -1,13 +1,5 @@
 # Base de Datos - TNS Track
 
-> **⚠️ Nota Importante**: Las convenciones de nomenclatura y estructura de base de datos están en proceso de formalización:
-> - **Issue #1**: [Creación de base de datos desde cero](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/1) - Estandarización de nomenclatura y estructura completa
-> - **Issue #3**: [Tabla de configuración centralizada](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3) - Migración de configuración desde JSONs a BD
->
-> Este documento se actualizará cuando dichos issues estén completos.
-
----
-
 ## 🗄️ Información General
 
 - **Nombre**: `tns_cool_track`
@@ -32,19 +24,97 @@ USE tns_cool_track;
 
 ## 📋 Convenciones de Nomenclatura
 
-### Tablas
-- **Formato**: snake_case
-- **Ejemplos**: `alert_tracking`, `device_names`, `scheduled_reports`
-- **Pluralización**: Depende del contexto semántico
-  - Uso de plural para colecciones: `usuarios`, `devices`
-  - Uso de singular para entidades: `alert_tracking` (tracking de alerta)
-- **Sin prefijos**: No se utiliza prefijo estándar como `tns_`
+> **Fuente oficial**: [Issue #1 - Creación de la base de datos desde cero](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/1)
+
+### Nombres de Tablas
+
+Las tablas deben seguir un sistema de **prefijos obligatorios** según su propósito:
+
+| Prefijo | Significado | Explicación | Ejemplo |
+|---------|-------------|-------------|---------|
+| `gen_` | General | Utilizado para tablas de uso global y que impactan en todos los módulos del servicio | `gen_usuario` |
+| `rep_` | Reportería | Utilizado para tablas de uso específico de reportería que se realizan mediante email | `rep_reportes_generados` |
+| `ale_` | Alertas y notificaciones | Utilizado para tablas de uso específico de envío de alertas y notificaciones que no son enviadas mediante email | `ale_preferencias` |
+| `sem_` | Mediciones eléctricas (Shelly Electrical Measurements) | Utilizado para tablas de uso relativo a mediciones eléctricas y lo relativo a transformaciones y cálculos de los mismos | `sem_mediciones` |
+| `ubi_` | Ubibot | Utilizado para tablas de uso relativo a mediciones de temperatura salidas desde Ubibot y lo relativo a transformaciones y cálculos de los mismos | `ubi_sensor_readings` |
+| `log_` | Auditoría de cambios (concepto de log) | Utilizado en tablas que hacen de todo tipo de auditorías | `log_configuracion` |
+| `ai_` | Artificial Intelligence | Tablas específicas para el uso de inteligencia artificial | `ai_query_logs` |
+
+**Reglas**:
+- Todo en minúsculas
+- Formato: snake_case
+- Prefijo obligatorio según categoría
+- Nombre descriptivo después del prefijo
+
+### Convención de Nombres de Índices
+
+#### Formato General
+
+**Para índices simples**:
+```
+[Tipo]_[TABLA]_[COLUMNA]
+```
+
+**Para índices compuestos (múltiples columnas)**:
+```
+[Tipo]_[TABLA]_[COLUMNA1]-[COLUMNA2]-[COLUMNA3]
+```
+
+**Nota**: Si el nombre resultante excede los 64 caracteres (límite de MySQL) o es necesario por legibilidad, se puede omitir el prefijo de la tabla (ej: `gen_`) en el nombre del índice, manteniendo solo el nombre base de la tabla.
+
+#### Prefijos de Tipo
+
+| Prefijo | Tipo de Índice | Uso |
+|---------|----------------|-----|
+| `pk_` | PRIMARY KEY | Implícito, rara vez nombrado explícitamente |
+| `uk_` | UNIQUE KEY | Índices con restricción de unicidad |
+| `idx_` | INDEX normal | Índices de búsqueda estándar |
+| `ft_` | FULLTEXT INDEX | Índices de texto completo |
+| `sp_` | SPATIAL INDEX | Índices espaciales/geográficos |
+| `fk_` | FOREIGN KEY | Claves foráneas |
+
+#### Foreign Keys (Formato Especial)
+
+Para claves foráneas, el formato es más descriptivo para identificar claramente el origen y destino:
+
+```
+fk_[tabla origen]_[columna origen]_[tabla destino]_[columna destino]
+```
+
+#### Ejemplos de Índices
+
+**Índices simples**:
+- `uk_gen_usuario_email` - Índice único en email de usuarios
+- `idx_gen_usuario_activo` - Índice en columna activo
+
+**Índices compuestos**:
+- `idx_gen_usuario_activo-fecha_creacion` - Índice compuesto en activo y fecha_creacion
+- `idx_gen_usuario_nombre-apellido` - Índice compuesto en nombre y apellido
+- `idx_gen_usuario_activo-fecha_creacion-fecha_actualizacion` - Índice compuesto en tres columnas
+
+**Foreign Keys**:
+- `fk_gen_rol_id_usuario_gen_usuario_id_usuario` - Foreign key desde gen_rol.id_usuario hacia gen_usuario.id_usuario
+- `fk_gen_permiso_id_rol_gen_rol_id_rol` - Foreign key desde gen_permiso.id_rol hacia gen_rol.id_rol
+
+**Ejemplo omitiendo prefijo (si es necesario por longitud)**:
+- `uk_usuario_email` - Versión abreviada si `uk_gen_usuario_email` excede 64 caracteres
+
+#### Reglas de Nomenclatura de Índices
+
+1. Todo en minúsculas
+2. Separación con guiones bajos (`_`) para tipo, tabla y columna individual
+3. Separación con guiones (`-`) entre columnas en índices compuestos
+4. Nombre de tabla completo (sin prefijo de esquema), a menos que sea necesario omitir el prefijo por longitud
+5. Para índices compuestos: listar todas las columnas separadas por guiones
+6. Máximo 64 caracteres (límite MySQL)
+7. Foreign keys deben seguir el formato completo con origen y destino
 
 ### Columnas
+
 - **Formato**: snake_case
 - **IDs**:
-  - Primary Key: `id` (AUTO_INCREMENT, UNSIGNED)
-  - Foreign Keys: `{tabla}_id` (ej: `user_id`, `device_id`, `channel_id`)
+  - Primary Key: `id_{tabla}` (AUTO_INCREMENT, UNSIGNED)
+  - Foreign Keys: `fk_id_{tabla}` (ej: `fk_id_usuario`, `fk_id_dispositivo`, `fk_id_canal`)
 - **Timestamps**:
   - `created_at` DATETIME (fecha de creación)
   - `updated_at` DATETIME (fecha de última actualización)
@@ -59,499 +129,21 @@ USE tns_cool_track;
   - TEXT para textos largos
   - JSON para estructuras complejas
 
-### Índices
-- **Primary Key**: `PRIMARY KEY (id)`
-- **Índices Únicos**:
-  - Naming: `UNIQUE KEY idx_unique_{columna}` o `UNIQUE KEY uk_{tabla}_{columna}`
-  - Ejemplo: `UNIQUE KEY idx_unique_email (email)`
-- **Índices Simples**:
-  - Naming: `KEY idx_{tabla}_{columna}` o `KEY idx_{columna}`
-  - Ejemplo: `KEY idx_created_at (created_at)`
-- **Índices Compuestos**:
-  - Naming: `KEY idx_{tabla}_{col1}_{col2}`
-  - Ejemplo: `KEY idx_alert_tracking_user_date (user_id, created_at)`
-- **Foreign Keys**:
-  - Naming: `CONSTRAINT fk_{tabla_origen}_{tabla_destino}`
-  - Ejemplo: `CONSTRAINT fk_alert_tracking_usuarios FOREIGN KEY (user_id) REFERENCES usuarios(id)`
-
 ### Valores NULL
+
 - **Regla General**: Preferir `NOT NULL` con valores por defecto
 - **Excepciones**:
   - Timestamps opcionales (`updated_at`, `deleted_at`)
   - Referencias opcionales (Foreign Keys que pueden ser nulos)
   - Campos calculados o derivados
 
-> **Nota**: Las convenciones de nomenclatura serán formalizadas y estandarizadas en Issues #1 (Creación de BD) y #3 (Tabla de configuración).
-
 ---
 
 ## 📊 Estructura de Tablas Identificadas
 
-⚠️ **NOTA IMPORTANTE**: Esta estructura está basada en análisis del código fuente. Se requiere verificación contra la base de datos real para completar detalles exactos de columnas, tipos de datos, constraints y relaciones.
-
-### 1. Tablas de Usuarios y Autenticación
-
-#### `usuarios`
-**Propósito**: Almacenar información de usuarios del sistema
-
-**Columnas identificadas** (basado en código):
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `email` - VARCHAR(255) UNIQUE NOT NULL
-- `password` - VARCHAR(255) NOT NULL (hash Argon2/Bcrypt)
-- `nombre` - VARCHAR(255)
-- `rol` - VARCHAR(50) (ej: 'admin', 'user')
-- `is_active` - TINYINT(1) DEFAULT 1
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Controlador**: `usuariosController.js`
-**Rutas**: `/api/usuarios`, `/api/auth`
-
----
-
-#### `reset_tokens`
-**Propósito**: Tokens para recuperación de contraseña
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `user_id` - INT UNSIGNED (FK a usuarios)
-- `token` - VARCHAR(255) UNIQUE NOT NULL
-- `expires_at` - DATETIME NOT NULL
-- `used` - TINYINT(1) DEFAULT 0
-- `created_at` - DATETIME
-
-**Servicio**: `tokenService.js`
-**Rutas**: `/api/auth` (forgot-password, reset-password)
-
----
-
-### 2. Tablas de Dispositivos
-
-#### `device_names`
-**Propósito**: Configuración y nombres de dispositivos Shelly
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `device_id` - VARCHAR(100) UNIQUE NOT NULL
-- `name` - VARCHAR(255) NOT NULL
-- `type` - VARCHAR(50) (ej: 'shelly_plug', 'shelly_em')
-- `location` - VARCHAR(255)
-- `is_active` - TINYINT(1) DEFAULT 1
-- `categoria` - VARCHAR(100) (para agrupación de consumo)
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Collector**: `shelly-collector.js`
-**Migración**: `20251110_restore_device_names.sql`
-**Rutas**: `/api/devices`
-
----
-
-#### `devices_ubibot`
-**Propósito**: Configuración de sensores de temperatura Ubibot
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `channel_id` - VARCHAR(100) UNIQUE NOT NULL
-- `name` - VARCHAR(255) NOT NULL
-- `location` - VARCHAR(255)
-- `min_temp` - DECIMAL(5,2) (temperatura mínima permitida)
-- `max_temp` - DECIMAL(5,2) (temperatura máxima permitida)
-- `is_active` - TINYINT(1) DEFAULT 1
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Collector**: `ubibot-collector.js`
-**Servicio**: `ubibot/ubibotService.js`
-**Rutas**: `/api/ubibot`
-
----
-
-### 3. Tablas de Alertas
-
-#### `alert_tracking`
-**Propósito**: Registro histórico de todas las alertas generadas
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `alert_type` - VARCHAR(50) (ej: 'temperature', 'power', 'gps')
-- `severity` - VARCHAR(20) (ej: 'critical', 'warning', 'info')
-- `device_id` - VARCHAR(100)
-- `channel_id` - VARCHAR(100)
-- `message` - TEXT NOT NULL
-- `value` - DECIMAL(10,2) (valor que disparó la alerta)
-- `threshold` - DECIMAL(10,2) (umbral configurado)
-- `status` - VARCHAR(20) (ej: 'active', 'acknowledged', 'resolved')
-- `acknowledged_by` - INT UNSIGNED (FK a usuarios)
-- `acknowledged_at` - DATETIME
-- `resolved_at` - DATETIME
-- `notification_sent` - TINYINT(1) DEFAULT 0
-- `notification_channels` - JSON (ej: ["email", "sms", "push"])
-- `metadata` - JSON (datos adicionales)
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Índices recomendados**:
-- `KEY idx_alert_type (alert_type)`
-- `KEY idx_severity (severity)`
-- `KEY idx_status (status)`
-- `KEY idx_created_at (created_at)`
-- `KEY idx_device_id (device_id)`
-
-**Rutas**: `/api/alert-tracking`
-
----
-
-#### `alert_metrics_hourly`
-**Propósito**: Métricas agregadas de alertas por hora (optimización de queries)
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `hour_timestamp` - DATETIME NOT NULL (truncado a hora)
-- `alert_type` - VARCHAR(50)
-- `total_alerts` - INT UNSIGNED DEFAULT 0
-- `critical_count` - INT UNSIGNED DEFAULT 0
-- `warning_count` - INT UNSIGNED DEFAULT 0
-- `info_count` - INT UNSIGNED DEFAULT 0
-- `acknowledged_count` - INT UNSIGNED DEFAULT 0
-- `resolved_count` - INT UNSIGNED DEFAULT 0
-- `avg_resolution_time_minutes` - DECIMAL(10,2)
-- `created_at` - DATETIME
-
-**Índices recomendados**:
-- `UNIQUE KEY uk_hour_type (hour_timestamp, alert_type)`
-- `KEY idx_hour_timestamp (hour_timestamp)`
-
-**Job**: `metricsAggregationJob.js`
-
----
-
-#### `alert_schedule_config`
-**Propósito**: Configuración de horarios de alertas (Feature: 002-configurable-alert-schedules)
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `name` - VARCHAR(255) NOT NULL
-- `description` - TEXT
-- `enabled` - TINYINT(1) DEFAULT 1
-- `schedule_type` - VARCHAR(50) (ej: 'always', 'business_hours', 'custom')
-- `days_of_week` - JSON (ej: [1,2,3,4,5] para lunes a viernes)
-- `start_time` - TIME (ej: '09:00:00')
-- `end_time` - TIME (ej: '18:00:00')
-- `timezone` - VARCHAR(50) DEFAULT 'America/Santiago'
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Servicio**: `db/alertScheduleConfigService.js`, `baseAlertService.js`
-**Rutas**: `/api/alert-schedule`
-
----
-
-#### `alert_notification_config`
-**Propósito**: Configuración de destinatarios de notificaciones
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `alert_type` - VARCHAR(50)
-- `notification_channel` - VARCHAR(20) (ej: 'email', 'sms', 'push')
-- `recipients` - JSON (array de emails/teléfonos/user_ids)
-- `enabled` - TINYINT(1) DEFAULT 1
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Servicio**: `baseAlertService.js`
-
----
-
-### 4. Tablas de Reportes
-
-#### `scheduled_reports`
-**Propósito**: Programación de reportes automáticos
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `name` - VARCHAR(255) NOT NULL
-- `report_type` - VARCHAR(50) (ej: 'executive_temperature', 'executive_consumption', 'executive_alerts')
-- `schedule_cron` - VARCHAR(100) (expresión cron)
-- `recipients` - JSON (array de emails)
-- `parameters` - JSON (parámetros del reporte)
-- `enabled` - TINYINT(1) DEFAULT 1
-- `last_run_at` - DATETIME
-- `next_run_at` - DATETIME
-- `created_by` - INT UNSIGNED (FK a usuarios)
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Servicio**: `reports/reportSchedulerService.js`
-**Job**: `reportCleanupJob.js`
-**Rutas**: `/api/reports`
-
----
-
-#### `report_analytics`
-**Propósito**: Analytics de reportes generados
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `report_id` - INT UNSIGNED (FK a scheduled_reports, puede ser NULL para reportes on-demand)
-- `report_type` - VARCHAR(50)
-- `generated_at` - DATETIME NOT NULL
-- `generated_by` - INT UNSIGNED (FK a usuarios, puede ser NULL para automáticos)
-- `file_path` - VARCHAR(500)
-- `file_size_bytes` - INT UNSIGNED
-- `generation_time_ms` - INT UNSIGNED (tiempo de generación en milisegundos)
-- `status` - VARCHAR(20) (ej: 'success', 'error')
-- `error_message` - TEXT
-- `viewed_at` - DATETIME
-- `downloaded_at` - DATETIME
-- `expires_at` - DATETIME
-- `created_at` - DATETIME
-
-**Servicio**: `reports/reportAnalyticsService.js`
-
----
-
-### 5. Tablas de Energía y Consumo
-
-#### `energy_data`
-**Propósito**: Datos de consumo eléctrico recolectados por Shelly
-
-**Columnas identificadas**:
-- `id` - BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `device_id` - VARCHAR(100) NOT NULL
-- `timestamp` - DATETIME NOT NULL
-- `power_watts` - DECIMAL(10,2) (potencia instantánea)
-- `energy_wh` - DECIMAL(15,2) (energía acumulada en Wh)
-- `voltage_v` - DECIMAL(6,2)
-- `current_a` - DECIMAL(8,3)
-- `temperature_c` - DECIMAL(5,2) (temperatura del dispositivo)
-- `is_on` - TINYINT(1)
-- `collected_at` - DATETIME (timestamp de recolección)
-- `created_at` - DATETIME
-
-**Índices recomendados**:
-- `KEY idx_device_timestamp (device_id, timestamp)`
-- `KEY idx_timestamp (timestamp)`
-
-**Collector**: `shelly-collector.js`
-**Servicio**: `database-service.js`
-
----
-
-#### `total_energy`
-**Propósito**: Totales de energía calculados
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `device_id` - VARCHAR(100) NOT NULL
-- `date` - DATE NOT NULL
-- `total_energy_kwh` - DECIMAL(15,3)
-- `avg_power_w` - DECIMAL(10,2)
-- `max_power_w` - DECIMAL(10,2)
-- `min_power_w` - DECIMAL(10,2)
-- `hours_on` - DECIMAL(5,2)
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Índices recomendados**:
-- `UNIQUE KEY uk_device_date (device_id, date)`
-- `KEY idx_date (date)`
-
-**Servicio**: `total-energy-service.js`
-
----
-
-#### `consumo_por_categoria`
-**Propósito**: Consumo agrupado por categoría de dispositivo
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `categoria` - VARCHAR(100) NOT NULL
-- `periodo` - VARCHAR(20) (ej: 'daily', 'monthly', 'yearly')
-- `fecha` - DATE NOT NULL
-- `total_kwh` - DECIMAL(15,3)
-- `total_costo` - DECIMAL(12,2) (si se calcula costo)
-- `device_count` - INT UNSIGNED (número de dispositivos en categoría)
-- `created_at` - DATETIME
-
-**Servicio**: `consumo-categoria-service.js`
-**Rutas**: `/api/consumo-categoria`
-
----
-
-### 6. Tablas de Temperatura
-
-#### `temperature_data`
-**Propósito**: Datos de temperatura recolectados por Ubibot
-
-**Columnas identificadas**:
-- `id` - BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `channel_id` - VARCHAR(100) NOT NULL
-- `timestamp` - DATETIME NOT NULL
-- `temperature_c` - DECIMAL(5,2) NOT NULL
-- `humidity` - DECIMAL(5,2) (si el sensor lo soporta)
-- `battery_level` - DECIMAL(5,2)
-- `signal_strength` - INT
-- `is_defrost_cycle` - TINYINT(1) DEFAULT 0 (detectado automáticamente)
-- `collected_at` - DATETIME
-- `created_at` - DATETIME
-
-**Índices recomendados**:
-- `KEY idx_channel_timestamp (channel_id, timestamp)`
-- `KEY idx_timestamp (timestamp)`
-- `KEY idx_is_defrost (is_defrost_cycle)`
-
-**Collector**: `ubibot-collector.js`
-**Servicio**: `temperatureDashboardService.js`
-
----
-
-#### `temperature_thresholds`
-**Propósito**: Umbrales de temperatura configurados por dispositivo
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `channel_id` - VARCHAR(100) NOT NULL
-- `min_temp` - DECIMAL(5,2) NOT NULL
-- `max_temp` - DECIMAL(5,2) NOT NULL
-- `critical_min_temp` - DECIMAL(5,2) (umbral crítico bajo)
-- `critical_max_temp` - DECIMAL(5,2) (umbral crítico alto)
-- `enabled` - TINYINT(1) DEFAULT 1
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Índices recomendados**:
-- `UNIQUE KEY uk_channel (channel_id)`
-
-**Componente**: `ThresholdManagementV2.js`
-
----
-
-#### `defrost_cycles`
-**Propósito**: Registro de ciclos de descongelamiento detectados
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `channel_id` - VARCHAR(100) NOT NULL
-- `start_timestamp` - DATETIME NOT NULL
-- `end_timestamp` - DATETIME
-- `duration_minutes` - INT UNSIGNED
-- `max_temp_during_cycle` - DECIMAL(5,2)
-- `recovery_time_minutes` - INT UNSIGNED (tiempo en volver a temp normal)
-- `is_complete` - TINYINT(1) DEFAULT 0
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Índices recomendados**:
-- `KEY idx_channel_start (channel_id, start_timestamp)`
-- `KEY idx_is_complete (is_complete)`
-
-**Componente**: `DefrostAnalysisV2.js`, `ContadorCiclosDescongelamiento.js`
-**Controlador**: `contadorCiclosController.js`
-
----
-
-### 7. Tablas de GPS y Tracking
-
-#### `gps_data`
-**Propósito**: Datos GPS históricos de personal/activos
-
-**Columnas identificadas**:
-- `id` - BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `device_id` - VARCHAR(100) NOT NULL
-- `user_id` - INT UNSIGNED (FK a usuarios, si aplica)
-- `latitude` - DECIMAL(10,8) NOT NULL
-- `longitude` - DECIMAL(11,8) NOT NULL
-- `accuracy_meters` - DECIMAL(8,2)
-- `altitude_meters` - DECIMAL(8,2)
-- `speed_kmh` - DECIMAL(6,2)
-- `heading_degrees` - DECIMAL(5,2)
-- `timestamp` - DATETIME NOT NULL
-- `battery_level` - DECIMAL(5,2)
-- `created_at` - DATETIME
-
-**Índices recomendados**:
-- `KEY idx_device_timestamp (device_id, timestamp)`
-- `KEY idx_user_timestamp (user_id, timestamp)`
-- `KEY idx_timestamp (timestamp)`
-- Considerar índice espacial: `SPATIAL KEY idx_location (latitude, longitude)` (requiere tipo POINT)
-
-**Rutas**: `/api/gps-data`, `/api/gps`
-**Componentes**: `MapModal.js`, `HistoricalMovementsSearchV2.js`
-
----
-
-#### `last_known_position`
-**Propósito**: Última posición conocida (optimización de queries)
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `device_id` - VARCHAR(100) UNIQUE NOT NULL
-- `user_id` - INT UNSIGNED (FK a usuarios)
-- `latitude` - DECIMAL(10,8) NOT NULL
-- `longitude` - DECIMAL(11,8) NOT NULL
-- `accuracy_meters` - DECIMAL(8,2)
-- `timestamp` - DATETIME NOT NULL
-- `updated_at` - DATETIME
-
-**Índices recomendados**:
-- `UNIQUE KEY uk_device (device_id)`
-- `KEY idx_user (user_id)`
-
-**Componente**: `LastKnownPositionV2.js`
-
----
-
-#### `blind_spot_zones`
-**Propósito**: Zonas de puntos ciegos (sin cobertura GPS)
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `name` - VARCHAR(255) NOT NULL
-- `description` - TEXT
-- `polygon_coordinates` - JSON (array de lat/lng)
-- `is_active` - TINYINT(1) DEFAULT 1
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Rutas**: `/api/blind-spots`
-
----
-
-### 8. Tablas de Configuración
-
-#### `presets`
-**Propósito**: Presets de configuración de usuario
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `user_id` - INT UNSIGNED (FK a usuarios)
-- `name` - VARCHAR(255) NOT NULL
-- `type` - VARCHAR(50) (ej: 'dashboard', 'alerts', 'reports')
-- `configuration` - JSON NOT NULL
-- `is_default` - TINYINT(1) DEFAULT 0
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Servicio**: `presetService.js`
-**Rutas**: `/api/presets`
-
----
-
-#### `global_settings`
-**Propósito**: Configuración global del sistema
-
-**Columnas identificadas**:
-- `id` - INT UNSIGNED AUTO_INCREMENT PRIMARY KEY
-- `setting_key` - VARCHAR(100) UNIQUE NOT NULL
-- `setting_value` - TEXT
-- `data_type` - VARCHAR(20) (ej: 'string', 'number', 'boolean', 'json')
-- `description` - TEXT
-- `updated_by` - INT UNSIGNED (FK a usuarios)
-- `created_at` - DATETIME
-- `updated_at` - DATETIME
-
-**Rutas**: `/api/config`
+### Agrupacion
+#### Tabla 
+[Caracteristicas a completar]
 
 ---
 
