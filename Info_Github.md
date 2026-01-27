@@ -70,6 +70,21 @@
 - ✅ `[BUG] Error en cálculo de promedios de temperatura`
 - ✅ `[RELEASE] Paso a producción [v.0.2.0]`
 
+### Templates de Issues y PRs
+
+El repositorio cuenta con templates predefinidos para estandarizar la creación de issues y pull requests:
+
+#### Templates Disponibles
+- **Issue Template**: `.github/ISSUE_TEMPLATE/issue_template.md`
+  - Estructura: Idea general, Archivos a crear/modificar, Criterios de aceptación, Notas adicionales
+  - Uso: Automático al crear nuevo issue en GitHub
+
+- **Pull Request Template**: `.github/pull_request_template.md`
+  - Estructura: Descripción, Tipo de cambio, Issue relacionado, Checklist de validación
+  - Uso: Automático al crear nuevo PR en GitHub
+
+> **Recomendación**: Utilizar siempre estos templates para mantener consistencia en la documentación del proyecto.
+
 ---
 
 ## 🌿 Convenciones de Branches
@@ -252,21 +267,18 @@ Closes #[numero]
 
 ## 📊 Listado de Issues
 
-### Issues Abiertos
+### Issues Principales
 
-#### Issue #2: Documentación Inicial
-- **Enlace**: https://github.com/andresTNS/TNS_TRACK_DEMO/issues/2
-- **Estado**: OPEN
-- **Asignados**: Bufigol, andresTNS
-- **Labels**: `documentation`, `good first issue`
-- **Branch**: `chore/documentacion-inicial`
+| Número del Issue | Estado | Descripción Breve | Labels | Branch de Trabajo |
+|------------------|--------|-------------------|--------|-------------------|
+| [#2](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/2) | 🟡 OPEN | Documentación Inicial | `documentation`, `good first issue` | `chore/documentacion-inicial` |
+| [#1](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/1) | 🟡 OPEN | Creación de BD desde cero | `good first issue`, `SQL - BBDD` | Por definir |
+| [#3](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3) | 🟡 OPEN | Tabla de configuración centralizada | `SQL - BBDD`, `enhancement` | Por definir |
+| [#4](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/4) | 🟡 OPEN | Estructura de carpetas servicios | `architecture`, `refactoring` | Por definir |
+| [#8](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/8) | 🟡 OPEN | Mejoras UX Dashboard | `front-end`, `enhancement` | Por definir |
+| [#9](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/9) | 🟡 OPEN | FASE 0 - Planificación | `documentation`, `IMPORTANT` | `chore/documentacion-inicial` |
 
-#### Issue #1: Creación de la base de datos desde cero
-- **Enlace**: https://github.com/andresTNS/TNS_TRACK_DEMO/issues/1
-- **Estado**: OPEN
-- **Asignados**: Bufigol, andresTNS
-- **Labels**: `good first issue`, `SQL - BBDD`
-- **Branch**: (aún no tiene rama específica)
+> **Nota**: Para ver la lista completa actualizada de issues, visitar [Issues del repositorio](https://github.com/andresTNS/TNS_TRACK_DEMO/issues)
 
 ---
 
