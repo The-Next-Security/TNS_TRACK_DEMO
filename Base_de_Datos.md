@@ -1,5 +1,13 @@
 # Base de Datos - TNS Track
 
+> **⚠️ Nota Importante**: Las convenciones de nomenclatura y estructura de base de datos están en proceso de formalización:
+> - **Issue #1**: [Creación de base de datos desde cero](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/1) - Estandarización de nomenclatura y estructura completa
+> - **Issue #3**: [Tabla de configuración centralizada](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3) - Migración de configuración desde JSONs a BD
+>
+> Este documento se actualizará cuando dichos issues estén completos.
+
+---
+
 ## 🗄️ Información General
 
 - **Nombre**: `tns_cool_track`
