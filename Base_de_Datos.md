@@ -24,11 +24,9 @@ USE tns_cool_track;
 
 ## 📋 Convenciones de Nomenclatura
 
-> **Fuente oficial**: [Issue #1 - Creación de la base de datos desde cero](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/1)
 
 ### Nombres de Tablas
 
-Las tablas deben seguir un sistema de **prefijos obligatorios** según su propósito:
 
 | Prefijo | Significado | Explicación | Ejemplo |
 |---------|-------------|-------------|---------|
@@ -139,207 +137,25 @@ fk_[tabla origen]_[columna origen]_[tabla destino]_[columna destino]
 
 ---
 
-## 📊 Estructura de Tablas Identificadas
+## 📊 Estructura de Tablas 
 
-### Agrupacion
-#### Tabla 
-[Caracteristicas a completar]
 
 ---
 
 ## 🔧 Stored Procedures Identificados
 
-⚠️ **NOTA**: Basado en análisis de código. Requiere verificación contra base de datos real.
-
-### Procedimientos de Alertas
-
-#### `sp_insert_alert`
-**Propósito**: Inserción de nuevas alertas con validación
-
-**Parámetros estimados**:
-```sql
-IN p_alert_type VARCHAR(50),
-IN p_severity VARCHAR(20),
-IN p_device_id VARCHAR(100),
-IN p_message TEXT,
-IN p_value DECIMAL(10,2),
-IN p_threshold DECIMAL(10,2)
-```
-
-**Lógica estimada**:
-- Validar parámetros
-- Insertar en `alert_tracking`
-- Retornar ID de alerta creada
-
----
-
-#### `sp_update_alert_status`
-**Propósito**: Actualización de estado de alertas
-
-**Parámetros estimados**:
-```sql
-IN p_alert_id INT UNSIGNED,
-IN p_status VARCHAR(20),
-IN p_user_id INT UNSIGNED
-```
-
----
-
-#### `sp_get_alert_metrics`
-**Propósito**: Obtención de métricas agregadas de alertas
-
-**Parámetros estimados**:
-```sql
-IN p_start_date DATETIME,
-IN p_end_date DATETIME,
-IN p_alert_type VARCHAR(50)
-```
-
-**Retorno**: Resultset con métricas agregadas
-
----
-
-### Procedimientos de Energía
-
-#### `sp_calculate_energy_totals`
-**Propósito**: Cálculo de totales diarios de energía
-
-**Parámetros estimados**:
-```sql
-IN p_device_id VARCHAR(100),
-IN p_date DATE
-```
-
-**Lógica estimada**:
-- Agregar datos de `energy_data` para el día especificado
-- Insertar/actualizar en `total_energy`
-
----
-
-#### `sp_aggregate_consumption`
-**Propósito**: Agregación de consumo por categoría
-
-**Parámetros estimados**:
-```sql
-IN p_periodo VARCHAR(20),
-IN p_fecha DATE
-```
-
----
-
-### Procedimientos de Reportes
-
-#### `sp_generate_report_data`
-**Propósito**: Generación de datos para reportes ejecutivos
-
-**Parámetros estimados**:
-```sql
-IN p_report_type VARCHAR(50),
-IN p_start_date DATETIME,
-IN p_end_date DATETIME
-```
-
-**Retorno**: Múltiples resultsets según tipo de reporte
-
----
-
-#### `sp_cleanup_expired_reports`
-**Propósito**: Limpieza de reportes expirados
-
-**Lógica estimada**:
-- Seleccionar reportes donde `expires_at < NOW()`
-- Eliminar archivos físicos
-- Marcar como eliminados o borrar registros
-
-**Job asociado**: `reportCleanupJob.js`
 
 ---
 
 ## ⚡ Triggers Identificados
 
-⚠️ **NOTA**: Basado en lógica de aplicación. Requiere verificación contra base de datos real.
 
-### Triggers de Auditoría
-
-#### `before_insert_usuarios`
-**Tabla**: `usuarios`
-**Evento**: BEFORE INSERT
-**Propósito**: Generación de timestamps
-
-**Lógica estimada**:
-```sql
-SET NEW.created_at = NOW();
-SET NEW.updated_at = NOW();
-```
-
----
-
-#### `before_update_usuarios`
-**Tabla**: `usuarios`
-**Evento**: BEFORE UPDATE
-**Propósito**: Actualización de `updated_at`
-
-**Lógica estimada**:
-```sql
-SET NEW.updated_at = NOW();
-```
-
----
-
-### Triggers de Agregación
-
-#### `after_insert_energy_data`
-**Tabla**: `energy_data`
-**Evento**: AFTER INSERT
-**Propósito**: Actualización de totales de energía
-
-**Lógica estimada**:
-- Llamar a `sp_calculate_energy_totals` para actualizar `total_energy`
-
----
-
-#### `after_insert_temperature_data`
-**Tabla**: `temperature_data`
-**Evento**: AFTER INSERT
-**Propósito**: Detección de ciclos de descongelamiento y generación de alertas
-
-**Lógica estimada**:
-- Si temperatura > umbral de descongelamiento: marcar `is_defrost_cycle = 1`
-- Si temperatura fuera de rango: insertar en `alert_tracking`
-
----
-
-### Triggers de Validación
-
-#### `before_insert_alert_tracking`
-**Tabla**: `alert_tracking`
-**Evento**: BEFORE INSERT
-**Propósito**: Validación de datos antes de inserción
-
-**Lógica estimada**:
-- Validar que `severity` esté en valores permitidos
-- Validar que `alert_type` sea válido
-- Generar timestamp de creación
 
 ---
 
 ## 🔍 Vistas (Views)
 
-### `kpi_view`
-**Propósito**: Agregación de KPIs principales del sistema
 
-**Creación**: Migration `20251023_create_kpi_view.js`
-
-**Columnas estimadas**:
-- `total_devices` - Total de dispositivos activos
-- `total_alerts_today` - Alertas generadas hoy
-- `critical_alerts_active` - Alertas críticas sin resolver
-- `avg_temperature` - Temperatura promedio actual
-- `total_energy_today_kwh` - Consumo total del día
-- `devices_online` - Dispositivos en línea
-- `last_updated` - Timestamp de última actualización
-
-**Uso**: Dashboards principales
 
 ---
 
@@ -428,43 +244,6 @@ WHERE timestamp < DATE_SUB(NOW(), INTERVAL 1 YEAR);
 
 ---
 
-## 📝 Notas Importantes
-
-### ⚠️ Verificación Pendiente
-
-Esta documentación se basa en análisis del código fuente del proyecto. Se requiere **verificación contra la base de datos real** para completar:
-
-1. **Listado completo de tablas y columnas**
-   - Tipos de datos exactos
-   - Longitudes de VARCHAR
-   - Valores DEFAULT
-   - Constraints NOT NULL
-
-2. **Stored procedures y triggers completos**
-   - Parámetros exactos
-   - Lógica completa
-   - Valores de retorno
-
-3. **Constraints y relaciones FK exactas**
-   - ON DELETE CASCADE/SET NULL/RESTRICT
-   - ON UPDATE CASCADE/SET NULL/RESTRICT
-
-4. **Índices completos**
-   - Todos los índices creados
-   - Estadísticas de uso
-
-### Issue Relacionado
-
-**Issue #1**: Creación de la base de datos desde cero
-
-Este issue se encargará de:
-- Generar scripts SQL completos de creación
-- Documentar todas las tablas, columnas y relaciones
-- Crear stored procedures y triggers
-- Establecer índices optimizados
-- Generar datos de prueba (seed data)
-
----
 
 ### Mantenimiento de Documentación
 
