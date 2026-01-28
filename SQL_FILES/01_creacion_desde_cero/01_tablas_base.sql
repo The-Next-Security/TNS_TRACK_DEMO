@@ -94,6 +94,98 @@ CREATE TABLE `gen_ubicaciones_reales` (
   PRIMARY KEY (`id_ubicacion_real`)
 ) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de ubicaciones reales';
 
+-- Catálogo de tipos de parámetros del sistema (compartido entre gen_cofiguracion y sem_configuracion)
+CREATE TABLE `gen_tipos_parametros` (
+  `id_tipo_parametro` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL COMMENT 'Nombre del tipo (STRING, NUMBER, BOOLEAN, OBJECT, ARRAY, JSON, DECIMAL, ENTERO, TEXTO)',
+  `descripcion` text COMMENT 'Descripción del tipo de parámetro',
+  `categoria` enum('PRIMITIVO','COMPLEJO','NUMERICO') DEFAULT 'PRIMITIVO' COMMENT 'Categorización del tipo',
+  `validacion_regex` varchar(255) NULL COMMENT 'Regex opcional para validar formato',
+  `ejemplo_valor` text NULL COMMENT 'Ejemplo de valor válido para este tipo',
+  `activo` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_tipo_parametro`),
+  UNIQUE KEY `uk_gen_tipos_parametros_nombre` (`nombre`),
+  INDEX `idx_gen_tipos_parametros_activo` (`activo`),
+  INDEX `idx_gen_tipos_parametros_categoria` (`categoria`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Catálogo centralizado de tipos de parámetros para todo el sistema';
+
+-- Grupos principales de configuración del sistema (database, jwt, websocket, email, etc.)
+CREATE TABLE `gen_cofiguracion_grupos` (
+  `id_cofiguracion_grupos` int NOT NULL AUTO_INCREMENT,
+  `nombre` varchar(50) NOT NULL COMMENT 'Nombre del grupo: database, jwt, websocket, email, etc.',
+  `descripcion` text COMMENT 'Descripción del propósito del grupo',
+  `orden` int DEFAULT '0' COMMENT 'Orden de visualización en UI',
+  `activo` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_cofiguracion_grupos`),
+  UNIQUE KEY `uk_gen_cofiguracion_grupos_nombre` (`nombre`),
+  INDEX `idx_gen_cofiguracion_grupos_activo` (`activo`),
+  INDEX `idx_gen_cofiguracion_grupos_orden` (`orden`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Grupos principales de configuración del sistema';
+
+-- Definición de estructura de parámetros de configuración general del sistema (sin valores)
+CREATE TABLE `gen_cofiguracion_parametros` (
+  `id_cofiguracion_parametros` int NOT NULL AUTO_INCREMENT,
+  `cofiguracion_grupos_id` int NOT NULL COMMENT 'FK a gen_cofiguracion_grupos',
+  `tipo_parametro_id` int NOT NULL COMMENT 'FK a gen_tipos_parametros',
+  `ruta_completa` varchar(255) NOT NULL COMMENT 'Ruta completa: database.development.host, jwt.secret, etc.',
+  `nombre_parametro` varchar(100) NOT NULL COMMENT 'Último nivel de la ruta: host, secret, port, etc.',
+  `nivel_anidacion` int NOT NULL DEFAULT '1' COMMENT 'Profundidad de anidación (1=raíz, 2=nivel1.param, 3=nivel1.nivel2.param)',
+  `ruta_padre` varchar(255) NULL COMMENT 'Ruta del padre (NULL si es raíz, ej: database.development para database.development.host)',
+  `es_sensible` tinyint(1) DEFAULT '0' COMMENT '1 = secreto/credencial (requiere encriptación), 0 = dato público',
+  `descripcion` text NULL COMMENT 'Descripción del propósito del parámetro',
+  `valor_default` text NULL COMMENT 'Valor por defecto si no hay valor activo',
+  `validacion_regex` varchar(255) NULL COMMENT 'Regex específico para este parámetro (sobreescribe el del tipo)',
+  `es_requerido` tinyint(1) DEFAULT '1' COMMENT '1 = parámetro obligatorio, 0 = opcional',
+  `activo` tinyint(1) DEFAULT '1',
+  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_cofiguracion_parametros`),
+  UNIQUE KEY `uk_gen_cofiguracion_parametros_ruta_completa` (`ruta_completa`),
+  INDEX `idx_gen_cofiguracion_parametros_grupo_id` (`cofiguracion_grupos_id`),
+  INDEX `idx_gen_cofiguracion_parametros_tipo_parametro_id` (`tipo_parametro_id`),
+  INDEX `idx_gen_cofiguracion_parametros_es_sensible` (`es_sensible`),
+  INDEX `idx_gen_cofiguracion_parametros_activo` (`activo`),
+  INDEX `idx_gen_cofiguracion_parametros_ruta_padre` (`ruta_padre`),
+  CONSTRAINT `fk_gen_cofiguracion_parametros_grupo_id_gen_cofiguracion_grupos_id_cofiguracion_grupos`
+    FOREIGN KEY (`cofiguracion_grupos_id`)
+    REFERENCES `gen_cofiguracion_grupos`(`id_cofiguracion_grupos`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_gen_cofiguracion_parametros_tipo_parametro_id_gen_tipos_parametros_id_tipo_parametro`
+    FOREIGN KEY (`tipo_parametro_id`)
+    REFERENCES `gen_tipos_parametros`(`id_tipo_parametro`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Definición de estructura de parámetros de configuración general del sistema (sin valores)';
+
+-- Valores reales de configuración con versionado e historial
+CREATE TABLE `gen_cofiguracion_valores` (
+  `id_cofiguracion_valores` int NOT NULL AUTO_INCREMENT,
+  `cofiguracion_parametros_id` int NOT NULL COMMENT 'FK a gen_cofiguracion_parametros',
+  `valor` text NOT NULL COMMENT 'Valor del parámetro (encriptado si es_sensible=1 en parámetros)',
+  `version` int DEFAULT '1' COMMENT 'Versión del valor (incrementa con cada cambio)',
+  `activo` tinyint(1) DEFAULT '1' COMMENT '1 = valor actual activo, 0 = valor histórico',
+  `valido_desde` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha desde la cual este valor es válido',
+  `valido_hasta` timestamp NULL DEFAULT NULL COMMENT 'Fecha hasta la cual fue válido (NULL = aún vigente)',
+  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_cofiguracion_valores`),
+  INDEX `idx_gen_cofiguracion_valores_parametro_id` (`cofiguracion_parametros_id`),
+  INDEX `idx_gen_cofiguracion_valores_activo` (`activo`),
+  INDEX `idx_gen_cofiguracion_valores_valido_desde-valido_hasta-activo` (`valido_desde`, `valido_hasta`, `activo`),
+  INDEX `idx_gen_cofiguracion_valores_version` (`version`),
+  UNIQUE KEY `uk_gen_cofiguracion_valores_parametro_id-activo` (`cofiguracion_parametros_id`, `activo`),
+  CONSTRAINT `fk_gen_cofiguracion_valores_parametro_id_gen_cofiguracion_parametros_id_cofiguracion_parametros`
+    FOREIGN KEY (`cofiguracion_parametros_id`)
+    REFERENCES `gen_cofiguracion_parametros`(`id_cofiguracion_parametros`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Valores reales de configuración con versionado e historial';
+
 -- ============================================
 -- TABLAS DE REPORTERÍA (rep_)
 -- ============================================
@@ -336,55 +428,29 @@ CREATE TABLE `sem_dispositivos` (
   INDEX `idx_sem_dispositivos_categoria` (`categoria`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de dispositivos Shelly';
 
--- ============================================
--- NOTA SOBRE CONFIGURACIÓN DEL SISTEMA (Issue #3)
--- ============================================
--- Las tablas sem_tipos_parametros y sem_configuracion implementan un patrón
--- similar al requerido en Issue #3 para la configuración general del sistema.
--- 
--- Patrón común:
--- 1. Tabla de catálogo de tipos (sem_tipos_parametros / gen_tipos_configuracion)
--- 2. Tabla de valores con validez temporal (sem_configuracion / gen_configuracion_sistema)
--- 
--- Diferencia:
--- - sem_*: Configuración específica del módulo de mediciones eléctricas
--- - gen_*: Configuración general del sistema (version, environment, database, jwt, etc.)
--- 
--- Ambas estructuras son escalables y permiten múltiples tipos de configuración
--- con control de versiones y validez temporal.
 
--- Catálogo de tipos de parámetros del sistema
-CREATE TABLE `sem_tipos_parametros` (
-  `id_tipos_parametros` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `descripcion` text COLLATE utf8mb4_unicode_ci,
-  `tipo_dato` enum('ENTERO','DECIMAL','TEXTO','BOOLEANO','JSON') COLLATE utf8mb4_unicode_ci NOT NULL,
-  `reglas_validacion` json DEFAULT NULL,
-  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_tipos_parametros`),
-  UNIQUE KEY `uk_sem_tipos_parametros_nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Catálogo de tipos de parámetros del sistema';
 
--- Tabla de configuración
+-- Tabla de configuración específica del módulo de mediciones eléctricas (usa gen_tipos_parametros compartido)
 CREATE TABLE `sem_configuracion` (
   `id_configuracion` int NOT NULL AUTO_INCREMENT,
-  `tipo_parametro_id` int NOT NULL,
-  `valor` text NOT NULL,
-  `activo` tinyint(1) DEFAULT '1',
-  `valido_desde` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `valido_hasta` timestamp NULL DEFAULT NULL,
-  `fecha_creacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `tipo_parametro_id` int NOT NULL COMMENT 'FK a gen_tipos_parametros (tabla compartida)',
+  `nombre_parametro` varchar(100) NOT NULL COMMENT 'Nombre específico del parámetro del módulo eléctrico',
+  `valor` text NOT NULL COMMENT 'Valor del parámetro de configuración',
+  `activo` tinyint(1) DEFAULT '1' COMMENT '1 = activo, 0 = inactivo',
+  `valido_desde` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha desde la cual este valor es válido',
+  `valido_hasta` timestamp NULL DEFAULT NULL COMMENT 'Fecha hasta la cual fue válido (NULL = aún vigente)',
+  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_configuracion`),
   INDEX `idx_sem_configuracion_tipo_parametro_id` (`tipo_parametro_id`),
-  INDEX `idx_sem_configuracion_valido_desde-valido_hasta-activo` (`valido_desde`,`valido_hasta`,`activo`),
-  CONSTRAINT `fk_sem_configuracion_tipo_parametro_id_sem_tipos_parametros_id_tipos_parametros` 
-    FOREIGN KEY (`tipo_parametro_id`) 
-    REFERENCES `sem_tipos_parametros`(`id_tipos_parametros`)
+  INDEX `idx_sem_configuracion_valido_desde-valido_hasta-activo` (`valido_desde`, `valido_hasta`, `activo`),
+  INDEX `idx_sem_configuracion_nombre_parametro` (`nombre_parametro`),
+  CONSTRAINT `fk_sem_configuracion_tipo_parametro_id_gen_tipos_parametros_id_tipo_parametro`
+    FOREIGN KEY (`tipo_parametro_id`)
+    REFERENCES `gen_tipos_parametros`(`id_tipo_parametro`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Configuración específica del módulo de mediciones eléctricas';
 
 -- Totales horarios de consumo energético
 CREATE TABLE `sem_totales_hora` (
