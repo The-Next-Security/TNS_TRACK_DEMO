@@ -1,4 +1,12 @@
 # ============================================
+# REGLAS GENERALES Y LOGS
+# ============================================
+*.log
+*.swp
+*~
+*.orig
+
+# ============================================
 # NODE.JS (servicios/)
 # ============================================
 servicios/node_modules/
@@ -13,6 +21,9 @@ servicios/eject.log
 servicios/npm-debug.log*
 servicios/yarn-debug.log*
 servicios/yarn-error.log*
+.eslintcache
+servicios/build/
+servicios/.cache/
 
 # ============================================
 # PUSH NOTIFICATIONS - Archivos sensibles
@@ -53,8 +64,9 @@ TNS_TRACK_DEMO/release.properties
 TNS_TRACK_DEMO/dependency-reduced-pom.xml
 TNS_TRACK_DEMO/buildNumber.properties
 TNS_TRACK_DEMO/.mvn/wrapper/maven-wrapper.jar
+TNS_TRACK_DEMO/nb-configuration.xml
 
-# Mantener los patrones genéricos que ya tenías
+# Mantener los patrones genéricos
 HELP.md
 target/
 !**/src/main/**/target/
