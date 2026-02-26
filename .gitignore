@@ -1,46 +1,66 @@
+# ============================================
+# NODE.JS (servicios/)
+# ============================================
 servicios/node_modules/
 servicios/src/config/jsons/
 servicios/src/config/token_id.txt
+servicios/.env
+servicios/.env.local
+servicios/.env.development.local
+servicios/.env.test.local
+servicios/.env.production.local
+servicios/eject.log
+servicios/npm-debug.log*
+servicios/yarn-debug.log*
+servicios/yarn-error.log*
 
 # ============================================
 # PUSH NOTIFICATIONS - Archivos sensibles
 # ============================================
-
-# Claves VAPID generadas
 vapid-keys.txt
 vapid-keys.json
 *.vapid
-
-# Logs de testing de push notifications
 push-notification-test.log
-
-# Variables de entorno con claves privadas
 .env.push
 .env.vapid
 
-# Archivos de sistema
+# ============================================
+# SISTEMA Y HERRAMIENTAS
+# ============================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
 .claude
 .github
 .playwright-mcp
 .specify
-
-# ============================================
-# CONTEXTO DE MIGRACIÓN SPRING BOOT
-# ============================================
-# Mega-prompt con análisis completo del proyecto
-# Solo para uso local - no commitear al repositorio
 SPRINGBOOT_MIGRATION_CONTEXT.md
 
 # ============================================
-# DEL PROYECTO SPRINGBOOT
+# JAVA / MAVEN (TNS_TRACK_DEMO/)
 # ============================================
+TNS_TRACK_DEMO/target/
+TNS_TRACK_DEMO/pom.xml.tag
+TNS_TRACK_DEMO/pom.xml.releaseBackup
+TNS_TRACK_DEMO/pom.xml.versionsBackup
+TNS_TRACK_DEMO/pom.xml.next
+TNS_TRACK_DEMO/release.properties
+TNS_TRACK_DEMO/dependency-reduced-pom.xml
+TNS_TRACK_DEMO/buildNumber.properties
+TNS_TRACK_DEMO/.mvn/wrapper/maven-wrapper.jar
+
+# Mantener los patrones genéricos que ya tenías
 HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
+### STS / IntelliJ / VS Code ###
 .apt_generated
 .classpath
 .factorypath
@@ -48,23 +68,16 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
-### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+.vscode/
+.nb-gradle/
+nbproject/private/
+nbbuild/
+dist/
+nbdist/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
