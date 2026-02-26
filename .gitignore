@@ -23,3 +23,10 @@ push-notification-test.log
 .github
 .playwright-mcp
 .specify
+
+# ============================================
+# CONTEXTO DE MIGRACIÓN SPRING BOOT
+# ============================================
+# Mega-prompt con análisis completo del proyecto
+# Solo para uso local - no commitear al repositorio
+SPRINGBOOT_MIGRATION_CONTEXT.md
