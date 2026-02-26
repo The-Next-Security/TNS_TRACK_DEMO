@@ -8,179 +8,181 @@ USE tns_cool_track;
 -- TABLAS GENERALES (gen_)
 -- ============================================
 
--- Tabla de Usuario
+-- Tabla de usuarios del sistema
 CREATE TABLE `gen_usuario` (
-  `id_usuario` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) NOT NULL,
-  `apellido` varchar(100) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `email` varchar(255) NOT NULL,
-  `activo` tinyint DEFAULT '1',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_usuario` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(100) NOT NULL,
+  `apellido` VARCHAR(100) NOT NULL,
+  `password` VARCHAR(255) NOT NULL,
+  `email` VARCHAR(255) NOT NULL,
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_usuario`),
   UNIQUE KEY `uk_gen_usuario_email` (`email`),
   INDEX `idx_gen_usuario_activo` (`activo`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Usuarios del sistema';
 
--- Tabla para recuperar contraseñas
+-- Tabla para recuperación de contraseñas
 CREATE TABLE `gen_password_reset` (
-  `id_password_reset` int NOT NULL AUTO_INCREMENT,
-  `id_usuario` int NOT NULL,
-  `token` varchar(255) NOT NULL,
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP,
-  `fecha_expiracion` datetime NOT NULL,
+  `id_password_reset` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT UNSIGNED NOT NULL,
+  `token` VARCHAR(255) NOT NULL,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_expiracion` DATETIME NOT NULL,
   PRIMARY KEY (`id_password_reset`),
   UNIQUE KEY `uk_gen_password_reset_token` (`token`),
   INDEX `idx_gen_password_reset_id_usuario` (`id_usuario`),
   INDEX `idx_gen_password_reset_fecha_creacion` (`fecha_creacion`),
-  CONSTRAINT `fk_gen_password_reset_id_usuario_gen_usuario_id_usuario` 
-    FOREIGN KEY (`id_usuario`) 
+  CONSTRAINT `fk_gen_password_reset_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
     REFERENCES `gen_usuario`(`id_usuario`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tokens para recuperación de contraseñas';
 
+-- Tabla de permisos del sistema
 CREATE TABLE `gen_permiso` (
-  `id_permiso` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) NOT NULL,
-  `descripcion` varchar(255) NOT NULL,
-  `activo` tinyint DEFAULT '1',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_permiso` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(100) NOT NULL,
+  `descripcion` VARCHAR(255) NOT NULL,
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_permiso`),
   UNIQUE KEY `uk_gen_permiso_nombre` (`nombre`),
   INDEX `idx_gen_permiso_activo` (`activo`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Permisos del sistema';
 
+-- Tabla de relación usuarios-permisos
 CREATE TABLE `gen_usuario_permisos` (
-  `id_usuario` int NOT NULL,
-  `id_permiso` int NOT NULL,
-  `activo` tinyint DEFAULT '1',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_usuario` INT UNSIGNED NOT NULL,
+  `id_permiso` INT UNSIGNED NOT NULL,
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_usuario`, `id_permiso`),
   INDEX `idx_gen_usuario_permisos_id_usuario` (`id_usuario`),
   INDEX `idx_gen_usuario_permisos_id_permiso` (`id_permiso`),
-  CONSTRAINT `fk_gen_usuario_permisos_id_usuario_gen_usuario_id_usuario` 
-    FOREIGN KEY (`id_usuario`) 
+  CONSTRAINT `fk_gen_usuario_permisos_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
     REFERENCES `gen_usuario`(`id_usuario`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_gen_usuario_permisos_id_permiso_gen_permiso_id_permiso` 
-    FOREIGN KEY (`id_permiso`) 
+  CONSTRAINT `fk_gen_usuario_permisos_id_permiso_gen_permiso_id_permiso`
+    FOREIGN KEY (`id_permiso`)
     REFERENCES `gen_permiso`(`id_permiso`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Relación entre usuarios y permisos';
 
 -- Tabla de feriados legales en Chile
 CREATE TABLE `gen_feriados_cl` (
-  `id_feriado` int NOT NULL AUTO_INCREMENT,
-  `fecha` date NOT NULL COMMENT 'Fecha del feriado en formato YYYY-MM-DD',
-  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Descripción o nombre del feriado',
+  `id_feriado` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `fecha` DATE NOT NULL COMMENT 'Fecha del feriado en formato YYYY-MM-DD',
+  `nombre` VARCHAR(100) NOT NULL COMMENT 'Descripción o nombre del feriado',
   PRIMARY KEY (`id_feriado`),
   UNIQUE KEY `uk_gen_feriados_cl_fecha` (`fecha`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de feriados legales en Chile';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Feriados legales en Chile';
 
--- Tabla de ubicaciones reales
+-- Tabla de ubicaciones reales físicas
 CREATE TABLE `gen_ubicaciones_reales` (
-  `id_ubicacion_real` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre de la ubicación real',
-  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Descripción de la ubicación real',
-  `activo` tinyint DEFAULT '1',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_ubicacion_real` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre de la ubicación real',
+  `descripcion` VARCHAR(255) NOT NULL COMMENT 'Descripción de la ubicación real',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_ubicacion_real`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de ubicaciones reales';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Ubicaciones reales físicas';
 
--- Catálogo de tipos de parámetros del sistema (compartido entre gen_cofiguracion y sem_configuracion)
+-- Catálogo centralizado de tipos de parámetros del sistema
 CREATE TABLE `gen_tipos_parametros` (
-  `id_tipo_parametro` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) NOT NULL COMMENT 'Nombre del tipo (STRING, NUMBER, BOOLEAN, OBJECT, ARRAY, JSON, DECIMAL, ENTERO, TEXTO)',
-  `descripcion` text COMMENT 'Descripción del tipo de parámetro',
-  `categoria` enum('PRIMITIVO','COMPLEJO','NUMERICO') DEFAULT 'PRIMITIVO' COMMENT 'Categorización del tipo',
-  `validacion_regex` varchar(255) NULL COMMENT 'Regex opcional para validar formato',
-  `ejemplo_valor` text NULL COMMENT 'Ejemplo de valor válido para este tipo',
-  `activo` tinyint(1) DEFAULT '1',
-  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_tipo_parametro` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(50) NOT NULL COMMENT 'Nombre del tipo (STRING, NUMBER, BOOLEAN, OBJECT, ARRAY, JSON, DECIMAL, ENTERO, TEXTO)',
+  `descripcion` TEXT COMMENT 'Descripción del tipo de parámetro',
+  `categoria` ENUM('primitivo','complejo','numerico') NOT NULL DEFAULT 'primitivo' COMMENT 'Categorización del tipo',
+  `validacion_regex` VARCHAR(255) NULL COMMENT 'Regex opcional para validar formato',
+  `ejemplo_valor` TEXT NULL COMMENT 'Ejemplo de valor válido para este tipo',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_tipo_parametro`),
   UNIQUE KEY `uk_gen_tipos_parametros_nombre` (`nombre`),
   INDEX `idx_gen_tipos_parametros_activo` (`activo`),
   INDEX `idx_gen_tipos_parametros_categoria` (`categoria`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Catálogo centralizado de tipos de parámetros para todo el sistema';
 
--- Grupos principales de configuración del sistema (database, jwt, websocket, email, etc.)
+-- Grupos principales de configuración del sistema
 CREATE TABLE `gen_cofiguracion_grupos` (
-  `id_cofiguracion_grupos` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(50) NOT NULL COMMENT 'Nombre del grupo: database, jwt, websocket, email, etc.',
-  `descripcion` text COMMENT 'Descripción del propósito del grupo',
-  `orden` int DEFAULT '0' COMMENT 'Orden de visualización en UI',
-  `activo` tinyint(1) DEFAULT '1',
-  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_cofiguracion_grupos` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(50) NOT NULL COMMENT 'Nombre del grupo: database, jwt, websocket, email, etc.',
+  `descripcion` TEXT COMMENT 'Descripción del propósito del grupo',
+  `orden` INT NOT NULL DEFAULT 0 COMMENT 'Orden de visualización en UI',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_cofiguracion_grupos`),
   UNIQUE KEY `uk_gen_cofiguracion_grupos_nombre` (`nombre`),
   INDEX `idx_gen_cofiguracion_grupos_activo` (`activo`),
   INDEX `idx_gen_cofiguracion_grupos_orden` (`orden`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Grupos principales de configuración del sistema';
 
--- Definición de estructura de parámetros de configuración general del sistema (sin valores)
+-- Definición de estructura de parámetros de configuración
 CREATE TABLE `gen_cofiguracion_parametros` (
-  `id_cofiguracion_parametros` int NOT NULL AUTO_INCREMENT,
-  `cofiguracion_grupos_id` int NOT NULL COMMENT 'FK a gen_cofiguracion_grupos',
-  `tipo_parametro_id` int NOT NULL COMMENT 'FK a gen_tipos_parametros',
-  `ruta_completa` varchar(255) NOT NULL COMMENT 'Ruta completa: database.development.host, jwt.secret, etc.',
-  `nombre_parametro` varchar(100) NOT NULL COMMENT 'Último nivel de la ruta: host, secret, port, etc.',
-  `nivel_anidacion` int NOT NULL DEFAULT '1' COMMENT 'Profundidad de anidación (1=raíz, 2=nivel1.param, 3=nivel1.nivel2.param)',
-  `ruta_padre` varchar(255) NULL COMMENT 'Ruta del padre (NULL si es raíz, ej: database.development para database.development.host)',
-  `es_sensible` tinyint(1) DEFAULT '0' COMMENT '1 = secreto/credencial (requiere encriptación), 0 = dato público',
-  `descripcion` text NULL COMMENT 'Descripción del propósito del parámetro',
-  `valor_default` text NULL COMMENT 'Valor por defecto si no hay valor activo',
-  `validacion_regex` varchar(255) NULL COMMENT 'Regex específico para este parámetro (sobreescribe el del tipo)',
-  `es_requerido` tinyint(1) DEFAULT '1' COMMENT '1 = parámetro obligatorio, 0 = opcional',
-  `activo` tinyint(1) DEFAULT '1',
-  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_cofiguracion_parametros` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_cofiguracion_grupos` INT UNSIGNED NOT NULL COMMENT 'FK a gen_cofiguracion_grupos',
+  `id_tipo_parametro` INT UNSIGNED NOT NULL COMMENT 'FK a gen_tipos_parametros',
+  `ruta_completa` VARCHAR(255) NOT NULL COMMENT 'Ruta completa: database.development.host, jwt.secret, etc.',
+  `nombre_parametro` VARCHAR(100) NOT NULL COMMENT 'Último nivel de la ruta: host, secret, port, etc.',
+  `nivel_anidacion` INT NOT NULL DEFAULT 1 COMMENT 'Profundidad de anidación (1=raíz, 2=nivel1.param, 3=nivel1.nivel2.param)',
+  `ruta_padre` VARCHAR(255) NULL COMMENT 'Ruta del padre (NULL si es raíz)',
+  `es_sensible` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = secreto/credencial (requiere encriptación), 0 = dato público',
+  `descripcion` TEXT NULL COMMENT 'Descripción del propósito del parámetro',
+  `valor_default` TEXT NULL COMMENT 'Valor por defecto si no hay valor activo',
+  `validacion_regex` VARCHAR(255) NULL COMMENT 'Regex específico para este parámetro',
+  `es_requerido` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = parámetro obligatorio, 0 = opcional',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_cofiguracion_parametros`),
   UNIQUE KEY `uk_gen_cofiguracion_parametros_ruta_completa` (`ruta_completa`),
-  INDEX `idx_gen_cofiguracion_parametros_grupo_id` (`cofiguracion_grupos_id`),
-  INDEX `idx_gen_cofiguracion_parametros_tipo_parametro_id` (`tipo_parametro_id`),
+  INDEX `idx_gen_cofiguracion_parametros_id_cofiguracion_grupos` (`id_cofiguracion_grupos`),
+  INDEX `idx_gen_cofiguracion_parametros_id_tipo_parametro` (`id_tipo_parametro`),
   INDEX `idx_gen_cofiguracion_parametros_es_sensible` (`es_sensible`),
   INDEX `idx_gen_cofiguracion_parametros_activo` (`activo`),
   INDEX `idx_gen_cofiguracion_parametros_ruta_padre` (`ruta_padre`),
-  CONSTRAINT `fk_gen_cofiguracion_parametros_grupo_id_gen_cofiguracion_grupos_id_cofiguracion_grupos`
-    FOREIGN KEY (`cofiguracion_grupos_id`)
+  CONSTRAINT `fk_cofiguracion_parametros_id_grupos_cofiguracion_grupos_id`
+    FOREIGN KEY (`id_cofiguracion_grupos`)
     REFERENCES `gen_cofiguracion_grupos`(`id_cofiguracion_grupos`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_gen_cofiguracion_parametros_tipo_parametro_id_gen_tipos_parametros_id_tipo_parametro`
-    FOREIGN KEY (`tipo_parametro_id`)
+  CONSTRAINT `fk_cofiguracion_parametros_id_tipo_tipos_parametros_id`
+    FOREIGN KEY (`id_tipo_parametro`)
     REFERENCES `gen_tipos_parametros`(`id_tipo_parametro`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Definición de estructura de parámetros de configuración general del sistema (sin valores)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Definición de estructura de parámetros de configuración del sistema';
 
 -- Valores reales de configuración con versionado e historial
 CREATE TABLE `gen_cofiguracion_valores` (
-  `id_cofiguracion_valores` int NOT NULL AUTO_INCREMENT,
-  `cofiguracion_parametros_id` int NOT NULL COMMENT 'FK a gen_cofiguracion_parametros',
-  `valor` text NOT NULL COMMENT 'Valor del parámetro (encriptado si es_sensible=1 en parámetros)',
-  `version` int DEFAULT '1' COMMENT 'Versión del valor (incrementa con cada cambio)',
-  `activo` tinyint(1) DEFAULT '1' COMMENT '1 = valor actual activo, 0 = valor histórico',
-  `valido_desde` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha desde la cual este valor es válido',
-  `valido_hasta` timestamp NULL DEFAULT NULL COMMENT 'Fecha hasta la cual fue válido (NULL = aún vigente)',
-  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_cofiguracion_valores` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_cofiguracion_parametros` INT UNSIGNED NOT NULL COMMENT 'FK a gen_cofiguracion_parametros',
+  `valor` TEXT NOT NULL COMMENT 'Valor del parámetro (encriptado si es_sensible=1 en parámetros)',
+  `version` INT NOT NULL DEFAULT 1 COMMENT 'Versión del valor (incrementa con cada cambio)',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = valor actual activo, 0 = valor histórico',
+  `valido_desde` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha desde la cual este valor es válido',
+  `valido_hasta` DATETIME NULL DEFAULT NULL COMMENT 'Fecha hasta la cual fue válido (NULL = aún vigente)',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_cofiguracion_valores`),
-  INDEX `idx_gen_cofiguracion_valores_parametro_id` (`cofiguracion_parametros_id`),
+  INDEX `idx_gen_cofiguracion_valores_id_cofiguracion_parametros` (`id_cofiguracion_parametros`),
   INDEX `idx_gen_cofiguracion_valores_activo` (`activo`),
   INDEX `idx_gen_cofiguracion_valores_valido_desde-valido_hasta-activo` (`valido_desde`, `valido_hasta`, `activo`),
   INDEX `idx_gen_cofiguracion_valores_version` (`version`),
-  UNIQUE KEY `uk_gen_cofiguracion_valores_parametro_id-activo` (`cofiguracion_parametros_id`, `activo`),
-  CONSTRAINT `fk_gen_cofiguracion_valores_parametro_id_gen_cofiguracion_parametros_id_cofiguracion_parametros`
-    FOREIGN KEY (`cofiguracion_parametros_id`)
+  UNIQUE KEY `uk_gen_cofiguracion_valores_id_parametros-activo` (`id_cofiguracion_parametros`, `activo`),
+  CONSTRAINT `fk_cofiguracion_valores_id_parametros_cofiguracion_parametros_id`
+    FOREIGN KEY (`id_cofiguracion_parametros`)
     REFERENCES `gen_cofiguracion_parametros`(`id_cofiguracion_parametros`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
@@ -191,358 +193,592 @@ CREATE TABLE `gen_cofiguracion_valores` (
 -- ============================================
 
 -- Tabla de tipos de reportes
-CREATE TABLE `rep_report_type` (
-  `id_report_type` int NOT NULL AUTO_INCREMENT,
-  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre del tipo de reporte',
-  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Descripción del tipo de reporte',
-  PRIMARY KEY (`id_report_type`),
-  UNIQUE KEY `uk_rep_report_type_nombre` (`nombre`)
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de tipos de reportes';
+CREATE TABLE `rep_tipo_reporte` (
+  `id_tipo_reporte` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre del tipo de reporte',
+  `descripcion` VARCHAR(255) NOT NULL COMMENT 'Descripción del tipo de reporte',
+  PRIMARY KEY (`id_tipo_reporte`),
+  UNIQUE KEY `uk_rep_tipo_reporte_nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tipos de reportes disponibles';
 
--- Tabla de templates de reportes
-CREATE TABLE `rep_templates` (
-  `id_template` int NOT NULL AUTO_INCREMENT,
-  `template_key` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Clave única del template',
-  `id_report_type` int NOT NULL COMMENT 'FK a rep_report_type.id_report_type',
-  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre del template',
-  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Descripción del template',
-  `activo` tinyint DEFAULT '1' COMMENT 'Indica si el template está activo',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del template',
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de actualización del template',
-  PRIMARY KEY (`id_template`),
-  UNIQUE KEY `uk_rep_templates_template_key` (`template_key`),
-  UNIQUE KEY `uk_rep_templates_nombre` (`nombre`),
-  INDEX `idx_rep_templates_id_report_type` (`id_report_type`),
-  CONSTRAINT `fk_rep_templates_id_report_type_rep_report_type_id_report_type` 
-    FOREIGN KEY (`id_report_type`) 
-    REFERENCES `rep_report_type`(`id_report_type`)
+-- Tabla de plantillas de reportes
+CREATE TABLE `rep_plantillas` (
+  `id_plantilla` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `clave_plantilla` VARCHAR(100) NOT NULL COMMENT 'Clave única de la plantilla',
+  `id_tipo_reporte` INT UNSIGNED NOT NULL COMMENT 'FK a rep_tipo_reporte',
+  `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre de la plantilla',
+  `descripcion` VARCHAR(255) NOT NULL COMMENT 'Descripción de la plantilla',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si la plantilla está activa',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_plantilla`),
+  UNIQUE KEY `uk_rep_plantillas_clave_plantilla` (`clave_plantilla`),
+  UNIQUE KEY `uk_rep_plantillas_nombre` (`nombre`),
+  INDEX `idx_rep_plantillas_id_tipo_reporte` (`id_tipo_reporte`),
+  CONSTRAINT `fk_rep_plantillas_id_tipo_reporte_rep_tipo_reporte_id_tipo_reporte`
+    FOREIGN KEY (`id_tipo_reporte`)
+    REFERENCES `rep_tipo_reporte`(`id_tipo_reporte`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de templates de reportes';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Plantillas de reportes';
+
+-- Tabla de reportes programados (debe ir ANTES de rep_reportes_generados por FK)
+CREATE TABLE `rep_reportes_programados` (
+  `id_reporte_programado` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_plantilla` INT UNSIGNED NOT NULL COMMENT 'FK a rep_plantillas',
+  `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre del reporte programado',
+  `descripcion` VARCHAR(255) NOT NULL COMMENT 'Descripción del reporte programado',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_reporte_programado`),
+  UNIQUE KEY `uk_rep_reportes_programados_nombre` (`nombre`),
+  INDEX `idx_rep_reportes_programados_id_plantilla` (`id_plantilla`),
+  CONSTRAINT `fk_rep_reportes_programados_id_plantilla_rep_plantillas_id_plantilla`
+    FOREIGN KEY (`id_plantilla`)
+    REFERENCES `rep_plantillas`(`id_plantilla`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reportes programados';
 
 -- Tabla de reportes generados
-CREATE TABLE `rep_generated_reports` (
-  `id_generated_report` int NOT NULL AUTO_INCREMENT,
-  `id_template` int NOT NULL COMMENT 'FK a rep_templates.id_template',
-  `nombre_reporte` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre del reporte generado',
-  `file_path` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Ruta del archivo del reporte generado',
-  `file_size_bytes` INT NOT NULL COMMENT 'Tamaño del archivo del reporte generado',
-  `generation_status` enum('pending','generating','completed','failed','expired') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'pending',
-  `fuente` ENUM('manual','scheduled','api','otro') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT 'manual',
-  `downloaded_at` timestamp NULL DEFAULT NULL,
-  `expired_at` timestamp NULL DEFAULT NULL COMMENT 'Auto-set when TTL cleanup deletes file',
-  `schedule_id` int NULL COMMENT 'FK a rep_scheduled_reports.id_scheduled_report',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del reporte generado',
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de actualización del reporte generado',
-  PRIMARY KEY (`id_generated_report`),
-  UNIQUE KEY `uk_rep_generated_reports_nombre_reporte` (`nombre_reporte`),
-  INDEX `idx_rep_generated_reports_id_template` (`id_template`),
-  INDEX `idx_rep_generated_reports_schedule_id` (`schedule_id`),
-  CONSTRAINT `fk_rep_generated_reports_id_template_rep_templates_id_template` 
-    FOREIGN KEY (`id_template`) 
-    REFERENCES `rep_templates`(`id_template`)
+CREATE TABLE `rep_reportes_generados` (
+  `id_reporte_generado` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_plantilla` INT UNSIGNED NOT NULL COMMENT 'FK a rep_plantillas',
+  `nombre_reporte` VARCHAR(100) NOT NULL COMMENT 'Nombre del reporte generado',
+  `ruta_archivo` VARCHAR(255) NOT NULL COMMENT 'Ruta del archivo del reporte generado',
+  `tamanio_bytes` INT NOT NULL COMMENT 'Tamaño del archivo en bytes',
+  `estado_generacion` ENUM('pendiente','generando','completado','fallido','expirado') NOT NULL DEFAULT 'pendiente',
+  `fuente` ENUM('manual','programado','api','otro') NOT NULL DEFAULT 'manual',
+  `fecha_descarga` DATETIME NULL DEFAULT NULL,
+  `fecha_expiracion` DATETIME NULL DEFAULT NULL COMMENT 'Fecha desde la cual el archivo fue eliminado por TTL',
+  `id_reporte_programado` INT UNSIGNED NULL COMMENT 'FK a rep_reportes_programados',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_reporte_generado`),
+  UNIQUE KEY `uk_rep_reportes_generados_nombre_reporte` (`nombre_reporte`),
+  INDEX `idx_rep_reportes_generados_id_plantilla` (`id_plantilla`),
+  INDEX `idx_rep_reportes_generados_id_reporte_programado` (`id_reporte_programado`),
+  CONSTRAINT `fk_rep_reportes_generados_id_plantilla_rep_plantillas_id_plantilla`
+    FOREIGN KEY (`id_plantilla`)
+    REFERENCES `rep_plantillas`(`id_plantilla`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_rep_generated_reports_schedule_id_rep_scheduled_reports_id_scheduled_report` 
-    FOREIGN KEY (`schedule_id`) 
-    REFERENCES `rep_scheduled_reports`(`id_scheduled_report`)
+  CONSTRAINT `fk_rep_generados_id_programado_rep_programados_id`
+    FOREIGN KEY (`id_reporte_programado`)
+    REFERENCES `rep_reportes_programados`(`id_reporte_programado`)
     ON DELETE SET NULL
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de reportes generados';
-
--- Tabla de reportes programados
-CREATE TABLE `rep_scheduled_reports` (
-  `id_scheduled_report` int NOT NULL AUTO_INCREMENT,
-  `id_template` int NOT NULL COMMENT 'FK a rep_templates.id_template',
-  `nombre` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre del reporte programado',
-  `descripcion` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Descripción del reporte programado',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del reporte programado',
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de actualización del reporte programado',
-  PRIMARY KEY (`id_scheduled_report`),
-  UNIQUE KEY `uk_rep_scheduled_reports_nombre` (`nombre`),
-  INDEX `idx_rep_scheduled_reports_id_template` (`id_template`),
-  CONSTRAINT `fk_rep_scheduled_reports_id_template_rep_templates_id_template` 
-    FOREIGN KEY (`id_template`) 
-    REFERENCES `rep_templates`(`id_template`)
-    ON DELETE RESTRICT
-    ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de reportes programados';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reportes generados';
 
 -- Tabla de log de ejecución de reportes programados
-CREATE TABLE `rep_schedule_execution_log` (
-  `id_schedule_execution_log` int NOT NULL AUTO_INCREMENT,
-  `id_scheduled_report` int NOT NULL COMMENT 'FK a rep_scheduled_reports.id_scheduled_report',
-  `id_generated_report` int NULL COMMENT 'FK a rep_generated_reports.id_generated_report',
-  `execution_time` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de ejecución del reporte programado',
-  `execution_status` enum('success','failed','skipped') CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Estado de ejecución del reporte programado',
-  `execution_duration_seconds` INT NOT NULL COMMENT 'Tiempo de ejecución del reporte programado',
-  `execution_error` TEXT COMMENT 'Error de ejecución del reporte programado',
-  PRIMARY KEY (`id_schedule_execution_log`),
-  INDEX `idx_rep_schedule_execution_log_id_scheduled_report` (`id_scheduled_report`),
-  INDEX `idx_rep_schedule_execution_log_id_generated_report` (`id_generated_report`),
-  CONSTRAINT `fk_rep_schedule_execution_log_id_scheduled_report_rep_scheduled_reports_id_scheduled_report` 
-    FOREIGN KEY (`id_scheduled_report`) 
-    REFERENCES `rep_scheduled_reports`(`id_scheduled_report`)
+CREATE TABLE `rep_log_ejecucion` (
+  `id_log_ejecucion` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_reporte_programado` INT UNSIGNED NOT NULL COMMENT 'FK a rep_reportes_programados',
+  `id_reporte_generado` INT UNSIGNED NULL COMMENT 'FK a rep_reportes_generados',
+  `fecha_ejecucion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de ejecución del reporte',
+  `estado_ejecucion` ENUM('exitoso','fallido','omitido') NOT NULL COMMENT 'Estado de la ejecución',
+  `duracion_segundos` INT NOT NULL COMMENT 'Duración de la ejecución en segundos',
+  `error_ejecucion` TEXT COMMENT 'Detalle del error si la ejecución falló',
+  PRIMARY KEY (`id_log_ejecucion`),
+  INDEX `idx_rep_log_ejecucion_id_reporte_programado` (`id_reporte_programado`),
+  INDEX `idx_rep_log_ejecucion_id_reporte_generado` (`id_reporte_generado`),
+  CONSTRAINT `fk_rep_log_ejecucion_id_programado_rep_programados_id`
+    FOREIGN KEY (`id_reporte_programado`)
+    REFERENCES `rep_reportes_programados`(`id_reporte_programado`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_rep_schedule_execution_log_id_generated_report_rep_generated_reports_id_generated_report` 
-    FOREIGN KEY (`id_generated_report`) 
-    REFERENCES `rep_generated_reports`(`id_generated_report`)
+  CONSTRAINT `fk_rep_log_ejecucion_id_generado_rep_generados_id`
+    FOREIGN KEY (`id_reporte_generado`)
+    REFERENCES `rep_reportes_generados`(`id_reporte_generado`)
     ON DELETE SET NULL
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de log de ejecución de reportes programados';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de ejecución de reportes programados';
 
 -- ============================================
 -- TABLAS UBIBOT (ubi_)
 -- ============================================
 
--- Tabla de canales ubibot
-CREATE TABLE `ubi_channel` (
-  `id_channel` int NOT NULL AUTO_INCREMENT,
-  `id_ubicacion_real` int NOT NULL COMMENT 'FK a gen_ubicaciones_reales.id_ubicacion_real',
-  `channel_id` int NOT NULL COMMENT 'ID del canal',
-  `product_id` int NOT NULL COMMENT 'ID del producto',
-  `device_id` int NOT NULL COMMENT 'ID del dispositivo',
-  `latitude` decimal(10,8) NOT NULL COMMENT 'Latitud del canal',
-  `longitude` decimal(11,8) NOT NULL COMMENT 'Longitud del canal',
-  `firmware` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Firmware del canal',
-  `mac_address` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'MAC address del canal',
-  `is_online` tinyint DEFAULT '1' COMMENT 'Indica si el canal está en línea',
-  `threshold_min_temperature` decimal(10,2) NOT NULL COMMENT 'Umbral mínimo de temperatura del canal',
-  `threshold_max_temperature` decimal(10,2) NOT NULL COMMENT 'Umbral máximo de temperatura del canal',
-  `threshold_updated_at` timestamp NULL DEFAULT NULL COMMENT 'Fecha de última actualización del umbral de temperatura',
-  `threshold_updated_by` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Usuario que actualizó el umbral de temperatura',
-  `last_alert_sent` timestamp NULL DEFAULT NULL COMMENT 'Fecha de último alerta enviada',
-  `activo` tinyint DEFAULT '1' COMMENT 'Indica si el canal está activo',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del canal',
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de actualización del canal',
-  PRIMARY KEY (`id_channel`),
-  UNIQUE KEY `uk_ubi_channel_channel_id` (`channel_id`),
-  INDEX `idx_ubi_channel_id_ubicacion_real` (`id_ubicacion_real`),
-  CONSTRAINT `fk_ubi_channel_id_ubicacion_real_gen_ubicaciones_reales_id_ubicacion_real` 
-    FOREIGN KEY (`id_ubicacion_real`) 
+-- Tabla de canales Ubibot
+CREATE TABLE `ubi_canal` (
+  `id_canal` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_ubicacion_real` INT UNSIGNED NOT NULL COMMENT 'FK a gen_ubicaciones_reales',
+  `canal_id` INT NOT NULL COMMENT 'ID natural del canal en Ubibot',
+  `id_producto` INT NOT NULL COMMENT 'ID del producto en Ubibot',
+  `id_dispositivo` INT NOT NULL COMMENT 'ID del dispositivo en Ubibot',
+  `latitud` DECIMAL(10,8) NOT NULL COMMENT 'Latitud del canal',
+  `longitud` DECIMAL(11,8) NOT NULL COMMENT 'Longitud del canal',
+  `firmware` VARCHAR(100) NOT NULL COMMENT 'Versión de firmware del sensor',
+  `mac_address` VARCHAR(100) NOT NULL COMMENT 'Dirección MAC del sensor',
+  `en_linea` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si el canal está en línea',
+  `temperatura_minima_umbral` DECIMAL(10,2) NOT NULL COMMENT 'Temperatura mínima de umbral de alerta',
+  `temperatura_maxima_umbral` DECIMAL(10,2) NOT NULL COMMENT 'Temperatura máxima de umbral de alerta',
+  `fecha_actualizacion_umbral` DATETIME NULL DEFAULT NULL COMMENT 'Fecha de última actualización del umbral',
+  `usuario_actualizacion_umbral` VARCHAR(100) NOT NULL COMMENT 'Usuario que actualizó el umbral',
+  `ultima_alerta_enviada` DATETIME NULL DEFAULT NULL COMMENT 'Fecha de última alerta enviada',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si el canal está activo',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_canal`),
+  UNIQUE KEY `uk_ubi_canal_canal_id` (`canal_id`),
+  INDEX `idx_ubi_canal_id_ubicacion_real` (`id_ubicacion_real`),
+  CONSTRAINT `fk_ubi_canal_id_ubicacion_real_gen_ubicaciones_reales_id`
+    FOREIGN KEY (`id_ubicacion_real`)
     REFERENCES `gen_ubicaciones_reales`(`id_ubicacion_real`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de canales ubibot';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Canales de sensores Ubibot';
 
--- Tabla de lecturas de sensores ubibot
-CREATE TABLE `ubi_sensor_readings` (
-  `id_sensor_reading` int NOT NULL AUTO_INCREMENT,
-  `id_channel` int NOT NULL COMMENT 'FK a ubi_channel.id_channel',
-  `temperature` decimal(10,2) NOT NULL COMMENT 'Temperatura del sensor',
-  `humidity` decimal(10,2) NOT NULL COMMENT 'Humedad del sensor',
-  `light` decimal(10,2) NOT NULL COMMENT 'Luz del sensor',
-  `voltage` decimal(10,2) NOT NULL COMMENT 'Voltaje del sensor',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del registro de lectura',
-  PRIMARY KEY (`id_sensor_reading`),
-  INDEX `idx_ubi_sensor_readings_id_channel` (`id_channel`),
-  CONSTRAINT `fk_ubi_sensor_readings_id_channel_ubi_channel_id_channel` 
-    FOREIGN KEY (`id_channel`) 
-    REFERENCES `ubi_channel`(`id_channel`)
+-- Tabla de lecturas de sensores Ubibot
+CREATE TABLE `ubi_lecturas_sensor` (
+  `id_lectura_sensor` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_canal` INT UNSIGNED NOT NULL COMMENT 'FK a ubi_canal',
+  `temperatura` DECIMAL(10,2) NOT NULL COMMENT 'Temperatura registrada por el sensor',
+  `humedad` DECIMAL(10,2) NOT NULL COMMENT 'Humedad registrada por el sensor',
+  `luz` DECIMAL(10,2) NOT NULL COMMENT 'Nivel de luz registrado por el sensor',
+  `voltaje` DECIMAL(10,2) NOT NULL COMMENT 'Voltaje registrado por el sensor',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora del registro',
+  PRIMARY KEY (`id_lectura_sensor`),
+  INDEX `idx_ubi_lecturas_sensor_id_canal` (`id_canal`),
+  CONSTRAINT `fk_ubi_lecturas_sensor_id_canal_ubi_canal_id_canal`
+    FOREIGN KEY (`id_canal`)
+    REFERENCES `ubi_canal`(`id_canal`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de lecturas de sensores ubibot';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Lecturas de sensores Ubibot';
 
 -- ============================================
 -- TABLAS DE INTELIGENCIA ARTIFICIAL (ai_)
 -- ============================================
 
 -- Tabla de sesiones de costos de IA
-CREATE TABLE `ai_session_costs` (
-  `id_session` bigint NOT NULL AUTO_INCREMENT COMMENT 'Unique session identifier',
-  `id_usuario` int NOT NULL COMMENT 'User who created this session',
-  `session_start` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Session start time',
-  `session_end` timestamp NULL DEFAULT NULL COMMENT 'Session end time (NULL = active)',
-  `model_used` varchar(50) NOT NULL COMMENT 'AI model name (e.g., gpt-4o-mini)',
-  `total_input_tokens` int DEFAULT '0' COMMENT 'Cumulative input tokens across all queries',
-  `total_output_tokens` int DEFAULT '0' COMMENT 'Cumulative output tokens across all queries',
-  `total_cost_usd` decimal(10,4) DEFAULT '0.0000' COMMENT 'Cumulative cost in USD',
-  `query_count` int DEFAULT '0' COMMENT 'Number of queries in this session',
-  `chambers_queried` text COMMENT 'JSON array of chamber names accessed',
-  `success` tinyint(1) DEFAULT '1' COMMENT 'Session completed successfully',
-  `error_message` text COMMENT 'Error details if success=FALSE',
-  PRIMARY KEY (`id_session`),
-  INDEX `idx_ai_session_costs_id_usuario-session_start` (`id_usuario`,`session_start`) COMMENT 'User session history lookup',
-  INDEX `idx_ai_session_costs_total_cost_usd` (`total_cost_usd` DESC) COMMENT 'Cost analysis queries',
-  INDEX `idx_ai_session_costs_session_end` (`session_end`) COMMENT 'Find active sessions (NULL)',
-  INDEX `idx_ai_session_costs_model_used` (`model_used`) COMMENT 'Model usage statistics',
-  CONSTRAINT `fk_ai_session_costs_id_usuario_gen_usuario_id_usuario` 
-    FOREIGN KEY (`id_usuario`) 
+CREATE TABLE `ai_costos_sesion` (
+  `id_sesion` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador único de sesión',
+  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'Usuario que creó la sesión',
+  `fecha_inicio` DATETIME NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de inicio de la sesión',
+  `fecha_fin` DATETIME NULL DEFAULT NULL COMMENT 'Fecha de fin de sesión (NULL = activa)',
+  `modelo_utilizado` VARCHAR(50) NOT NULL COMMENT 'Nombre del modelo IA utilizado (ej: gpt-4o-mini)',
+  `total_tokens_entrada` INT NOT NULL DEFAULT 0 COMMENT 'Total de tokens de entrada acumulados',
+  `total_tokens_salida` INT NOT NULL DEFAULT 0 COMMENT 'Total de tokens de salida acumulados',
+  `costo_total_usd` DECIMAL(10,4) NOT NULL DEFAULT 0.0000 COMMENT 'Costo total acumulado en USD',
+  `cantidad_consultas` INT NOT NULL DEFAULT 0 COMMENT 'Número de consultas en la sesión',
+  `camaras_consultadas` TEXT COMMENT 'JSON array de nombres de cámaras consultadas',
+  `exitoso` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si la sesión fue completada exitosamente',
+  `mensaje_error` TEXT COMMENT 'Detalle del error si exitoso = 0',
+  PRIMARY KEY (`id_sesion`),
+  INDEX `idx_ai_costos_sesion_id_usuario-fecha_inicio` (`id_usuario`, `fecha_inicio`) COMMENT 'Historial de sesiones por usuario',
+  INDEX `idx_ai_costos_sesion_costo_total_usd` (`costo_total_usd` DESC) COMMENT 'Consultas de análisis de costos',
+  INDEX `idx_ai_costos_sesion_fecha_fin` (`fecha_fin`) COMMENT 'Búsqueda de sesiones activas (NULL)',
+  INDEX `idx_ai_costos_sesion_modelo_utilizado` (`modelo_utilizado`) COMMENT 'Estadísticas de uso por modelo',
+  CONSTRAINT `fk_ai_costos_sesion_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
     REFERENCES `gen_usuario`(`id_usuario`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AI analysis session costs for budget tracking (FR-028, SC-011, SC-012)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Costos de sesiones de análisis con IA';
 
--- Tabla de logs de consultas de IA
-CREATE TABLE `ai_query_logs` (
-  `id_query_log` bigint NOT NULL AUTO_INCREMENT COMMENT 'Unique query log identifier',
-  `id_session` bigint NOT NULL COMMENT 'Parent session reference',
-  `id_usuario` int NOT NULL COMMENT 'User who executed this query',
-  `query_text` text NOT NULL COMMENT 'User natural language question',
-  `chambers` text COMMENT 'JSON array of channel IDs queried',
-  `date_range_start` date DEFAULT NULL COMMENT 'Query start date filter',
-  `date_range_end` date DEFAULT NULL COMMENT 'Query end date filter',
-  `response_summary` text COMMENT 'First 500 chars of AI response',
-  `input_tokens` int DEFAULT '0' COMMENT 'Input tokens for this query',
-  `output_tokens` int DEFAULT '0' COMMENT 'Output tokens for this query',
-  `cost_usd` decimal(10,4) DEFAULT '0.0000' COMMENT 'Cost for this query in USD',
-  `execution_time_ms` int DEFAULT NULL COMMENT 'Total query time including data fetch + AI',
-  `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Query execution timestamp',
-  PRIMARY KEY (`id_query_log`),
-  INDEX `idx_ai_query_logs_id_session` (`id_session`) COMMENT 'Session query history',
-  INDEX `idx_ai_query_logs_id_usuario` (`id_usuario`) COMMENT 'User query history',
-  INDEX `idx_ai_query_logs_created_at` (`created_at` DESC) COMMENT 'Recent queries',
-  INDEX `idx_ai_query_logs_execution_time_ms` (`execution_time_ms`) COMMENT 'Performance analysis',
-  FULLTEXT KEY `ft_ai_query_logs_query_text` (`query_text`) COMMENT 'Search queries by content',
-  CONSTRAINT `fk_ai_query_logs_id_session_ai_session_costs_id_session` 
-    FOREIGN KEY (`id_session`) 
-    REFERENCES `ai_session_costs`(`id_session`) 
+-- Tabla de log de consultas de IA
+CREATE TABLE `ai_log_consultas` (
+  `id_log_consulta` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del log de consulta',
+  `id_sesion` BIGINT UNSIGNED NOT NULL COMMENT 'Referencia a la sesión padre',
+  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'Usuario que ejecutó la consulta',
+  `texto_consulta` TEXT NOT NULL COMMENT 'Pregunta en lenguaje natural del usuario',
+  `camaras` TEXT COMMENT 'JSON array de IDs de canales consultados',
+  `fecha_rango_inicio` DATE DEFAULT NULL COMMENT 'Fecha de inicio del filtro de rango',
+  `fecha_rango_fin` DATE DEFAULT NULL COMMENT 'Fecha de fin del filtro de rango',
+  `resumen_respuesta` TEXT COMMENT 'Primeros 500 caracteres de la respuesta de la IA',
+  `tokens_entrada` INT NOT NULL DEFAULT 0 COMMENT 'Tokens de entrada para esta consulta',
+  `tokens_salida` INT NOT NULL DEFAULT 0 COMMENT 'Tokens de salida para esta consulta',
+  `costo_usd` DECIMAL(10,4) NOT NULL DEFAULT 0.0000 COMMENT 'Costo de esta consulta en USD',
+  `tiempo_ejecucion_ms` INT DEFAULT NULL COMMENT 'Tiempo total de ejecución incluyendo fetch de datos + IA',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de ejecución de la consulta',
+  PRIMARY KEY (`id_log_consulta`),
+  INDEX `idx_ai_log_consultas_id_sesion` (`id_sesion`) COMMENT 'Historial de consultas por sesión',
+  INDEX `idx_ai_log_consultas_id_usuario` (`id_usuario`) COMMENT 'Historial de consultas por usuario',
+  INDEX `idx_ai_log_consultas_fecha_creacion` (`fecha_creacion` DESC) COMMENT 'Consultas recientes',
+  INDEX `idx_ai_log_consultas_tiempo_ejecucion_ms` (`tiempo_ejecucion_ms`) COMMENT 'Análisis de rendimiento',
+  FULLTEXT KEY `ft_ai_log_consultas_texto_consulta` (`texto_consulta`) COMMENT 'Búsqueda de consultas por contenido',
+  CONSTRAINT `fk_ai_log_consultas_id_sesion_ai_costos_sesion_id_sesion`
+    FOREIGN KEY (`id_sesion`)
+    REFERENCES `ai_costos_sesion`(`id_sesion`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ai_query_logs_id_usuario_gen_usuario_id_usuario` 
-    FOREIGN KEY (`id_usuario`) 
-    REFERENCES `gen_usuario`(`id_usuario`) 
+  CONSTRAINT `fk_ai_log_consultas_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `gen_usuario`(`id_usuario`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=27 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Audit log of AI queries for security and observability (Principle III, NFR-003, NFR-008)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de consultas a IA para auditoría y observabilidad';
 
 -- ============================================
 -- TABLAS DE MEDICIONES ELÉCTRICAS (sem_)
 -- ============================================
 
+-- Catálogo de tipos de parámetros del módulo de mediciones eléctricas
+CREATE TABLE `sem_tipos_parametros` (
+  `id_tipo_parametro` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre del tipo (PRECIO_KWH, INTERVALO_RECOLECCION, etc.)',
+  `descripcion` TEXT NULL COMMENT 'Descripción del tipo de parámetro',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_tipo_parametro`),
+  UNIQUE KEY `uk_sem_tipos_parametros_nombre` (`nombre`),
+  INDEX `idx_sem_tipos_parametros_activo` (`activo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Catálogo de tipos de parámetros del módulo de mediciones eléctricas';
+
+-- Grupos de dispositivos Shelly para agrupación de consumo
+CREATE TABLE `sem_grupos` (
+  `id_grupo` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre del grupo de dispositivos',
+  `descripcion` TEXT NULL COMMENT 'Descripción del grupo',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_grupo`),
+  UNIQUE KEY `uk_sem_grupos_nombre` (`nombre`),
+  INDEX `idx_sem_grupos_activo` (`activo`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Grupos de dispositivos Shelly para agrupación de consumo energético';
+
 -- Tabla de dispositivos Shelly
 CREATE TABLE `sem_dispositivos` (
-  `id_dispositivo_shelly` int NOT NULL AUTO_INCREMENT,
-  `shelly_id` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'ID único del dispositivo Shelly (identificador natural)',
-  `nombre` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'Nombre del dispositivo',
-  `tipo` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Tipo de dispositivo (shelly_plug, shelly_em, etc.)',
-  `ubicacion` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Ubicación del dispositivo',
-  `categoria` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Categoría para agrupación de consumo',
-  `activo` tinyint DEFAULT '1' COMMENT 'Indica si el dispositivo está activo',
-  `fecha_creacion` datetime DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de creación del dispositivo',
-  `fecha_actualizacion` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT 'Fecha de actualización del dispositivo',
+  `id_dispositivo_shelly` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `shelly_id` VARCHAR(12) NOT NULL COMMENT 'ID único del dispositivo Shelly (identificador natural)',
+  `nombre` VARCHAR(255) NOT NULL COMMENT 'Nombre del dispositivo',
+  `tipo` VARCHAR(50) DEFAULT NULL COMMENT 'Tipo de dispositivo (shelly_plug, shelly_em, etc.)',
+  `ubicacion` VARCHAR(255) DEFAULT NULL COMMENT 'Ubicación del dispositivo',
+  `id_grupo` INT UNSIGNED NULL COMMENT 'FK a sem_grupos, grupo de dispositivos para agrupación de consumo',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si el dispositivo está activo',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_dispositivo_shelly`),
   UNIQUE KEY `uk_sem_dispositivos_shelly_id` (`shelly_id`),
   INDEX `idx_sem_dispositivos_activo` (`activo`),
-  INDEX `idx_sem_dispositivos_categoria` (`categoria`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Tabla de dispositivos Shelly';
+  INDEX `idx_sem_dispositivos_id_grupo` (`id_grupo`),
+  CONSTRAINT `fk_sem_dispositivos_id_grupo_sem_grupos_id_grupo`
+    FOREIGN KEY (`id_grupo`)
+    REFERENCES `sem_grupos`(`id_grupo`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Dispositivos Shelly de medición eléctrica';
 
-
-
--- Tabla de configuración específica del módulo de mediciones eléctricas (usa gen_tipos_parametros compartido)
+-- Tabla de configuración del módulo de mediciones eléctricas
 CREATE TABLE `sem_configuracion` (
-  `id_configuracion` int NOT NULL AUTO_INCREMENT,
-  `tipo_parametro_id` int NOT NULL COMMENT 'FK a gen_tipos_parametros (tabla compartida)',
-  `nombre_parametro` varchar(100) NOT NULL COMMENT 'Nombre específico del parámetro del módulo eléctrico',
-  `valor` text NOT NULL COMMENT 'Valor del parámetro de configuración',
-  `activo` tinyint(1) DEFAULT '1' COMMENT '1 = activo, 0 = inactivo',
-  `valido_desde` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha desde la cual este valor es válido',
-  `valido_hasta` timestamp NULL DEFAULT NULL COMMENT 'Fecha hasta la cual fue válido (NULL = aún vigente)',
-  `fecha_creacion` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `id_configuracion` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_tipo_parametro` INT UNSIGNED NOT NULL COMMENT 'FK a sem_tipos_parametros',
+  `nombre_parametro` VARCHAR(100) NOT NULL COMMENT 'Nombre específico del parámetro del módulo eléctrico',
+  `valor` TEXT NOT NULL COMMENT 'Valor del parámetro de configuración',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = activo, 0 = inactivo',
+  `valido_desde` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha desde la cual este valor es válido',
+  `valido_hasta` DATETIME NULL DEFAULT NULL COMMENT 'Fecha hasta la cual fue válido (NULL = aún vigente)',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_configuracion`),
-  INDEX `idx_sem_configuracion_tipo_parametro_id` (`tipo_parametro_id`),
+  INDEX `idx_sem_configuracion_id_tipo_parametro` (`id_tipo_parametro`),
   INDEX `idx_sem_configuracion_valido_desde-valido_hasta-activo` (`valido_desde`, `valido_hasta`, `activo`),
   INDEX `idx_sem_configuracion_nombre_parametro` (`nombre_parametro`),
-  CONSTRAINT `fk_sem_configuracion_tipo_parametro_id_gen_tipos_parametros_id_tipo_parametro`
-    FOREIGN KEY (`tipo_parametro_id`)
-    REFERENCES `gen_tipos_parametros`(`id_tipo_parametro`)
+  CONSTRAINT `fk_sem_configuracion_id_tipo_sem_tipos_parametros_id`
+    FOREIGN KEY (`id_tipo_parametro`)
+    REFERENCES `sem_tipos_parametros`(`id_tipo_parametro`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Configuración específica del módulo de mediciones eléctricas';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Configuración del módulo de mediciones eléctricas';
 
 -- Totales horarios de consumo energético
 CREATE TABLE `sem_totales_hora` (
-  `id_totales_hora` bigint NOT NULL AUTO_INCREMENT,
-  `shelly_id` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `hora_local` timestamp(6) NOT NULL,
-  `energia_activa_total` decimal(15,3) NOT NULL,
-  `energia_reactiva_total` decimal(15,3) DEFAULT NULL,
-  `potencia_maxima` decimal(10,2) DEFAULT NULL,
-  `potencia_minima` decimal(10,2) DEFAULT NULL,
-  `precio_kwh_periodo` decimal(10,2) NOT NULL,
-  `costo_total` decimal(15,2) NOT NULL,
-  `lecturas_validas` int NOT NULL,
-  `calidad_datos` decimal(5,2) DEFAULT NULL,
-  `fecha_creacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `lecturas_limite_apagado` int DEFAULT '0',
-  `lecturas_consumo_bajo` int DEFAULT '0',
-  `lecturas_consumo_medio` int DEFAULT '0',
-  `lecturas_consumo_alto` int DEFAULT '0',
-  `cantidad_datos` int DEFAULT '0',
+  `id_totales_hora` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `shelly_id` VARCHAR(12) NOT NULL,
+  `hora_local` DATETIME(6) NOT NULL,
+  `energia_activa_total` DECIMAL(15,3) NOT NULL,
+  `energia_reactiva_total` DECIMAL(15,3) DEFAULT NULL,
+  `potencia_maxima` DECIMAL(10,2) DEFAULT NULL,
+  `potencia_minima` DECIMAL(10,2) DEFAULT NULL,
+  `precio_kwh_periodo` DECIMAL(10,2) NOT NULL,
+  `costo_total` DECIMAL(15,2) NOT NULL,
+  `lecturas_validas` INT NOT NULL,
+  `calidad_datos` DECIMAL(5,2) DEFAULT NULL,
+  `lecturas_limite_apagado` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_bajo` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_medio` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_alto` INT NOT NULL DEFAULT 0,
+  `cantidad_datos` INT NOT NULL DEFAULT 0,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_totales_hora`),
-  UNIQUE KEY `uk_sem_totales_hora_shelly_id-hora_local` (`shelly_id`,`hora_local`),
+  UNIQUE KEY `uk_sem_totales_hora_shelly_id-hora_local` (`shelly_id`, `hora_local`),
   INDEX `idx_sem_totales_hora_shelly_id` (`shelly_id`),
   INDEX `idx_sem_totales_hora_hora_local` (`hora_local`),
   INDEX `idx_sem_totales_hora_calidad_datos` (`calidad_datos`),
-  INDEX `idx_sem_totales_hora_shelly_id-hora_local-energia_activa_total` (`shelly_id`,`hora_local`,`energia_activa_total`),
-  CONSTRAINT `fk_sem_totales_hora_shelly_id_sem_dispositivos_shelly_id` 
-    FOREIGN KEY (`shelly_id`) 
+  INDEX `idx_sem_totales_hora_shelly_id-hora_local-energia_activa_total` (`shelly_id`, `hora_local`, `energia_activa_total`),
+  CONSTRAINT `fk_sem_totales_hora_shelly_id_sem_dispositivos_shelly_id`
+    FOREIGN KEY (`shelly_id`)
     REFERENCES `sem_dispositivos`(`shelly_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=316292 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales horarios de consumo energético';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales horarios de consumo energético';
 
 -- Totales diarios de consumo energético
 CREATE TABLE `sem_totales_dia` (
-  `id_totales_dia` bigint NOT NULL AUTO_INCREMENT,
-  `shelly_id` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `fecha_local` date NOT NULL,
-  `energia_activa_total` decimal(15,3) NOT NULL,
-  `energia_reactiva_total` decimal(15,3) DEFAULT NULL,
-  `potencia_maxima` decimal(10,2) DEFAULT NULL,
-  `potencia_minima` decimal(10,2) DEFAULT NULL,
-  `precio_kwh_promedio` decimal(10,2) NOT NULL,
-  `costo_total` decimal(15,2) NOT NULL,
-  `horas_con_datos` int NOT NULL,
-  `fecha_creacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `lecturas_limite_apagado` int DEFAULT '0',
-  `lecturas_consumo_bajo` int DEFAULT '0',
-  `lecturas_consumo_medio` int DEFAULT '0',
-  `lecturas_consumo_alto` int DEFAULT '0',
-  `cantidad_datos` int DEFAULT '0',
+  `id_totales_dia` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `shelly_id` VARCHAR(12) NOT NULL,
+  `fecha_local` DATE NOT NULL,
+  `energia_activa_total` DECIMAL(15,3) NOT NULL,
+  `energia_reactiva_total` DECIMAL(15,3) DEFAULT NULL,
+  `potencia_maxima` DECIMAL(10,2) DEFAULT NULL,
+  `potencia_minima` DECIMAL(10,2) DEFAULT NULL,
+  `precio_kwh_promedio` DECIMAL(10,2) NOT NULL,
+  `costo_total` DECIMAL(15,2) NOT NULL,
+  `horas_con_datos` INT NOT NULL,
+  `lecturas_limite_apagado` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_bajo` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_medio` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_alto` INT NOT NULL DEFAULT 0,
+  `cantidad_datos` INT NOT NULL DEFAULT 0,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_totales_dia`),
-  UNIQUE KEY `uk_sem_totales_dia_shelly_id-fecha_local` (`shelly_id`,`fecha_local`),
+  UNIQUE KEY `uk_sem_totales_dia_shelly_id-fecha_local` (`shelly_id`, `fecha_local`),
   INDEX `idx_sem_totales_dia_shelly_id` (`shelly_id`),
   INDEX `idx_sem_totales_dia_fecha_local` (`fecha_local`),
-  CONSTRAINT `fk_sem_totales_dia_shelly_id_sem_dispositivos_shelly_id` 
-    FOREIGN KEY (`shelly_id`) 
+  CONSTRAINT `fk_sem_totales_dia_shelly_id_sem_dispositivos_shelly_id`
+    FOREIGN KEY (`shelly_id`)
     REFERENCES `sem_dispositivos`(`shelly_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=17267 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales diarios de consumo energético';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales diarios de consumo energético';
 
 -- Totales mensuales de consumo energético
 CREATE TABLE `sem_totales_mes` (
-  `id_totales_mes` bigint NOT NULL AUTO_INCREMENT,
-  `shelly_id` varchar(12) COLLATE utf8mb4_unicode_ci NOT NULL,
-  `año` int NOT NULL,
-  `mes` int NOT NULL,
-  `energia_activa_total` decimal(15,3) NOT NULL,
-  `energia_reactiva_total` decimal(15,3) DEFAULT NULL,
-  `potencia_maxima` decimal(10,2) DEFAULT NULL,
-  `potencia_minima` decimal(10,2) DEFAULT NULL,
-  `precio_kwh_promedio` decimal(10,2) NOT NULL,
-  `costo_total` decimal(15,2) NOT NULL,
-  `dias_con_datos` int NOT NULL,
-  `horas_con_datos` int NOT NULL,
-  `fecha_creacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `lecturas_limite_apagado` int DEFAULT '0',
-  `lecturas_consumo_bajo` int DEFAULT '0',
-  `lecturas_consumo_medio` int DEFAULT '0',
-  `lecturas_consumo_alto` int DEFAULT '0',
-  `cantidad_datos` int DEFAULT '0',
+  `id_totales_mes` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `shelly_id` VARCHAR(12) NOT NULL,
+  `año` INT NOT NULL,
+  `mes` INT NOT NULL,
+  `energia_activa_total` DECIMAL(15,3) NOT NULL,
+  `energia_reactiva_total` DECIMAL(15,3) DEFAULT NULL,
+  `potencia_maxima` DECIMAL(10,2) DEFAULT NULL,
+  `potencia_minima` DECIMAL(10,2) DEFAULT NULL,
+  `precio_kwh_promedio` DECIMAL(10,2) NOT NULL,
+  `costo_total` DECIMAL(15,2) NOT NULL,
+  `dias_con_datos` INT NOT NULL,
+  `horas_con_datos` INT NOT NULL,
+  `lecturas_limite_apagado` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_bajo` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_medio` INT NOT NULL DEFAULT 0,
+  `lecturas_consumo_alto` INT NOT NULL DEFAULT 0,
+  `cantidad_datos` INT NOT NULL DEFAULT 0,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_totales_mes`),
-  UNIQUE KEY `uk_sem_totales_mes_shelly_id-año-mes` (`shelly_id`,`año`,`mes`),
+  UNIQUE KEY `uk_sem_totales_mes_shelly_id-año-mes` (`shelly_id`, `año`, `mes`),
   INDEX `idx_sem_totales_mes_shelly_id` (`shelly_id`),
-  INDEX `idx_sem_totales_mes_año-mes` (`año`,`mes`),
-  CONSTRAINT `fk_sem_totales_mes_shelly_id_sem_dispositivos_shelly_id` 
-    FOREIGN KEY (`shelly_id`) 
+  INDEX `idx_sem_totales_mes_año-mes` (`año`, `mes`),
+  CONSTRAINT `fk_sem_totales_mes_shelly_id_sem_dispositivos_shelly_id`
+    FOREIGN KEY (`shelly_id`)
     REFERENCES `sem_dispositivos`(`shelly_id`)
     ON DELETE CASCADE
     ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=8690 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales mensuales de consumo energético';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Totales mensuales de consumo energético';
+
+-- Mediciones brutas de energía de dispositivos Shelly
+CREATE TABLE `sem_mediciones` (
+  `id_medicion` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `shelly_id` VARCHAR(12) NOT NULL COMMENT 'FK a sem_dispositivos',
+  `timestamp_utc` DATETIME NOT NULL COMMENT 'Timestamp original del dispositivo en UTC',
+  `timestamp_local` DATETIME NOT NULL COMMENT 'Timestamp local en hora de Santiago',
+  `fase` ENUM('A', 'B', 'C', 'TOTAL') NOT NULL DEFAULT 'TOTAL' COMMENT 'Fase eléctrica medida',
+  `voltaje` DECIMAL(6,2) NULL COMMENT 'Voltaje en V',
+  `corriente` DECIMAL(8,4) NULL COMMENT 'Corriente en A',
+  `potencia_activa` DECIMAL(10,2) NULL COMMENT 'Potencia activa en W',
+  `potencia_reactiva` DECIMAL(10,2) NULL COMMENT 'Potencia reactiva en VAR',
+  `potencia_aparente` DECIMAL(10,2) NULL COMMENT 'Potencia aparente en VA',
+  `factor_potencia` DECIMAL(5,4) NULL COMMENT 'Factor de potencia (-1 a 1)',
+  `frecuencia` DECIMAL(5,2) NULL COMMENT 'Frecuencia en Hz',
+  `energia_activa` DECIMAL(15,3) NULL COMMENT 'Energía activa acumulada en Wh',
+  `energia_reactiva` DECIMAL(15,3) NULL COMMENT 'Energía reactiva acumulada en VARh',
+  `calidad_lectura` ENUM('NORMAL', 'ESTIMADO', 'INVALIDO') NOT NULL DEFAULT 'NORMAL' COMMENT 'Calidad de la lectura recibida',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_medicion`),
+  INDEX `idx_sem_mediciones_shelly_id-timestamp_local` (`shelly_id`, `timestamp_local`),
+  INDEX `idx_sem_mediciones_timestamp_local` (`timestamp_local`),
+  INDEX `idx_sem_mediciones_fase` (`fase`),
+  INDEX `idx_sem_mediciones_calidad_lectura` (`calidad_lectura`),
+  CONSTRAINT `fk_sem_mediciones_shelly_id_sem_dispositivos_shelly_id`
+    FOREIGN KEY (`shelly_id`)
+    REFERENCES `sem_dispositivos`(`shelly_id`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Mediciones brutas de energía de dispositivos Shelly';
+
+-- ============================================
+-- TABLAS UBIBOT - PRESETS DE TEMPERATURA (ubi_)
+-- ============================================
+
+-- Presets de temperatura para umbrales de alerta
+CREATE TABLE `ubi_presets_temperatura` (
+  `id_preset` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre_preset` VARCHAR(100) NOT NULL COMMENT 'Nombre descriptivo del preset',
+  `temperatura_minima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura mínima del umbral',
+  `temperatura_maxima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura máxima del umbral',
+  `es_predeterminado` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = preset predeterminado del sistema',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `creado_por` VARCHAR(100) NOT NULL COMMENT 'Usuario que creó el preset',
+  `actualizado_por` VARCHAR(100) NOT NULL COMMENT 'Último usuario que actualizó el preset',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_preset`),
+  UNIQUE KEY `uk_ubi_presets_temperatura_nombre_preset` (`nombre_preset`),
+  INDEX `idx_ubi_presets_temperatura_activo` (`activo`),
+  INDEX `idx_ubi_presets_temperatura_es_predeterminado` (`es_predeterminado`),
+  CONSTRAINT `chk_ubi_presets_temperatura_minima`
+    CHECK (`temperatura_minima` >= -50 AND `temperatura_minima` <= 150),
+  CONSTRAINT `chk_ubi_presets_temperatura_maxima`
+    CHECK (`temperatura_maxima` >= -50 AND `temperatura_maxima` <= 150),
+  CONSTRAINT `chk_ubi_presets_temperatura_rango`
+    CHECK (`temperatura_minima` < `temperatura_maxima`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Presets de temperatura para umbrales de alerta de canales Ubibot';
+
+-- Historial de cambios en presets de temperatura
+CREATE TABLE `ubi_historial_presets` (
+  `id_cambio` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_preset` INT UNSIGNED NULL COMMENT 'FK a ubi_presets_temperatura (NULL para acciones globales)',
+  `tipo_accion` ENUM('CREAR', 'ACTUALIZAR', 'ELIMINAR', 'APLICAR', 'RESTAURAR_PREDETERMINADOS') NOT NULL COMMENT 'Tipo de acción realizada',
+  `valores_anteriores` JSON NULL COMMENT 'Valores del preset antes del cambio',
+  `valores_nuevos` JSON NULL COMMENT 'Valores del preset después del cambio',
+  `cambiado_por` VARCHAR(100) NOT NULL COMMENT 'Usuario que realizó el cambio',
+  `razon_cambio` TEXT NULL COMMENT 'Razón o descripción del cambio',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_cambio`),
+  INDEX `idx_ubi_historial_presets_id_preset` (`id_preset`),
+  INDEX `idx_ubi_historial_presets_tipo_accion` (`tipo_accion`),
+  INDEX `idx_ubi_historial_presets_fecha_creacion` (`fecha_creacion`),
+  CONSTRAINT `fk_historial_presets_id_preset_presets_temperatura_id_preset`
+    FOREIGN KEY (`id_preset`)
+    REFERENCES `ubi_presets_temperatura`(`id_preset`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Historial de cambios en presets de temperatura Ubibot';
+
+-- ============================================
+-- TABLAS DE LOG (log_)
+-- ============================================
+
+-- Log de procesos y operaciones del sistema
+CREATE TABLE `log_proceso` (
+  `id_log_proceso` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `mensaje` TEXT NOT NULL COMMENT 'Mensaje descriptivo del proceso o evento',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_log_proceso`),
+  INDEX `idx_log_proceso_fecha_creacion` (`fecha_creacion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de procesos y operaciones internas del sistema';
+
+-- ============================================
+-- TABLAS DE ALERTAS Y NOTIFICACIONES (ale_)
+-- ============================================
+
+-- Seguimiento de alertas de temperatura y desconexión de sensores
+CREATE TABLE `ale_seguimiento` (
+  `id_alerta` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_canal` INT UNSIGNED NULL COMMENT 'FK a ubi_canal (NULL si el canal fue eliminado)',
+  `tipo_alerta` ENUM('temperatura', 'desconexion') NOT NULL COMMENT 'Tipo de alerta generada',
+  `estado` ENUM('pendiente', 'confirmado', 'resuelto', 'falsa_alarma') NOT NULL DEFAULT 'pendiente',
+  `severidad` ENUM('baja', 'media', 'critica') NOT NULL DEFAULT 'media',
+  `datos_alerta` JSON NULL COMMENT 'Datos adicionales de la alerta en formato JSON',
+  `valor_temperatura` DECIMAL(5,2) NULL COMMENT 'Temperatura media cuando se disparó la alerta',
+  `umbral_minimo` DECIMAL(5,2) NULL COMMENT 'Umbral mínimo configurado al momento de la alerta',
+  `umbral_maximo` DECIMAL(5,2) NULL COMMENT 'Umbral máximo configurado al momento de la alerta',
+  `es_falsa_alarma` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = alerta marcada como falsa alarma',
+  `notificado_push` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = notificación push enviada',
+  `tiempo_respuesta_minutos` DECIMAL(10,2) NULL COMMENT 'Tiempo desde generación hasta confirmación en minutos',
+  `tiempo_resolucion_minutos` DECIMAL(10,2) NULL COMMENT 'Tiempo desde generación hasta resolución en minutos',
+  `fecha_alerta` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de generación de la alerta',
+  `fecha_confirmacion` DATETIME NULL COMMENT 'Fecha y hora de confirmación de la alerta',
+  `fecha_resolucion` DATETIME NULL COMMENT 'Fecha y hora de resolución de la alerta',
+  PRIMARY KEY (`id_alerta`),
+  INDEX `idx_ale_seguimiento_id_canal` (`id_canal`),
+  INDEX `idx_ale_seguimiento_tipo_alerta` (`tipo_alerta`),
+  INDEX `idx_ale_seguimiento_estado` (`estado`),
+  INDEX `idx_ale_seguimiento_severidad` (`severidad`),
+  INDEX `idx_ale_seguimiento_fecha_alerta` (`fecha_alerta`),
+  INDEX `idx_ale_seguimiento_estado-fecha_alerta` (`estado`, `fecha_alerta`),
+  CONSTRAINT `fk_ale_seguimiento_id_canal_ubi_canal_id_canal`
+    FOREIGN KEY (`id_canal`)
+    REFERENCES `ubi_canal`(`id_canal`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Seguimiento de alertas de temperatura y desconexión de sensores Ubibot';
+
+-- Métricas resumen de alertas por día y hora
+CREATE TABLE `ale_metricas_resumen` (
+  `id_metrica` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `fecha` DATE NOT NULL COMMENT 'Fecha del resumen de métricas',
+  `hora` TINYINT NULL COMMENT 'Hora del resumen (NULL = resumen diario completo)',
+  `total_alertas_temperatura` INT NOT NULL DEFAULT 0,
+  `total_alertas_desconexion` INT NOT NULL DEFAULT 0,
+  `promedio_tiempo_respuesta` DECIMAL(10,2) NULL COMMENT 'Tiempo promedio de respuesta en minutos',
+  `promedio_tiempo_resolucion` DECIMAL(10,2) NULL COMMENT 'Tiempo promedio de resolución en minutos',
+  `minimo_tiempo_respuesta` DECIMAL(10,2) NULL,
+  `maximo_tiempo_respuesta` DECIMAL(10,2) NULL,
+  `alertas_pendientes` INT NOT NULL DEFAULT 0,
+  `alertas_confirmadas` INT NOT NULL DEFAULT 0,
+  `alertas_resueltas` INT NOT NULL DEFAULT 0,
+  `alertas_falsa_alarma` INT NOT NULL DEFAULT 0,
+  `push_enviados` INT NOT NULL DEFAULT 0,
+  `push_fallidos` INT NOT NULL DEFAULT 0,
+  `tasa_entrega_push` DECIMAL(5,2) NULL COMMENT 'Porcentaje de notificaciones push entregadas',
+  `total_alertas_criticas` INT NOT NULL DEFAULT 0,
+  `promedio_tiempo_respuesta_critica` DECIMAL(10,2) NULL COMMENT 'Tiempo promedio de respuesta para alertas críticas',
+  `canales_alertados_unicos` INT NOT NULL DEFAULT 0 COMMENT 'Número de canales distintos con alertas en el período',
+  `id_canal_top` INT UNSIGNED NULL COMMENT 'Canal con más alertas en el período',
+  `alertas_canal_top` INT NULL COMMENT 'Cantidad de alertas del canal con más alertas',
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_metrica`),
+  UNIQUE KEY `uk_ale_metricas_resumen_fecha-hora` (`fecha`, `hora`),
+  INDEX `idx_ale_metricas_resumen_fecha` (`fecha`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Métricas resumen de alertas por día y hora';
+
+-- Suscripciones push de usuarios para notificaciones
+CREATE TABLE `ale_push_suscripciones` (
+  `id_suscripcion` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'FK a gen_usuario',
+  `endpoint` VARCHAR(500) NOT NULL COMMENT 'URL del endpoint push (debe iniciar con https://)',
+  `p256dh` VARCHAR(255) NOT NULL COMMENT 'Clave pública de encriptación para push',
+  `auth` VARCHAR(255) NOT NULL COMMENT 'Secret de autenticación para push',
+  `tipo_dispositivo` ENUM('escritorio', 'movil', 'tablet', 'desconocido') NOT NULL DEFAULT 'desconocido',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = suscripción activa',
+  `ultima_conexion` DATETIME NULL COMMENT 'Última vez que el dispositivo se conectó',
+  `ultima_notificacion_enviada` DATETIME NULL COMMENT 'Última notificación enviada a esta suscripción',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_suscripcion`),
+  UNIQUE KEY `uk_ale_push_suscripciones_endpoint` (`endpoint`(191)),
+  INDEX `idx_ale_push_suscripciones_id_usuario` (`id_usuario`),
+  INDEX `idx_ale_push_suscripciones_activo` (`activo`),
+  INDEX `idx_ale_push_suscripciones_ultima_conexion` (`ultima_conexion`),
+  CONSTRAINT `fk_ale_push_suscripciones_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `gen_usuario`(`id_usuario`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `chk_ale_push_suscripciones_endpoint`
+    CHECK (`endpoint` LIKE 'https://%')
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Suscripciones push de usuarios para notificaciones';
+
+-- Preferencias de notificaciones push por suscripción de usuario
+CREATE TABLE `ale_preferencias_push` (
+  `id_preferencia` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_suscripcion` INT UNSIGNED NOT NULL COMMENT 'FK a ale_push_suscripciones',
+  `dnd_habilitado` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = modo No Molestar habilitado',
+  `hora_inicio_dnd` TIME NULL COMMENT 'Hora de inicio del modo No Molestar',
+  `hora_fin_dnd` TIME NULL COMMENT 'Hora de fin del modo No Molestar',
+  `dias_dnd` JSON NULL COMMENT 'Días de la semana para DND (JSON array con nombres en inglés)',
+  `permitir_alertas_criticas` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = permitir alertas críticas incluso en DND',
+  `tipos_alerta_habilitados` JSON NULL COMMENT 'JSON array de tipos de alerta habilitados (NULL = todos)',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_preferencia`),
+  UNIQUE KEY `uk_ale_preferencias_push_id_suscripcion` (`id_suscripcion`),
+  CONSTRAINT `fk_preferencias_push_id_suscripcion_push_suscripciones_id`
+    FOREIGN KEY (`id_suscripcion`)
+    REFERENCES `ale_push_suscripciones`(`id_suscripcion`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Preferencias de notificaciones push por suscripción de usuario';
