@@ -110,18 +110,20 @@ fk_[tabla origen]_[columna origen]_[tabla destino]_[columna destino]
 ### Columnas
 
 - **Formato**: snake_case
+- **Idioma**: Español obligatorio en todos los nombres de columnas
 - **IDs**:
-  - Primary Key: `id_{tabla}` (AUTO_INCREMENT, UNSIGNED)
-  - Foreign Keys: `fk_id_{tabla}` (ej: `fk_id_usuario`, `fk_id_dispositivo`, `fk_id_canal`)
-- **Timestamps**:
-  - `created_at` DATETIME (fecha de creación)
-  - `updated_at` DATETIME (fecha de última actualización)
-  - `deleted_at` DATETIME (soft delete, si aplica)
+  - Primary Key: `id_{tabla}` (AUTO_INCREMENT, UNSIGNED) (ej: `id_usuario`, `id_canal`)
+  - Foreign Keys: misma columna que el PK de la tabla referenciada, sin prefijo adicional (ej: `id_usuario`, `id_canal`)
+- **Timestamps de auditoría**:
+  - `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+  - `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+  - `fecha_eliminacion` DATETIME NULL (soft delete, si aplica)
 - **Booleans**:
-  - Prefijo `is_` (ej: `is_active`, `is_enabled`)
-  - Prefijo `has_` (ej: `has_notifications`, `has_alerts`)
-  - Tipo: TINYINT(1) o BOOLEAN
-- **Fechas**: DATETIME (manejo de zona horaria en aplicación)
+  - Estado estándar: `activo` TINYINT(1) NOT NULL DEFAULT 1
+  - Otros estados: adjetivo descriptivo en español sin prefijo (ej: `en_linea`, `exitoso`, `habilitado`)
+  - Capacidades: prefijo `tiene_` (ej: `tiene_notificaciones`, `tiene_alertas`)
+  - Tipo: TINYINT(1)
+- **Fechas de negocio**: DATETIME (manejo de zona horaria en aplicación)
 - **Textos**:
   - VARCHAR(N) para textos cortos
   - TEXT para textos largos
