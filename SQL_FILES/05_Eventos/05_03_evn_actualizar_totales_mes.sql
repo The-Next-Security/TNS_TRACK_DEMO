@@ -1,4 +1,4 @@
-CREATE EVENT event_actualizar_totales_mes
+CREATE EVENT evn_actualizar_totales_mes
 ON SCHEDULE EVERY 1 HOUR
 STARTS '2025-01-28 00:00:00.000'
 ON COMPLETION NOT PRESERVE
@@ -28,7 +28,7 @@ DO BEGIN
 
     SET v_año_actual = YEAR(CURRENT_DATE());
     SET v_mes_actual = MONTH(CURRENT_DATE());
-    SET v_success_mes = fn_process_totales_mes(v_año_actual, v_mes_actual);
+    SET v_success_mes = fun_process_totales_mes(v_año_actual, v_mes_actual);
 
     IF v_success_mes THEN
         INSERT INTO sem_auditoria_detallada (
