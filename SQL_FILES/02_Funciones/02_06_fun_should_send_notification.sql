@@ -1,5 +1,5 @@
-CREATE DEFINER=`root`@`localhost` FUNCTION `teltonika`.`fn_should_send_notification`(
-    p_subscription_id INT,
+CREATE DEFINER=`root`@`%` FUNCTION `tns_cool_track`.`fun_should_send_notification`(
+    p_id_suscripcion INT,
     p_alert_type VARCHAR(20),
     p_is_critical BOOLEAN
 ) RETURNS tinyint(1)
@@ -18,12 +18,12 @@ BEGIN
 
     -- Obtener preferencias de la suscripción
     SELECT
-        dnd_enabled,
-        dnd_start_time,
-        dnd_end_time,
-        dnd_days,
-        allow_critical_alerts,
-        enabled_alert_types
+        dnd_habilitado,
+        hora_inicio_dnd,
+        hora_fin_dnd,
+        dias_dnd,
+        permitir_alertas_criticas,
+        tipos_alerta_habilitados
     INTO
         v_dnd_enabled,
         v_dnd_start,
@@ -31,8 +31,8 @@ BEGIN
         v_dnd_days,
         v_allow_critical,
         v_enabled_types
-    FROM push_notification_preferences
-    WHERE subscription_id = p_subscription_id;
+    FROM ale_preferencias_push
+    WHERE id_suscripcion = p_id_suscripcion;
 
     -- Si no hay preferencias configuradas, permitir notificación
     IF v_dnd_enabled IS NULL THEN
