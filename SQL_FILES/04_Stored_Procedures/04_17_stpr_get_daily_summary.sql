@@ -1,37 +1,33 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`%` PROCEDURE `sp_get_daily_summary`(
-    IN p_date DATE
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_get_daily_summary`(
+    IN p_fecha DATE
 )
 BEGIN
     SELECT
-        p_date AS summary_date,
-        SUM(total_temperature_alerts) AS daily_temperature_alerts,
-        SUM(total_disconnection_alerts) AS daily_disconnection_alerts,
-        ROUND(AVG(avg_response_time_minutes), 2) AS daily_avg_response_time,
-        ROUND(AVG(avg_resolution_time_minutes), 2) AS daily_avg_resolution_time,
-        MIN(min_response_time_minutes) AS daily_best_response_time,
-        MAX(max_response_time_minutes) AS daily_worst_response_time,
-        SUM(alerts_resolved) AS daily_resolved_count,
-        SUM(alerts_pending) AS daily_pending_count,
-        SUM(push_sent) AS daily_push_sent,
-        SUM(push_failed) AS daily_push_failed,
+        p_fecha AS fecha_resumen,
+        SUM(total_alertas_temperatura) AS alertas_temperatura_dia,
+        SUM(total_alertas_desconexion) AS alertas_desconexion_dia,
+        ROUND(AVG(promedio_tiempo_respuesta), 2) AS promedio_respuesta_dia,
+        ROUND(AVG(promedio_tiempo_resolucion), 2) AS promedio_resolucion_dia,
+        MIN(minimo_tiempo_respuesta) AS mejor_tiempo_respuesta_dia,
+        MAX(maximo_tiempo_respuesta) AS peor_tiempo_respuesta_dia,
+        SUM(alertas_resueltas) AS resueltas_dia,
+        SUM(alertas_pendientes) AS pendientes_dia,
+        SUM(push_enviados) AS push_enviados_dia,
+        SUM(push_fallidos) AS push_fallidos_dia,
         CASE
-            WHEN SUM(push_sent) + SUM(push_failed) > 0
-            THEN ROUND(SUM(push_sent) * 100.0 / (SUM(push_sent) + SUM(push_failed)), 2)
+            WHEN SUM(push_enviados) + SUM(push_fallidos) > 0
+            THEN ROUND(SUM(push_enviados) * 100.0 / (SUM(push_enviados) + SUM(push_fallidos)), 2)
             ELSE NULL
-        END AS daily_delivery_rate,
-        MAX(unique_channels_alerted) AS peak_channels_alerted_hour,
+        END AS tasa_entrega_dia,
+        MAX(canales_alertados_unicos) AS pico_canales_alertados_hora,
         (
-            SELECT HOUR(TIMESTAMP(date, MAKETIME(hour, 0, 0)))
-            FROM alert_metrics_summary
-            WHERE date = p_date
-            ORDER BY (total_temperature_alerts + total_disconnection_alerts) DESC
+            SELECT HOUR(TIMESTAMP(fecha, MAKETIME(hora, 0, 0)))
+            FROM ale_metricas_resumen
+            WHERE fecha = p_fecha
+            ORDER BY (total_alertas_temperatura + total_alertas_desconexion) DESC
             LIMIT 1
-        ) AS peak_alert_hour
-    FROM alert_metrics_summary
-    WHERE date = p_date
-    GROUP BY p_date;
-END ;;
-
-DELIMITER ;
+        ) AS hora_pico_alertas
+    FROM ale_metricas_resumen
+    WHERE fecha = p_fecha
+    GROUP BY p_fecha;
+END
