@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `teltonika`.`ObtenerValorString`(
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_obtener_valor_string`(
     IN p_input_string TEXT,
     IN p_key VARCHAR(50),
     OUT p_value VARCHAR(255)
