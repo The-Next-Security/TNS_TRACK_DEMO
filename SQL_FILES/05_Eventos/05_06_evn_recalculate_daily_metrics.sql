@@ -1,8 +1,8 @@
-CREATE EVENT evt_recalculate_daily_metrics
+CREATE EVENT evn_recalculate_daily_metrics
 ON SCHEDULE EVERY 1 DAY
 STARTS '2025-12-27 02:00:00.000'
 ON COMPLETION NOT PRESERVE
 ENABLE
 DO BEGIN
-    CALL sp_process_recent_metrics(24);
+    CALL stpr_process_recent_metrics(24);
 END
