@@ -303,6 +303,7 @@ CREATE TABLE `ubi_canal` (
   `id_canal` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `id_ubicacion_real` INT UNSIGNED NOT NULL COMMENT 'FK a gen_ubicaciones_reales',
   `canal_id` INT NOT NULL COMMENT 'ID natural del canal en Ubibot',
+  `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre descriptivo del canal en Ubibot',
   `id_producto` INT NOT NULL COMMENT 'ID del producto en Ubibot',
   `id_dispositivo` INT NOT NULL COMMENT 'ID del dispositivo en Ubibot',
   `latitud` DECIMAL(10,8) NOT NULL COMMENT 'Latitud del canal',
@@ -336,9 +337,12 @@ CREATE TABLE `ubi_lecturas_sensor` (
   `humedad` DECIMAL(10,2) NOT NULL COMMENT 'Humedad registrada por el sensor',
   `luz` DECIMAL(10,2) NOT NULL COMMENT 'Nivel de luz registrado por el sensor',
   `voltaje` DECIMAL(10,2) NOT NULL COMMENT 'Voltaje registrado por el sensor',
-  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora del registro',
+  `fecha_lectura` DATETIME NOT NULL COMMENT 'Fecha y hora exacta de la lectura del sensor',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de inserción del registro',
   PRIMARY KEY (`id_lectura_sensor`),
   INDEX `idx_ubi_lecturas_sensor_id_canal` (`id_canal`),
+  INDEX `idx_ubi_lecturas_sensor_fecha_lectura` (`fecha_lectura`),
+  INDEX `idx_ubi_lecturas_sensor_id_canal-fecha_lectura` (`id_canal`, `fecha_lectura`),
   CONSTRAINT `fk_ubi_lecturas_sensor_id_canal_ubi_canal_id_canal`
     FOREIGN KEY (`id_canal`)
     REFERENCES `ubi_canal`(`id_canal`)
@@ -656,6 +660,27 @@ CREATE TABLE `ubi_historial_presets` (
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Historial de cambios en presets de temperatura Ubibot';
+
+-- Contadores de ciclos de temperatura diarios por canal Ubibot
+CREATE TABLE `ubi_contador_ciclos` (
+  `id_contador_ciclo` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `fecha_ciclos` DATETIME NOT NULL COMMENT 'Fecha y hora de inicio del ciclo de temperatura',
+  `id_canal` INT UNSIGNED NOT NULL COMMENT 'FK a ubi_canal',
+  `numero_ciclos` DECIMAL(3,1) NOT NULL DEFAULT 0 COMMENT 'Número de ciclos de temperatura detectados en el día',
+  `tiempo_en_positivo` INT NOT NULL DEFAULT 0 COMMENT 'Tiempo en minutos con temperatura positiva',
+  `porcentaje_tiempo` DECIMAL(6,3) NOT NULL DEFAULT 0 COMMENT 'Porcentaje del tiempo con temperatura positiva',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_contador_ciclo`),
+  UNIQUE KEY `uk_ubi_contador_ciclos_fecha_canal` (`fecha_ciclos`, `id_canal`),
+  INDEX `idx_ubi_contador_ciclos_id_canal` (`id_canal`),
+  INDEX `idx_ubi_contador_ciclos_fecha_ciclos` (`fecha_ciclos`),
+  CONSTRAINT `fk_contador_ciclos_id_canal_ubi_canal_id_canal`
+    FOREIGN KEY (`id_canal`)
+    REFERENCES `ubi_canal`(`id_canal`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Contadores de ciclos de temperatura diarios por canal Ubibot';
 
 -- ============================================
 -- TABLAS DE LOG (log_)
