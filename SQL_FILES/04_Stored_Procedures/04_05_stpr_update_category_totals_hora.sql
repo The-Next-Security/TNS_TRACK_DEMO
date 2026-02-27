@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `teltonika`.`fn_update_category_totals_hora`(
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_update_category_totals_hora`(
     p_inicio TIMESTAMP,
     p_fin TIMESTAMP
 )
@@ -21,8 +21,8 @@ BEGIN
             @errno = MYSQL_ERRNO,
             @text = MESSAGE_TEXT;
         
-        INSERT INTO process_log (message) 
-        VALUES (CONCAT('ERROR CRÍTICO en fn_update_category_totals_hora: ', 
+        INSERT INTO log_proceso (mensaje) 
+        VALUES (CONCAT('ERROR CRÍTICO en stpr_update_category_totals_hora: ', 
                       @errno, ' - ', @text, ' - ROLLBACK ejecutado'));
         RESIGNAL;
     END;
@@ -31,8 +31,8 @@ BEGIN
     START TRANSACTION;
     
     -- Registro de inicio
-    INSERT INTO process_log (message) 
-    VALUES (CONCAT('Iniciando fn_update_category_totals_hora MULTI-GRUPO: ', p_inicio, ' a ', p_fin));
+    INSERT INTO log_proceso (mensaje) 
+    VALUES (CONCAT('Iniciando stpr_update_category_totals_hora MULTI-GRUPO: ', p_inicio, ' a ', p_fin));
     
     -- ✅ 0. LIMPIAR REGISTROS ANÓMALOS PRIMERO (registros con timestamps exactos en lugar de horas cerradas)
     DELETE FROM sem_totales_hora 
@@ -43,7 +43,7 @@ BEGIN
     SET v_registros_anomalos_eliminados = ROW_COUNT();
     
     IF v_registros_anomalos_eliminados > 0 THEN
-        INSERT INTO process_log (message) 
+        INSERT INTO log_proceso (mensaje) 
         VALUES (CONCAT('🧹 LIMPIEZA: Eliminados ', v_registros_anomalos_eliminados, 
                       ' registros anómalos con timestamps no redondeados'));
     END IF;
@@ -73,7 +73,7 @@ BEGIN
     
     SET v_lecturas_esperadas = 3600 / COALESCE(v_intervalo_recoleccion, 10);
     
-    INSERT INTO process_log (message) 
+    INSERT INTO log_proceso (mensaje) 
     VALUES (CONCAT('Configuración: Intervalo=', v_intervalo_recoleccion, 
                   's, Precio=', v_precio_kwh, ' CLP/kWh'));
     
@@ -110,7 +110,7 @@ BEGIN
             END IF;
             
             -- Obtener umbrales específicos para este grupo
-            SET v_thresholds = fn_get_consumption_thresholds(v_grupo_id, p_inicio);
+            SET v_thresholds = fun_get_consumption_thresholds(v_grupo_id, p_inicio);
             SET v_limite_apagado = CAST(JSON_EXTRACT(v_thresholds, '$.limite_apagado') AS DECIMAL(10,2));
             SET v_cuartil_bajo = CAST(JSON_EXTRACT(v_thresholds, '$.cuartil_bajo') AS DECIMAL(10,2));
             SET v_cuartil_medio = CAST(JSON_EXTRACT(v_thresholds, '$.cuartil_medio') AS DECIMAL(10,2));
@@ -208,7 +208,7 @@ BEGIN
             END IF;
             
             -- Obtener umbrales específicos para este grupo
-            SET v_thresholds = fn_get_consumption_thresholds(v_grupo_id, p_inicio);
+            SET v_thresholds = fun_get_consumption_thresholds(v_grupo_id, p_inicio);
             SET v_limite_apagado = CAST(JSON_EXTRACT(v_thresholds, '$.limite_apagado') AS DECIMAL(10,2));
             SET v_cuartil_bajo = CAST(JSON_EXTRACT(v_thresholds, '$.cuartil_bajo') AS DECIMAL(10,2));
             SET v_cuartil_medio = CAST(JSON_EXTRACT(v_thresholds, '$.cuartil_medio') AS DECIMAL(10,2));
@@ -292,7 +292,7 @@ BEGIN
       AND (MINUTE(hora_local) != 0 OR SECOND(hora_local) != 0);
     
     IF v_error_count > 0 THEN
-        INSERT INTO process_log (message) 
+        INSERT INTO log_proceso (mensaje) 
         VALUES (CONCAT('🚨 ERROR CRÍTICO: ', v_error_count, 
                        ' registros SIGUEN teniendo horarios no redondeados después del procesamiento'));
         
@@ -301,7 +301,7 @@ BEGIN
         WHERE hora_local BETWEEN p_inicio AND p_fin
           AND (MINUTE(hora_local) != 0 OR SECOND(hora_local) != 0);
         
-        INSERT INTO process_log (message) 
+        INSERT INTO log_proceso (mensaje) 
         VALUES (CONCAT('🧹 ELIMINADOS automáticamente ', ROW_COUNT(), ' registros anómalos residuales'));
     END IF;
     
@@ -312,7 +312,7 @@ BEGIN
       AND (energia_activa_total < 0 OR energia_activa_total > 100 OR costo_total < 0);
     
     IF v_error_count > 0 THEN
-        INSERT INTO process_log (message) 
+        INSERT INTO log_proceso (mensaje) 
         VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' registros con valores de energía/costo anómalos'));
     END IF;
     
@@ -324,7 +324,7 @@ BEGIN
       AND cantidad_datos > 0;
     
     IF v_error_count > 0 THEN
-        INSERT INTO process_log (message) 
+        INSERT INTO log_proceso (mensaje) 
         VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' registros con categorización inconsistente'));
     END IF;
     
@@ -332,8 +332,8 @@ BEGIN
     COMMIT;
     
     -- Log de finalización exitosa
-    INSERT INTO process_log (message) 
-    VALUES (CONCAT('✅ fn_update_category_totals_hora MULTI-GRUPO COMPLETADA: ',
+    INSERT INTO log_proceso (mensaje) 
+    VALUES (CONCAT('✅ stpr_update_category_totals_hora MULTI-GRUPO COMPLETADA: ',
                   'Anomalías eliminadas=', v_registros_anomalos_eliminados, ', ',
                   'Actualizados=', v_registros_actualizados, ', ',
                   'Creados=', v_registros_creados));
