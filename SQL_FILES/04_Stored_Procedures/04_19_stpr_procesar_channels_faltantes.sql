@@ -1,10 +1,8 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`%` PROCEDURE `sp_procesar_channels_faltantes`()
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_procesar_channels_faltantes`()
 BEGIN
     -- Variables para channels
-    DECLARE v_channel_id INT;
-    DECLARE v_channel_name VARCHAR(50);
+    DECLARE v_id_canal INT;
+    DECLARE v_nombre_canal VARCHAR(50);
     DECLARE v_done_channels BOOLEAN DEFAULT FALSE;
 
     -- Variables para fechas
@@ -17,21 +15,21 @@ BEGIN
 
     -- Cursor para channels sin procesar
     DECLARE channels_cursor CURSOR FOR
-        SELECT DISTINCT c.channel_id, c.name
-        FROM channels_ubibot c
-        JOIN sensor_readings_ubibot sr ON c.channel_id = sr.channel_id
-        WHERE c.esOperativa = 1
-        AND sr.external_temperature IS NOT NULL
-        AND c.channel_id NOT IN (SELECT DISTINCT channel_id FROM contador_ciclos)
-        ORDER BY c.channel_id;
+        SELECT DISTINCT c.id_canal, c.nombre
+        FROM ubi_canal c
+        JOIN ubi_lecturas_sensor sr ON c.id_canal = sr.id_canal
+        WHERE c.activo = 1
+        AND sr.temperatura IS NOT NULL
+        AND c.id_canal NOT IN (SELECT DISTINCT id_canal FROM ubi_contador_ciclos)
+        ORDER BY c.id_canal;
 
     -- Cursor para fechas de un channel específico
     DECLARE fechas_cursor CURSOR FOR
-        SELECT DISTINCT DATE(external_temperature_timestamp) as fecha
-        FROM sensor_readings_ubibot
-        WHERE channel_id = v_channel_id
-        AND external_temperature IS NOT NULL
-        ORDER BY DATE(external_temperature_timestamp);
+        SELECT DISTINCT DATE(fecha_lectura) as fecha
+        FROM ubi_lecturas_sensor
+        WHERE id_canal = v_id_canal
+        AND temperatura IS NOT NULL
+        ORDER BY DATE(fecha_lectura);
 
     DECLARE CONTINUE HANDLER FOR NOT FOUND
     BEGIN
@@ -42,14 +40,14 @@ BEGIN
         END IF;
     END;
 
-    INSERT INTO process_log (message)
+    INSERT INTO log_proceso (mensaje)
     VALUES ('[CHANNELS_FALTANTES] Iniciando procesamiento...');
 
     -- Abrir cursor de channels
     OPEN channels_cursor;
 
     channels_loop: LOOP
-        FETCH channels_cursor INTO v_channel_id, v_channel_name;
+        FETCH channels_cursor INTO v_id_canal, v_nombre_canal;
 
         IF v_done_channels THEN
             LEAVE channels_loop;
@@ -59,8 +57,8 @@ BEGIN
         SET v_errores_channel = 0;
         SET v_done_fechas = FALSE;
 
-        INSERT INTO process_log (message)
-        VALUES (CONCAT('[CHANNELS_FALTANTES] Procesando channel: ', v_channel_id, ' (', v_channel_name, ')'));
+        INSERT INTO log_proceso (mensaje)
+        VALUES (CONCAT('[CHANNELS_FALTANTES] Procesando channel: ', v_id_canal, ' (', v_nombre_canal, ')'));
 
         -- Abrir cursor de fechas para este channel
         OPEN fechas_cursor;
@@ -86,21 +84,21 @@ BEGIN
                     SET v_errores_channel = v_errores_channel + 1;
                     SET @fechas_con_error = @fechas_con_error + 1;
 
-                    INSERT INTO process_log (message)
-                    VALUES (CONCAT('[CHANNELS_FALTANTES] ERROR channel ', v_channel_id, ' fecha ', v_fecha_actual, ': ',
+                    INSERT INTO log_proceso (mensaje)
+                    VALUES (CONCAT('[CHANNELS_FALTANTES] ERROR channel ', v_id_canal, ' fecha ', v_fecha_actual, ': ',
                                    @errno, ' - ', @text));
                 END;
 
                 -- Llamar al stored procedure principal
-                CALL sp_calcular_ciclos_temperatura(v_fecha_actual);
+                CALL stpr_calcular_ciclos_temperatura(v_fecha_actual);
 
                 SET v_fechas_channel = v_fechas_channel + 1;
                 SET @fechas_procesadas = @fechas_procesadas + 1;
 
                 -- Log cada 20 fechas por channel
                 IF v_fechas_channel % 20 = 0 THEN
-                    INSERT INTO process_log (message)
-                    VALUES (CONCAT('[CHANNELS_FALTANTES] Channel ', v_channel_id, ' - ', v_fechas_channel, ' fechas procesadas'));
+                    INSERT INTO log_proceso (mensaje)
+                    VALUES (CONCAT('[CHANNELS_FALTANTES] Channel ', v_id_canal, ' - ', v_fechas_channel, ' fechas procesadas'));
                 END IF;
 
             END;
@@ -112,18 +110,16 @@ BEGIN
 
         SET @channels_procesados = @channels_procesados + 1;
 
-        INSERT INTO process_log (message)
-        VALUES (CONCAT('[CHANNELS_FALTANTES] Channel COMPLETADO: ', v_channel_id, ' (', v_channel_name, ') - ',
+        INSERT INTO log_proceso (mensaje)
+        VALUES (CONCAT('[CHANNELS_FALTANTES] Channel COMPLETADO: ', v_id_canal, ' (', v_nombre_canal, ') - ',
                        v_fechas_channel, ' fechas procesadas, ', v_errores_channel, ' errores'));
 
     END LOOP channels_loop;
 
     CLOSE channels_cursor;
 
-    INSERT INTO process_log (message)
+    INSERT INTO log_proceso (mensaje)
     VALUES (CONCAT('[CHANNELS_FALTANTES] Procesamiento completado - Channels: ', @channels_procesados,
                    ' - Fechas totales: ', @fechas_procesadas, ' - Errores: ', @fechas_con_error));
 
-END ;;
-
-DELIMITER ;
+END
