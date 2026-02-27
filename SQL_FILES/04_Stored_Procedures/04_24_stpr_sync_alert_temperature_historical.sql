@@ -1,38 +1,34 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_sync_alert_temperature_historical`(IN p_overwrite_existing BOOLEAN)
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_sync_alert_temperature_historical`(IN p_sobreescribir_existentes BOOLEAN)
 BEGIN
   DECLARE v_processed INT DEFAULT 0;
 
-  IF p_overwrite_existing THEN
-    UPDATE alert_tracking
+  IF p_sobreescribir_existentes THEN
+    UPDATE ale_seguimiento
     SET
-      temperature_value = CAST(JSON_UNQUOTE(JSON_EXTRACT(alert_data, '$.averageTemperature')) AS DECIMAL(5,2)),
-      min_threshold     = CAST(JSON_UNQUOTE(JSON_EXTRACT(alert_data, '$.minThreshold'))      AS DECIMAL(5,2)),
-      max_threshold     = CAST(JSON_UNQUOTE(JSON_EXTRACT(alert_data, '$.maxThreshold'))      AS DECIMAL(5,2))
+      valor_temperatura = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.averageTemperature')) AS DECIMAL(5,2)),
+      umbral_minimo     = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.minThreshold'))      AS DECIMAL(5,2)),
+      umbral_maximo     = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.maxThreshold'))      AS DECIMAL(5,2))
     WHERE
-      (alert_type = 'temperature' OR alert_type IS NULL)
-      AND JSON_EXTRACT(alert_data, '$.connectionStatus') IS NULL
-      AND JSON_EXTRACT(alert_data, '$.averageTemperature') IS NOT NULL
-      AND JSON_EXTRACT(alert_data, '$.minThreshold')      IS NOT NULL
-      AND JSON_EXTRACT(alert_data, '$.maxThreshold')      IS NOT NULL;
+      (tipo_alerta = 'temperatura' OR tipo_alerta IS NULL)
+      AND JSON_EXTRACT(datos_alerta, '$.connectionStatus') IS NULL
+      AND JSON_EXTRACT(datos_alerta, '$.averageTemperature') IS NOT NULL
+      AND JSON_EXTRACT(datos_alerta, '$.minThreshold')      IS NOT NULL
+      AND JSON_EXTRACT(datos_alerta, '$.maxThreshold')      IS NOT NULL;
   ELSE
-    UPDATE alert_tracking
+    UPDATE ale_seguimiento
     SET
-      temperature_value = CAST(JSON_UNQUOTE(JSON_EXTRACT(alert_data, '$.averageTemperature')) AS DECIMAL(5,2)),
-      min_threshold     = CAST(JSON_UNQUOTE(JSON_EXTRACT(alert_data, '$.minThreshold'))      AS DECIMAL(5,2)),
-      max_threshold     = CAST(JSON_UNQUOTE(JSON_EXTRACT(alert_data, '$.maxThreshold'))      AS DECIMAL(5,2))
+      valor_temperatura = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.averageTemperature')) AS DECIMAL(5,2)),
+      umbral_minimo     = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.minThreshold'))      AS DECIMAL(5,2)),
+      umbral_maximo     = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.maxThreshold'))      AS DECIMAL(5,2))
     WHERE
-      (alert_type = 'temperature' OR alert_type IS NULL)
-      AND JSON_EXTRACT(alert_data, '$.connectionStatus') IS NULL
-      AND JSON_EXTRACT(alert_data, '$.averageTemperature') IS NOT NULL
-      AND JSON_EXTRACT(alert_data, '$.minThreshold')      IS NOT NULL
-      AND JSON_EXTRACT(alert_data, '$.maxThreshold')      IS NOT NULL
-      AND (temperature_value IS NULL OR min_threshold IS NULL OR max_threshold IS NULL);
+      (tipo_alerta = 'temperatura' OR tipo_alerta IS NULL)
+      AND JSON_EXTRACT(datos_alerta, '$.connectionStatus') IS NULL
+      AND JSON_EXTRACT(datos_alerta, '$.averageTemperature') IS NOT NULL
+      AND JSON_EXTRACT(datos_alerta, '$.minThreshold')      IS NOT NULL
+      AND JSON_EXTRACT(datos_alerta, '$.maxThreshold')      IS NOT NULL
+      AND (valor_temperatura IS NULL OR umbral_minimo IS NULL OR umbral_maximo IS NULL);
   END IF;
 
   SET v_processed = ROW_COUNT();
   SELECT v_processed AS rows_updated;
-END ;;
-
-DELIMITER ;
+END
