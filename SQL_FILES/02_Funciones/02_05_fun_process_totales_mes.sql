@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` FUNCTION `teltonika`.`fn_process_totales_mes`(
+CREATE DEFINER=`root`@`%` FUNCTION `tns_cool_track`.`fun_process_totales_mes`(
     p_año INT,
     p_mes INT
 ) RETURNS tinyint
