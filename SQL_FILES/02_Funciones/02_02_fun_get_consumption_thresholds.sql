@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` FUNCTION `teltonika`.`fn_get_consumption_thresholds`(
+CREATE DEFINER=`root`@`%` FUNCTION `tns_cool_track`.`fun_get_consumption_thresholds`(
     p_grupo_id INT,
     p_fecha TIMESTAMP
 ) RETURNS json
@@ -28,7 +28,7 @@ BEGIN
         SET v_grupo_id_usado = 1; -- Usar grupo General como fallback
         
         -- Registrar la sustitución
-        INSERT INTO process_log (message) 
+        INSERT INTO log_proceso (mensaje) 
         VALUES (CONCAT('Grupo ID: ', p_grupo_id, ' no existe o no está activo. Usando grupo General (ID: 1) para fecha: ', p_fecha));
     END IF;
     
