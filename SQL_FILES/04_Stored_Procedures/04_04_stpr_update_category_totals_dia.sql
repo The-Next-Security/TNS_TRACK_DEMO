@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `teltonika`.`fn_update_category_totals_dia`(
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_update_category_totals_dia`(
     p_inicio DATE,
     p_fin DATE
 )
@@ -18,8 +18,8 @@ BEGIN
             @errno = MYSQL_ERRNO,
             @text = MESSAGE_TEXT;
         
-        INSERT INTO process_log (message) 
-        VALUES (CONCAT('ERROR CRÍTICO en fn_update_category_totals_dia: ', 
+        INSERT INTO log_proceso (mensaje) 
+        VALUES (CONCAT('ERROR CRÍTICO en stpr_update_category_totals_dia: ', 
                       @errno, ' - ', @text, ' - ROLLBACK ejecutado'));
         RESIGNAL;
     END;
@@ -28,8 +28,8 @@ BEGIN
     START TRANSACTION;
     
     -- Registro de inicio
-    INSERT INTO process_log (message) 
-    VALUES (CONCAT('Iniciando fn_update_category_totals_dia MULTI-GRUPO: ', p_inicio, ' a ', p_fin));
+    INSERT INTO log_proceso (mensaje) 
+    VALUES (CONCAT('Iniciando stpr_update_category_totals_dia MULTI-GRUPO: ', p_inicio, ' a ', p_fin));
     
     -- ✅ 1. Obtener configuración dinámica por nombre
     SELECT CAST(c.valor AS DECIMAL(10,2))
@@ -43,7 +43,7 @@ BEGIN
     ORDER BY c.valido_desde DESC
     LIMIT 1;
     
-    INSERT INTO process_log (message) 
+    INSERT INTO log_proceso (mensaje) 
     VALUES (CONCAT('Configuración DIA: Precio=', v_precio_kwh, ' CLP/kWh'));
     
     -- ✅ 2. ACTUALIZAR registros existentes por grupo específico
@@ -227,7 +227,7 @@ BEGIN
     END;
     
     -- ✅ 4. Validación de coherencia día vs suma de horas
-    INSERT INTO process_log (message) 
+    INSERT INTO log_proceso (mensaje) 
     VALUES ('Validando coherencia entre totales_dia y suma de totales_hora...');
     
     SELECT COUNT(*) INTO v_error_count
@@ -247,7 +247,7 @@ BEGIN
     ) AS validation;
     
     IF v_error_count > 0 THEN
-        INSERT INTO process_log (message) 
+        INSERT INTO log_proceso (mensaje) 
         VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' registros con incoherencia día vs horas'));
     END IF;
     
@@ -258,7 +258,7 @@ BEGIN
       AND (energia_activa_total < 0 OR energia_activa_total > 2400 OR costo_total < 0);
     
     IF v_error_count > 0 THEN
-        INSERT INTO process_log (message) 
+        INSERT INTO log_proceso (mensaje) 
         VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' registros diarios con valores anómalos'));
     END IF;
     
@@ -266,7 +266,7 @@ BEGIN
     COMMIT;
     
     -- Log de finalización exitosa
-    INSERT INTO process_log (message) 
-    VALUES (CONCAT('✅ fn_update_category_totals_dia MULTI-GRUPO COMPLETADA: Actualizados=', 
+    INSERT INTO log_proceso (mensaje) 
+    VALUES (CONCAT('✅ stpr_update_category_totals_dia MULTI-GRUPO COMPLETADA: Actualizados=', 
                   v_registros_actualizados, ', Creados=', v_registros_creados));
 END
