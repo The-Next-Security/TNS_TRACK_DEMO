@@ -1,6 +1,4 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`%` PROCEDURE `process_sector`(
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_process_sector`(
     IN sector_num INT,
     IN min_rojo INT,
     IN max_rojo INT,
@@ -30,7 +28,7 @@ BEGIN
 
 
 	CALL calcular_diferencia_minutos(inicio, fin, minutos_diferencia);
-    INSERT INTO `teltonika`.`debug_beacon_count` (`sector`,`count`,`timestamp`)
+    INSERT INTO `tns_cool_track`.`debug_beacon_count` (`sector`,`count`,`timestamp`)
     VALUES(CONCAT('Sector ', sector_num), minutos_diferencia, CURRENT_TIMESTAMP());
 
 
@@ -44,6 +42,4 @@ BEGIN
 		SET sector_status = 'Verde';
 	END IF;
 
-END ;;
-
-DELIMITER ;
+END
