@@ -304,8 +304,8 @@ CREATE TABLE `ubi_canal` (
   `id_ubicacion_real` INT UNSIGNED NOT NULL COMMENT 'FK a gen_ubicaciones_reales',
   `canal_id` INT NOT NULL COMMENT 'ID natural del canal en Ubibot',
   `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre descriptivo del canal en Ubibot',
-  `id_producto` INT NOT NULL COMMENT 'ID del producto en Ubibot',
-  `id_dispositivo` INT NOT NULL COMMENT 'ID del dispositivo en Ubibot',
+  `id_producto` VARCHAR(20) NOT NULL COMMENT 'ID del producto en Ubibot',
+  `id_dispositivo` VARCHAR(64) NOT NULL COMMENT 'ID del dispositivo en Ubibot',
   `latitud` DECIMAL(10,8) NOT NULL COMMENT 'Latitud del canal',
   `longitud` DECIMAL(11,8) NOT NULL COMMENT 'Longitud del canal',
   `firmware` VARCHAR(100) NOT NULL COMMENT 'Versión de firmware del sensor',
@@ -449,7 +449,7 @@ CREATE TABLE `sem_dispositivos` (
   `shelly_id` VARCHAR(12) NOT NULL COMMENT 'ID único del dispositivo Shelly (identificador natural)',
   `nombre` VARCHAR(255) NOT NULL COMMENT 'Nombre del dispositivo',
   `tipo` VARCHAR(50) DEFAULT NULL COMMENT 'Tipo de dispositivo (shelly_plug, shelly_em, etc.)',
-  `ubicacion` VARCHAR(255) DEFAULT NULL COMMENT 'Ubicación del dispositivo',
+  `id_ubicacion_real` INT UNSIGNED DEFAULT NULL COMMENT 'FK a gen_ubicaciones_reales',
   `id_grupo` INT UNSIGNED NULL COMMENT 'FK a sem_grupos, grupo de dispositivos para agrupación de consumo',
   `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si el dispositivo está activo',
   `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -462,6 +462,11 @@ CREATE TABLE `sem_dispositivos` (
     FOREIGN KEY (`id_grupo`)
     REFERENCES `sem_grupos`(`id_grupo`)
     ON DELETE SET NULL
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_sem_dispositivos_id_ubicacion_real_gen_ubicaciones_reales_id`
+    FOREIGN KEY (`id_ubicacion_real`)
+    REFERENCES `gen_ubicaciones_reales`(`id_ubicacion_real`)
+    ON DELETE RESTRICT
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Dispositivos Shelly de medición eléctrica';
 
