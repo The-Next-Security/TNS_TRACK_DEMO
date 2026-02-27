@@ -1,6 +1,4 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`%` TRIGGER `triggerGPSDATAaDoorStatus`
+CREATE DEFINER=`root`@`%` TRIGGER `trig_GPS_data_a_door_status`
 AFTER INSERT ON `gps_data`
 FOR EACH ROW
 BEGIN
@@ -31,15 +29,15 @@ BEGIN
             SET objeto_actual = SUBSTRING(raw_data, pos_inicio, pos_fin - pos_inicio + 1);
 
             -- Obtener mac.address del objeto actual
-            CALL ObtenerValorString(objeto_actual, 'mac.address', mac_address);
+            CALL stpr_obtener_valor_string(objeto_actual, 'mac.address', mac_address);
 
             -- Verificar si es una puerta
             SELECT esPuerta INTO es_puerta FROM beacons WHERE mac = mac_address;
 
             IF es_puerta = 1 THEN
                 -- Obtener temperatura y estado magnético
-                CALL ObtenerValorString(objeto_actual, 'temperature', temperatura);
-                CALL ObtenerValorString(objeto_actual, 'magnet', status_magnetico);
+                CALL stpr_obtener_valor_string(objeto_actual, 'temperature', temperatura);
+                CALL stpr_obtener_valor_string(objeto_actual, 'magnet', status_magnetico);
 
                 -- Obtener el sector
                 SELECT ubicacion INTO nombre_sector FROM beacons WHERE mac = mac_address;
@@ -61,6 +59,4 @@ BEGIN
             SET pos_inicio = LOCATE('{', raw_data, pos_fin + 1);
         END LOOP bucle_principal;
     END IF;
-END ;;
-
-DELIMITER ;
+END
