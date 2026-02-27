@@ -1,6 +1,4 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`localhost` PROCEDURE `sp_restore_default_presets`(
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_restore_default_presets`(
     IN p_restored_by VARCHAR(100)
 )
 BEGIN
@@ -13,34 +11,32 @@ BEGIN
     START TRANSACTION;
 
     -- Desactivar presets personalizados (no eliminar para mantener historial)
-    UPDATE temperature_presets
-    SET is_active = 0,
-        updated_by = p_restored_by
-    WHERE is_default = 0;
+    UPDATE ubi_presets_temperatura
+    SET activo = 0,
+        actualizado_por = p_restored_by
+    WHERE es_predeterminado = 0;
 
     -- Reactivar presets por defecto
-    UPDATE temperature_presets
-    SET is_active = 1,
-        updated_by = p_restored_by
-    WHERE is_default = 1;
+    UPDATE ubi_presets_temperatura
+    SET activo = 1,
+        actualizado_por = p_restored_by
+    WHERE es_predeterminado = 1;
 
     -- Registrar en historial
-    INSERT INTO preset_change_history (
-        action_type,
-        new_values,
-        changed_by,
-        change_reason
+    INSERT INTO ubi_historial_presets (
+        tipo_accion,
+        valores_nuevos,
+        cambiado_por,
+        razon_cambio
     ) VALUES (
-        'RESTORE_DEFAULTS',
-        JSON_OBJECT('action', 'Presets restaurados a valores por defecto'),
+        'RESTAURAR_PREDETERMINADOS',
+        JSON_OBJECT('accion', 'Presets restaurados a valores por defecto'),
         p_restored_by,
         'Restauración de presets del sistema'
     );
 
     COMMIT;
 
-    SELECT 'Presets restaurados exitosamente' as message,
-           (SELECT COUNT(*) FROM temperature_presets WHERE is_active = 1) as active_presets;
-END ;;
-
-DELIMITER ;
+    SELECT 'Presets restaurados exitosamente' AS mensaje,
+           (SELECT COUNT(*) FROM ubi_presets_temperatura WHERE activo = 1) AS presets_activos;
+END
