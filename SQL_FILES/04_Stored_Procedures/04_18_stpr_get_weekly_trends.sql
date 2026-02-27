@@ -1,21 +1,17 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`%` PROCEDURE `sp_get_weekly_trends`(
-    IN p_start_date DATE,
-    IN p_end_date DATE
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_get_weekly_trends`(
+    IN p_fecha_inicio DATE,
+    IN p_fecha_fin DATE
 )
 BEGIN
     SELECT
-        date,
-        SUM(total_temperature_alerts + total_disconnection_alerts) AS total_alerts,
-        SUM(alerts_resolved) AS total_resolved,
-        ROUND(AVG(avg_response_time_minutes), 2) AS avg_response_time,
-        ROUND(AVG(push_delivery_rate), 2) AS avg_delivery_rate,
-        MAX(unique_channels_alerted) AS max_channels_alerted
-    FROM alert_metrics_summary
-    WHERE date BETWEEN p_start_date AND p_end_date
-    GROUP BY date
-    ORDER BY date ASC;
-END ;;
-
-DELIMITER ;
+        fecha,
+        SUM(total_alertas_temperatura + total_alertas_desconexion) AS total_alertas,
+        SUM(alertas_resueltas) AS total_resueltas,
+        ROUND(AVG(promedio_tiempo_respuesta), 2) AS promedio_tiempo_respuesta,
+        ROUND(AVG(tasa_entrega_push), 2) AS promedio_tasa_entrega,
+        MAX(canales_alertados_unicos) AS max_canales_alertados
+    FROM ale_metricas_resumen
+    WHERE fecha BETWEEN p_fecha_inicio AND p_fecha_fin
+    GROUP BY fecha
+    ORDER BY fecha ASC;
+END
