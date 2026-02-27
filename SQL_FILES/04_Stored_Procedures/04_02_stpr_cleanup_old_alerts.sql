@@ -1,12 +1,12 @@
-CREATE DEFINER=`root`@`localhost` PROCEDURE `teltonika`.`cleanup_old_alerts`(IN days_to_keep INT)
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_cleanup_old_alerts`(IN p_dias_a_mantener INT)
 BEGIN
-                DECLARE deleted_count INT DEFAULT 0;
+    DECLARE v_eliminados INT DEFAULT 0;
 
-                DELETE FROM alert_tracking
-                WHERE status IN ('resolved', 'false_alarm')
-                AND resolved_at < DATE_SUB(NOW(), INTERVAL days_to_keep DAY);
+    DELETE FROM ale_seguimiento
+    WHERE estado IN ('resuelto', 'falsa_alarma')
+    AND fecha_resolucion < DATE_SUB(NOW(), INTERVAL p_dias_a_mantener DAY);
 
-                SET deleted_count = ROW_COUNT();
+    SET v_eliminados = ROW_COUNT();
 
-                SELECT deleted_count as alerts_deleted;
-            END
+    SELECT v_eliminados AS alertas_eliminadas;
+END
