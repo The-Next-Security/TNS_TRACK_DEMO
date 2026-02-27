@@ -1,20 +1,20 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `teltonika`.`sp_archive_old_metrics`(
-    IN p_retention_months INT,
-    OUT p_rows_deleted INT
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_archive_old_metrics`(
+    IN p_meses_retencion INT,
+    OUT p_filas_eliminadas INT
 )
 BEGIN
-    DECLARE v_cutoff_date DATE;
+    DECLARE v_fecha_corte DATE;
 
-    SET v_cutoff_date = DATE_SUB(CURDATE(), INTERVAL p_retention_months MONTH);
+    SET v_fecha_corte = DATE_SUB(CURDATE(), INTERVAL p_meses_retencion MONTH);
 
     -- Opción 1: Mover a tabla de archivo (recomendado)
-    -- INSERT INTO alert_metrics_summary_archive SELECT * FROM alert_metrics_summary WHERE date < v_cutoff_date;
+    -- INSERT INTO ale_metricas_resumen_archivo SELECT * FROM ale_metricas_resumen WHERE fecha < v_fecha_corte;
 
     -- Opción 2: Eliminar directamente
-    DELETE FROM alert_metrics_summary
-    WHERE date < v_cutoff_date;
+    DELETE FROM ale_metricas_resumen
+    WHERE fecha < v_fecha_corte;
 
-    SET p_rows_deleted = ROW_COUNT();
+    SET p_filas_eliminadas = ROW_COUNT();
 
-    SELECT CONCAT('Eliminadas ', p_rows_deleted, ' filas anteriores a ', v_cutoff_date) AS message;
+    SELECT CONCAT('Eliminadas ', p_filas_eliminadas, ' filas anteriores a ', v_fecha_corte) AS mensaje;
 END
