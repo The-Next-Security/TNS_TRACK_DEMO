@@ -1,4 +1,4 @@
-CREATE EVENT event_actualizar_totales_hora
+CREATE EVENT evn_actualizar_totales_hora
 ON SCHEDULE EVERY 5 MINUTE
 STARTS '2025-01-28 00:00:00.000'
 ON COMPLETION NOT PRESERVE
@@ -26,7 +26,7 @@ DO BEGIN
     END;
 
     SET v_hora_actual = DATE_FORMAT(NOW(), '%Y-%m-%d %H:00:00');
-    SET v_success_hora = fn_process_totales_hora(v_hora_actual);
+    SET v_success_hora = fun_process_totales_hora(v_hora_actual);
 
     IF v_success_hora THEN
         INSERT INTO sem_auditoria_detallada (
