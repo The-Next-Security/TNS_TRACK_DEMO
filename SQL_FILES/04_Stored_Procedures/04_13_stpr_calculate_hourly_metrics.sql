@@ -1,156 +1,156 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `teltonika`.`sp_calculate_hourly_metrics`(
-    IN p_target_date DATE,
-    IN p_target_hour TINYINT
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_calculate_hourly_metrics`(
+    IN p_fecha_objetivo DATE,
+    IN p_hora_objetivo TINYINT
 )
 BEGIN
-    DECLARE v_hour_start DATETIME;
-    DECLARE v_hour_end DATETIME;
-    DECLARE v_alert_count INT;
+    DECLARE v_inicio_hora DATETIME;
+    DECLARE v_fin_hora DATETIME;
+    DECLARE v_total_alertas INT;
 
     -- Calcular rango de timestamps para la hora
-    SET v_hour_start = TIMESTAMP(p_target_date, MAKETIME(p_target_hour, 0, 0));
-    SET v_hour_end = TIMESTAMP(p_target_date, MAKETIME(p_target_hour, 59, 59));
+    SET v_inicio_hora = TIMESTAMP(p_fecha_objetivo, MAKETIME(p_hora_objetivo, 0, 0));
+    SET v_fin_hora = TIMESTAMP(p_fecha_objetivo, MAKETIME(p_hora_objetivo, 59, 59));
 
     -- Verificar si hay alertas en el período
-    SELECT COUNT(*) INTO v_alert_count
-    FROM alert_tracking
-    WHERE alert_timestamp BETWEEN v_hour_start AND v_hour_end;
+    SELECT COUNT(*) INTO v_total_alertas
+    FROM ale_seguimiento
+    WHERE fecha_alerta BETWEEN v_inicio_hora AND v_fin_hora;
 
     -- Si no hay alertas, insertar registro con ceros
-    IF v_alert_count = 0 THEN
-        INSERT INTO alert_metrics_summary (
-            `date`, `hour`,
-            total_temperature_alerts, total_disconnection_alerts,
-            alerts_pending, alerts_acknowledged, alerts_resolved, alerts_false_alarm,
-            push_sent, push_failed, critical_alerts_count, unique_channels_alerted,
-            last_updated_at
+    IF v_total_alertas = 0 THEN
+        INSERT INTO ale_metricas_resumen (
+            `fecha`, `hora`,
+            total_alertas_temperatura, total_alertas_desconexion,
+            alertas_pendientes, alertas_confirmadas, alertas_resueltas, alertas_falsa_alarma,
+            push_enviados, push_fallidos, total_alertas_criticas, canales_alertados_unicos,
+            fecha_actualizacion
         ) VALUES (
-            p_target_date, p_target_hour,
+            p_fecha_objetivo, p_hora_objetivo,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             NOW()
         )
         ON DUPLICATE KEY UPDATE
-            last_updated_at = NOW();
+            fecha_actualizacion = NOW();
 
-        SELECT 
-            p_target_date AS target_date,
-            p_target_hour AS target_hour,
-            0 AS total_alerts,
-            'Sin alertas en este período' AS message;
+        SELECT
+            p_fecha_objetivo AS fecha_objetivo,
+            p_hora_objetivo AS hora_objetivo,
+            0 AS total_alertas,
+            'Sin alertas en este período' AS mensaje;
     ELSE
         -- UPSERT con datos reales
-        INSERT INTO alert_metrics_summary (
-            `date`,
-            `hour`,
-            total_temperature_alerts,
-            total_disconnection_alerts,
-            avg_response_time_minutes,
-            avg_resolution_time_minutes,
-            min_response_time_minutes,
-            max_response_time_minutes,
-            alerts_pending,
-            alerts_acknowledged,
-            alerts_resolved,
-            alerts_false_alarm,
-            push_sent,
-            push_failed,
-            push_delivery_rate,
-            critical_alerts_count,
-            critical_avg_response_time_minutes,
-            unique_channels_alerted,
-            top_channel_id,
-            top_channel_alert_count,
-            last_updated_at
+        INSERT INTO ale_metricas_resumen (
+            `fecha`,
+            `hora`,
+            total_alertas_temperatura,
+            total_alertas_desconexion,
+            promedio_tiempo_respuesta,
+            promedio_tiempo_resolucion,
+            minimo_tiempo_respuesta,
+            maximo_tiempo_respuesta,
+            alertas_pendientes,
+            alertas_confirmadas,
+            alertas_resueltas,
+            alertas_falsa_alarma,
+            push_enviados,
+            push_fallidos,
+            tasa_entrega_push,
+            total_alertas_criticas,
+            promedio_tiempo_respuesta_critica,
+            canales_alertados_unicos,
+            id_canal_top,
+            alertas_canal_top,
+            fecha_actualizacion
         )
         SELECT
-            p_target_date AS `date`,
-            p_target_hour AS `hour`,
+            p_fecha_objetivo AS `fecha`,
+            p_hora_objetivo AS `hora`,
 
-            -- Alert volume metrics (COALESCE para evitar NULL)
-            COALESCE(SUM(CASE WHEN alert_type = 'temperature' THEN 1 ELSE 0 END), 0) AS total_temperature_alerts,
-            COALESCE(SUM(CASE WHEN alert_type = 'disconnection' THEN 1 ELSE 0 END), 0) AS total_disconnection_alerts,
+            -- Volumen de alertas (COALESCE para evitar NULL)
+            COALESCE(SUM(CASE WHEN tipo_alerta = 'temperatura' THEN 1 ELSE 0 END), 0) AS total_alertas_temperatura,
+            COALESCE(SUM(CASE WHEN tipo_alerta = 'desconexion' THEN 1 ELSE 0 END), 0) AS total_alertas_desconexion,
 
-            -- Response/resolution time metrics
-            ROUND(AVG(response_time_minutes), 2) AS avg_response_time_minutes,
-            ROUND(AVG(resolution_time_minutes), 2) AS avg_resolution_time_minutes,
-            MIN(response_time_minutes) AS min_response_time_minutes,
-            MAX(response_time_minutes) AS max_response_time_minutes,
+            -- Tiempos de respuesta y resolución
+            ROUND(AVG(tiempo_respuesta_minutos), 2) AS promedio_tiempo_respuesta,
+            ROUND(AVG(tiempo_resolucion_minutos), 2) AS promedio_tiempo_resolucion,
+            MIN(tiempo_respuesta_minutos) AS minimo_tiempo_respuesta,
+            MAX(tiempo_respuesta_minutos) AS maximo_tiempo_respuesta,
 
-            -- Status distribution
-            COALESCE(SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END), 0) AS alerts_pending,
-            COALESCE(SUM(CASE WHEN status = 'acknowledged' THEN 1 ELSE 0 END), 0) AS alerts_acknowledged,
-            COALESCE(SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END), 0) AS alerts_resolved,
-            COALESCE(SUM(CASE WHEN status = 'false_alarm' OR is_false_alarm = 1 THEN 1 ELSE 0 END), 0) AS alerts_false_alarm,
+            -- Distribución por estado
+            COALESCE(SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END), 0) AS alertas_pendientes,
+            COALESCE(SUM(CASE WHEN estado = 'confirmado' THEN 1 ELSE 0 END), 0) AS alertas_confirmadas,
+            COALESCE(SUM(CASE WHEN estado = 'resuelto' THEN 1 ELSE 0 END), 0) AS alertas_resueltas,
+            COALESCE(SUM(CASE WHEN estado = 'falsa_alarma' OR es_falsa_alarma = 1 THEN 1 ELSE 0 END), 0) AS alertas_falsa_alarma,
 
-            -- Push notification metrics
-            COALESCE(SUM(CASE WHEN notified_via_push = 1 THEN 1 ELSE 0 END), 0) AS push_sent,
-            COALESCE(SUM(CASE WHEN notified_via_push = 0 THEN 1 ELSE 0 END), 0) AS push_failed,
+            -- Métricas de notificaciones push
+            COALESCE(SUM(CASE WHEN notificado_push = 1 THEN 1 ELSE 0 END), 0) AS push_enviados,
+            COALESCE(SUM(CASE WHEN notificado_push = 0 THEN 1 ELSE 0 END), 0) AS push_fallidos,
             CASE
                 WHEN COUNT(*) > 0
                 THEN ROUND(
-                    SUM(CASE WHEN notified_via_push = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+                    SUM(CASE WHEN notificado_push = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
                     2
                 )
                 ELSE NULL
-            END AS push_delivery_rate,
+            END AS tasa_entrega_push,
 
-            -- Critical alerts metrics
-            COALESCE(SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END), 0) AS critical_alerts_count,
+            -- Métricas de alertas críticas
+            COALESCE(SUM(CASE WHEN severidad = 'critica' THEN 1 ELSE 0 END), 0) AS total_alertas_criticas,
             ROUND(
-                AVG(CASE WHEN severity = 'critical' THEN response_time_minutes ELSE NULL END),
+                AVG(CASE WHEN severidad = 'critica' THEN tiempo_respuesta_minutos ELSE NULL END),
                 2
-            ) AS critical_avg_response_time_minutes,
+            ) AS promedio_tiempo_respuesta_critica,
 
-            -- Channel metrics
-            COALESCE(COUNT(DISTINCT channel_id), 0) AS unique_channels_alerted,
+            -- Métricas de canales
+            COALESCE(COUNT(DISTINCT id_canal), 0) AS canales_alertados_unicos,
             (
-                SELECT at2.channel_id
-                FROM alert_tracking at2
-                WHERE at2.alert_timestamp BETWEEN v_hour_start AND v_hour_end
-                GROUP BY at2.channel_id
+                SELECT s2.id_canal
+                FROM ale_seguimiento s2
+                WHERE s2.fecha_alerta BETWEEN v_inicio_hora AND v_fin_hora
+                GROUP BY s2.id_canal
                 ORDER BY COUNT(*) DESC
                 LIMIT 1
-            ) AS top_channel_id,
+            ) AS id_canal_top,
             (
                 SELECT COUNT(*)
-                FROM alert_tracking at3
-                WHERE at3.alert_timestamp BETWEEN v_hour_start AND v_hour_end
-                GROUP BY at3.channel_id
+                FROM ale_seguimiento s3
+                WHERE s3.fecha_alerta BETWEEN v_inicio_hora AND v_fin_hora
+                GROUP BY s3.id_canal
                 ORDER BY COUNT(*) DESC
                 LIMIT 1
-            ) AS top_channel_alert_count,
+            ) AS alertas_canal_top,
 
-            NOW() AS last_updated_at
+            NOW() AS fecha_actualizacion
 
-        FROM alert_tracking
-        WHERE alert_timestamp BETWEEN v_hour_start AND v_hour_end
+        FROM ale_seguimiento
+        WHERE fecha_alerta BETWEEN v_inicio_hora AND v_fin_hora
 
         ON DUPLICATE KEY UPDATE
-            total_temperature_alerts = VALUES(total_temperature_alerts),
-            total_disconnection_alerts = VALUES(total_disconnection_alerts),
-            avg_response_time_minutes = VALUES(avg_response_time_minutes),
-            avg_resolution_time_minutes = VALUES(avg_resolution_time_minutes),
-            min_response_time_minutes = VALUES(min_response_time_minutes),
-            max_response_time_minutes = VALUES(max_response_time_minutes),
-            alerts_pending = VALUES(alerts_pending),
-            alerts_acknowledged = VALUES(alerts_acknowledged),
-            alerts_resolved = VALUES(alerts_resolved),
-            alerts_false_alarm = VALUES(alerts_false_alarm),
-            push_sent = VALUES(push_sent),
-            push_failed = VALUES(push_failed),
-            push_delivery_rate = VALUES(push_delivery_rate),
-            critical_alerts_count = VALUES(critical_alerts_count),
-            critical_avg_response_time_minutes = VALUES(critical_avg_response_time_minutes),
-            unique_channels_alerted = VALUES(unique_channels_alerted),
-            top_channel_id = VALUES(top_channel_id),
-            top_channel_alert_count = VALUES(top_channel_alert_count),
-            last_updated_at = NOW();
+            total_alertas_temperatura = VALUES(total_alertas_temperatura),
+            total_alertas_desconexion = VALUES(total_alertas_desconexion),
+            promedio_tiempo_respuesta = VALUES(promedio_tiempo_respuesta),
+            promedio_tiempo_resolucion = VALUES(promedio_tiempo_resolucion),
+            minimo_tiempo_respuesta = VALUES(minimo_tiempo_respuesta),
+            maximo_tiempo_respuesta = VALUES(maximo_tiempo_respuesta),
+            alertas_pendientes = VALUES(alertas_pendientes),
+            alertas_confirmadas = VALUES(alertas_confirmadas),
+            alertas_resueltas = VALUES(alertas_resueltas),
+            alertas_falsa_alarma = VALUES(alertas_falsa_alarma),
+            push_enviados = VALUES(push_enviados),
+            push_fallidos = VALUES(push_fallidos),
+            tasa_entrega_push = VALUES(tasa_entrega_push),
+            total_alertas_criticas = VALUES(total_alertas_criticas),
+            promedio_tiempo_respuesta_critica = VALUES(promedio_tiempo_respuesta_critica),
+            canales_alertados_unicos = VALUES(canales_alertados_unicos),
+            id_canal_top = VALUES(id_canal_top),
+            alertas_canal_top = VALUES(alertas_canal_top),
+            fecha_actualizacion = NOW();
 
         -- Retornar estadísticas
-        SELECT 
-            p_target_date AS target_date,
-            p_target_hour AS target_hour,
-            v_alert_count AS total_alerts,
-            'Métricas calculadas exitosamente' AS message;
+        SELECT
+            p_fecha_objetivo AS fecha_objetivo,
+            p_hora_objetivo AS hora_objetivo,
+            v_total_alertas AS total_alertas,
+            'Métricas calculadas exitosamente' AS mensaje;
     END IF;
 END
