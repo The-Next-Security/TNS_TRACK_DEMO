@@ -1,6 +1,4 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`%` PROCEDURE `sp_process_recent_metrics`(
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_process_recent_metrics`(
     IN p_hours_back INT
 )
 BEGIN
@@ -10,7 +8,7 @@ BEGIN
     SET v_current_datetime = DATE_SUB(NOW(), INTERVAL p_hours_back HOUR);
 
     WHILE v_counter < p_hours_back DO
-        CALL sp_calculate_hourly_metrics(
+        CALL stpr_calculate_hourly_metrics(
             DATE(v_current_datetime),
             HOUR(v_current_datetime)
         );
@@ -19,7 +17,5 @@ BEGIN
         SET v_counter = v_counter + 1;
     END WHILE;
 
-    SELECT CONCAT('Procesadas ', p_hours_back, ' horas de métricas') AS message;
-END ;;
-
-DELIMITER ;
+    SELECT CONCAT('Procesadas ', p_hours_back, ' horas de métricas') AS mensaje;
+END
