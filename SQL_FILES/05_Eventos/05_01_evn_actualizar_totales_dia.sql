@@ -1,4 +1,4 @@
-CREATE EVENT event_actualizar_totales_dia
+CREATE EVENT evn_actualizar_totales_dia
 ON SCHEDULE EVERY 30 MINUTE
 STARTS '2025-01-28 00:00:00.000'
 ON COMPLETION NOT PRESERVE
@@ -26,7 +26,7 @@ DO BEGIN
     END;
 
     SET v_dia_actual = CURRENT_DATE();
-    SET v_success_dia = fn_process_totales_dia(v_dia_actual);
+    SET v_success_dia = fun_process_totales_dia(v_dia_actual);
 
     IF v_success_dia THEN
         INSERT INTO sem_auditoria_detallada (
