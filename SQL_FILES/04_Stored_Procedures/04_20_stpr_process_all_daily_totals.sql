@@ -1,6 +1,4 @@
-DELIMITER ;;
-
-CREATE DEFINER=`root`@`%` PROCEDURE `sp_process_all_daily_totals`()
+CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_process_all_daily_totals`()
 BEGIN
     DECLARE v_start_date DATE;
     DECLARE v_current_date DATE;
@@ -18,13 +16,11 @@ BEGIN
     -- Loop hasta la fecha actual
     WHILE v_current_date <= v_today DO
         -- Ejecutar la función para el día actual
-        SELECT teltonika.fn_process_totales_dia(v_current_date);
+        SELECT fun_process_totales_dia(v_current_date);
 
         -- Mover a la siguiente fecha
         SET v_current_date = DATE_ADD(v_current_date, INTERVAL 1 DAY);
     END WHILE;
 
-    SELECT 'Proceso de totales diarios completado.' AS message;
-END ;;
-
-DELIMITER ;
+    SELECT 'Proceso de totales diarios completado.' AS mensaje;
+END
