@@ -5,13 +5,10 @@
 *.swp
 *~
 *.orig
-
-# ============================================
-# NODE.JS (servicios/)
-# ============================================
 servicios/node_modules/
 servicios/src/config/jsons/
 servicios/src/config/token_id.txt
+<<<<<<< HEAD
 servicios/.env
 servicios/.env.local
 servicios/.env.development.local
@@ -24,20 +21,13 @@ servicios/yarn-error.log*
 .eslintcache
 servicios/build/
 servicios/.cache/
-
-# ============================================
-# PUSH NOTIFICATIONS - Archivos sensibles
-# ============================================
+servicios/public/
 vapid-keys.txt
 vapid-keys.json
 *.vapid
 push-notification-test.log
 .env.push
 .env.vapid
-
-# ============================================
-# SISTEMA Y HERRAMIENTAS
-# ============================================
 .DS_Store
 .DS_Store?
 ._*
@@ -47,14 +37,10 @@ ehthumbs.db
 Thumbs.db
 
 .claude
-.github
 .playwright-mcp
 .specify
+<<<<<<< HEAD
 SPRINGBOOT_MIGRATION_CONTEXT.md
-
-# ============================================
-# JAVA / MAVEN (TNS_TRACK_DEMO/)
-# ============================================
 TNS_TRACK_DEMO/target/
 TNS_TRACK_DEMO/pom.xml.tag
 TNS_TRACK_DEMO/pom.xml.releaseBackup
@@ -93,3 +79,7 @@ nbdist/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+=======
+
+# Lecciones aprendidas del proyecto
+LECCIONES_APRENDIDAS.md

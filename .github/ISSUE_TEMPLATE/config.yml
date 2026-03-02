@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Pregunta o Discusión
+    url: https://github.com/andresTNS/TNS_TRACK_DEMO/discussions
+    about: ¿Tienes una pregunta? Usa las Discussions en lugar de crear un issue
