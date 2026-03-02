@@ -53,8 +53,8 @@ BEGIN
         
         SET v_error_message = CONCAT('Error en id_canal ', v_id_canal, ': ', @errno, ' - ', @text);
         
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] ERROR: ', v_error_message));
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] ERROR: ', v_error_message));
         
         SET v_error_count = v_error_count + 1;
     END;
@@ -65,16 +65,16 @@ BEGIN
     SET v_fecha_ciclos = v_fecha_inicio;
     
     -- Log de inicio
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] Iniciando procesamiento para fecha: ', p_fecha_objetivo));
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] Iniciando procesamiento para fecha: ', p_fecha_objetivo));
     
     -- Contar total de channels a procesar
     SELECT COUNT(*) INTO v_total_channels
     FROM ubi_canal 
     WHERE activo = 1;
     
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] Total channels a procesar: ', v_total_channels));
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] Total channels a procesar: ', v_total_channels));
     
     -- Iniciar transacción principal
     START TRANSACTION;
@@ -142,13 +142,13 @@ BEGIN
                         WHERE fecha_ciclos = v_fecha_ciclos 
                         AND id_canal = v_id_canal;
                         
-                        INSERT INTO log_proceso (mensaje) 
-                        VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] ACTUALIZADO - Channel: ', v_id_canal, 
+                        INSERT INTO log_general (origen, mensaje) 
+                        VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] ACTUALIZADO - Channel: ', v_id_canal, 
                                ' (', v_nombre_channel, ') - Ciclos: ', v_numero_ciclos, 
                                ' - Tiempo: ', v_tiempo_en_positivo, 'min - Porcentaje: ', v_porcentaje_tiempo, '%'));
                     ELSE
-                        INSERT INTO log_proceso (mensaje) 
-                        VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] SIN CAMBIOS - Channel: ', v_id_canal, 
+                        INSERT INTO log_general (origen, mensaje) 
+                        VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] SIN CAMBIOS - Channel: ', v_id_canal, 
                                ' (', v_nombre_channel, ') - Datos correctos'));
                     END IF;
                 ELSE
@@ -167,8 +167,8 @@ BEGIN
                         v_porcentaje_tiempo
                     );
                     
-                    INSERT INTO log_proceso (mensaje) 
-                    VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] INSERTADO - Channel: ', v_id_canal, 
+                    INSERT INTO log_general (origen, mensaje) 
+                    VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] INSERTADO - Channel: ', v_id_canal, 
                            ' (', v_nombre_channel, ') - Ciclos: ', v_numero_ciclos, 
                            ' - Tiempo: ', v_tiempo_en_positivo, 'min - Porcentaje: ', v_porcentaje_tiempo, '%'));
                 END IF;
@@ -186,15 +186,15 @@ BEGIN
                 SET v_channels_omitidos = v_channels_omitidos + 1;
                 SET v_channels_error = v_channels_error + 1;
                 
-                INSERT INTO log_proceso (mensaje) 
-                VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] OMITIDO - Channel: ', v_id_canal, 
+                INSERT INTO log_general (origen, mensaje) 
+                VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] OMITIDO - Channel: ', v_id_canal, 
                        ' (', v_nombre_channel, ') - Error después de ', v_max_reintentos, ' reintentos: ', v_error_message));
                 
                 LEAVE retry_loop;
             ELSE
                 -- Reintento
-                INSERT INTO log_proceso (mensaje) 
-                VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] REINTENTO ', v_error_count, '/', v_max_reintentos, 
+                INSERT INTO log_general (origen, mensaje) 
+                VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] REINTENTO ', v_error_count, '/', v_max_reintentos, 
                        ' - Channel: ', v_id_canal, ' - Error: ', v_error_message));
             END IF;
             
@@ -209,8 +209,8 @@ BEGIN
     COMMIT;
     
     -- Log final
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('[stpr_calcular_ciclos_temperatura] COMPLETADO - Fecha: ', p_fecha_objetivo, 
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_calcular_ciclos_temperatura', CONCAT('[stpr_calcular_ciclos_temperatura] COMPLETADO - Fecha: ', p_fecha_objetivo, 
            ' - Procesados: ', v_channels_procesados, '/', v_total_channels,
            ' - Errores: ', v_channels_error, 
            ' - Omitidos: ', v_channels_omitidos));

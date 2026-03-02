@@ -66,14 +66,14 @@ BEGIN
     AND fecha_lectura IS NOT NULL;
     
     -- Log inicial
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('[stpr_calcular_metricas_temperatura] Channel: ', p_id_canal, 
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] Channel: ', p_id_canal, 
            ' - Fecha: ', DATE(p_fecha_inicio), ' - Registros encontrados: ', v_total_registros));
     
     -- Si no hay datos, salir con valores en 0
     IF v_total_registros = 0 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('[stpr_calcular_metricas_temperatura] Sin datos para channel_id: ', p_id_canal, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] Sin datos para channel_id: ', p_id_canal, 
                ' en fecha: ', DATE(p_fecha_inicio)));
         -- Salir del procedimiento sin procesamiento
         SELECT 0 INTO p_numero_ciclos;
@@ -102,8 +102,8 @@ BEGIN
                     INTO v_temp_interpolada;
                     SET v_temp_actual = v_temp_interpolada;
                     
-                    INSERT INTO log_proceso (mensaje) 
-                    VALUES (CONCAT('[stpr_calcular_metricas_temperatura] Interpolación - Channel: ', p_id_canal,
+                    INSERT INTO log_general (origen, mensaje) 
+                    VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] Interpolación - Channel: ', p_id_canal,
                            ' - Timestamp: ', v_timestamp_actual, ' - Valor: ', v_temp_actual));
                 END IF;
                 
@@ -116,13 +116,13 @@ BEGIN
                         SET v_empezó_en_positivo = TRUE;
                         SET v_esta_en_positivo = TRUE;
                         
-                        INSERT INTO log_proceso (mensaje) 
-                        VALUES (CONCAT('[stpr_calcular_metricas_temperatura] Empezó en POSITIVO - Channel: ', p_id_canal,
+                        INSERT INTO log_general (origen, mensaje) 
+                        VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] Empezó en POSITIVO - Channel: ', p_id_canal,
                                ' - Temp: ', v_temp_actual, '°C'));
                     ELSE
                         SET v_esta_en_positivo = FALSE;
-                        INSERT INTO log_proceso (mensaje) 
-                        VALUES (CONCAT('[stpr_calcular_metricas_temperatura] Empezó en NEGATIVO - Channel: ', p_id_canal,
+                        INSERT INTO log_general (origen, mensaje) 
+                        VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] Empezó en NEGATIVO - Channel: ', p_id_canal,
                                ' - Temp: ', v_temp_actual, '°C'));
                     END IF;
                     
@@ -163,8 +163,8 @@ BEGIN
                             SET v_hubo_transicion_positiva = TRUE;
                             SET v_transiciones_detectadas = v_transiciones_detectadas + 1;
                             
-                            INSERT INTO log_proceso (mensaje) 
-                            VALUES (CONCAT('[stpr_calcular_metricas_temperatura] TRANSICIÓN NEG→POS - Channel: ', p_id_canal,
+                            INSERT INTO log_general (origen, mensaje) 
+                            VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] TRANSICIÓN NEG→POS - Channel: ', p_id_canal,
                                    ' - De: ', v_temp_anterior, '°C a ', v_temp_actual, '°C',
                                    ' - Cruce en: ', v_tiempo_cruce));
                             
@@ -190,8 +190,8 @@ BEGIN
                                 SET v_ciclos_completos = v_ciclos_completos + 1;
                                 SET v_transiciones_detectadas = v_transiciones_detectadas + 1;
                                 
-                                INSERT INTO log_proceso (mensaje) 
-                                VALUES (CONCAT('[stpr_calcular_metricas_temperatura] CICLO COMPLETO #', v_ciclos_completos, 
+                                INSERT INTO log_general (origen, mensaje) 
+                                VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] CICLO COMPLETO #', v_ciclos_completos, 
                                        ' - Channel: ', p_id_canal, ' - De: ', v_temp_anterior, '°C a ', v_temp_actual, '°C',
                                        ' - Cruce en: ', v_tiempo_cruce));
                             END IF;
@@ -214,8 +214,8 @@ BEGIN
             IF v_temp_actual > 0 THEN
                 SET v_terminó_en_positivo = TRUE;
                 
-                INSERT INTO log_proceso (mensaje) 
-                VALUES (CONCAT('[stpr_calcular_metricas_temperatura] Terminó en POSITIVO - Channel: ', p_id_canal,
+                INSERT INTO log_general (origen, mensaje) 
+                VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] Terminó en POSITIVO - Channel: ', p_id_canal,
                        ' - Temp final: ', v_temp_actual, '°C'));
             END IF;
             
@@ -226,15 +226,15 @@ BEGIN
             IF v_empezó_en_positivo THEN
                 SET p_numero_ciclos = p_numero_ciclos + 0.5;
                 
-                INSERT INTO log_proceso (mensaje) 
-                VALUES (CONCAT('[stpr_calcular_metricas_temperatura] +0.5 ciclos (empezó positivo) - Channel: ', p_id_canal));
+                INSERT INTO log_general (origen, mensaje) 
+                VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] +0.5 ciclos (empezó positivo) - Channel: ', p_id_canal));
             END IF;
             
             IF v_terminó_en_positivo AND NOT v_empezó_en_positivo AND v_hubo_transicion_positiva THEN
                 SET p_numero_ciclos = p_numero_ciclos + 0.5;
                 
-                INSERT INTO log_proceso (mensaje) 
-                VALUES (CONCAT('[stpr_calcular_metricas_temperatura] +0.5 ciclos (terminó positivo) - Channel: ', p_id_canal));
+                INSERT INTO log_general (origen, mensaje) 
+                VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] +0.5 ciclos (terminó positivo) - Channel: ', p_id_canal));
             END IF;
             
             -- Convertir segundos a minutos y calcular porcentaje
@@ -242,8 +242,8 @@ BEGIN
             SET p_porcentaje_tiempo = ROUND((v_tiempo_total_segundos / 86400.0) * 100, 3);
             
             -- Log final con resumen completo
-            INSERT INTO log_proceso (mensaje) 
-            VALUES (CONCAT('[stpr_calcular_metricas_temperatura] RESUMEN - Channel: ', p_id_canal,
+            INSERT INTO log_general (origen, mensaje) 
+            VALUES ('stpr_calcular_metricas_temperatura', CONCAT('[stpr_calcular_metricas_temperatura] RESUMEN - Channel: ', p_id_canal,
                    ' - Registros: ', v_registros_procesados, '/', v_total_registros,
                    ' - Transiciones: ', v_transiciones_detectadas,
                    ' - Ciclos: ', p_numero_ciclos,

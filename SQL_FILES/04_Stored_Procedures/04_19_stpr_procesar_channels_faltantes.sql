@@ -40,8 +40,8 @@ BEGIN
         END IF;
     END;
 
-    INSERT INTO log_proceso (mensaje)
-    VALUES ('[CHANNELS_FALTANTES] Iniciando procesamiento...');
+    INSERT INTO log_general (origen, mensaje)
+    VALUES ('stpr_procesar_channels_faltantes', '[CHANNELS_FALTANTES] Iniciando procesamiento...');
 
     -- Abrir cursor de channels
     OPEN channels_cursor;
@@ -57,8 +57,8 @@ BEGIN
         SET v_errores_channel = 0;
         SET v_done_fechas = FALSE;
 
-        INSERT INTO log_proceso (mensaje)
-        VALUES (CONCAT('[CHANNELS_FALTANTES] Procesando channel: ', v_id_canal, ' (', v_nombre_canal, ')'));
+        INSERT INTO log_general (origen, mensaje)
+        VALUES ('stpr_procesar_channels_faltantes', CONCAT('[CHANNELS_FALTANTES] Procesando channel: ', v_id_canal, ' (', v_nombre_canal, ')'));
 
         -- Abrir cursor de fechas para este channel
         OPEN fechas_cursor;
@@ -84,8 +84,8 @@ BEGIN
                     SET v_errores_channel = v_errores_channel + 1;
                     SET @fechas_con_error = @fechas_con_error + 1;
 
-                    INSERT INTO log_proceso (mensaje)
-                    VALUES (CONCAT('[CHANNELS_FALTANTES] ERROR channel ', v_id_canal, ' fecha ', v_fecha_actual, ': ',
+                    INSERT INTO log_general (origen, mensaje)
+                    VALUES ('stpr_procesar_channels_faltantes', CONCAT('[CHANNELS_FALTANTES] ERROR channel ', v_id_canal, ' fecha ', v_fecha_actual, ': ',
                                    @errno, ' - ', @text));
                 END;
 
@@ -97,8 +97,8 @@ BEGIN
 
                 -- Log cada 20 fechas por channel
                 IF v_fechas_channel % 20 = 0 THEN
-                    INSERT INTO log_proceso (mensaje)
-                    VALUES (CONCAT('[CHANNELS_FALTANTES] Channel ', v_id_canal, ' - ', v_fechas_channel, ' fechas procesadas'));
+                    INSERT INTO log_general (origen, mensaje)
+                    VALUES ('stpr_procesar_channels_faltantes', CONCAT('[CHANNELS_FALTANTES] Channel ', v_id_canal, ' - ', v_fechas_channel, ' fechas procesadas'));
                 END IF;
 
             END;
@@ -110,16 +110,16 @@ BEGIN
 
         SET @channels_procesados = @channels_procesados + 1;
 
-        INSERT INTO log_proceso (mensaje)
-        VALUES (CONCAT('[CHANNELS_FALTANTES] Channel COMPLETADO: ', v_id_canal, ' (', v_nombre_canal, ') - ',
+        INSERT INTO log_general (origen, mensaje)
+        VALUES ('stpr_procesar_channels_faltantes', CONCAT('[CHANNELS_FALTANTES] Channel COMPLETADO: ', v_id_canal, ' (', v_nombre_canal, ') - ',
                        v_fechas_channel, ' fechas procesadas, ', v_errores_channel, ' errores'));
 
     END LOOP channels_loop;
 
     CLOSE channels_cursor;
 
-    INSERT INTO log_proceso (mensaje)
-    VALUES (CONCAT('[CHANNELS_FALTANTES] Procesamiento completado - Channels: ', @channels_procesados,
+    INSERT INTO log_general (origen, mensaje)
+    VALUES ('stpr_procesar_channels_faltantes', CONCAT('[CHANNELS_FALTANTES] Procesamiento completado - Channels: ', @channels_procesados,
                    ' - Fechas totales: ', @fechas_procesadas, ' - Errores: ', @fechas_con_error));
 
 END

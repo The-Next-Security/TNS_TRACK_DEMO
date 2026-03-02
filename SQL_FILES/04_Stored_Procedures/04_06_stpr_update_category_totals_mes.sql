@@ -24,8 +24,8 @@ BEGIN
             @errno = MYSQL_ERRNO,
             @text = MESSAGE_TEXT;
         
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('ERROR CRÍTICO en stpr_update_category_totals_mes: ', 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_mes', CONCAT('ERROR CRÍTICO en stpr_update_category_totals_mes: ', 
                       @errno, ' - ', @text, ' - ROLLBACK ejecutado'));
         RESIGNAL;
     END;
@@ -38,8 +38,8 @@ BEGIN
     START TRANSACTION;
     
     -- Registro de inicio
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('Iniciando stpr_update_category_totals_mes MULTI-GRUPO: ', 
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_update_category_totals_mes', CONCAT('Iniciando stpr_update_category_totals_mes MULTI-GRUPO: ', 
                    p_inicio_anio, '-', p_inicio_mes, ' a ', p_fin_anio, '-', p_fin_mes));
     
     -- ✅ 1. Obtener configuración dinámica por nombre
@@ -54,8 +54,8 @@ BEGIN
     ORDER BY c.valido_desde DESC
     LIMIT 1;
     
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('Configuración MES: Precio=', v_precio_kwh, ' CLP/kWh, Rango: ', 
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_update_category_totals_mes', CONCAT('Configuración MES: Precio=', v_precio_kwh, ' CLP/kWh, Rango: ', 
                    v_fecha_inicio, ' al ', v_fecha_fin));
     
     -- ✅ 2. ACTUALIZAR registros existentes por grupo específico
@@ -254,8 +254,8 @@ BEGIN
     END;
     
     -- ✅ 4. Validación de coherencia mes vs suma de días
-    INSERT INTO log_proceso (mensaje) 
-    VALUES ('Validando coherencia entre totales_mes y suma de totales_dia...');
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_update_category_totals_mes', 'Validando coherencia entre totales_mes y suma de totales_dia...');
     
     SELECT COUNT(*) INTO v_error_count
     FROM (
@@ -276,8 +276,8 @@ BEGIN
     ) AS validation;
     
     IF v_error_count > 0 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' registros con incoherencia mes vs días'));
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_mes', CONCAT('ADVERTENCIA: ', v_error_count, ' registros con incoherencia mes vs días'));
     END IF;
     
     -- ✅ 5. Validación de resultados anómalos mensuales
@@ -288,13 +288,13 @@ BEGIN
       AND (energia_activa_total < 0 OR energia_activa_total > 74400 OR costo_total < 0);
     
     IF v_error_count > 0 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' registros mensuales con valores anómalos'));
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_mes', CONCAT('ADVERTENCIA: ', v_error_count, ' registros mensuales con valores anómalos'));
     END IF;
     
     -- ✅ 6. Validación de días esperados vs días con datos
-    INSERT INTO log_proceso (mensaje) 
-    VALUES ('Validando completitud de datos mensuales...');
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_update_category_totals_mes', 'Validando completitud de datos mensuales...');
     
     SELECT COUNT(*) INTO v_error_count
     FROM (
@@ -315,16 +315,16 @@ BEGIN
     ) AS completeness;
     
     IF v_error_count > 0 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' meses con menos del 80% de días con datos'));
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_mes', CONCAT('ADVERTENCIA: ', v_error_count, ' meses con menos del 80% de días con datos'));
     END IF;
     
     -- Commit de la transacción
     COMMIT;
     
     -- Log de finalización exitosa
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('✅ stpr_update_category_totals_mes MULTI-GRUPO COMPLETADA: Actualizados=', 
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_update_category_totals_mes', CONCAT('✅ stpr_update_category_totals_mes MULTI-GRUPO COMPLETADA: Actualizados=', 
                   v_registros_actualizados, ', Creados=', v_registros_creados,
                   ', Período: ', p_inicio_anio, '-', p_inicio_mes, ' a ', p_fin_anio, '-', p_fin_mes));
 END

@@ -39,9 +39,9 @@ DO BEGIN
     END IF;
 
     -- Registrar inicio de la ejecución
-    INSERT INTO log_proceso (mensaje)
+    INSERT INTO log_general (origen, mensaje)
     VALUES (
-        CONCAT('Iniciando evento centralizado evn_update_consumption_categories a las ',
+        'evn_update_consumption_categories', CONCAT('Iniciando evento centralizado evn_update_consumption_categories a las ',
                TIME(v_hora_actual), '. Actualizando: ',
                'Horas: ', v_hora_anterior, ' a ', v_hora_actual, ', ',
                'Días: ', v_dia_anterior, ' a ', v_dia_actual, ', ',
@@ -62,9 +62,9 @@ DO BEGIN
     );
 
     -- Registrar finalización exitosa
-    INSERT INTO log_proceso (mensaje)
+    INSERT INTO log_general (origen, mensaje)
     VALUES (
-        CONCAT('Finalizado evento centralizado evn_update_consumption_categories a las ',
+        'evn_update_consumption_categories', CONCAT('Finalizado evento centralizado evn_update_consumption_categories a las ',
                TIME(NOW()), '. Duración total: ',
                TIMESTAMPDIFF(SECOND, v_hora_actual, NOW()), ' segundos.')
     );

@@ -7,8 +7,8 @@ BEGIN
 
     -- Verificar que no estemos procesando el día actual accidentalmente
     IF v_fecha_test = CURDATE() THEN
-        INSERT INTO log_proceso (mensaje)
-        VALUES (CONCAT('[TEST_MANUAL] ADVERTENCIA - Intentando procesar día actual: ', v_fecha_test));
+        INSERT INTO log_general (origen, mensaje)
+        VALUES ('stpr_test_evento_manual', CONCAT('[TEST_MANUAL] ADVERTENCIA - Intentando procesar día actual: ', v_fecha_test));
 
         SELECT 'ADVERTENCIA' AS resultado,
                v_fecha_test AS fecha_solicitada,
@@ -22,8 +22,8 @@ BEGIN
     FROM ubi_contador_ciclos
     WHERE DATE(fecha_ciclos) = v_fecha_test;
 
-    INSERT INTO log_proceso (mensaje)
-    VALUES (CONCAT('[TEST_MANUAL] Iniciando test para fecha: ', v_fecha_test,
+    INSERT INTO log_general (origen, mensaje)
+    VALUES ('stpr_test_evento_manual', CONCAT('[TEST_MANUAL] Iniciando test para fecha: ', v_fecha_test,
                    ' - Registros existentes: ', v_registros_antes));
 
     -- Ejecutar la misma lógica que el evento
@@ -48,8 +48,8 @@ BEGIN
     FROM ubi_contador_ciclos
     WHERE DATE(fecha_ciclos) = v_fecha_test;
 
-    INSERT INTO log_proceso (mensaje)
-    VALUES (CONCAT('[TEST_MANUAL] Test completado para ', v_fecha_test,
+    INSERT INTO log_general (origen, mensaje)
+    VALUES ('stpr_test_evento_manual', CONCAT('[TEST_MANUAL] Test completado para ', v_fecha_test,
                    ' - Registros finales: ', v_registros_despues));
 
 END

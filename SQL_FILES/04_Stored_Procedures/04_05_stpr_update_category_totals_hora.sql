@@ -21,8 +21,8 @@ BEGIN
             @errno = MYSQL_ERRNO,
             @text = MESSAGE_TEXT;
         
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('ERROR CRÍTICO en stpr_update_category_totals_hora: ', 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_hora', CONCAT('ERROR CRÍTICO en stpr_update_category_totals_hora: ', 
                       @errno, ' - ', @text, ' - ROLLBACK ejecutado'));
         RESIGNAL;
     END;
@@ -31,8 +31,8 @@ BEGIN
     START TRANSACTION;
     
     -- Registro de inicio
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('Iniciando stpr_update_category_totals_hora MULTI-GRUPO: ', p_inicio, ' a ', p_fin));
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_update_category_totals_hora', CONCAT('Iniciando stpr_update_category_totals_hora MULTI-GRUPO: ', p_inicio, ' a ', p_fin));
     
     -- ✅ 0. LIMPIAR REGISTROS ANÓMALOS PRIMERO (registros con timestamps exactos en lugar de horas cerradas)
     DELETE FROM sem_totales_hora 
@@ -43,8 +43,8 @@ BEGIN
     SET v_registros_anomalos_eliminados = ROW_COUNT();
     
     IF v_registros_anomalos_eliminados > 0 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('🧹 LIMPIEZA: Eliminados ', v_registros_anomalos_eliminados, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_hora', CONCAT('🧹 LIMPIEZA: Eliminados ', v_registros_anomalos_eliminados, 
                       ' registros anómalos con timestamps no redondeados'));
     END IF;
     
@@ -73,8 +73,8 @@ BEGIN
     
     SET v_lecturas_esperadas = 3600 / COALESCE(v_intervalo_recoleccion, 10);
     
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('Configuración: Intervalo=', v_intervalo_recoleccion, 
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_update_category_totals_hora', CONCAT('Configuración: Intervalo=', v_intervalo_recoleccion, 
                   's, Precio=', v_precio_kwh, ' CLP/kWh'));
     
     -- ✅ 2. ACTUALIZAR registros existentes por grupo específico
@@ -292,8 +292,8 @@ BEGIN
       AND (MINUTE(hora_local) != 0 OR SECOND(hora_local) != 0);
     
     IF v_error_count > 0 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('🚨 ERROR CRÍTICO: ', v_error_count, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_hora', CONCAT('🚨 ERROR CRÍTICO: ', v_error_count, 
                        ' registros SIGUEN teniendo horarios no redondeados después del procesamiento'));
         
         -- Eliminar automáticamente estos registros problemáticos
@@ -301,8 +301,8 @@ BEGIN
         WHERE hora_local BETWEEN p_inicio AND p_fin
           AND (MINUTE(hora_local) != 0 OR SECOND(hora_local) != 0);
         
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('🧹 ELIMINADOS automáticamente ', ROW_COUNT(), ' registros anómalos residuales'));
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_hora', CONCAT('🧹 ELIMINADOS automáticamente ', ROW_COUNT(), ' registros anómalos residuales'));
     END IF;
     
     -- ✅ 5. Validación de resultados anómalos en valores
@@ -312,8 +312,8 @@ BEGIN
       AND (energia_activa_total < 0 OR energia_activa_total > 100 OR costo_total < 0);
     
     IF v_error_count > 0 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' registros con valores de energía/costo anómalos'));
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_hora', CONCAT('ADVERTENCIA: ', v_error_count, ' registros con valores de energía/costo anómalos'));
     END IF;
     
     -- ✅ 6. Validación de integridad de categorización
@@ -324,16 +324,16 @@ BEGIN
       AND cantidad_datos > 0;
     
     IF v_error_count > 0 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('ADVERTENCIA: ', v_error_count, ' registros con categorización inconsistente'));
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('stpr_update_category_totals_hora', CONCAT('ADVERTENCIA: ', v_error_count, ' registros con categorización inconsistente'));
     END IF;
     
     -- Commit de la transacción
     COMMIT;
     
     -- Log de finalización exitosa
-    INSERT INTO log_proceso (mensaje) 
-    VALUES (CONCAT('✅ stpr_update_category_totals_hora MULTI-GRUPO COMPLETADA: ',
+    INSERT INTO log_general (origen, mensaje) 
+    VALUES ('stpr_update_category_totals_hora', CONCAT('✅ stpr_update_category_totals_hora MULTI-GRUPO COMPLETADA: ',
                   'Anomalías eliminadas=', v_registros_anomalos_eliminados, ', ',
                   'Actualizados=', v_registros_actualizados, ', ',
                   'Creados=', v_registros_creados));

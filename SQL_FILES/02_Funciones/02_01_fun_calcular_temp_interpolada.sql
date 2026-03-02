@@ -51,24 +51,24 @@ BEGIN
         -- Si aún no hay datos, usar 0
         SET v_temp_interpolada = COALESCE(v_temp_interpolada, 0);
         
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('[calcular_temp_interpolada] Sin datos cercanos - ID: ', p_registro_id, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('fun_calcular_temp_interpolada', CONCAT('[calcular_temp_interpolada] Sin datos cercanos - ID: ', p_registro_id, 
                ' - Usando valor más cercano: ', v_temp_interpolada));
         
     ELSEIF v_temp_anterior IS NULL THEN
         -- Solo hay dato posterior, usar ese valor
         SET v_temp_interpolada = v_temp_posterior;
         
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('[calcular_temp_interpolada] Solo posterior - ID: ', p_registro_id, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('fun_calcular_temp_interpolada', CONCAT('[calcular_temp_interpolada] Solo posterior - ID: ', p_registro_id, 
                ' - Valor: ', v_temp_interpolada));
                
     ELSEIF v_temp_posterior IS NULL THEN
         -- Solo hay dato anterior, usar ese valor
         SET v_temp_interpolada = v_temp_anterior;
         
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('[calcular_temp_interpolada] Solo anterior - ID: ', p_registro_id, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('fun_calcular_temp_interpolada', CONCAT('[calcular_temp_interpolada] Solo anterior - ID: ', p_registro_id, 
                ' - Valor: ', v_temp_interpolada));
     ELSE
         -- Interpolación lineal entre ambos valores
@@ -85,8 +85,8 @@ BEGIN
             SET v_temp_interpolada = v_temp_anterior + (v_proporcion * (v_temp_posterior - v_temp_anterior));
         END IF;
         
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('[calcular_temp_interpolada] Interpolación lineal - ID: ', p_registro_id, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('fun_calcular_temp_interpolada', CONCAT('[calcular_temp_interpolada] Interpolación lineal - ID: ', p_registro_id, 
                ' - Anterior: ', v_temp_anterior, '°C (', v_timestamp_anterior, ')',
                ' - Posterior: ', v_temp_posterior, '°C (', v_timestamp_posterior, ')',
                ' - Interpolada: ', v_temp_interpolada, '°C',
@@ -96,15 +96,15 @@ BEGIN
     -- Validación final del resultado
     IF v_temp_interpolada IS NULL THEN
         SET v_temp_interpolada = 0;
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('[calcular_temp_interpolada] ERROR - Resultado NULL - ID: ', p_registro_id, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('fun_calcular_temp_interpolada', CONCAT('[calcular_temp_interpolada] ERROR - Resultado NULL - ID: ', p_registro_id, 
                ' - Forzando a 0'));
     END IF;
     
     -- Validar rango razonable (-50°C a +50°C)
     IF v_temp_interpolada < -50 OR v_temp_interpolada > 50 THEN
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('[calcular_temp_interpolada] ADVERTENCIA - Valor fuera de rango - ID: ', p_registro_id, 
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('fun_calcular_temp_interpolada', CONCAT('[calcular_temp_interpolada] ADVERTENCIA - Valor fuera de rango - ID: ', p_registro_id, 
                ' - Valor: ', v_temp_interpolada, '°C'));
     END IF;
     

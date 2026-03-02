@@ -28,8 +28,8 @@ BEGIN
         SET v_grupo_id_usado = 1; -- Usar grupo General como fallback
         
         -- Registrar la sustitución
-        INSERT INTO log_proceso (mensaje) 
-        VALUES (CONCAT('Grupo ID: ', p_grupo_id, ' no existe o no está activo. Usando grupo General (ID: 1) para fecha: ', p_fecha));
+        INSERT INTO log_general (origen, mensaje) 
+        VALUES ('fun_get_consumption_thresholds', CONCAT('Grupo ID: ', p_grupo_id, ' no existe o no está activo. Usando grupo General (ID: 1) para fecha: ', p_fecha));
     END IF;
     
     -- Obtener el límite de apagado usando nombre en lugar de ID
