@@ -18,30 +18,17 @@ DO BEGIN
     SET v_processed_current = fun_process_totales_hora(v_current_hour);
 
     -- Registrar la ejecución del evento
-    INSERT INTO sem_auditoria_detallada (
-        tipo_operacion,
-        tabla_afectada,
-        registro_id,
-        usuario,
-        datos_nuevos,
-        fecha_operacion,
-        direccion_ip,
-        aplicacion
-    ) VALUES (
-        'EVENT',
-        'sem_totales_hora',
-        NULL,
-        'SYSTEM',
+    INSERT INTO log_eventos (evento_nombre, resultado, mensaje, datos)
+    VALUES (
+        'evn_procesar_totales',
+        IF(v_processed_previous + v_processed_current > 0, 'EXITOSO', 'SIN_CAMBIOS'),
+        'Procesamiento de totales completado',
         JSON_OBJECT(
-            'evento', 'evn_procesar_totales',
             'hora_anterior_procesada', v_previous_hour,
             'resultado_hora_anterior', IF(v_processed_previous, 'EXITOSO', 'SIN_CAMBIOS'),
             'hora_actual_procesada', v_current_hour,
             'resultado_hora_actual', IF(v_processed_current, 'EXITOSO', 'SIN_CAMBIOS'),
             'total_periodos_actualizados', v_processed_previous + v_processed_current
-        ),
-        CURRENT_TIMESTAMP(6),
-        '127.0.0.1',
-        'EVENT_SCHEDULER'
+        )
     );
 END

@@ -7,21 +7,16 @@ DO BEGIN
     DECLARE v_success_dia BOOLEAN DEFAULT FALSE;
     DECLARE v_dia_actual DATE;
     DECLARE v_error_message TEXT;
-    
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1 v_error_message = MESSAGE_TEXT;
-        INSERT INTO sem_auditoria_detallada (
-            tipo_operacion, tabla_afectada, usuario, datos_nuevos, 
-            fecha_operacion, direccion_ip, aplicacion
-        ) VALUES (
-            'ERROR', 'sem_totales_dia', 'SYSTEM',
-            JSON_OBJECT(
-                'mensaje', 'Error en actualización de totales día',
-                'error', v_error_message,
-                'hora_ejecucion', NOW()
-            ),
-            CURRENT_TIMESTAMP(6), '127.0.0.1', 'EVENT_actualizar_totales_dia'
+        INSERT INTO log_errores (origen, tipo_origen, mensaje_error, datos_contexto)
+        VALUES (
+            'evn_actualizar_totales_dia',
+            'EVENTO',
+            v_error_message,
+            JSON_OBJECT('mensaje', 'Error en actualización de totales día', 'hora_ejecucion', NOW())
         );
     END;
 
@@ -29,16 +24,12 @@ DO BEGIN
     SET v_success_dia = fun_process_totales_dia(v_dia_actual);
 
     IF v_success_dia THEN
-        INSERT INTO sem_auditoria_detallada (
-            tipo_operacion, tabla_afectada, usuario, datos_nuevos, 
-            fecha_operacion, direccion_ip, aplicacion
-        ) VALUES (
-            'ACTUALIZACION', 'sem_totales_dia', 'SYSTEM',
-            JSON_OBJECT(
-                'mensaje', 'Actualización exitosa de totales día',
-                'dia_procesado', v_dia_actual
-            ),
-            CURRENT_TIMESTAMP(6), '127.0.0.1', 'EVENT_actualizar_totales_dia'
+        INSERT INTO log_eventos (evento_nombre, resultado, mensaje, datos)
+        VALUES (
+            'evn_actualizar_totales_dia',
+            'EXITOSO',
+            'Actualización exitosa de totales día',
+            JSON_OBJECT('dia_procesado', v_dia_actual)
         );
     END IF;
 END

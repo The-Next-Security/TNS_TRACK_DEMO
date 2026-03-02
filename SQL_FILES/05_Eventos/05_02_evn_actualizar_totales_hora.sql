@@ -7,21 +7,16 @@ DO BEGIN
     DECLARE v_success_hora BOOLEAN DEFAULT FALSE;
     DECLARE v_hora_actual TIMESTAMP;
     DECLARE v_error_message TEXT;
-    
+
     DECLARE EXIT HANDLER FOR SQLEXCEPTION
     BEGIN
         GET DIAGNOSTICS CONDITION 1 v_error_message = MESSAGE_TEXT;
-        INSERT INTO sem_auditoria_detallada (
-            tipo_operacion, tabla_afectada, usuario, datos_nuevos, 
-            fecha_operacion, direccion_ip, aplicacion
-        ) VALUES (
-            'ERROR', 'sem_totales_hora', 'SYSTEM',
-            JSON_OBJECT(
-                'mensaje', 'Error en actualización de totales hora',
-                'error', v_error_message,
-                'hora_ejecucion', NOW()
-            ),
-            CURRENT_TIMESTAMP(6), '127.0.0.1', 'EVENT_actualizar_totales_hora'
+        INSERT INTO log_errores (origen, tipo_origen, mensaje_error, datos_contexto)
+        VALUES (
+            'evn_actualizar_totales_hora',
+            'EVENTO',
+            v_error_message,
+            JSON_OBJECT('mensaje', 'Error en actualización de totales hora', 'hora_ejecucion', NOW())
         );
     END;
 
@@ -29,16 +24,12 @@ DO BEGIN
     SET v_success_hora = fun_process_totales_hora(v_hora_actual);
 
     IF v_success_hora THEN
-        INSERT INTO sem_auditoria_detallada (
-            tipo_operacion, tabla_afectada, usuario, datos_nuevos, 
-            fecha_operacion, direccion_ip, aplicacion
-        ) VALUES (
-            'ACTUALIZACION', 'sem_totales_hora', 'SYSTEM',
-            JSON_OBJECT(
-                'mensaje', 'Actualización exitosa de totales hora',
-                'hora_procesada', v_hora_actual
-            ),
-            CURRENT_TIMESTAMP(6), '127.0.0.1', 'EVENT_actualizar_totales_hora'
+        INSERT INTO log_eventos (evento_nombre, resultado, mensaje, datos)
+        VALUES (
+            'evn_actualizar_totales_hora',
+            'EXITOSO',
+            'Actualización exitosa de totales hora',
+            JSON_OBJECT('hora_procesada', v_hora_actual)
         );
     END IF;
 END
