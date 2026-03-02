@@ -270,30 +270,6 @@ CREATE TABLE `rep_reportes_generados` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reportes generados';
 
--- Tabla de log de ejecución de reportes programados
-CREATE TABLE `rep_log_ejecucion` (
-  `id_log_ejecucion` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `id_reporte_programado` INT UNSIGNED NOT NULL COMMENT 'FK a rep_reportes_programados',
-  `id_reporte_generado` INT UNSIGNED NULL COMMENT 'FK a rep_reportes_generados',
-  `fecha_ejecucion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha de ejecución del reporte',
-  `estado_ejecucion` ENUM('exitoso','fallido','omitido') NOT NULL COMMENT 'Estado de la ejecución',
-  `duracion_segundos` INT NOT NULL COMMENT 'Duración de la ejecución en segundos',
-  `error_ejecucion` TEXT COMMENT 'Detalle del error si la ejecución falló',
-  PRIMARY KEY (`id_log_ejecucion`),
-  INDEX `idx_rep_log_ejecucion_id_reporte_programado` (`id_reporte_programado`),
-  INDEX `idx_rep_log_ejecucion_id_reporte_generado` (`id_reporte_generado`),
-  CONSTRAINT `fk_rep_log_ejecucion_id_programado_rep_programados_id`
-    FOREIGN KEY (`id_reporte_programado`)
-    REFERENCES `rep_reportes_programados`(`id_reporte_programado`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fk_rep_log_ejecucion_id_generado_rep_generados_id`
-    FOREIGN KEY (`id_reporte_generado`)
-    REFERENCES `rep_reportes_generados`(`id_reporte_generado`)
-    ON DELETE SET NULL
-    ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de ejecución de reportes programados';
-
 -- ============================================
 -- TABLAS UBIBOT (ubi_)
 -- ============================================
@@ -379,39 +355,6 @@ CREATE TABLE `ai_costos_sesion` (
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Costos de sesiones de análisis con IA';
-
--- Tabla de log de consultas de IA
-CREATE TABLE `ai_log_consultas` (
-  `id_log_consulta` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT COMMENT 'Identificador único del log de consulta',
-  `id_sesion` BIGINT UNSIGNED NOT NULL COMMENT 'Referencia a la sesión padre',
-  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'Usuario que ejecutó la consulta',
-  `texto_consulta` TEXT NOT NULL COMMENT 'Pregunta en lenguaje natural del usuario',
-  `camaras` TEXT COMMENT 'JSON array de IDs de canales consultados',
-  `fecha_rango_inicio` DATE DEFAULT NULL COMMENT 'Fecha de inicio del filtro de rango',
-  `fecha_rango_fin` DATE DEFAULT NULL COMMENT 'Fecha de fin del filtro de rango',
-  `resumen_respuesta` TEXT COMMENT 'Primeros 500 caracteres de la respuesta de la IA',
-  `tokens_entrada` INT NOT NULL DEFAULT 0 COMMENT 'Tokens de entrada para esta consulta',
-  `tokens_salida` INT NOT NULL DEFAULT 0 COMMENT 'Tokens de salida para esta consulta',
-  `costo_usd` DECIMAL(10,4) NOT NULL DEFAULT 0.0000 COMMENT 'Costo de esta consulta en USD',
-  `tiempo_ejecucion_ms` INT DEFAULT NULL COMMENT 'Tiempo total de ejecución incluyendo fetch de datos + IA',
-  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de ejecución de la consulta',
-  PRIMARY KEY (`id_log_consulta`),
-  INDEX `idx_ai_log_consultas_id_sesion` (`id_sesion`) COMMENT 'Historial de consultas por sesión',
-  INDEX `idx_ai_log_consultas_id_usuario` (`id_usuario`) COMMENT 'Historial de consultas por usuario',
-  INDEX `idx_ai_log_consultas_fecha_creacion` (`fecha_creacion` DESC) COMMENT 'Consultas recientes',
-  INDEX `idx_ai_log_consultas_tiempo_ejecucion_ms` (`tiempo_ejecucion_ms`) COMMENT 'Análisis de rendimiento',
-  FULLTEXT KEY `ft_ai_log_consultas_texto_consulta` (`texto_consulta`) COMMENT 'Búsqueda de consultas por contenido',
-  CONSTRAINT `fk_ai_log_consultas_id_sesion_ai_costos_sesion_id_sesion`
-    FOREIGN KEY (`id_sesion`)
-    REFERENCES `ai_costos_sesion`(`id_sesion`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE,
-  CONSTRAINT `fk_ai_log_consultas_id_usuario_gen_usuario_id_usuario`
-    FOREIGN KEY (`id_usuario`)
-    REFERENCES `gen_usuario`(`id_usuario`)
-    ON DELETE CASCADE
-    ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de consultas a IA para auditoría y observabilidad';
 
 -- ============================================
 -- TABLAS DE MEDICIONES ELÉCTRICAS (sem_)
@@ -645,27 +588,6 @@ CREATE TABLE `ubi_presets_temperatura` (
     CHECK (`temperatura_minima` < `temperatura_maxima`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Presets de temperatura para umbrales de alerta de canales Ubibot';
 
--- Historial de cambios en presets de temperatura
-CREATE TABLE `ubi_historial_presets` (
-  `id_cambio` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `id_preset` INT UNSIGNED NULL COMMENT 'FK a ubi_presets_temperatura (NULL para acciones globales)',
-  `tipo_accion` ENUM('CREAR', 'ACTUALIZAR', 'ELIMINAR', 'APLICAR', 'RESTAURAR_PREDETERMINADOS') NOT NULL COMMENT 'Tipo de acción realizada',
-  `valores_anteriores` JSON NULL COMMENT 'Valores del preset antes del cambio',
-  `valores_nuevos` JSON NULL COMMENT 'Valores del preset después del cambio',
-  `cambiado_por` VARCHAR(100) NOT NULL COMMENT 'Usuario que realizó el cambio',
-  `razon_cambio` TEXT NULL COMMENT 'Razón o descripción del cambio',
-  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_cambio`),
-  INDEX `idx_ubi_historial_presets_id_preset` (`id_preset`),
-  INDEX `idx_ubi_historial_presets_tipo_accion` (`tipo_accion`),
-  INDEX `idx_ubi_historial_presets_fecha_creacion` (`fecha_creacion`),
-  CONSTRAINT `fk_historial_presets_id_preset_presets_temperatura_id_preset`
-    FOREIGN KEY (`id_preset`)
-    REFERENCES `ubi_presets_temperatura`(`id_preset`)
-    ON DELETE SET NULL
-    ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Historial de cambios en presets de temperatura Ubibot';
-
 -- Contadores de ciclos de temperatura diarios por canal Ubibot
 CREATE TABLE `ubi_contador_ciclos` (
   `id_contador_ciclo` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -686,19 +608,6 @@ CREATE TABLE `ubi_contador_ciclos` (
     ON DELETE CASCADE
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Contadores de ciclos de temperatura diarios por canal Ubibot';
-
--- ============================================
--- TABLAS DE LOG (log_)
--- ============================================
-
--- Log de procesos y operaciones del sistema
-CREATE TABLE `log_proceso` (
-  `id_log_proceso` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `mensaje` TEXT NOT NULL COMMENT 'Mensaje descriptivo del proceso o evento',
-  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_log_proceso`),
-  INDEX `idx_log_proceso_fecha_creacion` (`fecha_creacion`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de procesos y operaciones internas del sistema';
 
 -- ============================================
 -- TABLAS DE ALERTAS Y NOTIFICACIONES (ale_)
