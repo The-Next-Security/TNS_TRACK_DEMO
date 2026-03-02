@@ -97,23 +97,26 @@
         </dependency>
 
         <!-- JDBC + HikariCP pool de conexiones (reemplaza pool manual MySQL2) -->
+        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-jdbc -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-jdbc</artifactId>
+            <version>4.1.0-M2</version>
         </dependency>
 
         <!-- WebClient para llamadas HTTP salientes (Ubibot API, Shelly API) -->
+        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-webflux -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
+            <version>4.1.0-M2</version>
         </dependency>
-
         <!-- Hot reload en desarrollo -->
+        <!-- Source: https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-devtools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
-            <scope>runtime</scope>
-            <optional>true</optional>
+            <version>4.1.0-M2</version>
         </dependency>
 
         <!-- ====================================== -->
@@ -121,10 +124,11 @@
         <!-- ====================================== -->
 
         <!-- Driver MySQL (reemplaza mysql2 npm) -->
+        <!-- Source: https://mvnrepository.com/artifact/com.mysql/mysql-connector-j -->
         <dependency>
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
-            <scope>runtime</scope>
+            <version>9.6.0</version>
         </dependency>
 
         <!-- ====================================== -->
@@ -185,7 +189,7 @@
         <dependency>
             <groupId>nl.martijndwars</groupId>
             <artifactId>web-push</artifactId>
-            <version>5.1.1</version>
+            <version>5.1.2</version>
         </dependency>
 
         <!-- BouncyCastle: requerido por web-push para crypto ECDH (Java 17+/21+/25+) -->
