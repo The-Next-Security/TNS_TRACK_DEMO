@@ -26,7 +26,7 @@ BEGIN
     
     -- Declarar cursor para recorrer los grupos activos
     DECLARE grupo_cursor CURSOR FOR 
-        SELECT id, nombre FROM sem_grupos WHERE activo = 1;
+        SELECT id_grupo, nombre FROM sem_grupos WHERE activo = 1;
     
     -- Declarar handler para el final del cursor
     DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
@@ -95,7 +95,7 @@ BEGIN
         SELECT GROUP_CONCAT(CONCAT("'", shelly_id, "'")) 
         INTO @dispositivos_ids
         FROM sem_dispositivos
-        WHERE grupo_id = v_grupo_id
+        WHERE id_grupo = v_grupo_id
           AND activo = 1;
         
         -- Si no hay dispositivos, continuar con el siguiente grupo
@@ -213,15 +213,21 @@ BEGIN
     SET valido_hasta = v_fecha_calculo,
         activo = 0,
         fecha_actualizacion = NOW()
-    WHERE tipo_parametro_id IN (11, 12, 13)
+    WHERE id_tipo_parametro IN (11, 12, 13)
       AND activo = 1;
     
     -- Insertar nuevos registros
-    INSERT INTO sem_configuracion (tipo_parametro_id, valor, activo, valido_desde)
+    INSERT INTO sem_configuracion (
+        id_tipo_parametro,
+        nombre_parametro,
+        valor,
+        activo,
+        valido_desde
+    )
     VALUES 
-        (11, json_consumo_bajo, 1, v_fecha_calculo),
-        (12, json_consumo_medio, 1, v_fecha_calculo),
-        (13, json_consumo_alto, 1, v_fecha_calculo);
+        (11, 'CONSUMO BAJO',  json_consumo_bajo,  1, v_fecha_calculo),
+        (12, 'CONSUMO MEDIO', json_consumo_medio, 1, v_fecha_calculo),
+        (13, 'CONSUMO ALTO',  json_consumo_alto,  1, v_fecha_calculo);
     
     COMMIT;
 END

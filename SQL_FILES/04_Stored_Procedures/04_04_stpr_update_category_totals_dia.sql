@@ -35,7 +35,7 @@ BEGIN
     SELECT CAST(c.valor AS DECIMAL(10,2))
     INTO v_precio_kwh
     FROM sem_configuracion c
-    JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+    JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
     WHERE tp.nombre = 'PRECIO_KWH'
     AND c.activo = 1
     AND c.valido_desde <= p_inicio
@@ -52,9 +52,9 @@ BEGIN
         DECLARE v_grupo_id INT;
         
         DECLARE grupos_cursor CURSOR FOR 
-            SELECT DISTINCT g.id
+            SELECT DISTINCT g.id_grupo
             FROM sem_grupos g
-            JOIN sem_dispositivos d ON d.grupo_id = g.id
+            JOIN sem_dispositivos d ON d.id_grupo = g.id_grupo
             JOIN sem_totales_dia td ON td.shelly_id = d.shelly_id
             WHERE td.fecha_local BETWEEN p_inicio AND p_fin
             AND g.activo = 1
@@ -94,7 +94,7 @@ BEGIN
                 FROM sem_totales_hora th
                 JOIN sem_dispositivos d ON th.shelly_id = d.shelly_id
                 WHERE DATE(th.hora_local) BETWEEN p_inicio AND p_fin
-                  AND d.grupo_id = v_grupo_id
+                  AND d.id_grupo = v_grupo_id
                 GROUP BY th.shelly_id, fecha_formateada
             ) AS stats ON td.shelly_id = stats.shelly_id AND td.fecha_local = stats.fecha_formateada
             SET 
@@ -114,7 +114,7 @@ BEGIN
                 -- ✅ Auditoría
                 td.fecha_actualizacion = CURRENT_TIMESTAMP
             WHERE td.fecha_local BETWEEN p_inicio AND p_fin
-              AND d.grupo_id = v_grupo_id;
+              AND d.id_grupo = v_grupo_id;
             
             SET v_registros_actualizados = v_registros_actualizados + ROW_COUNT();
         END LOOP;
@@ -129,10 +129,10 @@ BEGIN
         
         -- Cursor para grupos que tienen datos en totales_hora pero no en totales_dia
         DECLARE grupos_insert_cursor CURSOR FOR 
-            SELECT DISTINCT d.grupo_id
+            SELECT DISTINCT d.id_grupo
             FROM sem_totales_hora th
             JOIN sem_dispositivos d ON th.shelly_id = d.shelly_id
-            JOIN sem_grupos g ON d.grupo_id = g.id
+            JOIN sem_grupos g ON d.id_grupo = g.id_grupo
             WHERE DATE(th.hora_local) BETWEEN p_inicio AND p_fin
               AND g.activo = 1
               AND d.activo = 1
@@ -210,7 +210,7 @@ BEGIN
                 FROM sem_totales_hora th
                 JOIN sem_dispositivos d ON th.shelly_id = d.shelly_id
                 WHERE DATE(th.hora_local) BETWEEN p_inicio AND p_fin
-                  AND d.grupo_id = v_grupo_id  -- ✅ Solo dispositivos de este grupo
+                  AND d.id_grupo = v_grupo_id  -- ✅ Solo dispositivos de este grupo
                 GROUP BY th.shelly_id, fecha_formateada
             ) AS stats
             WHERE NOT EXISTS (

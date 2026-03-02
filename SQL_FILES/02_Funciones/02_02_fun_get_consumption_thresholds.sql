@@ -18,7 +18,7 @@ BEGIN
     DECLARE v_valor_cuartil_alto DECIMAL(10,2);
     
     -- Verificar si el grupo existe
-    SELECT EXISTS(SELECT 1 FROM sem_grupos WHERE id = p_grupo_id AND activo = 1)
+    SELECT EXISTS(SELECT 1 FROM sem_grupos WHERE id_grupo = p_grupo_id AND activo = 1)
     INTO v_grupo_existe;
     
     -- Determinar qué grupo_id usar
@@ -36,7 +36,7 @@ BEGIN
     SELECT CAST(c.valor AS DECIMAL(10,2))
     INTO v_limite_apagado
     FROM sem_configuracion c
-    JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+    JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
     WHERE tp.nombre = 'LIMITE APAGADO'
     AND c.activo = 1
     AND c.valido_desde <= p_fecha
@@ -47,7 +47,7 @@ BEGIN
     SELECT c.valor
     INTO v_cuartil_bajo
     FROM sem_configuracion c
-    JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+    JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
     WHERE tp.nombre = 'CONSUMO BAJO'
     AND c.activo = 1
     AND c.valido_desde <= p_fecha
@@ -57,7 +57,7 @@ BEGIN
     SELECT c.valor
     INTO v_cuartil_medio
     FROM sem_configuracion c
-    JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+    JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
     WHERE tp.nombre = 'CONSUMO MEDIO'
     AND c.activo = 1
     AND c.valido_desde <= p_fecha
@@ -67,7 +67,7 @@ BEGIN
     SELECT c.valor
     INTO v_cuartil_alto
     FROM sem_configuracion c
-    JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+    JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
     WHERE tp.nombre = 'CONSUMO ALTO'
     AND c.activo = 1
     AND c.valido_desde <= p_fecha

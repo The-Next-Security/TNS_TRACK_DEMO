@@ -52,7 +52,7 @@ BEGIN
     SELECT CAST(c.valor AS UNSIGNED)
     INTO v_intervalo_recoleccion
     FROM sem_configuracion c
-    JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+    JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
     WHERE tp.nombre = 'INTERVALO_RECOLECCION'
     AND c.activo = 1
     AND c.valido_desde <= p_inicio
@@ -63,7 +63,7 @@ BEGIN
     SELECT CAST(c.valor AS DECIMAL(10,2))
     INTO v_precio_kwh
     FROM sem_configuracion c
-    JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+    JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
     WHERE tp.nombre = 'PRECIO_KWH'
     AND c.activo = 1
     AND c.valido_desde <= p_inicio
@@ -88,9 +88,9 @@ BEGIN
         DECLARE v_cuartil_alto DECIMAL(10,2);
         
         DECLARE grupos_cursor CURSOR FOR 
-            SELECT DISTINCT g.id
+            SELECT DISTINCT g.id_grupo
             FROM sem_grupos g
-            JOIN sem_dispositivos d ON d.grupo_id = g.id
+            JOIN sem_dispositivos d ON d.id_grupo = g.id_grupo
             JOIN sem_totales_hora th ON th.shelly_id = d.shelly_id
             WHERE th.hora_local BETWEEN p_inicio AND p_fin
             AND g.activo = 1
@@ -140,7 +140,7 @@ BEGIN
                 JOIN sem_dispositivos d ON m.shelly_id = d.shelly_id
                 WHERE m.timestamp_local BETWEEN p_inicio AND p_fin
                   AND m.fase = 'TOTAL'
-                  AND d.grupo_id = v_grupo_id
+                  AND d.id_grupo = v_grupo_id
                 GROUP BY m.shelly_id, hora_formateada
             ) AS stats ON th.shelly_id = stats.shelly_id AND th.hora_local = stats.hora_formateada
             SET 
@@ -158,7 +158,7 @@ BEGIN
                 th.cantidad_datos = stats.cantidad_total,
                 th.fecha_actualizacion = CURRENT_TIMESTAMP
             WHERE th.hora_local BETWEEN p_inicio AND p_fin
-              AND d.grupo_id = v_grupo_id
+              AND d.id_grupo = v_grupo_id
               -- ✅ SOLO actualizar registros con horas cerradas válidas
               AND MINUTE(th.hora_local) = 0 
               AND SECOND(th.hora_local) = 0;
@@ -181,10 +181,10 @@ BEGIN
         
         -- Cursor para grupos que tienen mediciones nuevas (sin registros en totales_hora)
         DECLARE grupos_insert_cursor CURSOR FOR 
-            SELECT DISTINCT d.grupo_id
+            SELECT DISTINCT d.id_grupo
             FROM sem_mediciones m
             JOIN sem_dispositivos d ON m.shelly_id = d.shelly_id
-            JOIN sem_grupos g ON d.grupo_id = g.id
+            JOIN sem_grupos g ON d.id_grupo = g.id_grupo
             WHERE m.timestamp_local BETWEEN p_inicio AND p_fin
               AND m.fase = 'TOTAL'
               AND g.activo = 1
@@ -273,7 +273,7 @@ BEGIN
                 JOIN sem_dispositivos d ON m.shelly_id = d.shelly_id
                 WHERE m.timestamp_local BETWEEN p_inicio AND p_fin
                   AND m.fase = 'TOTAL'
-                  AND d.grupo_id = v_grupo_id  -- ✅ Solo dispositivos de este grupo
+                  AND d.id_grupo = v_grupo_id  -- ✅ Solo dispositivos de este grupo
                 GROUP BY m.shelly_id, hora_formateada
                 -- ✅ VALIDACIÓN ADICIONAL: Solo considerar si hay suficientes mediciones
                 HAVING COUNT(*) >= 10  -- Al menos 10 mediciones para considerar válida la hora

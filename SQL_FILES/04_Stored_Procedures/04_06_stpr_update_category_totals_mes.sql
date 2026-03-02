@@ -46,7 +46,7 @@ BEGIN
     SELECT CAST(c.valor AS DECIMAL(10,2))
     INTO v_precio_kwh
     FROM sem_configuracion c
-    JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+    JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
     WHERE tp.nombre = 'PRECIO_KWH'
     AND c.activo = 1
     AND c.valido_desde <= v_fecha_inicio
@@ -64,9 +64,9 @@ BEGIN
         DECLARE v_grupo_id INT;
         
         DECLARE grupos_cursor CURSOR FOR 
-            SELECT DISTINCT g.id
+            SELECT DISTINCT g.id_grupo
             FROM sem_grupos g
-            JOIN sem_dispositivos d ON d.grupo_id = g.id
+            JOIN sem_dispositivos d ON d.id_grupo = g.id_grupo
             JOIN sem_totales_mes tm ON tm.shelly_id = d.shelly_id
             WHERE (tm.año > p_inicio_anio OR (tm.año = p_inicio_anio AND tm.mes >= p_inicio_mes))
               AND (tm.año < p_fin_anio OR (tm.año = p_fin_anio AND tm.mes <= p_fin_mes))
@@ -109,7 +109,7 @@ BEGIN
                 FROM sem_totales_dia td
                 JOIN sem_dispositivos d ON td.shelly_id = d.shelly_id
                 WHERE td.fecha_local BETWEEN v_fecha_inicio AND v_fecha_fin
-                  AND d.grupo_id = v_grupo_id
+                  AND d.id_grupo = v_grupo_id
                 GROUP BY td.shelly_id, anio, mes
             ) AS stats ON tm.shelly_id = stats.shelly_id 
                        AND tm.año = stats.anio 
@@ -133,7 +133,7 @@ BEGIN
                 tm.fecha_actualizacion = CURRENT_TIMESTAMP
             WHERE (tm.año > p_inicio_anio OR (tm.año = p_inicio_anio AND tm.mes >= p_inicio_mes))
               AND (tm.año < p_fin_anio OR (tm.año = p_fin_anio AND tm.mes <= p_fin_mes))
-              AND d.grupo_id = v_grupo_id;
+              AND d.id_grupo = v_grupo_id;
             
             SET v_registros_actualizados = v_registros_actualizados + ROW_COUNT();
         END LOOP;
@@ -148,10 +148,10 @@ BEGIN
         
         -- Cursor para grupos que tienen datos en totales_dia pero no en totales_mes
         DECLARE grupos_insert_cursor CURSOR FOR 
-            SELECT DISTINCT d.grupo_id
+            SELECT DISTINCT d.id_grupo
             FROM sem_totales_dia td
             JOIN sem_dispositivos d ON td.shelly_id = d.shelly_id
-            JOIN sem_grupos g ON d.grupo_id = g.id
+            JOIN sem_grupos g ON d.id_grupo = g.id_grupo
             WHERE td.fecha_local BETWEEN v_fecha_inicio AND v_fecha_fin
               AND g.activo = 1
               AND d.activo = 1
@@ -236,7 +236,7 @@ BEGIN
                 FROM sem_totales_dia td
                 JOIN sem_dispositivos d ON td.shelly_id = d.shelly_id
                 WHERE td.fecha_local BETWEEN v_fecha_inicio AND v_fecha_fin
-                  AND d.grupo_id = v_grupo_id  -- ✅ Solo dispositivos de este grupo
+                  AND d.id_grupo = v_grupo_id  -- ✅ Solo dispositivos de este grupo
                 GROUP BY td.shelly_id, anio, mes
             ) AS stats
             WHERE NOT EXISTS (
