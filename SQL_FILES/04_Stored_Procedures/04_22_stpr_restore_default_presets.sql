@@ -22,17 +22,13 @@ BEGIN
         actualizado_por = p_restored_by
     WHERE es_predeterminado = 1;
 
-    -- Registrar en historial
-    INSERT INTO ubi_historial_presets (
-        tipo_accion,
-        valores_nuevos,
-        cambiado_por,
-        razon_cambio
-    ) VALUES (
-        'RESTAURAR_PREDETERMINADOS',
-        JSON_OBJECT('accion', 'Presets restaurados a valores por defecto'),
-        p_restored_by,
-        'Restauración de presets del sistema'
+    -- Registrar en log del SP (los triggers ya capturan cada fila en log_ubi_presets_temperatura)
+    INSERT INTO log_stored_procedures (sp_nombre, tipo_operacion, tabla_afectada, mensaje)
+    VALUES (
+        'stpr_restore_default_presets',
+        'UPDATE',
+        'ubi_presets_temperatura',
+        CONCAT('Presets restaurados a valores por defecto por: ', p_restored_by)
     );
 
     COMMIT;
