@@ -35,7 +35,7 @@ BEGIN
     
     -- Si existe, obtener el ID
     IF v_registro_existe THEN
-        SELECT id INTO v_id_totales_mes
+        SELECT id_totales_mes INTO v_id_totales_mes
         FROM sem_totales_mes
         WHERE año = p_año AND mes = p_mes
         LIMIT 1;
@@ -57,7 +57,7 @@ BEGIN
              'horas_con_datos', horas_con_datos
         ) INTO v_datos_anteriores
         FROM sem_totales_mes
-        WHERE id = v_id_totales_mes;
+        WHERE id_totales_mes = v_id_totales_mes;
     END IF;
 
 
@@ -74,7 +74,7 @@ BEGIN
             (SUM(m.potencia_activa * v_intervalo_segundos) / (3600 * 1000)) * 
             (SELECT CAST(valor AS DECIMAL(10,2))
                 FROM sem_configuracion c
-                JOIN sem_tipos_parametros tp ON c.tipo_parametro_id = tp.id
+                JOIN sem_tipos_parametros tp ON c.id_tipo_parametro = tp.id_tipo_parametro
                 WHERE tp.nombre = 'PRECIO_KWH'
                 AND c.activo = 1
                  AND c.valido_desde <= DATE(m.timestamp_local)
@@ -133,26 +133,24 @@ BEGIN
         horas_con_datos = VALUES(horas_con_datos),
         fecha_actualizacion = CURRENT_TIMESTAMP;
 
-    -- Registrar en auditoría si hubo cambios
+    -- Registrar en log si hubo cambios
     IF ROW_COUNT() > 0 THEN
-         INSERT INTO sem_auditoria_detallada (
+        INSERT INTO log_stored_procedures (
+            sp_nombre,
             tipo_operacion,
             tabla_afectada,
-            registro_id,
-            usuario,
+            id_registro,
             datos_anteriores,
             datos_nuevos,
-            fecha_operacion,
-            direccion_ip,
-            aplicacion
+            mensaje
         ) VALUES (
+            'fun_process_totales_mes',
             IF(v_registro_existe, 'UPDATE', 'INSERT'),
             'sem_totales_mes',
             COALESCE(v_id_totales_mes, LAST_INSERT_ID()),
-            'SYSTEM',
             v_datos_anteriores,
             (SELECT JSON_OBJECT(
-                'año', año, -- Corrección aquí: 'anio' -> 'año'
+                'año', año,
                 'mes', mes,
                 'energia_activa_total', energia_activa_total,
                 'energia_reactiva_total', energia_reactiva_total,
@@ -161,12 +159,9 @@ BEGIN
                 'precio_kwh_promedio', precio_kwh_promedio,
                 'costo_total', costo_total,
                 'dias_con_datos', dias_con_datos,
-                 'horas_con_datos', horas_con_datos,
-                'estado_actualizacion', 'EXITOSO'
-            ) FROM sem_totales_mes WHERE id = COALESCE(v_id_totales_mes, LAST_INSERT_ID())),
-            CURRENT_TIMESTAMP(6),
-            '127.0.0.1',
-            'EVENT_actualizacion_totales_mensuales'
+                'horas_con_datos', horas_con_datos
+            ) FROM sem_totales_mes WHERE id_totales_mes = COALESCE(v_id_totales_mes, LAST_INSERT_ID())),
+            'Totales mensuales procesados exitosamente'
         );
         SET v_success = TRUE;
     END IF;
