@@ -140,12 +140,36 @@ const getDescriptionText = (title) => {
 };
 
 const routines = [
-  //  { title: "Dashboard", image: dashboardImage, route: "/dashboard", permission: "view_dashboard" },
-  //  { title: "Intrusiones Blind Spot", image: detectionImage, route: "/blind-spot-intrusions", permission: "view_blind_spot_intrusions" },
-  //
-  //  { title: "Sectores Presencia Personal", image: presenciaImage, route: "/presencia", permission: "view_presence" },
-  //  { title: "Mensajes SOS Visualización por Ubicación", image: smsDataImage, route: "/sms-data", permission: "view_sms" },
-  //  { title: "Temperatura", image: temperaturaImage, route: "/temperatura", permission: "view_temperature" },
+  {
+    title: "Dashboard", 
+    image: dashboardImage, 
+    route: "/dashboard", 
+    permission: "view_dashboard" 
+  },
+  {
+    title: "Intrusiones Blind Spot", 
+    image: detectionImage,
+    route: "/blind-spot-intrusions",
+    permission: "view_blind_spot_intrusions"
+  },
+  {
+    title: "Sectores Presencia Personal", 
+    image: presenciaImage, 
+    route: "/presencia", 
+    permission: "view_presence"
+  },
+  {
+    title: "Mensajes SOS Visualización por Ubicación", 
+    image: smsDataImage, 
+    route: "/sms-data", 
+    permission: "view_sms" 
+  },
+  {
+    title: "Temperatura", 
+    image: temperaturaImage, 
+    route: "/temperatura", 
+    permission: "view_temperature" 
+  },
   {
     title: "Display Temperatura Cámaras",
     image: dashboardTemperaturaImage,
@@ -193,11 +217,9 @@ const routines = [
     title: "Display KW Cámaras",
     image: dashboard_electricImage,
     route: "/dashboard-electrico",
-    permission: "view_temperature_data_intelligence",
+    permission: "view_energy_data_intelligence",
   },
-
-  // Rutinas previamente ocultas (solo se habilitan si existe su pantalla V2)
-  /*{
+  {
     title: "Interior Ubicación en Tiempo Real",
     image: ubicaciontiemporealinteriorImage,
     route: "/ubicaciones-interior",
@@ -226,41 +248,48 @@ const routines = [
     image: doorStatusImage,
     route: "/door-status-matrix",
     permission: "view_door_status",
-  },*/
-  //  { title: "Datos Análisis Forense", image: dataIntelligenceImage, route: "/inteligencia-de-datos", permission: "view_data_intelligence" },
-  //  { title: "Parametrización", image: configurationImage, route: "/configuracion", permission: "view_configuration" },
-
+  },
+  {
+    title: "Datos Análisis Forense", 
+    image: dataIntelligenceImage, 
+    route: "/inteligencia-de-datos", 
+    permission: "view_data_intelligence" 
+  },
+  {
+    title: "Parametrización", 
+    image: configurationImage, 
+    route: "/configuracion", 
+    permission: "view_configuration" 
+  },
   {
     title: "Análisis de Deshielo",
     image: frostIcon,
     route: "/analisis-deshielo",
     permission: "view_defrost_analysis",
   },
-
-
   {
     title: "Gráfico KW por Cámara",
     image: consumoelectrico_electricImage,
     route: "/consumo-electrico",
-    permission: "view_temperature_data_intelligence",
+    permission: "view_energy_data_intelligence",
   },
   {
     title: "Gráfico KW por Dia",
     image: consumototaldiario_electricImage,
     route: "/consumo-total-diario",
-    permission: "view_temperature_data_intelligence",
+    permission: "view_energy_data_intelligence",
   },
   {
     title: "Gráfico KW por Mes",
     image: consumototalmes_electricImage,
     route: "/consumo-total-mensual",
-    permission: "view_temperature_data_intelligence",
+    permission: "view_energy_data_intelligence",
   },
   {
     title: "Gráfico KW por Año",
     image: consumototalano_electricImage,
     route: "/consumo-total-anual",
-    permission: "view_temperature_data_intelligence",
+    permission: "view_energy_data_intelligence",
   },
   {
     title: "Consulta Temperatura x Fecha",
