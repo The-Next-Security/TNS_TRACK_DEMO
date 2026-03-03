@@ -5,13 +5,18 @@ import cl.thenextsecurity.tns.tns_track_demo.database.repositories.custom.logic.
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.sql.Date;
+import java.util.ArrayList;
 
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Getter
+@Setter
 public class Usuario {
     private int id_usuario;
     private String Nombre;
@@ -20,6 +25,7 @@ public class Usuario {
     private boolean activo;
     private Date Fecha_cracion;
     private Date Fecha_Acutalizacion;
+    private ArrayList<Permiso> listadoPermisos;
 
     public Usuario(long id_usuario) {
         UsuarioCustomRepoImpl busquedaUsuario = new UsuarioCustomRepoImpl();
@@ -32,6 +38,7 @@ public class Usuario {
             this.activo = desde_bbdd.isActivo();
             this.Fecha_cracion = desde_bbdd.getFecha_cracion();
             this.Fecha_Acutalizacion = desde_bbdd.getFecha_Acutalizacion();
+            this.listadoPermisos = desde_bbdd.getListadoPermisos();
         }
     }
 
