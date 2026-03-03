@@ -8,7 +8,6 @@
 servicios/node_modules/
 servicios/src/config/jsons/
 servicios/src/config/token_id.txt
-<<<<<<< HEAD
 servicios/.env
 servicios/.env.local
 servicios/.env.development.local
@@ -39,8 +38,19 @@ Thumbs.db
 .claude
 .playwright-mcp
 .specify
-<<<<<<< HEAD
-SPRINGBOOT_MIGRATION_CONTEXT.md
+
+# ============================================
+# CONFIGURACIÓN SENSIBLE (ESTÁNDAR EXTERNO)
+# ============================================
+*-secrets.yaml
+*-secrets.properties
+.env
+.env.*
+
+# ============================================
+# JAVA / SPRING BOOT / MAVEN
+# ============================================
+TNS_TRACK_DEMO/bin/
 TNS_TRACK_DEMO/target/
 TNS_TRACK_DEMO/pom.xml.tag
 TNS_TRACK_DEMO/pom.xml.releaseBackup
@@ -51,6 +61,9 @@ TNS_TRACK_DEMO/dependency-reduced-pom.xml
 TNS_TRACK_DEMO/buildNumber.properties
 TNS_TRACK_DEMO/.mvn/wrapper/maven-wrapper.jar
 TNS_TRACK_DEMO/nb-configuration.xml
+
+# Documentación de migración interna
+SPRINGBOOT_MIGRATION_CONTEXT.md
 
 # Mantener los patrones genéricos
 HELP.md
@@ -79,7 +92,6 @@ nbdist/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
-=======
 
 # Lecciones aprendidas del proyecto
 LECCIONES_APRENDIDAS.md
