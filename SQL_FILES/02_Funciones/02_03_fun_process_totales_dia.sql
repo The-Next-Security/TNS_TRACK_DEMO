@@ -86,7 +86,7 @@ BEGIN
     WHERE m.timestamp_local >= p_fecha_local
     AND m.timestamp_local < v_siguiente_dia
     AND m.fase = 'TOTAL'
-    AND m.calidad_lectura IN ('NORMAL', 'INTERPOLADA')
+    AND m.calidad_lectura IN ('NORMAL', 'ESTIMADO')
     GROUP BY m.shelly_id
     ON DUPLICATE KEY UPDATE
         energia_activa_total = VALUES(energia_activa_total),
