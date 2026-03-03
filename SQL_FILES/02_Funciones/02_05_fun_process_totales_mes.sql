@@ -86,7 +86,7 @@ BEGIN
         WHERE m.timestamp_local >= v_primer_dia_mes
         AND m.timestamp_local <= v_ultimo_dia_mes
         AND m.fase = 'TOTAL'
-        AND m.calidad_lectura IN ('NORMAL', 'INTERPOLADA')
+        AND m.calidad_lectura IN ('NORMAL', 'ESTIMADO')
         GROUP BY DATE(m.timestamp_local)
     ) as daily_data;
 
@@ -120,7 +120,7 @@ BEGIN
     WHERE m.timestamp_local >= v_primer_dia_mes
     AND m.timestamp_local <= v_ultimo_dia_mes
     AND m.fase = 'TOTAL'
-    AND m.calidad_lectura IN ('NORMAL', 'INTERPOLADA')
+    AND m.calidad_lectura IN ('NORMAL', 'ESTIMADO')
     GROUP BY m.shelly_id, p_año, p_mes
     ON DUPLICATE KEY UPDATE
         energia_activa_total = VALUES(energia_activa_total),
