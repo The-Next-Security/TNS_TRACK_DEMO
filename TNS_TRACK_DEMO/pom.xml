@@ -8,7 +8,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.2</version>
+        <version>4.0.0</version>
         <relativePath/>
     </parent>
 
@@ -19,16 +19,20 @@
     <description>Backend Spring Boot para TNS Track - Monitoreo camaras frias y rastreo GPS</description>
 
     <properties>
-        <java.version>21</java.version>
-        <jjwt.version>0.12.6</jjwt.version>
+        <java.version>25</java.version>
+        <!-- Lombok 1.18.40+ para JDK 25 -->
+        <lombok.version>1.18.42</lombok.version>
+        <jjwt.version>0.12.7</jjwt.version>
         <spring-ai.version>1.0.0-M6</spring-ai.version>
-        <!-- Centraliza version de BouncyCastle: bcprov y bcpkix deben ser identicas -->
         <bouncycastle.version>1.80</bouncycastle.version>
-        <!-- Override justificado: mysql-connector-j 9.2.0 incluye fix para                -->
-        <!-- TIME_ZONE handling con MySQL 8.x; BOM 3.4.2 gestiona 9.1.0                    -->
-        <mysql.version>9.2.0</mysql.version>
-        <!-- Override justificado: argon2-jvm 2.12 mejora compatibilidad con Java 21 LTS   -->
+        <mysql.version>9.6.0</mysql.version>
         <argon2-jvm.version>2.12</argon2-jvm.version>
+        <netty-bom.version>4.1.127.Final</netty-bom.version>
+        <async-http-client.version>2.12.3</async-http-client.version>
+        <jose4j.version>0.9.6</jose4j.version>
+        <web-push.version>5.1.2</web-push.version>
+        <openhtmltopdf.version>1.0.10</openhtmltopdf.version>
+        <paho-mqtt.version>1.2.5</paho-mqtt.version>
     </properties>
 
     <!-- ================================================ -->
@@ -39,30 +43,37 @@
     <dependencyManagement>
         <dependencies>
 
-            <!-- Netty BOM: cubre TODOS los modulos de Netty en una sola declaracion.       -->
-            <!-- Reemplaza el override modulo-a-modulo anterior que dejaba 16+ modulos      -->
-            <!-- en 4.1.117.Final (con CVE-2025-58056/57, CVE-2025-67735,                  -->
-            <!-- CVE-2025-25193, CVE-2025-24970).                                           -->
+            <!-- Netty BOM: ultima 4.1.x estable -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-bom</artifactId>
-                <version>4.1.119.Final</version>
+                <version>${netty-bom.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
 
-            <!-- async-http-client: CVE-2024-53990 en 2.10.4 -->
             <dependency>
                 <groupId>org.asynchttpclient</groupId>
                 <artifactId>async-http-client</artifactId>
-                <version>2.12.3</version>
+                <version>${async-http-client.version}</version>
             </dependency>
 
-            <!-- jose4j: multiples CVEs en 0.7.0 -->
             <dependency>
                 <groupId>org.bitbucket.b_c</groupId>
                 <artifactId>jose4j</artifactId>
-                <version>0.9.6</version>
+                <version>${jose4j.version}</version>
+            </dependency>
+
+            <!-- Spring Boot 4.0 BOM no gestiona estas versiones; las fijamos aqui -->
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>1.21.3</version>
+            </dependency>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>mysql</artifactId>
+                <version>1.21.3</version>
             </dependency>
 
         </dependencies>
@@ -169,7 +180,7 @@
         <!-- Reemplaza @sendgrid/mail npm           -->
         <!-- ====================================== -->
 
-        <!-- Version gestionada por Spring Boot BOM (4.10.3 en Boot 3.4.2) -->
+        <!-- Version gestionada por Spring Boot BOM -->
         <dependency>
             <groupId>com.sendgrid</groupId>
             <artifactId>sendgrid-java</artifactId>
@@ -186,7 +197,7 @@
         <dependency>
             <groupId>nl.martijndwars</groupId>
             <artifactId>web-push</artifactId>
-            <version>5.1.2</version>
+            <version>${web-push.version}</version>
         </dependency>
 
         <!-- BouncyCastle Provider: requerido por web-push para crypto ECDH (Java 17+/21+) -->
@@ -232,10 +243,6 @@
         <!-- ====================================== -->
         <!-- Spring AI - Integracion OpenAI         -->
         <!-- Reemplaza openai npm                   -->
-        <!-- ADVERTENCIA: 1.0.0-M6 es milestone;   -->
-        <!--   API puede cambiar sin deprecacion.   -->
-        <!--   Actualizar a GA cuando este          -->
-        <!--   disponible en Maven Central.         -->
         <!-- ====================================== -->
 
         <dependency>
@@ -263,7 +270,7 @@
         <dependency>
             <groupId>org.eclipse.paho</groupId>
             <artifactId>org.eclipse.paho.client.mqttv3</artifactId>
-            <version>1.2.5</version>
+            <version>${paho-mqtt.version}</version>
         </dependency>
 
         <!-- ====================================== -->
@@ -306,7 +313,7 @@
         <!-- ====================================== -->
 
         <!-- JUnit 5, AssertJ, Mockito, Spring Test, @WebMvcTest, @DataJpaTest,             -->
-        <!-- @AutoConfigureTestDatabase: todo incluido en este starter en Boot 3.x          -->
+        <!-- @AutoConfigureTestDatabase: todo incluido en este starter                        -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -355,14 +362,16 @@
 
     <build>
         <plugins>
-            <!-- Compiler plugin con soporte Lombok.                                         -->
-            <!-- ${lombok.version}: propiedad gestionada por Spring Boot BOM;               -->
-            <!-- necesaria en annotationProcessorPaths porque maven-compiler-plugin         -->
-            <!-- no hereda versiones del BOM en esta seccion en todas sus versiones.        -->
+            <!-- Compiler plugin: Lombok 1.18.40+ para JDK 25.                              -->
+            <!-- En JDK 23+ los annotation processors estan deshabilitados por defecto;    -->
+            <!-- -proc:full los habilita. annotationProcessorPaths declara Lombok.          -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
+                    <compilerArgs>
+                        <arg>-proc:full</arg>
+                    </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>
