@@ -13,6 +13,7 @@
 
 SOURCE 01_creacion_desde_cero/01_tablas_base.sql;
 SOURCE 01_creacion_desde_cero/02_tablas_log.sql;
+SOURCE 01_creacion_desde_cero/03_indices.sql;
 SOURCE 01_creacion_desde_cero/04_inserts_base.sql;
 
 
@@ -153,6 +154,8 @@ DELIMITER ;
 
 DELIMITER //
 
+SOURCE 05_Eventos/05_00_evn_limpeza_tokens_reset_password.sql
+//
 SOURCE 05_Eventos/05_01_evn_actualizar_totales_dia.sql
 //
 SOURCE 05_Eventos/05_02_evn_actualizar_totales_hora.sql
