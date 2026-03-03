@@ -83,3 +83,4 @@ build/
 
 # Lecciones aprendidas del proyecto
 LECCIONES_APRENDIDAS.md
+.blackboxcli/
