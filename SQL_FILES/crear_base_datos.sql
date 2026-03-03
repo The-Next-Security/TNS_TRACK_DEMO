@@ -12,8 +12,8 @@
 -- ==============================================================================
 
 SOURCE 01_creacion_desde_cero/01_tablas_base.sql;
-SOURCE 01_creacion_desde_cero/02_indices.sql;
-SOURCE 01_creacion_desde_cero/03_inserts_base.sql;
+SOURCE 01_creacion_desde_cero/02_tablas_log.sql;
+SOURCE 01_creacion_desde_cero/04_inserts_base.sql;
 
 
 -- ==============================================================================
@@ -47,9 +47,39 @@ DELIMITER //
 
 SOURCE 03_Triggers/03_01_trig_update_response_time.sql
 //
-SOURCE 03_Triggers/03_02_trig_GPS_registro_temperatura.sql
+SOURCE 03_Triggers/03_02_trig_gen_usuario.sql
 //
-SOURCE 03_Triggers/03_03_trig_GPS_data_a_door_status.sql
+SOURCE 03_Triggers/03_03_trig_gen_permiso.sql
+//
+SOURCE 03_Triggers/03_04_trig_gen_usuario_permisos.sql
+//
+SOURCE 03_Triggers/03_05_trig_gen_feriados_cl.sql
+//
+SOURCE 03_Triggers/03_06_trig_gen_ubicaciones_reales.sql
+//
+SOURCE 03_Triggers/03_07_trig_gen_tipos_parametros.sql
+//
+SOURCE 03_Triggers/03_08_trig_gen_cofiguracion_grupos.sql
+//
+SOURCE 03_Triggers/03_09_trig_gen_cofiguracion_parametros.sql
+//
+SOURCE 03_Triggers/03_10_trig_gen_cofiguracion_valores.sql
+//
+SOURCE 03_Triggers/03_11_trig_rep_tipo_reporte.sql
+//
+SOURCE 03_Triggers/03_12_trig_rep_plantillas.sql
+//
+SOURCE 03_Triggers/03_13_trig_sem_grupos.sql
+//
+SOURCE 03_Triggers/03_14_trig_sem_tipos_parametros.sql
+//
+SOURCE 03_Triggers/03_15_trig_sem_configuracion.sql
+//
+SOURCE 03_Triggers/03_16_trig_sem_dispositivos.sql
+//
+SOURCE 03_Triggers/03_17_trig_ubi_canal.sql
+//
+SOURCE 03_Triggers/03_18_trig_ubi_presets_temperatura.sql
 //
 
 DELIMITER ;
@@ -88,8 +118,6 @@ SOURCE 04_Stored_Procedures/04_12_stpr_calcular_cuartiles_consumo.sql
 SOURCE 04_Stored_Procedures/04_13_stpr_calculate_hourly_metrics.sql
 //
 SOURCE 04_Stored_Procedures/04_14_stpr_disable_dnd.sql
-//
-SOURCE 04_Stored_Procedures/04_15_stpr_process_sector.sql
 //
 SOURCE 04_Stored_Procedures/04_16_stpr_enable_default_dnd.sql
 //
