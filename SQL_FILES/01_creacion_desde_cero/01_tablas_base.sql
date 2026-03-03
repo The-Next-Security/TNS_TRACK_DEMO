@@ -215,7 +215,7 @@ CREATE TABLE `rep_plantillas` (
   UNIQUE KEY `uk_rep_plantillas_clave_plantilla` (`clave_plantilla`),
   UNIQUE KEY `uk_rep_plantillas_nombre` (`nombre`),
   INDEX `idx_rep_plantillas_id_tipo_reporte` (`id_tipo_reporte`),
-  CONSTRAINT `fk_rep_plantillas_id_tipo_reporte_rep_tipo_reporte_id_tipo_reporte`
+  CONSTRAINT `fk_plantillas_id_tipo_reporte_tipo_reporte_id_tipo_reporte`
     FOREIGN KEY (`id_tipo_reporte`)
     REFERENCES `rep_tipo_reporte`(`id_tipo_reporte`)
     ON DELETE RESTRICT
@@ -233,7 +233,7 @@ CREATE TABLE `rep_reportes_programados` (
   PRIMARY KEY (`id_reporte_programado`),
   UNIQUE KEY `uk_rep_reportes_programados_nombre` (`nombre`),
   INDEX `idx_rep_reportes_programados_id_plantilla` (`id_plantilla`),
-  CONSTRAINT `fk_rep_reportes_programados_id_plantilla_rep_plantillas_id_plantilla`
+  CONSTRAINT `fk_reportes_programados_id_plantilla_plantillas_id_plantilla`
     FOREIGN KEY (`id_plantilla`)
     REFERENCES `rep_plantillas`(`id_plantilla`)
     ON DELETE RESTRICT
@@ -258,7 +258,7 @@ CREATE TABLE `rep_reportes_generados` (
   UNIQUE KEY `uk_rep_reportes_generados_nombre_reporte` (`nombre_reporte`),
   INDEX `idx_rep_reportes_generados_id_plantilla` (`id_plantilla`),
   INDEX `idx_rep_reportes_generados_id_reporte_programado` (`id_reporte_programado`),
-  CONSTRAINT `fk_rep_reportes_generados_id_plantilla_rep_plantillas_id_plantilla`
+  CONSTRAINT `fk_reportes_generados_id_plantilla_plantillas_id_plantilla`
     FOREIGN KEY (`id_plantilla`)
     REFERENCES `rep_plantillas`(`id_plantilla`)
     ON DELETE RESTRICT
