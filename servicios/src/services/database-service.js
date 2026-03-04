@@ -244,18 +244,19 @@ class DatabaseService {
           };
         }
 
-        // Determinar calidad de lectura
+        // Determinar calidad de lectura — mapear a ENUM('NORMAL', 'ESTIMADO', 'INVALIDO')
+        // enrichData() produce: 'GOOD', 'SUSPECT', 'BAD'
         let calidadLectura = 'NORMAL';
         if (deviceStatus.reading_quality) {
           switch (deviceStatus.reading_quality) {
             case 'GOOD':
               calidadLectura = 'NORMAL';
               break;
-            case 'WARN':
-              calidadLectura = 'ALERTA';
+            case 'SUSPECT':
+              calidadLectura = 'ESTIMADO';
               break;
             case 'BAD':
-              calidadLectura = 'ERROR';
+              calidadLectura = 'INVALIDO';
               break;
             default:
               calidadLectura = 'NORMAL';
@@ -312,25 +313,10 @@ class DatabaseService {
               break;
           }
 
-          // Preparar detalles de validación
-          const validacionDetalle = {
-            voltaje: {
-              valor: voltaje,
-              calidad: this.validateVoltage(voltaje)
-            },
-            corriente: {
-              valor: corriente,
-              calidad: this.validateCurrent(corriente)
-            },
-            factor_potencia: {
-              valor: factorPotencia,
-              calidad: this.validatePowerFactor(factorPotencia)
-            }
-          };
-
           // Crear objeto de medición
           const medicion = {
             shelly_id: deviceId,
+            timestamp_utc: timestamp,
             timestamp_local: timestamp,
             fase: phase,
             voltaje: voltaje,
@@ -340,10 +326,8 @@ class DatabaseService {
             factor_potencia: factorPotencia,
             frecuencia: parseFloat(emData.freq || 50),
             energia_activa: energia_activa,
-            energia_reactiva: 0, // No disponible directamente
+            energia_reactiva: 0, // No disponible directamente en la API Shelly
             calidad_lectura: calidadLectura,
-            validacion_detalle: JSON.stringify(validacionDetalle),
-            intervalo_segundos: deviceStatus.interval_ms ? Math.round(deviceStatus.interval_ms / 1000) : 10
           };
 
           // Insertar medición
