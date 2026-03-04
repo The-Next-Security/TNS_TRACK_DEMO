@@ -240,17 +240,7 @@ class Server {
     console.log("⏳ [Server] Inicializando servicios..."); // Log 10
 
     try {
-      // 1. Forzar carga/verificación de config primero
-      try {
-        console.log("  [Server] Verificando carga inicial de configuración...");
-        configLoader.getConfig(); // Llama a getConfig para asegurar que se cargó/validó
-        console.log("  [Server] Configuración verificada/cargada.");
-      } catch (configError) {
-        console.error("  [Server] ¡Fallo crítico al cargar configuración inicial!", configError);
-        throw configError; // Relanzar para detener el arranque
-      }
-
-      // 2. Inicializar DatabaseService
+      // 1. Inicializar DatabaseService
       console.log("  [Server] Inicializando DatabaseService..."); // Log 11
       await this.services.database.initialize();
       const dbConnected = await this.services.database.testConnection();
@@ -467,13 +457,26 @@ class Server {
 }
 
 // --- Arranque del Servidor ---
-console.log("[Init] Creando instancia del servidor...");
-const server = new Server();
-console.log("[Init] Llamando a server.start()...");
-server.start(); // start() ahora maneja su propio error fatal y sale.
+async function boot() {
+  // Fase 1+2: cargar configuración desde connection-config.json + BD
+  // DEBE ejecutarse antes de instanciar Server (los servicios usan configLoader.getConfig())
+  console.log("[Init] Cargando configuración desde BD...");
+  await configLoader.initialize();
 
-// Exportar para posibles pruebas o uso programático
-module.exports = {
-  server,
-  app: server.app, // Exportar la instancia de app Express
-};
+  console.log("[Init] Creando instancia del servidor...");
+  const server = new Server();
+  console.log("[Init] Llamando a server.start()...");
+  await server.start();
+
+  // Exportar para posibles pruebas o uso programático
+  module.exports = {
+    server,
+    app: server.app,
+  };
+}
+
+boot().catch((err) => {
+  console.error("💥 [Init] Error fatal al arrancar la aplicación:", err.message);
+  console.error(err.stack);
+  process.exit(1);
+});
