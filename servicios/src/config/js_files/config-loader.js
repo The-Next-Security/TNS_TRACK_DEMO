@@ -1,469 +1,408 @@
 // src/config/js_files/config-loader.js
-const BaseConfigLoader = require("./base-config-loader");
-const path = require("path");
-const fs = require("fs");
+//
+// Carga de configuración en dos fases:
+//   Fase 1: Lee connection-config.json (síncrono) → credenciales DB
+//   Fase 2: Consulta BD con pool temporal → construye config completa anidada
+//
+// USO OBLIGATORIO al arranque:
+//   await configLoader.initialize();   // UNA vez antes de new Server()
+//   configLoader.getConfig();          // síncono, usa caché de 5 min
+
+const BaseConfigLoader = require('./base-config-loader');
+const path = require('path');
+const fs = require('fs');
+const mysql = require('mysql2/promise');
+
+// Mapeo id_tipo_parametro → tipo de dato para coerción de valores BD
+const TIPO_MAP = {
+  1: 'STRING',   // VARCHAR / texto libre
+  2: 'BOOLEAN',  // true / false
+  3: 'STRING',   // texto (reservado)
+  4: 'JSON',     // Array o JSON object
+  5: 'JSON',     // Recipients (JSON con arrays de teléfonos)
+  6: 'FLOAT',    // Decimal (horas, ratios)
+  7: 'INTEGER',  // Entero (puerto, intervalo ms, contador)
+};
 
 class ConfigLoader extends BaseConfigLoader {
   constructor() {
     super();
-    console.log("[ConfigLoader] Constructor: Creando instancia..."); // Log 1
-    this.config = {};
-    // Definir configPath ANTES de llamar a ensureDirectoryExists o loadConfiguration
-    // Ajusta esta ruta relativa si es necesario, basándose en la ubicación de config-loader.js
-    // Asumiendo que config-loader.js está en src/config/js_files y el JSON en src/config/jsons
-    this.configPath = "../jsons/unified-config.json";
-    this.currentConfigPath = null; // Inicializar
+    this._initialized = false;
+    this.config = null;
+    this._connectionConfigPath = path.resolve(
+      __dirname,
+      '../jsons/connection-config.json'
+    );
+  }
 
-    this.ensureDirectoryExists();
-    console.log("[ConfigLoader] Constructor: Llamando a loadConfiguration inicial..."); // Log 2
+  // ─────────────────────────────────────────────────────────────────────────
+  // API PÚBLICA
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Inicialización completa en dos fases. Debe llamarse UNA vez al arranque,
+   * ANTES de crear la instancia del servidor.
+   * @returns {Promise<void>}
+   */
+  async initialize() {
+    if (this._initialized) {
+      console.log('[ConfigLoader] initialize: ya inicializado, omitiendo.');
+      return;
+    }
+
+    console.log('[ConfigLoader] initialize: iniciando carga de configuración...');
+
+    // Fase 1: credenciales DB desde archivo local
+    const connectionData = this._loadPhase1();
+
+    // Fase 2: resto de la configuración desde BD
+    await this._loadPhase2(connectionData);
+
+    this._initialized = true;
+    console.log(`✅ [ConfigLoader] Configuración lista (entorno: ${connectionData.envKey})`);
+  }
+
+  /**
+   * Devuelve la configuración completa (síncrono).
+   * Requiere que initialize() haya sido llamado previamente.
+   * Si el caché expiró, lanza un reload asíncrono en background.
+   * @returns {Object}
+   */
+  getConfig() {
+    if (!this._initialized || !this.cachedConfig) {
+      throw new Error(
+        '[ConfigLoader] getConfig() llamado antes de initialize(). ' +
+        'Ejecuta await configLoader.initialize() al inicio de server.js.'
+      );
+    }
+
+    if (!this.isCacheValid()) {
+      this._triggerBackgroundReload();
+    }
+
+    return this.cachedConfig;
+  }
+
+  /**
+   * Recarga la configuración desde BD (async).
+   * No afecta getConfig() hasta que la recarga completa.
+   * @returns {Promise<Object>}
+   */
+  async reloadConfig() {
+    console.log('[ConfigLoader] reloadConfig: recargando desde BD...');
+    const connectionData = this._loadPhase1();
+    await this._loadPhase2(connectionData);
+    return this.cachedConfig;
+  }
+
+  /**
+   * Devuelve solo las credenciales de conexión DB (del archivo local).
+   * Útil para módulos que necesitan los datos de conexión directamente.
+   * @returns {Object} { host, port, username, password, database, pool }
+   */
+  getConnectionConfig() {
+    const connectionData = this._loadPhase1();
+    return connectionData.dbCredentials;
+  }
+
+  /**
+   * Obtiene un valor específico usando notación de punto.
+   * @param {string} dotPath - Ejemplo: "jwt.secret"
+   * @returns {*} El valor o undefined si no existe
+   */
+  getValue(dotPath) {
+    if (!dotPath || typeof dotPath !== 'string') return undefined;
     try {
-      this.loadConfiguration(); // Carga inicial
-    } catch (error) {
-      // Es crucial manejar el error aquí también, porque si falla en el constructor,
-      // la instancia exportada podría estar en un estado inválido.
-      console.error("💥 [ConfigLoader] ¡ERROR CRÍTICO DURANTE LA CARGA INICIAL EN EL CONSTRUCTOR!", error.message);
-      // Podríamos lanzar el error para detener la aplicación inmediatamente,
-      // o marcar la instancia como inválida. Lanzar es más seguro para evitar
-      // que la aplicación continúe con una configuración faltante.
-      throw error; // Detener si la carga inicial falla.
+      const cfg = this.getConfig();
+      return dotPath
+        .split('.')
+        .reduce((obj, key) => (obj && obj[key] !== undefined ? obj[key] : undefined), cfg);
+    } catch {
+      return undefined;
     }
   }
 
   /**
-   * Asegura que el directorio de configuración existe
+   * Verifica si existe un valor en la ruta especificada.
+   * @param {string} dotPath
+   * @returns {boolean}
+   */
+  hasConfig(dotPath) {
+    return this.getValue(dotPath) !== undefined;
+  }
+
+  /**
+   * Devuelve información del entorno activo.
+   * @returns {{ current: number, name: string }}
+   */
+  getCurrentEnvironment() {
+    const cfg = this.getConfig();
+    return cfg.environment || { current: 0, name: 'development' };
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // FASE 1
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Lee connection-config.json de forma síncrona.
+   * @returns {{ envIndex: number, envKey: string, dbCredentials: Object }}
    * @private
    */
-  ensureDirectoryExists() {
-    // Construir la ruta absoluta basada en la ubicación de este archivo (__dirname)
-    const absoluteConfigDir = path.resolve(__dirname, path.dirname(this.configPath));
-    console.log(`[ConfigLoader] ensureDirectoryExists: Verificando directorio: ${absoluteConfigDir}`); // Log
-
-    if (!fs.existsSync(absoluteConfigDir)) {
-      try {
-        console.log(`[ConfigLoader] ensureDirectoryExists: Creando directorio: ${absoluteConfigDir}`); // Log
-        fs.mkdirSync(absoluteConfigDir, { recursive: true });
-        console.log(`[ConfigLoader] ensureDirectoryExists: Directorio creado con éxito.`); // Log
-      } catch (error) {
-        // Este error es serio, ya que podría impedir guardar/leer config.
-        console.error(`❌ [ConfigLoader] Error CRÍTICO al crear directorio ${absoluteConfigDir}:`, error.message);
-        // Podría ser necesario lanzar un error aquí si el directorio es indispensable.
-        // throw new Error(`No se pudo crear el directorio de configuración: ${error.message}`);
-      }
-    } else {
-      console.log(`[ConfigLoader] ensureDirectoryExists: El directorio ya existe.`); // Log
+  _loadPhase1() {
+    if (!fs.existsSync(this._connectionConfigPath)) {
+      throw new Error(
+        `[ConfigLoader] Fase 1: archivo de conexión no encontrado en ${this._connectionConfigPath}. ` +
+        'Crea servicios/src/config/jsons/connection-config.json con las credenciales BD.'
+      );
     }
+
+    const raw = fs.readFileSync(this._connectionConfigPath, 'utf8');
+    const parsed = JSON.parse(raw);
+
+    const envIndex = parsed.environment ?? 0;
+    const envKey = envIndex === 0 ? 'development' : 'production';
+
+    const dbCredentials = parsed[envKey];
+    if (!dbCredentials) {
+      throw new Error(
+        `[ConfigLoader] Fase 1: no se encontró la clave "${envKey}" en connection-config.json.`
+      );
+    }
+
+    console.log(`[ConfigLoader] Fase 1: credenciales DB cargadas (entorno: ${envKey})`);
+    return { envIndex, envKey, dbCredentials };
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // FASE 2
+  // ─────────────────────────────────────────────────────────────────────────
 
   /**
-   * Busca el archivo de configuración en varias ubicaciones posibles
-   * @returns {string|null} - Ruta absoluta al archivo de configuración o null si no se encuentra
+   * Conecta a BD con pool temporal y carga toda la configuración.
+   * @param {{ envIndex, envKey, dbCredentials }} connectionData
    * @private
    */
-  findConfigFile() {
-    console.log("[ConfigLoader] findConfigFile: Buscando archivo de configuración..."); // Log
-    // Construye rutas absolutas desde la ubicación actual de este archivo
-    const possiblePaths = [
-      path.resolve(__dirname, this.configPath), // Ruta relativa definida en constructor
-      path.resolve(__dirname, "..", "jsons", "unified-config.json"), // Asumiendo estructura src/config/jsons
-      // Puedes añadir más rutas absolutas o relativas si es necesario
-      // path.resolve(__dirname, "../../unified-config.json"), // Ejemplo: En la raíz del proyecto
-    ];
+  async _loadPhase2({ envIndex, envKey, dbCredentials }) {
+    console.log('[ConfigLoader] Fase 2: consultando configuración en BD...');
 
-    for (const filePath of possiblePaths) {
-      console.log(`[ConfigLoader] findConfigFile: Verificando ruta: ${filePath}`); // Log
-      if (fs.existsSync(filePath)) {
-        console.log(`[ConfigLoader] findConfigFile: Archivo encontrado en: ${filePath}`); // Log
-        return filePath; // Devuelve la ruta absoluta encontrada
-      }
-    }
+    const tempPool = mysql.createPool({
+      host: dbCredentials.host,
+      port: dbCredentials.port,
+      user: dbCredentials.username,
+      password: dbCredentials.password,
+      database: dbCredentials.database,
+      connectionLimit: 2,
+      waitForConnections: true,
+    });
 
-    console.error("[ConfigLoader] findConfigFile: ¡Archivo de configuración unified-config.json no encontrado en las rutas esperadas!"); // Log de error
-    return null;
-  }
-
-
-  /**
-   * Carga la configuración de la aplicación desde el archivo JSON unificado
-   *
-   * @returns {Object} - Configuración cargada
-   * @throws {Error} - Si hay errores al cargar o parsear el archivo de configuración
-   */
-  loadConfiguration() {
-    // Loguear inicio de carga/recarga
-    const action = this.cachedConfig ? "Recargando" : "Cargando";
-    console.log(`[ConfigLoader] loadConfiguration: ${action} configuración...`); // Log 3 (Modificado)
     try {
-      if (this.isCacheValid()) {
-        console.log("[ConfigLoader] loadConfiguration: Usando configuración en caché (válida)."); // Log 4a
-        return this.cachedConfig;
-      }
-      console.log("[ConfigLoader] loadConfiguration: Caché inválida o inexistente, leyendo archivo..."); // Log 4b
+      const [rows] = await tempPool.execute(`
+        SELECT
+          p.ruta_completa,
+          v.valor,
+          p.id_tipo_parametro
+        FROM gen_cofiguracion_parametros p
+        JOIN gen_cofiguracion_valores v
+          ON p.id_cofiguracion_parametros = v.id_cofiguracion_parametros
+        WHERE p.activo = 1
+          AND v.activo = 1
+        ORDER BY p.id_cofiguracion_parametros
+      `);
 
-      const configFilePath = this.findConfigFile();
-      // findConfigFile ahora devuelve ruta absoluta o null
-      if (!configFilePath) {
-        // Lanzar error si no se encontró el archivo
-        throw new Error("No se encontró el archivo de configuración unificada (unified-config.json).");
-      }
-      console.log(`[ConfigLoader] loadConfiguration: Leyendo archivo desde: ${configFilePath}`); // Log 5
+      console.log(`[ConfigLoader] Fase 2: ${rows.length} parámetros cargados desde BD.`);
 
-      const configData = fs.readFileSync(configFilePath, "utf8");
-      console.log("[ConfigLoader] loadConfiguration: Archivo leído, parseando JSON..."); // Log 6
-      const unifiedConfig = JSON.parse(configData);
-      console.log("[ConfigLoader] loadConfiguration: JSON parseado correctamente."); // Log 7
+      // Construir objeto anidado desde filas planas
+      const bdConfig = this._buildNestedConfig(rows);
 
-      // Determinar el entorno actual (0 = desarrollo, 1 = producción)
-      const currentEnvIndex = unifiedConfig.environment?.current ?? 0; // Default a 0 si no existe
-      const envLabels = unifiedConfig.environment?.labels ?? ["development", "production"]; // Defaults
-      // Validar índice
-      const currentEnv = (currentEnvIndex === 0 || currentEnvIndex === 1) ? currentEnvIndex : 0;
-      const envLabel = envLabels[currentEnv];
+      // Agregar aliases de compatibilidad para servicios que usan paths anteriores
+      this._applyCompatibilityAliases(bdConfig);
 
-      console.log(`[ConfigLoader] loadConfiguration: Entorno detectado: ${envLabel} (índice: ${currentEnv})`); // Log
-
-      // *** Leer secretos desde variables de entorno ***
-      // Es crucial que estas variables de entorno estén definidas donde corra la app
-      const dbPasswordDev = process.env.DB_DEV_PASS || unifiedConfig.database?.development?.password;
-      const dbPasswordProd = process.env.DB_PROD_PASS || unifiedConfig.database?.production?.password;
-      const sendgridApiKey = process.env.SENDGRID_API_KEY || unifiedConfig.email?.sendgrid_api_key;
-      const jwtSecret = process.env.JWT_SECRET || unifiedConfig.jwt?.secret;
-      const dbHostDev = process.env.DB_DEV_HOST || unifiedConfig.database?.development?.host;
-      const dbUserDev = process.env.DB_DEV_USER || unifiedConfig.database?.development?.username;
-      const dbHostProd = process.env.DB_PROD_HOST || unifiedConfig.database?.production?.host;
-      const dbUserProd = process.env.DB_PROD_USER || unifiedConfig.database?.production?.username;
-      // Añadir más variables de entorno según sea necesario (ej. Twilio SID/Token)
-      const openaiApiKey = process.env.OPENAI_API_KEY || unifiedConfig.OpenAI_API?.OPENAI_API_KEY;
-
-      // Construir objeto de configuración usando valores de entorno si existen
+      // Combinar: credenciales DB (Fase 1) + resto de config (BD)
       this.config = {
-        database: {
-          ...(envLabel === 'development' ? unifiedConfig.database?.development : unifiedConfig.database?.production),
-          host: envLabel === 'development' ? dbHostDev : dbHostProd,
-          username: envLabel === 'development' ? dbUserDev : dbUserProd,
-          password: envLabel === 'development' ? dbPasswordDev : dbPasswordProd,
+        ...bdConfig,
+        database: dbCredentials,    // credenciales desde connection-config.json
+        environment: {
+          current: envIndex,
+          name: envKey,
         },
-        api: {
-          shelly_cloud: unifiedConfig.api?.shelly_cloud,
-          mapbox: unifiedConfig.api?.mapbox,
-        },
-        collection: { // Asegurar que existe la sección antes de acceder
-          interval: unifiedConfig.api?.shelly_cloud?.collection_interval ?? 10000, // Default 10s
-          retryAttempts: 3,
-          retryDelay: 5000,
-        },
-        ubibot: unifiedConfig.ubibot,
-        email: {
-          ...(unifiedConfig.email ?? {}), // Copiar base si existe
-          SENDGRID_API_KEY: sendgridApiKey, // Sobrescribir con variable de entorno
-        },
-        sms: unifiedConfig.sms, // Asumiendo que no hay secretos aquí, si los hay, mover a env
-        twilio: unifiedConfig.twilio, // Mover a env si contiene secretos
-        jwt: {
-          ...(unifiedConfig.jwt ?? {}),
-          secret: jwtSecret, // Sobrescribir con variable de entorno
-        },
-        measurement: unifiedConfig.measurement,
-        alertSystem: unifiedConfig.alertSystem,
-        appInfo: unifiedConfig.appInfo,
-        pushNotifications: unifiedConfig.pushNotifications, // Configuración de Push Notifications PWA
-        reports_module_config: unifiedConfig.reports_module_config, // Configuración del módulo de reportes
-        OpenAI_API: {
-          ...(unifiedConfig.OpenAI_API ?? {}),
-          OPENAI_API_KEY: openaiApiKey
-        },
-        environment: { // Guardar el entorno resuelto
-          current: currentEnv,
-          name: envLabel
-        }
       };
 
-      // Guardar la ruta absoluta del archivo de configuración usado
-      this.currentConfigPath = configFilePath;
-
-      // Validar la configuración final construida
+      // Validar campos críticos
       this.validateConfig();
-      console.log("[ConfigLoader] loadConfiguration: Configuración validada."); // Log 8
 
       // Actualizar caché
       this.cachedConfig = this.config;
       this.lastLoadTime = Date.now();
 
-      console.log(`✅ [ConfigLoader] Configuración cargada y cacheadada correctamente (Entorno: ${envLabel})`); // Log 9
-      return this.config;
-
-    } catch (error) {
-      // Loguear el error antes de relanzarlo
-      console.error(`❌ [ConfigLoader] Error fatal al cargar/parsear la configuración: ${error.message}`);
-      // Incluir detalles adicionales si es posible
-      console.error(`   (Archivo intentado: ${this.currentConfigPath || 'No encontrado'})`);
-      if (error instanceof SyntaxError) {
-        console.error("   (El archivo unified-config.json podría tener un error de sintaxis JSON)");
-      } else if (error.code === 'ENOENT') {
-        console.error("   (Verifica que el archivo unified-config.json existe en las rutas buscadas)");
-      }
-      // Relanzar el error para que el proceso de arranque falle si la config es crítica
-      throw new Error(`Error al cargar la configuración: ${error.message}`);
+    } finally {
+      await tempPool.end();
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // FASE D — buildNestedConfig
+  // ─────────────────────────────────────────────────────────────────────────
+
   /**
-   * Cambia el entorno actual (desarrollo/producción) y recarga la configuración
-   * IMPORTANTE: Modifica directamente el archivo unified-config.json
-   *
-   * @param {number} envIndex - 0 para desarrollo, 1 para producción
-   * @returns {Object} - La nueva configuración cargada
+   * Convierte un array de filas BD en un objeto anidado.
+   * Ejemplo: ruta_completa='jwt.secret', valor='abc' → { jwt: { secret: 'abc' } }
+   * @param {Array<{ruta_completa: string, valor: string, id_tipo_parametro: number}>} rows
+   * @returns {Object}
+   * @private
    */
-  changeEnvironment(envIndex) {
-    console.log(`[ConfigLoader] changeEnvironment: Solicitado cambio a entorno índice ${envIndex}`); // Log
-    try {
-      // Validar índice de entorno
-      if (envIndex !== 0 && envIndex !== 1) {
-        throw new Error("El índice de entorno debe ser 0 (desarrollo) o 1 (producción)");
+  _buildNestedConfig(rows) {
+    const result = {};
+
+    for (const { ruta_completa, valor, id_tipo_parametro } of rows) {
+      const parts = ruta_completa.split('.');
+      let current = result;
+
+      // Navegar/crear nodos intermedios
+      for (let i = 0; i < parts.length - 1; i++) {
+        if (!current[parts[i]] || typeof current[parts[i]] !== 'object') {
+          current[parts[i]] = {};
+        }
+        current = current[parts[i]];
       }
 
-      // Asegurarse de tener la ruta al archivo actual
-      const configFilePath = this.currentConfigPath || this.findConfigFile();
-      if (!configFilePath) {
-        throw new Error("No se pudo encontrar el archivo de configuración para modificar el entorno.");
-      }
-      console.log(`[ConfigLoader] changeEnvironment: Modificando archivo: ${configFilePath}`); // Log
+      // Asignar valor final con coerción de tipo
+      current[parts[parts.length - 1]] = this._coerceValue(valor, id_tipo_parametro);
+    }
 
-      // Leer el archivo de configuración actual
-      const configData = fs.readFileSync(configFilePath, "utf8");
-      const unifiedConfig = JSON.parse(configData);
+    return result;
+  }
 
-      // Verificar si el cambio es necesario
-      if (unifiedConfig.environment?.current === envIndex) {
-        console.log(`[ConfigLoader] changeEnvironment: El entorno ya está establecido en ${envIndex}. No se necesita cambio.`); // Log
-        // Devolver la config actual (puede requerir recarga si la caché expiró)
-        return this.loadConfiguration();
-      }
+  /**
+   * Coerce un valor string de BD al tipo JS apropiado según id_tipo_parametro.
+   * @param {string|null} valor
+   * @param {number} tipoId
+   * @returns {*}
+   * @private
+   */
+  _coerceValue(valor, tipoId) {
+    if (valor === null || valor === undefined) return null;
 
-      // Actualizar el índice de entorno en el objeto
-      if (!unifiedConfig.environment) unifiedConfig.environment = {}; // Crear si no existe
-      unifiedConfig.environment.current = envIndex;
+    const tipoDato = TIPO_MAP[tipoId] || 'STRING';
 
-      // Guardar el archivo actualizado (formato JSON con indentación)
-      fs.writeFileSync(configFilePath, JSON.stringify(unifiedConfig, null, 2), "utf8");
-      console.log(`[ConfigLoader] changeEnvironment: Archivo unified-config.json actualizado con environment.current = ${envIndex}`); // Log
-
-      // Limpiar caché y forzar recarga para aplicar el cambio inmediatamente
-      this.cachedConfig = null;
-      this.lastLoadTime = null;
-      console.log("[ConfigLoader] changeEnvironment: Caché limpiada, recargando configuración..."); // Log
-
-      return this.loadConfiguration(); // Devolver la nueva configuración cargada
-
-    } catch (error) {
-      console.error(`❌ [ConfigLoader] Error al cambiar de entorno a índice ${envIndex}:`, error.message);
-      // Relanzar el error podría ser apropiado aquí, ya que el estado podría ser inconsistente
-      throw new Error(`Error al cambiar de entorno: ${error.message}`);
+    switch (tipoDato) {
+      case 'INTEGER':
+        return parseInt(valor, 10);
+      case 'FLOAT':
+        return parseFloat(valor);
+      case 'BOOLEAN':
+        return valor === 'true' || valor === '1';
+      case 'JSON':
+        try {
+          return JSON.parse(valor);
+        } catch {
+          console.warn(`[ConfigLoader] _coerceValue: no se pudo parsear JSON para valor "${valor}"`);
+          return valor;
+        }
+      default: // STRING
+        return valor;
     }
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // COMPATIBILIDAD CON PATHS ANTERIORES
+  // ─────────────────────────────────────────────────────────────────────────
 
   /**
-   * Validates the application's configuration to ensure all required fields are present.
-   * Modificado para usar this.config directamente.
-   * @throws {Error} If any required configuration fields are missing.
+   * Agrega aliases para servicios que usan los paths de unified-config.json.
+   * Solo aplica a los casos donde el path en BD difiere del path anterior.
+   *
+   * NOTA: Eliminar estos aliases a medida que se migren los servicios.
+   * @param {Object} cfg - Objeto de config construido desde BD
+   * @private
+   */
+  _applyCompatibilityAliases(cfg) {
+    // email.sendgrid_api_key → email.SENDGRID_API_KEY
+    if (cfg.email?.sendgrid_api_key !== undefined) {
+      cfg.email.SENDGRID_API_KEY = cfg.email.sendgrid_api_key;
+    }
+
+    // ubibot.account_key → ubibot.accountKey
+    if (cfg.ubibot?.account_key !== undefined) {
+      cfg.ubibot.accountKey = cfg.ubibot.account_key;
+    }
+
+    // ubibot.token_file → ubibot.tokenFile
+    if (cfg.ubibot?.token_file !== undefined) {
+      cfg.ubibot.tokenFile = cfg.ubibot.token_file;
+    }
+
+    // ubibot.excluded_channels → ubibot.excludedChannels (si algún servicio lo usa)
+    if (cfg.ubibot?.excluded_channels !== undefined) {
+      cfg.ubibot.excludedChannels = cfg.ubibot.excluded_channels;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // VALIDACIÓN
+  // ─────────────────────────────────────────────────────────────────────────
+
+  /**
+   * Valida que los campos críticos estén presentes.
+   * Solo valida lo que es imprescindible para el arranque.
+   * @throws {Error} Si falta algún campo requerido
    */
   validateConfig() {
-    console.log("[ConfigLoader] validateConfig: Validando configuración cargada..."); // Log
-    const configToValidate = this.config; // Usar la config ya construida en la instancia
-
-    if (!configToValidate) {
-      throw new Error("Intento de validar configuración antes de que se haya cargado.");
+    const cfg = this.config;
+    if (!cfg) {
+      throw new Error('[ConfigLoader] validateConfig: config no está cargada.');
     }
 
-    // Validación de base de datos
-    const dbConfig = configToValidate.database;
-    if (!dbConfig || !dbConfig.host || !dbConfig.port || !dbConfig.database || !dbConfig.username) {
-      // La contraseña puede ser opcional o vacía en algunos casos, pero los otros son esenciales
-      console.error("Error de Validación: Faltan campos requeridos en la configuración de base de datos:", dbConfig);
-      throw new Error("Configuración de base de datos incompleta (host, port, database, username son requeridos)");
+    // ── Base de datos (Fase 1 — connection-config.json)
+    const db = cfg.database;
+    if (!db || !db.host || !db.port || !db.database || !db.username) {
+      throw new Error(
+        '[ConfigLoader] Configuración de base de datos incompleta ' +
+        '(requiere host, port, database, username en connection-config.json)'
+      );
     }
 
-    // Validación de configuración de API Shelly Cloud
-    const shellyApi = configToValidate.api?.shelly_cloud;
-    if (!shellyApi || !shellyApi.url || !shellyApi.device_id || !shellyApi.auth_key) {
-      console.error("Error de Validación: Faltan campos requeridos en api.shelly_cloud:", shellyApi);
-      throw new Error("Configuración de API Shelly Cloud incompleta (url, device_id, auth_key son requeridos)");
+    // ── JWT Secret (crítico — sin esto la autenticación falla)
+    if (!cfg.jwt?.secret) {
+      throw new Error('[ConfigLoader] Falta jwt.secret en la BD (id=2). ¿Ejecutaste 04_valores_reales.sql?');
     }
 
-    // Validación de configuración de mediciones (opcional, ajustar según criticidad)
-    const measurement = configToValidate.measurement;
-    if (!measurement || measurement.precio_kwh === undefined || !measurement.intervalos?.medicion) {
-      // Permitir precio 0, pero debe estar definido
-      console.warn("Advertencia de Validación: Configuración de mediciones incompleta (precio_kwh, intervalos.medicion).");
-      // throw new Error("Configuración de mediciones incompleta"); // Descomentar si es crítico
+    // ── Email API Key (crítico para notificaciones)
+    if (!cfg.email?.SENDGRID_API_KEY) {
+      console.warn('[ConfigLoader] ⚠️  Falta email.sendgrid_api_key (id=11). Notificaciones por email deshabilitadas.');
     }
 
-    // Validación de configuración de Ubibot (opcional, ajustar según criticidad)
-    const ubibot = configToValidate.ubibot;
-    if (!ubibot || !ubibot.accountKey || !ubibot.tokenFile) {
-      console.warn("Advertencia de Validación: Configuración de Ubibot incompleta (accountKey, tokenFile).");
-      // throw new Error("Configuración de Ubibot incompleta"); // Descomentar si es crítico
+    // ── Shelly Cloud API (advertencia — no bloquea arranque)
+    if (!cfg.api?.shelly_cloud?.url) {
+      console.warn('[ConfigLoader] ⚠️  Falta api.shelly_cloud.url (id=29). Colector Shelly deshabilitado.');
     }
 
-    // Validación de configuración JWT
-    if (!configToValidate.jwt || !configToValidate.jwt.secret) {
-      // ¡Muy crítico! Sin secreto JWT, la autenticación fallará.
-      console.error("Error de Validación CRÍTICO: Falta la configuración del secreto JWT (jwt.secret)");
-      throw new Error("Falta la configuración del secreto JWT");
-    }
-
-    // Validación configuración SMS (opcional, ajustar según criticidad)
-    const sms = configToValidate.sms;
-    if (!sms || !sms.modem || !sms.modem.url) {
-      console.warn("Advertencia de Validación: Configuración de SMS o URL del módem incompleta.");
-      // throw new Error("Configuración de SMS incompleta (modem.url es requerido)"); // Descomentar si es crítico
-    }
-
-    // Verificar configuración de email (API Key ya se valida en loadConfiguration)
-    const email = configToValidate.email;
-    if (!email || !email.SENDGRID_API_KEY) {
-      // Ya se valida que empiece con SG. en loadConfiguration, pero verificar existencia aquí también
-      console.error("Error de Validación CRÍTICO: Falta la API Key de SendGrid (email.SENDGRID_API_KEY)");
-      throw new Error("Falta la API Key de SendGrid en la configuración");
-    } else if (!email.SENDGRID_API_KEY.startsWith("SG.")) {
-      console.warn("Advertencia de Validación: La API Key de SendGrid no tiene el formato correcto.");
-      // No lanzar error aquí, ya que se advirtió antes, pero es un posible problema.
-    }
-    if (!email.email_contacto?.from_verificado) {
-      console.warn("Advertencia de Validación: Email remitente (email.email_contacto.from_verificado) no configurado.");
-    }
-
-    console.log("[ConfigLoader] validateConfig: Validación completada con éxito."); // Log
+    console.log('[ConfigLoader] validateConfig: validación completada.');
   }
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // HELPERS INTERNOS
+  // ─────────────────────────────────────────────────────────────────────────
 
   /**
-   * Obtiene la configuración actual (cargándola si es necesario o usando caché)
-   * @returns {Object} Configuración actual del sistema
+   * Dispara recarga de caché en background sin bloquear getConfig().
+   * @private
    */
-  getConfig() {
-    // loadConfiguration maneja la caché internamente
-    return this.loadConfiguration();
+  _triggerBackgroundReload() {
+    this.reloadConfig()
+      .then(() => console.log('[ConfigLoader] Caché renovado en background.'))
+      .catch(err => console.error('[ConfigLoader] Error en recarga background:', err.message));
   }
 
-
   /**
-   * Recarga todas las configuraciones invalidando la caché
-   * @returns {Object} Nueva configuración del sistema
+   * Implementación requerida por BaseConfigLoader.
+   * En este loader, la carga real se hace en initialize() y reloadConfig().
+   * @returns {Object}
    */
-  reloadConfig() {
-    console.log("[ConfigLoader] reloadConfig: Solicitud de recarga manual, limpiando caché..."); // Log
-    this.cachedConfig = null;
-    this.lastLoadTime = null;
-    return this.loadConfiguration(); // Forzar relectura
-  }
-
-
-  /**
-   * Obtiene un valor específico de la configuración usando notación de punto
-   * @param {string} path Ruta al valor (ejemplo: "database.host")
-   * @returns {any} Valor encontrado en la ruta especificada o undefined si no existe
-   */
-  getValue(path) {
-    if (!path || typeof path !== 'string') return undefined;
-
-    try {
-      // Usar la configuración actual (posiblemente de caché)
-      const currentConfig = this.getConfig();
-      // Reducir la ruta
-      return path.split(".").reduce((obj, key) => {
-        // Verificar que obj no sea null o undefined antes de acceder a la key
-        return obj && obj[key] !== undefined ? obj[key] : undefined;
-      }, currentConfig);
-    } catch (error) {
-      // Esto no debería ocurrir con el reduce seguro, pero por si acaso
-      console.warn(`[ConfigLoader] getValue: Error al acceder a la ruta "${path}":`, error.message);
-      return undefined;
-    }
-  }
-
-
-  /**
-   * Verifica si existe una configuración en la ruta especificada
-   * @param {string} path Ruta a verificar
-   * @returns {boolean} true si existe la configuración
-   */
-  hasConfig(path) {
-    return this.getValue(path) !== undefined;
-  }
-
-
-  /**
-   * Obtiene el entorno actual (desarrollo/producción)
-   * @returns {Object} Información del entorno actual { index: number, name: string }
-   */
-  getCurrentEnvironment() {
-    // Asegurarse de que la config está cargada
-    const currentConfig = this.getConfig();
-    // Devolver el objeto de entorno guardado en la config
-    return currentConfig.environment || { index: 0, name: 'development' }; // Fallback
-  }
-
-
-  /**
-   * Actualiza un valor específico en el archivo de configuración unified-config.json
-   * ¡PRECAUCIÓN! Modifica el archivo físico.
-   * @param {string} path - Ruta al valor a actualizar (ejemplo: "email.email_contacto.from_verificado")
-   * @param {any} value - Nuevo valor
-   * @returns {boolean} - true si la actualización fue exitosa
-   */
-  updateConfigValue(path, value) {
-    console.log(`[ConfigLoader] updateConfigValue: Solicitado actualizar "${path}" a "${value}"`); // Log
-    try {
-      // Necesitamos la ruta absoluta al archivo
-      const configFilePath = this.currentConfigPath || this.findConfigFile();
-      if (!configFilePath) {
-        throw new Error("No se pudo encontrar el archivo de configuración para actualizar.");
-      }
-      console.log(`[ConfigLoader] updateConfigValue: Modificando archivo: ${configFilePath}`); // Log
-
-      // Leer el archivo actual
-      const configData = fs.readFileSync(configFilePath, "utf8");
-      const unifiedConfig = JSON.parse(configData);
-
-      // Dividir la ruta y navegar/crear nodos intermedios
-      const parts = path.split(".");
-      let current = unifiedConfig;
-      for (let i = 0; i < parts.length - 1; i++) {
-        const key = parts[i];
-        // Si el nodo intermedio no existe o no es un objeto, crearlo
-        if (!current[key] || typeof current[key] !== 'object') {
-          console.log(`[ConfigLoader] updateConfigValue: Creando nodo intermedio "${key}" en la ruta.`); // Log
-          current[key] = {};
-        }
-        current = current[key];
-      }
-
-      // Actualizar el valor final
-      const finalKey = parts[parts.length - 1];
-      current[finalKey] = value;
-      console.log(`[ConfigLoader] updateConfigValue: Valor en "${path}" establecido.`); // Log
-
-      // Guardar el archivo actualizado con formato
-      fs.writeFileSync(configFilePath, JSON.stringify(unifiedConfig, null, 2), "utf8");
-      console.log(`[ConfigLoader] updateConfigValue: Archivo guardado.`); // Log
-
-      // Limpiar caché y forzar recarga para aplicar el cambio
-      this.cachedConfig = null;
-      this.lastLoadTime = null;
-      console.log("[ConfigLoader] updateConfigValue: Caché limpiada, recargando configuración..."); // Log
-      this.loadConfiguration(); // Recargar para actualizar la instancia en memoria
-
-      console.log(`✅ [ConfigLoader] updateConfigValue: Valor "${path}" actualizado correctamente en archivo y memoria.`); // Log
-      return true;
-    } catch (error) {
-      console.error(`❌ [ConfigLoader] Error al actualizar valor "${path}":`, error.message);
-      // No relanzar para no detener la aplicación, pero indicar fallo
-      return false;
-    }
+  loadConfiguration() {
+    return this.getConfig();
   }
 }
 
-// Exporta una única instancia para mantener el patrón Singleton
+// Exporta una única instancia (Singleton)
 module.exports = new ConfigLoader();
