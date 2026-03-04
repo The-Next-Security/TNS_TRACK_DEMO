@@ -1,5 +1,5 @@
 servicios/node_modules/
-servicios/src/config/jsons/
+servicios/src/config/jsons/connection-config.json
 servicios/src/config/token_id.txt
 servicios/public/
 # ============================================
