@@ -19,9 +19,9 @@ class ShellyApiAdapter {
     initialize() {
         const appConfig = config.getConfig();
         this.config = {
-            baseUrl: appConfig.api.url,
-            deviceId: appConfig.api.device_id,
-            authKey: appConfig.api.auth_key,
+            baseUrl: appConfig.api.shelly_cloud.url,
+            deviceId: appConfig.api.shelly_cloud.device_id,
+            authKey: appConfig.api.shelly_cloud.auth_key,
             timeout: 10000 // Tiempo de espera predeterminado
         };
 
@@ -31,12 +31,12 @@ class ShellyApiAdapter {
     /**
      * Recarga la configuración de la API
      */
-    reloadConfig() {
-        const appConfig = config.reloadConfig();
+    async reloadConfig() {
+        const appConfig = await config.reloadConfig();
         this.config = {
-            baseUrl: appConfig.api.url,
-            deviceId: appConfig.api.device_id,
-            authKey: appConfig.api.auth_key,
+            baseUrl: appConfig.api.shelly_cloud.url,
+            deviceId: appConfig.api.shelly_cloud.device_id,
+            authKey: appConfig.api.shelly_cloud.auth_key,
             timeout: 10000
         };
 
