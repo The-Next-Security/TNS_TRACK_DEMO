@@ -27,4 +27,8 @@ push-notification-test.log
 # Lecciones aprendidas del proyecto
 LECCIONES_APRENDIDAS.md
 
+# Archivos SQL con credenciales reales (nunca subir a git)
+SQL_FILES/01_creacion_desde_cero/04_valores_reales.sql
+SQL_FILES/01_creacion_desde_cero/04_valores_produccion.sql
+
 SPRINGBOOT_MIGRATION_CONTEXT.md
