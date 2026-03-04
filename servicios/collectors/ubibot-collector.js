@@ -3,7 +3,6 @@
 const config = require("../src/config/js_files/config-loader");
 const ubibotController = require("../src/controllers/ubibotController");
 const ubibotService = require("../src/services/ubibot/ubibotService");
-const databaseService = require("../src/services/database-service");
 
 
 class UbibotCollector {
@@ -134,7 +133,8 @@ class UbibotCollector {
             await ubibotService.processChannelData(channelData);
             await ubibotService.processSensorReadings(
               channelData.channel_id,
-              JSON.parse(channelData.last_values)
+              JSON.parse(channelData.last_values),
+              channelData.net
             );
           }
         } catch (error) {
