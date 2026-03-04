@@ -11,7 +11,6 @@ const cookieParser = require("cookie-parser");
 // Importar Collectors y Servicios principales
 const ShellyCollector = require("./collectors/shelly-collector");
 const UbibotCollector = require("./collectors/ubibot-collector");
-// const OnPremiseCollector = require("./collectors/onPremise-collector"); // Descomentar si se usa
 const databaseService = require("./src/services/database-service");
 const energyAveragesService = require("./src/services/energy-averages-service");
 const totalEnergyService = require("./src/services/total-energy-service");
@@ -67,7 +66,6 @@ class Server {
     this.port = process.env.PORT || 1337;
     this.shellyCollector = new ShellyCollector();
     this.ubibotCollector = new UbibotCollector();
-    // this.onPremiseCollector = new OnPremiseCollector(); // Descomentar si se usa
     this.services = {
       database: databaseService,
       energyAverages: energyAveragesService,
@@ -307,10 +305,6 @@ class Server {
       await this.ubibotCollector.start();
       console.log("  [Server] UbibotCollector iniciado.");
 
-      // console.log("  [Server] Iniciando OnPremiseCollector..."); // Descomentar si se usa
-      // await this.onPremiseCollector.start();
-      // console.log("  [Server] OnPremiseCollector iniciado.");
-      
       console.log("  [Server] Inicializando NotificationController...");
       try {
         // Asumiendo que notificationController es la instancia singleton importada
@@ -423,8 +417,6 @@ class Server {
       console.log("  ✅ [Server] ShellyCollector detenido.");
       if (this.ubibotCollector?.stop) this.ubibotCollector.stop();
       console.log("  ✅ [Server] UbibotCollector detenido.");
-      // if (this.onPremiseCollector?.stop) this.onPremiseCollector.stop(); // Descomentar si se usa
-      // console.log("  ✅ [Server] OnPremiseCollector detenido.");
 
       console.log("  [Server] Deteniendo MetricsAggregationJob...");
       if (metricsAggregationJob?.stop) metricsAggregationJob.stop();
