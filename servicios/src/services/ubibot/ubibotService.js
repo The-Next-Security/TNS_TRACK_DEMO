@@ -1,4 +1,4 @@
-// src/services/ubibotService.js
+// src/services/ubibot/ubibotService.js
 
 const mysql = require("mysql2/promise");
 const configLoader = require("../../config/js_files/config-loader");
@@ -35,7 +35,6 @@ class UbibotService {
         try {
             const { ubibot: ubibotConfig, alertSystem } = configLoader.getConfig();
 
-            // Validar configuración (sin cambios)
             const accountKeyValue = ubibotConfig?.account_key;
             const tokenFilePathValue = ubibotConfig?.token_file;
             if (!accountKeyValue || typeof accountKeyValue !== 'string' || accountKeyValue.trim() === '') {
@@ -53,12 +52,11 @@ class UbibotService {
 
             this.timeZone = alertSystem?.timeZone || "America/Santiago";
 
-            // Asegurar que el pool se inicialice
             if (!pool) {
-                initializePool(); // Llamar a la inicialización si no está listo
+                initializePool();
             }
 
-            console.log("✅ UbibotService inicializado/instanciado (Lógica Temp Removida).");
+            console.log("✅ UbibotService inicializado.");
 
         } catch (error) {
             console.error("💥 [UbibotService] Error CRÍTICO en el constructor:", error.message);
@@ -72,238 +70,338 @@ class UbibotService {
      */
     async _getConnection() {
         if (!pool) {
-          console.error("❌ [UbibotService] Intento de obtener conexión pero el pool no está inicializado.");
-          throw new Error("Pool de base de datos no inicializado para UbibotService.");
+            console.error("❌ [UbibotService] Intento de obtener conexión pero el pool no está inicializado.");
+            throw new Error("Pool de base de datos no inicializado para UbibotService.");
         }
         return await pool.getConnection();
     }
 
     /**
-     * Convierte una fecha/hora UTC a una fecha/hora en la zona horaria configurada.
-     * @param {string|Date} utcTime - Fecha/hora en UTC.
-     * @returns {moment.Moment} Fecha/hora local.
+     * Convierte una fecha/hora UTC a la zona horaria configurada.
+     * @param {string|Date} utcTime
+     * @returns {moment.Moment}
      */
     getLocalTime(utcTime) {
-        // ... (sin cambios)
         return moment.utc(utcTime).tz(this.timeZone);
     }
 
     /**
-     * Procesa los datos de un canal de Ubibot recibidos de la API.
-     * Actualiza la información del canal en la BD y su estado de conexión (delegando a updateConnectionStatus).
+     * Procesa los datos de un canal recibidos de la API de Ubibot.
+     * Inserta el canal si es nuevo o actualiza sus datos básicos y estado de conexión.
+     *
+     * Mapeo API → ubi_canal:
+     *   channel_id      → canal_id
+     *   name            → nombre
+     *   product_id      → id_producto
+     *   device_id       → id_dispositivo
+     *   latitude        → latitud
+     *   longitude       → longitud
+     *   firmware        → firmware
+     *   mac_address     → mac_address
+     *   net             → en_linea  (1=online, 0=offline)
+     *   last_entry_date → ultima_lectura_ubibot
+     *   full_serial     → serial
+     *   last_ip         → ultima_ip
+     *   device_health.score → puntaje_salud
+     *
      * @param {Object} channelData - Datos del canal obtenidos de la API de Ubibot.
-     * @returns {Promise<boolean>} true si el procesamiento fue exitoso.
+     * @returns {Promise<boolean>}
      */
     async processChannelData(channelData) {
-        // --- Lógica principal sin cambios ---
         if (!channelData || !channelData.channel_id) {
-          console.warn("[UbibotService] processChannelData: Se recibieron datos de canal inválidos o sin channel_id.");
-          return false;
+            console.warn("[UbibotService] processChannelData: datos de canal inválidos o sin channel_id.");
+            return false;
         }
+
         console.log(`[UbibotService] processChannelData: Procesando canal ${channelData.channel_id} (${channelData.name || 'Sin Nombre'})...`);
         const connection = await this._getConnection();
         try {
-            const [existingChannelRows] = await connection.query( /* ... consulta ... */
-                "SELECT * FROM channels_ubibot WHERE channel_id = ?", [channelData.channel_id]
+            const [existingRows] = await connection.query(
+                "SELECT * FROM ubi_canal WHERE canal_id = ?",
+                [channelData.channel_id]
             );
-            const existingChannel = existingChannelRows[0];
-            const basicInfo = { /* ... extraer info ... */
-                product_id: channelData.product_id, device_id: channelData.device_id, latitude: channelData.latitude,
-                longitude: channelData.longitude, firmware: channelData.firmware, mac_address: channelData.mac_address,
-                last_entry_date: channelData.last_entry_date ? new Date(channelData.last_entry_date) : null,
-                created_at: channelData.created_at ? new Date(channelData.created_at) : null,
-                name: channelData.name || `Canal ${channelData.channel_id}`,
-             };
+            const existingChannel = existingRows[0];
+
             const isOnline = channelData.net === "1" || channelData.net === 1;
             const currentTime = new Date();
 
+            // Campos que se sincronizan desde la API en cada ciclo
+            const basicInfo = {
+                nombre:               channelData.name || `Canal ${channelData.channel_id}`,
+                id_producto:          channelData.product_id || null,
+                id_dispositivo:       channelData.device_id || null,
+                latitud:              channelData.latitude || null,
+                longitud:             channelData.longitude || null,
+                firmware:             channelData.firmware || null,
+                mac_address:          channelData.mac_address || null,
+                en_linea:             isOnline ? 1 : 0,
+                ultima_lectura_ubibot: channelData.last_entry_date
+                    ? new Date(channelData.last_entry_date)
+                    : null,
+                serial:               channelData.full_serial || null,
+                ultima_ip:            channelData.last_ip || null,
+                puntaje_salud:        channelData.device_health?.score ?? null,
+            };
+
             if (!existingChannel) {
-                // Insertar nuevo canal (lógica sin cambios)
-                console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} es nuevo. Insertando...`);
-                const newChannelData = { /* ... construir datos ... */
-                    ...basicInfo, channel_id: channelData.channel_id, is_currently_out_of_range: isOnline ? 0 : 1,
-                    out_of_range_since: isOnline ? null : currentTime, last_alert_sent: null, esOperativa: 1,
-                    id_parametrizacion: 7, ubicacion_real: 1,
-                 };
-                await connection.query("INSERT INTO channels_ubibot SET ?", newChannelData);
-                console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} insertado.`);
-                // Notificar posible desconexión inicial (esta lógica es de conexión, no temperatura)
-                 if (!isOnline && newChannelData.esOperativa === 1) {
-                    // **** LLAMADA A MÉTODO INTERNO ****
-                    await this.updateConnectionStatus(connection, channelData.channel_id, newChannelData.name, isOnline, false, true, null, currentTime);
-                }
+                // Canal nuevo: insertar con valores por defecto para campos de negocio
+                console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} es nuevo. Insertando en ubi_canal...`);
+                const newChannel = {
+                    ...basicInfo,
+                    canal_id:                    channelData.channel_id,
+                    id_ubicacion_real:            1,      // Sin asignar — el operador deberá configurarlo
+                    temperatura_minima_umbral:    -25.00, // Umbral por defecto para refrigeración
+                    temperatura_maxima_umbral:    -10.00,
+                    usuario_actualizacion_umbral: 'sistema',
+                    fuera_linea_desde:            isOnline ? null : currentTime,
+                    activo:                       1,
+                };
+                await connection.query("INSERT INTO ubi_canal SET ?", newChannel);
+                console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} insertado en ubi_canal.`);
 
             } else {
-                // Actualizar canal existente
-                console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} existe. Verificando actualizaciones...`);
-                const wasOffline = existingChannel.is_currently_out_of_range === 1;
-                const isOperational = existingChannel.esOperativa === 1;
+                // Canal existente: actualizar campos básicos y estado de conexión
+                console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} existe. Actualizando...`);
 
-                // Actualizar campos básicos si cambiaron (lógica sin cambios)
-                const fieldsToUpdate = {}; let hasChanges = false;
-                for (const key in basicInfo) { /* ... comparar y añadir a fieldsToUpdate ... */
-                   let apiValue = basicInfo[key]; let dbValue = existingChannel[key];
-                   if (apiValue instanceof Date) apiValue = apiValue.getTime();
-                   if (dbValue instanceof Date) dbValue = dbValue.getTime();
-                   if (apiValue !== dbValue) { fieldsToUpdate[key] = basicInfo[key]; hasChanges = true; }
-                }
-                if (hasChanges) {
-                    console.log(`[UbibotService] processChannelData: Actualizando ${Object.keys(fieldsToUpdate).length} campos básicos para canal ${channelData.channel_id}...`);
-                    await connection.query( "UPDATE channels_ubibot SET ? WHERE channel_id = ?", [fieldsToUpdate, channelData.channel_id] );
-                } else {
-                    console.log(`[UbibotService] processChannelData: Sin cambios en datos básicos para canal ${channelData.channel_id}.`);
+                const wasOnline = existingChannel.en_linea === 1;
+                const updateData = { ...basicInfo };
+
+                // Gestionar timestamp de desconexión
+                if (!isOnline && wasOnline) {
+                    updateData.fuera_linea_desde = currentTime; // Nueva desconexión
+                } else if (isOnline && !wasOnline) {
+                    updateData.fuera_linea_desde = null;        // Reconexión
                 }
 
-                await this.updateConnectionStatus( connection, channelData.channel_id, existingChannel.name, isOnline, wasOffline, isOperational, existingChannel, currentTime );
+                await connection.query(
+                    "UPDATE ubi_canal SET ? WHERE canal_id = ?",
+                    [updateData, channelData.channel_id]
+                );
+
+                // Notificar cambios de estado de conexión
+                await this.updateConnectionStatus(
+                    connection,
+                    channelData.channel_id,
+                    existingChannel.nombre,
+                    isOnline,
+                    !wasOnline,             // wasOffline
+                    existingChannel.activo === 1,
+                    existingChannel,
+                    currentTime
+                );
             }
             return true;
+
         } catch (error) {
             console.error(`❌ [UbibotService] Error en processChannelData para canal ${channelData.channel_id}:`, error.message);
             return false;
         } finally {
-            if (connection) connection.release();
+            connection.release();
             console.log(`[UbibotService] processChannelData: Conexión liberada para canal ${channelData.channel_id}.`);
         }
     }
 
     /**
-     * Actualiza el estado de conexión de un canal en la BD y notifica al controlador si es operativo.
-     * **NOTA:** Esta función ahora llama a notificationController.processConnectionStatusChange,
-     * que SÍ existe y se usa para las alertas de *desconexión*.
-     * @param {mysql.PoolConnection} connection - Conexión activa.
-     * @param {string} channelId - ID del canal.
-     * @param {string} channelName - Nombre del canal.
-     * @param {boolean} isOnline - Estado actual de la API.
-     * @param {boolean} wasOffline - Estado previo en BD.
-     * @param {boolean} isOperational - Operatividad en BD.
-     * @param {Object|null} currentChannel - Datos actuales de BD.
-     * @param {Date} currentTime - Timestamp actual.
+     * Actualiza el estado de conexión de un canal y notifica si corresponde.
+     * Trabaja sobre ubi_canal usando canal_id como identificador natural de Ubibot.
+     *
+     * Mapeo de estados:
+     *   Old: is_currently_out_of_range=1 → New: en_linea=0
+     *   Old: out_of_range_since          → New: fuera_linea_desde
+     *   Old: esOperativa                 → New: activo
+     *   Old: last_alert_sent             → New: ultima_alerta_enviada
+     *
+     * @param {mysql.PoolConnection} connection
+     * @param {string} canalId - ID natural de Ubibot (channel_id en la API).
+     * @param {string} channelName
+     * @param {boolean} isOnline
+     * @param {boolean} wasOffline - Estado previo: true si estaba desconectado.
+     * @param {boolean} isOperational - Equivalente a activo=1 en ubi_canal.
+     * @param {Object|null} currentChannel - Fila actual de ubi_canal.
+     * @param {Date} currentTime
      * @returns {Promise<boolean>}
      */
-    async updateConnectionStatus( connection, channelId, channelName, isOnline, wasOffline, isOperational, currentChannel, currentTime ) {
-         console.log(`[UbibotService] updateConnectionStatus: Canal ${channelId}, isOnline=${isOnline}, wasOffline=${wasOffline}, isOperational=${isOperational}`);
-         try {
-            // Ignorar si no es operativo (lógica sin cambios)
-             if (!isOperational) {
-                 console.log(`[UbibotService] updateConnectionStatus: Canal ${channelId} NO operativo. Evento ignorado para notificaciones.`);
-                 // Actualizar BD igualmente
-                 if (isOnline && wasOffline) { await connection.query("UPDATE channels_ubibot SET is_currently_out_of_range = 0 WHERE channel_id = ?", [channelId]); }
-                 else if (!isOnline && !wasOffline) { await connection.query("UPDATE channels_ubibot SET is_currently_out_of_range = 1, out_of_range_since = ? WHERE channel_id = ?", [currentTime, channelId]); }
-                 return true;
-             }
+    async updateConnectionStatus(connection, canalId, channelName, isOnline, wasOffline, isOperational, currentChannel, currentTime) {
+        console.log(`[UbibotService] updateConnectionStatus: Canal ${canalId}, isOnline=${isOnline}, wasOffline=${wasOffline}, isOperational=${isOperational}`);
+        try {
+            if (!isOperational) {
+                console.log(`[UbibotService] updateConnectionStatus: Canal ${canalId} NO activo. Ignorando notificaciones.`);
+                // Actualizar estado en BD igualmente
+                if (isOnline && wasOffline) {
+                    await connection.query(
+                        "UPDATE ubi_canal SET en_linea = 1, fuera_linea_desde = NULL WHERE canal_id = ?",
+                        [canalId]
+                    );
+                } else if (!isOnline && !wasOffline) {
+                    await connection.query(
+                        "UPDATE ubi_canal SET en_linea = 0, fuera_linea_desde = ? WHERE canal_id = ?",
+                        [currentTime, canalId]
+                    );
+                }
+                return true;
+            }
 
-             // Lógica de Actualización BD y Notificación (SOLO SI ES OPERATIVO)
-             let stateChanged = false;
-             if (isOnline && wasOffline) { // Reconexión
-                 stateChanged = true;
-                 console.log(`[UbibotService] updateConnectionStatus: Detectada RECONEXIÓN para canal ${channelId}.`);
-                 await connection.query("UPDATE channels_ubibot SET is_currently_out_of_range = 0 WHERE channel_id = ?", [channelId]);
-             } else if (!isOnline && !wasOffline) { // Nueva Desconexión
-                 stateChanged = true;
-                 console.log(`[UbibotService] updateConnectionStatus: Detectada NUEVA DESCONEXIÓN para canal ${channelId}.`);
-                 await connection.query("UPDATE channels_ubibot SET is_currently_out_of_range = 1, out_of_range_since = ? WHERE channel_id = ?", [currentTime, channelId]);
-             } else {
-                 // Sin cambio de estado relevante
-                 console.log(`[UbibotService] updateConnectionStatus: Sin cambio de estado relevante para ${channelId}.`);
-             }
+            let stateChanged = false;
+            if (isOnline && wasOffline) {
+                stateChanged = true;
+                console.log(`[UbibotService] updateConnectionStatus: RECONEXIÓN detectada para canal ${canalId}.`);
+                await connection.query(
+                    "UPDATE ubi_canal SET en_linea = 1, fuera_linea_desde = NULL WHERE canal_id = ?",
+                    [canalId]
+                );
+            } else if (!isOnline && !wasOffline) {
+                stateChanged = true;
+                console.log(`[UbibotService] updateConnectionStatus: NUEVA DESCONEXIÓN detectada para canal ${canalId}.`);
+                await connection.query(
+                    "UPDATE ubi_canal SET en_linea = 0, fuera_linea_desde = ? WHERE canal_id = ?",
+                    [currentTime, canalId]
+                );
+            } else {
+                console.log(`[UbibotService] updateConnectionStatus: Sin cambio de estado para canal ${canalId}.`);
+            }
 
-             // Notificar al controlador SOLO si hubo cambio de estado Y es operativo
-             if (stateChanged) {
-                 console.log(`[UbibotService] updateConnectionStatus: Hubo cambio de estado, llamando a notificationController.processConnectionStatusChange para ${channelId}...`);
-                 // **** LLAMADA A NOTIFICATION CONTROLLER (para desconexiones) ****
-                 await notificationController.processConnectionStatusChange(
-                     channelId, channelName ?? `Canal ${channelId}`, isOnline, wasOffline,
-                     isOnline ? currentChannel?.out_of_range_since : currentTime, // Timestamp relevante
-                     currentChannel?.last_alert_sent, isOperational
-                 );
-                 console.log(`[UbibotService] updateConnectionStatus: Llamada a notificationController completada para ${channelId}.`);
-             }
-             return true;
-         } catch (error) {
-             console.error(`❌ [UbibotService] Error en updateConnectionStatus para canal ${channelId}:`, error.message);
-             return false;
-         }
-    }
+            if (stateChanged) {
+                console.log(`[UbibotService] updateConnectionStatus: Notificando cambio de estado para canal ${canalId}...`);
+                await notificationController.processConnectionStatusChange(
+                    canalId,
+                    channelName ?? `Canal ${canalId}`,
+                    isOnline,
+                    wasOffline,
+                    isOnline ? currentChannel?.fuera_linea_desde : currentTime,
+                    currentChannel?.ultima_alerta_enviada,
+                    isOperational
+                );
+                console.log(`[UbibotService] updateConnectionStatus: Notificación completada para canal ${canalId}.`);
+            }
+            return true;
 
-
-    /**
-     * Procesa las lecturas de sensores (temperatura, etc.) y las inserta en la BD.
-     * Ya NO llama a la verificación de parámetros para alertas de temperatura.
-     * @param {string} channelId - ID del canal.
-     * @param {Object} lastValues - Objeto con los últimos valores leídos (ya parseado).
-     * @returns {Promise<boolean>} true si el procesamiento fue exitoso.
-     */
-    async processSensorReadings(channelId, lastValues) {
-        if (!channelId || !lastValues || typeof lastValues !== 'object' || !lastValues.field1?.created_at) {
-            console.warn(`[UbibotService] processSensorReadings: Datos inválidos o timestamp faltante para canal ${channelId}.`);
+        } catch (error) {
+            console.error(`❌ [UbibotService] Error en updateConnectionStatus para canal ${canalId}:`, error.message);
             return false;
         }
-        console.log(`[UbibotService] processSensorReadings: Procesando lecturas para canal ${channelId}...`);
+    }
 
+    /**
+     * Procesa e inserta las lecturas de sensores de un canal en ubi_lecturas_sensor.
+     *
+     * Mapeo last_values → ubi_lecturas_sensor:
+     *   field1 → temperatura           (temp. ambiente interior del sensor)
+     *   field2 → humedad
+     *   field3 → luz
+     *   field4 → voltaje
+     *   field5 → wifi_rssi
+     *   field8 → temperatura_externa   (sonda exterior — dato principal de refrigeración)
+     *   field8.created_at → fecha_lectura_externa
+     *   field1.created_at → fecha_lectura
+     *   channel.net → en_linea_lectura
+     *
+     * @param {string} canalId - ID natural de Ubibot (channel_id en la API).
+     * @param {Object} lastValues - Objeto last_values ya parseado desde JSON.
+     * @param {string|number|null} channelNet - Valor de channel.net ('1' = online, '0' = offline).
+     * @returns {Promise<boolean>}
+     */
+    async processSensorReadings(canalId, lastValues, channelNet = null) {
+        if (!canalId || !lastValues || typeof lastValues !== 'object' || !lastValues.field1?.created_at) {
+            console.warn(`[UbibotService] processSensorReadings: Datos inválidos o timestamp faltante para canal ${canalId}.`);
+            return false;
+        }
+
+        console.log(`[UbibotService] processSensorReadings: Procesando lecturas para canal ${canalId}...`);
         const connection = await this._getConnection();
         try {
-            const utcTimestamp = moment.utc(lastValues.field1.created_at);
-            if (!utcTimestamp.isValid()) {
-                console.error(`[UbibotService] processSensorReadings: Timestamp inválido en field1 para canal ${channelId}: ${lastValues.field1.created_at}`);
+            // Resolver canal_id de Ubibot → id_canal interno de ubi_canal
+            const [canalRows] = await connection.query(
+                "SELECT id_canal, activo FROM ubi_canal WHERE canal_id = ?",
+                [canalId]
+            );
+            if (!canalRows.length) {
+                console.warn(`[UbibotService] processSensorReadings: Canal ${canalId} no existe en ubi_canal. Omitiendo lectura.`);
                 return false;
             }
-            const santiagoTime = this.getLocalTime(utcTimestamp);
-            const utcDateObject = utcTimestamp.toDate();
+            const { id_canal, activo } = canalRows[0];
+            if (!activo) {
+                console.log(`[UbibotService] processSensorReadings: Canal ${canalId} está inactivo. Omitiendo lectura.`);
+                return false;
+            }
 
-            const dataToInsert = { /* ... construir datos ... */
-                channel_id: channelId, timestamp: utcDateObject,
-                temperature: lastValues.field1?.value !== undefined ? parseFloat(lastValues.field1.value) : null,
-                humidity: lastValues.field2?.value !== undefined ? parseFloat(lastValues.field2.value) : null,
-                light: lastValues.field3?.value !== undefined ? parseFloat(lastValues.field3.value) : null,
-                voltage: lastValues.field4?.value !== undefined ? parseFloat(lastValues.field4.value) : null,
-                wifi_rssi: lastValues.field5?.value !== undefined ? parseInt(lastValues.field5.value, 10) : null,
-                external_temperature: lastValues.field8?.value !== undefined ? parseFloat(lastValues.field8.value) : null,
-                external_temperature_timestamp: lastValues.field8?.created_at ? convertToMySQLDateTime(lastValues.field8.created_at) : null,
-                insercion: santiagoTime.format("YYYY-MM-DD HH:mm:ss"),
+            // Timestamp principal: field1 (temperatura ambiente)
+            const utcTimestamp = moment.utc(lastValues.field1.created_at);
+            if (!utcTimestamp.isValid()) {
+                console.error(`[UbibotService] processSensorReadings: Timestamp inválido en field1 para canal ${canalId}: ${lastValues.field1.created_at}`);
+                return false;
+            }
+
+            // Timestamp sonda externa: field8 (puede diferir del ciclo principal)
+            const field8CreatedAt = lastValues.field8?.created_at
+                ? convertToMySQLDateTime(lastValues.field8.created_at)
+                : null;
+
+            const dataToInsert = {
+                id_canal,
+                temperatura:          lastValues.field1?.value !== undefined ? parseFloat(lastValues.field1.value) : null,
+                humedad:              lastValues.field2?.value !== undefined ? parseFloat(lastValues.field2.value) : null,
+                luz:                  lastValues.field3?.value !== undefined ? parseFloat(lastValues.field3.value) : null,
+                voltaje:              lastValues.field4?.value !== undefined ? parseFloat(lastValues.field4.value) : null,
+                temperatura_externa:  lastValues.field8?.value !== undefined ? parseFloat(lastValues.field8.value) : null,
+                fecha_lectura_externa: field8CreatedAt,
+                wifi_rssi:            lastValues.field5?.value !== undefined ? parseInt(lastValues.field5.value, 10) : null,
+                en_linea_lectura:     channelNet !== null ? (channelNet === '1' || channelNet === 1 ? 1 : 0) : null,
+                fecha_lectura:        utcTimestamp.toDate(),
             };
-            for (const key in dataToInsert) { // Reemplazar NaN
+
+            // Limpiar NaN por si algún parseFloat/parseInt falló
+            for (const key in dataToInsert) {
                 if (Number.isNaN(dataToInsert[key])) dataToInsert[key] = null;
             }
 
-            await connection.query("INSERT INTO sensor_readings_ubibot SET ?", dataToInsert);
-            console.log(`[UbibotService] processSensorReadings: Datos insertados para canal ${channelId} (Timestamp UTC: ${utcTimestamp.format()})`);
+            await connection.query("INSERT INTO ubi_lecturas_sensor SET ?", dataToInsert);
+            console.log(`[UbibotService] processSensorReadings: Lectura insertada para canal ${canalId} (id_canal=${id_canal}, fecha_lectura=${utcTimestamp.format()})`);
 
-
-            return true; // Éxito
+            return true;
 
         } catch (error) {
-            console.error(`❌ [UbibotService] Error en processSensorReadings para canal ${channelId}:`, error.message);
+            console.error(`❌ [UbibotService] Error en processSensorReadings para canal ${canalId}:`, error.message);
             return false;
         } finally {
-            if (connection) connection.release();
-            // ELIMINADO Log redundante de liberación
-            // console.log(`[UbibotService] processSensorReadings: Conexión liberada para canal ${channelId}.`);
+            connection.release();
         }
     }
 
     /**
-     * Obtiene el timestamp de la última lectura registrada para un canal.
-     * (Sin cambios)
-     * @param {string} channelId - ID del canal.
-     * @returns {Promise<Object|null>} Objeto con { external_temperature_timestamp } o null.
+     * Obtiene el timestamp de la última lectura de sonda externa para un canal.
+     * Útil para detectar sensores silenciosos.
+     *
+     * @param {string} canalId - ID natural de Ubibot (channel_id en la API).
+     * @returns {Promise<Object|null>} { fecha_lectura_externa } o null.
      */
-    async getLastSensorReading(channelId) {
-        // ... (sin cambios)
-        if (!channelId) return null;
+    async getLastSensorReading(canalId) {
+        if (!canalId) return null;
         const connection = await this._getConnection();
         try {
-          const [rows] = await connection.query( "SELECT MAX(external_temperature_timestamp) AS external_temperature_timestamp FROM sensor_readings_ubibot WHERE channel_id = ?", [channelId] );
-          return rows[0];
+            // Primero resolver canal_id → id_canal
+            const [canalRows] = await connection.query(
+                "SELECT id_canal FROM ubi_canal WHERE canal_id = ?",
+                [canalId]
+            );
+            if (!canalRows.length) return null;
+
+            const { id_canal } = canalRows[0];
+            const [rows] = await connection.query(
+                "SELECT MAX(fecha_lectura_externa) AS fecha_lectura_externa FROM ubi_lecturas_sensor WHERE id_canal = ?",
+                [id_canal]
+            );
+            return rows[0] || null;
+
         } catch (error) {
-          console.error(`❌ [UbibotService] Error en getLastSensorReading para canal ${channelId}:`, error.message);
-          return null;
+            console.error(`❌ [UbibotService] Error en getLastSensorReading para canal ${canalId}:`, error.message);
+            return null;
         } finally {
-          if (connection) connection.release();
+            connection.release();
         }
     }
 }
 
-// Inicialización del pool (sin cambios)
+// Inicialización del pool al cargar el módulo
 (async () => {
     try { await initializePool(); } catch (e) { /* error ya logueado */ }
 })();
