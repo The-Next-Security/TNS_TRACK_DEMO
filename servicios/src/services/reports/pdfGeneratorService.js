@@ -11,19 +11,29 @@ const fs = require('fs').promises;
 const path = require('path');
 const configLoader = require('../../config/js_files/config-loader');
 
-// Configuration from unified-config.json
-const MAX_BROWSER_INSTANCES = configLoader.getValue('reports_module_config.max_concurrent_reports') || 3;
-const PDF_TIMEOUT = (configLoader.getValue('reports_module_config.pdf_generation_timeout') || 60) * 1000; // Convert seconds to ms
+// Configuración leída en primer uso (no en carga del módulo)
+let _maxBrowserInstances = null;
+let _pdfTimeoutMs = null;
+function _getPdfConfig() {
+  if (_pdfTimeoutMs == null) {
+    const raw = configLoader.getValue('reports_module_config');
+    _maxBrowserInstances = (raw?.max_concurrent_reports) || 3;
+    _pdfTimeoutMs = ((raw?.pdf_generation_timeout) || 60) * 1000;
+  }
+  return { maxInstances: _maxBrowserInstances, timeoutMs: _pdfTimeoutMs };
+}
 
 // Browser pool management
 class BrowserPool {
   constructor() {
     this.browsers = [];
     this.availableBrowsers = [];
-    this.maxInstances = MAX_BROWSER_INSTANCES;
+    this.maxInstances = 3; // actualizado en getBrowser() si hace falta
   }
 
   async getBrowser() {
+    const { maxInstances } = _getPdfConfig();
+    this.maxInstances = maxInstances;
     // Return available browser if exists
     if (this.availableBrowsers.length > 0) {
       return this.availableBrowsers.pop();
@@ -109,13 +119,12 @@ async function generatePDF(htmlContent, outputPath, options = {}) {
       deviceScaleFactor: 2
     });
 
-    // Set timeout
-    page.setDefaultTimeout(PDF_TIMEOUT);
+    const { timeoutMs } = _getPdfConfig();
+    page.setDefaultTimeout(timeoutMs);
 
-    // Load HTML content
     await page.setContent(htmlContent, {
       waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: PDF_TIMEOUT
+      timeout: timeoutMs
     });
 
     // PDF generation options

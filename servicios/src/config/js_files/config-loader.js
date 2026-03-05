@@ -189,7 +189,7 @@ class ConfigLoader extends BaseConfigLoader {
     const tempPool = mysql.createPool({
       host: dbCredentials.host,
       port: dbCredentials.port,
-      user: dbCredentials.username,
+      user: dbCredentials.user || dbCredentials.username,
       password: dbCredentials.password,
       database: dbCredentials.database,
       connectionLimit: 2,
@@ -235,6 +235,18 @@ class ConfigLoader extends BaseConfigLoader {
       this.cachedConfig = this.config;
       this.lastLoadTime = Date.now();
 
+    } catch (err) {
+      const msg = [
+        err.message || '(sin mensaje)',
+        err.code && `code: ${err.code}`,
+        err.sqlMessage && `sqlMessage: ${err.sqlMessage}`,
+        err.errno != null && `errno: ${err.errno}`,
+        err.sqlState && `sqlState: ${err.sqlState}`,
+      ].filter(Boolean).join(' | ');
+      console.error('[ConfigLoader] Fase 2: error al consultar BD:', msg);
+      const rich = new Error(`[ConfigLoader] Fase 2: ${msg}`);
+      rich.originalError = err;
+      throw rich;
     } finally {
       await tempPool.end();
     }

@@ -49,20 +49,22 @@ async function initializePool() {
 
 class NotificationService {
     constructor() {
-        try {
-            const { alertSystem } = configLoader.getConfig();
-            this.timeZone = alertSystem?.timeZone || "America/Santiago";
-            this.initialized = false;
-            if (!pool) {
-                console.log("[NotificationService] Constructor: Pool interno no listo, se inicializará asíncronamente.");
-                // La llamada a initializePool() se hará al final del archivo o mediante initialize()
-            }
-            console.log("✅ NotificationService instanciado (gestionará pool interno).");
-            console.log(`   - Zona horaria configurada: ${this.timeZone}`);
-        } catch (error) {
-            console.error("💥 [NotificationService] Error CRÍTICO en el constructor:", error.message);
-            throw error; // Es importante detener si la config falla aquí
+        // No leer config en constructor. Se asigna en init() tras configLoader.initialize().
+        this.timeZone = "America/Santiago";
+        this.initialized = false;
+        if (!pool) {
+            console.log("[NotificationService] Constructor: Pool interno no listo, se inicializará asíncronamente.");
         }
+        console.log("✅ NotificationService instanciado (gestionará pool interno).");
+    }
+
+    /**
+     * Inicializa propiedades que dependen de config. Llamar desde boot() tras configLoader.initialize().
+     */
+    init() {
+        const { alertSystem } = configLoader.getConfig();
+        this.timeZone = alertSystem?.timeZone || "America/Santiago";
+        console.log(`[NotificationService] init: Zona horaria configurada: ${this.timeZone}`);
     }
 
     /**
@@ -470,17 +472,5 @@ class NotificationService {
 const serviceInstance = new NotificationService();
 
 // Inicialización asíncrona del pool INTERNO al cargar el módulo
-// Ya que ahora tenemos initialize() explícito, podríamos omitir esta inicialización automática
-// pero la mantenemos por compatibilidad con código existente
-(async () => {
-    try {
-        // Inicializar a través del método de la instancia para actualizar su estado interno
-        await serviceInstance.initialize();
-    } catch (e) {
-        console.error("‼️ Fallo Crítico en la inicialización ASÍNCRONA del pool de NotificationService. El servicio podría no funcionar.", e.message);
-        // Considerar si la aplicación debe detenerse aquí si este servicio es absolutamente crítico.
-        // process.exit(1);
-    }
-})();
-
+// No auto-inicializar al cargar: initialize() se llama desde server.js (initializeServices) tras configLoader.initialize().
 module.exports = serviceInstance;

@@ -4,23 +4,22 @@ const configLoader = require('../config/js_files/config-loader');
 class OpenAIService {
   constructor() {
     this.client = null;
-    const config = configLoader.getConfig();
-    // Use DeepSeek for more cost-effective AI analysis ($0.28/$0.42 per 1M tokens)
-    // Compatible with OpenAI SDK, just requires different baseURL
-    this.model = config.OpenAI_API?.OPENAI_MODEL || 'deepseek-chat';
-    this.maxTokens = parseInt(config.OpenAI_API?.OPENAI_MAX_TOKENS) || 2000;
-    this._initializeClient();
+    this.model = 'deepseek-chat';
+    this.maxTokens = 2000;
   }
 
-  _initializeClient() {
+  /**
+   * Carga config y crea el cliente. Llamar desde boot() tras configLoader.initialize().
+   */
+  init() {
     const config = configLoader.getConfig();
+    this.model = config.OpenAI_API?.OPENAI_MODEL || 'deepseek-chat';
+    this.maxTokens = parseInt(config.OpenAI_API?.OPENAI_MAX_TOKENS) || 2000;
     const apiKey = config.OpenAI_API?.OPENAI_API_KEY;
-
     if (!apiKey) {
       console.warn('[OpenAIService] WARNING: OPENAI_API_KEY not set in configuration');
-      return; // Client will be null, will fail gracefully in analyzeChamberData
+      return;
     }
-    
     try {
       this.client = new OpenAI({
         apiKey: apiKey,

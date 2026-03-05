@@ -15,13 +15,12 @@ class UbibotServiceAdapter {
         this.pool = null;
         this.initialized = false;
         this.timeZone = 'America/Santiago';
-        this.initialize();
     }
 
     /**
-     * Inicializa el adaptador de servicio Ubibot
+     * Inicializa el adaptador de servicio Ubibot. Llamar desde boot() tras configLoader.initialize().
      */
-    async initialize() {
+    async init() {
         try {
             // Cargar configuración
             const appConfig = config.getConfig();

@@ -1,33 +1,37 @@
 // Dependencias requeridas
 const mysql = require("mysql2/promise");
-const ddbb_data = require("../config/jsons/database.json"); 
+const configLoader = require("../config/js_files/config-loader");
 const moment = require('moment');
 const axios = require('axios');
-const sgMailConfig = require("../config/jsons/sgMailConfig.json");
-const smsConfig = require("../config/jsons/smsConfig.json");
 
 // Configuración global
 let io;
 const RSSI_THRESHOLD = -90;
-const INTERVALO_ENTRE_SMS = 35; 
+const INTERVALO_ENTRE_SMS = 35;
 const COOLDOWN_PERIODO = 35; // segundos para nueva inserción
 const MODEM_URL = 'http://192.168.8.1';
-// const PHONE_NUMBER = '+56967684626';
-// const SMS_MESSAGE = 'tns tns setdigout ?1? ? 2';
 
-// Para trackear los cooldowns activos
 const beaconCooldowns = new Map();
 
-// Configuración del pool de conexiones MySQL
-const pool = mysql.createPool({
-  host: ddbb_data.host,
-  user: ddbb_data.user,
-  password: ddbb_data.password,
-  database: ddbb_data.database,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-});
+// Pool creado en primer uso (tras configLoader.initialize())
+let pool = null;
+function getPool() {
+  if (!pool) {
+    const db = configLoader.getConfig().database;
+    const user = db.user || db.username;
+    pool = mysql.createPool({
+      host: db.host,
+      user,
+      password: db.password,
+      database: db.database,
+      port: db.port || 3306,
+      waitForConnections: true,
+      connectionLimit: db.pool?.max_size || 10,
+      queueLimit: 0,
+    });
+  }
+  return pool;
+}
 
 // Función de inicialización de Socket.IO
 function init(socketIo) {
@@ -142,8 +146,15 @@ async function sendSMS(phoneNumber, message) {
   }
 }
 async function enviarCorreoIncidencia(asunto, mensaje) {
-  const FROM_EMAIL = sgMailConfig.email_contacto.from_verificado;
-  const TO_EMAILS = sgMailConfig.email_contacto.destinatarios;
+  const emailConfig = configLoader.getConfig().email || {};
+  const FROM_EMAIL = emailConfig.email_contacto?.from_verificado;
+  const TO_EMAILS = Array.isArray(emailConfig.email_contacto?.destinatarios) ? emailConfig.email_contacto.destinatarios : [];
+  const apiKey = emailConfig.SENDGRID_API_KEY;
+
+  if (!apiKey || !FROM_EMAIL || TO_EMAILS.length === 0) {
+    console.warn('control_incidencias: email no configurado, omitiendo envío');
+    return false;
+  }
 
   const data = {
     personalizations: [{ to: TO_EMAILS.map(email => ({ email })) }],
@@ -158,7 +169,7 @@ async function enviarCorreoIncidencia(asunto, mensaje) {
   try {
     const response = await axios.post('https://api.sendgrid.com/v3/mail/send', data, {
       headers: {
-        'Authorization': `Bearer ${sgMailConfig.SENDGRID_API_KEY}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
       }
     });
@@ -252,7 +263,7 @@ async function procesarPosibleIncidencia(device_name, ble_beacons, timestamp, ev
 //     if (din2_value === false || din2_value === 0) {  // Agregamos la comparación con 0
 //       console.log('[DEBUG] din2 es false o 0 - Detectada posible intrusión');
 //       
-//       const connection = await pool.getConnection();
+//       const connection = await getPool().getConnection();
 //       try {
 //         const [lastState] = await connection.query(
 //           `SELECT din_2 FROM gps_data 
@@ -338,7 +349,7 @@ async function procesarBeacon(device_name, beacon) {
 }
 
 async function insertarIncidencia(dispositivo, detector_id) {
-  const connection = await pool.getConnection();
+  const connection = await getPool().getConnection();
   try {
     // Determinar el tipo de detección
     const tipoDeteccion = detector_id === 'SENSOR_DIN2' ? 'sensor' : 'beacon';
@@ -392,7 +403,7 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
       return;
     }
 
-    const connection = await pool.getConnection();
+    const connection = await getPool().getConnection();
     try {
       const [deviceInfo] = await connection.query(
         'SELECT device_asignado FROM devices WHERE id = ?',
@@ -418,22 +429,25 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
       await checkModemConnection();
       await delay(1000);
 
-      // Enviar SMS de activación
-      await sendSMS(smsConfig.sms_destinatarios.activacion.numero, 
-                   smsConfig.sms_destinatarios.activacion.mensaje);
-      console.log("SMS de activación enviado exitosamente");
+      const smsConfig = configLoader.getConfig().sms || {};
+      const dest = smsConfig.sms_destinatarios || {};
+      const activacion = dest.activacion || {};
+      const confirmacion = dest.confirmacion || {};
+      const alertas = Array.isArray(dest.alertas) ? dest.alertas : [];
 
+      if (activacion.numero) {
+        await sendSMS(activacion.numero, activacion.mensaje || 'Activación');
+        console.log("SMS de activación enviado exitosamente");
+      }
       await delay(2000);
 
-      // Enviar SMS de confirmación
-      await sendSMS(smsConfig.sms_destinatarios.confirmacion.numero, 
-                   smsConfig.sms_destinatarios.confirmacion.mensaje);
-      console.log("SMS de confirmación enviado exitosamente");
-
+      if (confirmacion.numero) {
+        await sendSMS(confirmacion.numero, confirmacion.mensaje || 'Confirmación');
+        console.log("SMS de confirmación enviado exitosamente");
+      }
       await delay(5000);
 
-      // Enviar alertas a todos los destinatarios configurados
-      for (const numero of smsConfig.sms_destinatarios.alertas) {
+      for (const numero of alertas) {
         try {
           await sendSMS(numero, mensajePersonalizado);
           console.log(`SMS de alerta enviado exitosamente a ${numero}`);
@@ -469,7 +483,7 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
       }
     } catch (error) {
       console.error('Error en enviarSMSIncidencia:', error);
-      const connection = await pool.getConnection();
+      const connection = await getPool().getConnection();
       try {
         const query = `
           INSERT INTO historico_sms_blindspot 
@@ -495,7 +509,7 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
       FROM ultimo_sms_blindspot
       WHERE id_dispositivo = ? AND beacon_id = ?
     `;
-    const connection = await pool.getConnection();
+    const connection = await getPool().getConnection();
     try {
       const [results] = await connection.query(query, [dispositivo, beacon_id]);
       if (results.length === 0) return true;
@@ -516,7 +530,7 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
       VALUES (?, ?, NOW())
       ON DUPLICATE KEY UPDATE ultimo_sms = NOW()
     `;
-    const connection = await pool.getConnection();
+    const connection = await getPool().getConnection();
     try {
       await connection.query(query, [dispositivo, beacon_id]);
       console.log("Se insertó o actualizó en ultimo_sms_blindspot");
@@ -531,7 +545,7 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
       ? `${sentenciaSQL} devices WHERE id = ?`
       : `${sentenciaSQL} beacons WHERE id = ?`;
     
-    const connection = await pool.getConnection();
+    const connection = await getPool().getConnection();
     try {
       const [results] = await connection.query(query, [inputToCheck]);
       const esBlindSpot = results[0]?.esBlind_spot === 1;

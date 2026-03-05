@@ -32,36 +32,34 @@ async function initializePool() {
 
 class UbibotService {
     constructor() {
-        try {
-            const { ubibot: ubibotConfig, alertSystem } = configLoader.getConfig();
+        // No leer config en constructor. Se asigna en init() tras configLoader.initialize().
+        this.accountKey = null;
+        this.tokenFile = null;
+        this.timeZone = "America/Santiago";
+        console.log("[UbibotService] Instancia creada (config en init()).");
+    }
 
-            const accountKeyValue = ubibotConfig?.account_key;
-            const tokenFilePathValue = ubibotConfig?.token_file;
-            if (!accountKeyValue || typeof accountKeyValue !== 'string' || accountKeyValue.trim() === '') {
-                console.error("❌ [UbibotService] Configuración crítica faltante o vacía: ubibot.account_key.");
-                this.accountKey = null;
-            } else {
-                this.accountKey = accountKeyValue.trim();
-            }
-            if (!tokenFilePathValue || typeof tokenFilePathValue !== 'string' || tokenFilePathValue.trim() === '') {
-                console.error("❌ [UbibotService] Configuración crítica faltante o vacía: ubibot.token_file.");
-                this.tokenFile = null;
-            } else {
-                this.tokenFile = tokenFilePathValue;
-            }
-
-            this.timeZone = alertSystem?.timeZone || "America/Santiago";
-
-            if (!pool) {
-                initializePool();
-            }
-
-            console.log("✅ UbibotService inicializado.");
-
-        } catch (error) {
-            console.error("💥 [UbibotService] Error CRÍTICO en el constructor:", error.message);
-            throw error;
+    /**
+     * Carga config. Llamar desde boot() tras configLoader.initialize().
+     */
+    init() {
+        const { ubibot: ubibotConfig, alertSystem } = configLoader.getConfig();
+        const accountKeyValue = ubibotConfig?.account_key;
+        const tokenFilePathValue = ubibotConfig?.token_file;
+        if (!accountKeyValue || typeof accountKeyValue !== 'string' || accountKeyValue.trim() === '') {
+            console.error("❌ [UbibotService] Configuración crítica faltante o vacía: ubibot.account_key.");
+            this.accountKey = null;
+        } else {
+            this.accountKey = accountKeyValue.trim();
         }
+        if (!tokenFilePathValue || typeof tokenFilePathValue !== 'string' || tokenFilePathValue.trim() === '') {
+            console.error("❌ [UbibotService] Configuración crítica faltante o vacía: ubibot.token_file.");
+            this.tokenFile = null;
+        } else {
+            this.tokenFile = tokenFilePathValue;
+        }
+        this.timeZone = alertSystem?.timeZone || "America/Santiago";
+        console.log("✅ UbibotService init completado.");
     }
 
     /**
@@ -69,10 +67,7 @@ class UbibotService {
      * @private
      */
     async _getConnection() {
-        if (!pool) {
-            console.error("❌ [UbibotService] Intento de obtener conexión pero el pool no está inicializado.");
-            throw new Error("Pool de base de datos no inicializado para UbibotService.");
-        }
+        if (!pool) await initializePool();
         return await pool.getConnection();
     }
 
@@ -400,10 +395,5 @@ class UbibotService {
         }
     }
 }
-
-// Inicialización del pool al cargar el módulo
-(async () => {
-    try { await initializePool(); } catch (e) { /* error ya logueado */ }
-})();
 
 module.exports = new UbibotService();

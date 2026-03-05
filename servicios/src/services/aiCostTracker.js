@@ -1,13 +1,27 @@
 const databaseService = require('./database-service');
-const pricing = require('../config/jsons/ai-pricing.json');
 const configLoader = require('../config/js_files/config-loader');
+
+// Fallback si no existe ai-pricing.json (DeepSeek por millón de tokens)
+const DEFAULT_PRICING = {
+  'deepseek-chat': { input_per_million: 0.14, output_per_million: 0.28 }
+};
 
 class AICostTracker {
   constructor() {
-    this.pricing = pricing;
+    this.pricing = DEFAULT_PRICING;
+  }
+
+  _ensurePricing() {
+    if (this._pricingLoaded) return;
+    try {
+      const custom = configLoader.getValue('OpenAI_API.pricing') || configLoader.getConfig().ai_pricing;
+      if (custom && typeof custom === 'object') this.pricing = { ...DEFAULT_PRICING, ...custom };
+    } catch (_) { /* config no lista aún */ }
+    this._pricingLoaded = true;
   }
 
   calculateCost(modelName, inputTokens, outputTokens) {
+    this._ensurePricing();
     const modelPricing = this.pricing[modelName] || this.pricing['deepseek-chat'];
     if (!modelPricing) {
       console.warn(`[AICostTracker] Unknown model: ${modelName}, using deepseek-chat pricing`);

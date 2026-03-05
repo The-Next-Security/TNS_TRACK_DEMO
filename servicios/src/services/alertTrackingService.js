@@ -63,22 +63,18 @@ async function initializePool() {
  */
 class AlertTrackingService {
     constructor() {
-        try {
-            const { alertSystem } = configLoader.getConfig();
-            this.timeZone = alertSystem?.timeZone || "America/Santiago";
-            this.initialized = false;
+        this.timeZone = "America/Santiago";
+        this.initialized = false;
+        console.log("[AlertTrackingService] Instancia creada (config en init()).");
+    }
 
-            if (!pool) {
-                console.log("[AlertTrackingService] Constructor: Pool interno no listo, se inicializará asíncronamente.");
-            }
-
-            console.log("✅ AlertTrackingService instanciado (gestionará pool interno).");
-            console.log(`   - Zona horaria configurada: ${this.timeZone}`);
-
-        } catch (error) {
-            console.error("💥 [AlertTrackingService] Error CRÍTICO en el constructor:", error.message);
-            throw error;
-        }
+    /**
+     * Carga config. Llamar desde boot() tras configLoader.initialize().
+     */
+    init() {
+        const { alertSystem } = configLoader.getConfig();
+        this.timeZone = alertSystem?.timeZone || "America/Santiago";
+        console.log(`[AlertTrackingService] init: Zona horaria: ${this.timeZone}`);
     }
 
     /**
@@ -1391,16 +1387,6 @@ class AlertTrackingService {
     }
 }
 
-// Crear instancia singleton
+// Crear instancia singleton. initialize() se llama desde server.js (initializeServices) tras configLoader.initialize().
 const serviceInstance = new AlertTrackingService();
-
-// Inicialización asíncrona del pool INTERNO al cargar el módulo
-(async () => {
-    try {
-        await serviceInstance.initialize();
-    } catch (error) {
-        console.error("❌ [AlertTrackingService] Fallo en inicialización automática:", error.message);
-    }
-})();
-
 module.exports = serviceInstance;

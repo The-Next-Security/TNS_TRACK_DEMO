@@ -10,15 +10,20 @@
 const mysql = require('mysql2/promise');
 const configLoader = require('../../../config/js_files/config-loader');
 
-// Database configuration from unified-config.json
-const dbConfigRaw = configLoader.getValue('database');
-const dbConfig = {
-  host: dbConfigRaw.host,
-  port: dbConfigRaw.port,
-  user: dbConfigRaw.username,  // Map username -> user for mysql2
-  password: dbConfigRaw.password,
-  database: dbConfigRaw.database
-};
+let _dbConfig = null;
+function getDbConfig() {
+  if (!_dbConfig) {
+    const raw = configLoader.getValue('database');
+    _dbConfig = {
+      host: raw.host,
+      port: raw.port,
+      user: raw.username,
+      password: raw.password,
+      database: raw.database
+    };
+  }
+  return _dbConfig;
+}
 
 /**
  * Calculate comprehensive temperature KPIs for given devices and date range
@@ -39,7 +44,7 @@ async function calculateKPIs(channelIds, startDate, endDate) {
 
   let connection;
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     // Placeholders for channel IDs
     const placeholders = channelIds.map(() => '?').join(',');
@@ -134,7 +139,7 @@ async function calculateKPIs(channelIds, startDate, endDate) {
 async function getDeviceStatistics(channelIds, startDate, endDate) {
   let connection;
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     const placeholders = channelIds.map(() => '?').join(',');
 
@@ -215,7 +220,7 @@ async function getDeviceStatistics(channelIds, startDate, endDate) {
 async function getHourlyTemperatures(channelIds, startDate, endDate) {
   let connection;
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     const placeholders = channelIds.map(() => '?').join(',');
 
@@ -273,7 +278,7 @@ async function calculateTimeAboveZeroPercentage(channelIds, startDate, endDate) 
 
   let connection;
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     const placeholders = channelIds.map(() => '?').join(',');
 

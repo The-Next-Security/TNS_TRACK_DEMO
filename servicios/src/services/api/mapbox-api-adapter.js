@@ -9,18 +9,16 @@ const config = require('../../config/js_files/config-loader');
 class MapboxApiAdapter {
     constructor() {
         this.config = null;
-        this.initialize();
     }
 
     /**
-     * Inicializa el adaptador cargando la configuración
+     * Inicializa el adaptador cargando la configuración. Llamar desde boot() tras configLoader.initialize().
      */
-    initialize() {
+    init() {
         const appConfig = config.getConfig();
         this.config = {
             accessToken: appConfig.api.mapbox?.access_token || null
         };
-
         if (!this.config.accessToken) {
             console.warn('MapboxApiAdapter: Token de acceso no configurado');
         } else {

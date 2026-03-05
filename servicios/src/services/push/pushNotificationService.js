@@ -1050,16 +1050,6 @@ class PushNotificationService {
     }
 }
 
-// Exportar instancia singleton
+// Exportar instancia singleton. initialize() se llama desde server.js (initializeServices) tras configLoader.initialize().
 const serviceInstance = new PushNotificationService();
-
-// Inicialización automática
-(async () => {
-    try {
-        await serviceInstance.initialize();
-    } catch (error) {
-        console.error("❌ [PushNotificationService] Fallo en inicialización automática:", error.message);
-    }
-})();
-
 module.exports = serviceInstance;

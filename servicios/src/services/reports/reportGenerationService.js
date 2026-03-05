@@ -24,18 +24,27 @@ const executiveAlertsTemplate = require('./templates/executiveAlertsTemplate');
 const executiveConsumptionTemplate = require('./templates/executiveConsumptionTemplate'); // Phase 9 (T096)
 const configLoader = require('../../config/js_files/config-loader');
 
-// Database configuration from unified-config.json
-const dbConfigRaw = configLoader.getValue('database');
-const dbConfig = {
-  host: dbConfigRaw.host,
-  port: dbConfigRaw.port,
-  user: dbConfigRaw.username,  // Map username -> user for mysql2
-  password: dbConfigRaw.password,
-  database: dbConfigRaw.database
-};
-
-// Storage configuration from unified-config.json
-const STORAGE_PATH = configLoader.getValue('reports_module_config.reports_storage_path') || '../storage/reports';
+let _dbConfig = null;
+let _storagePath = null;
+function getDbConfig() {
+  if (!_dbConfig) {
+    const raw = configLoader.getValue('database');
+    _dbConfig = {
+      host: raw.host,
+      port: raw.port,
+      user: raw.username,
+      password: raw.password,
+      database: raw.database
+    };
+  }
+  return _dbConfig;
+}
+function getStoragePath() {
+  if (_storagePath == null) {
+    _storagePath = configLoader.getValue('reports_module_config.reports_storage_path') || '../storage/reports';
+  }
+  return _storagePath;
+}
 
 /**
  * Generate a complete temperature report
@@ -66,8 +75,7 @@ async function generateReport(reportType, config, userId) {
       throw new Error('Invalid config: startDate, endDate, and deviceIds are required');
     }
 
-    // Connect to database
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     // Get template configuration
     const [templateRows] = await connection.execute(
@@ -402,7 +410,7 @@ async function generateReport(reportType, config, userId) {
     const fileName = `${sanitizedName}_${timestamp}.pdf`;
 
     // Resolve storage path
-    const storagePath = path.resolve(__dirname, '../../..', STORAGE_PATH);
+    const storagePath = path.resolve(__dirname, '../../..', getStoragePath());
     const filePath = path.join(storagePath, fileName);
 
     // Generate PDF
@@ -493,7 +501,7 @@ async function getReportHistory(filters = {}, pagination = {}) {
   let connection;
 
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     const { reportType, startDate, endDate, generatedBy, deviceIds, search, status } = filters;
     const { page = 1, limit = 20, sortBy = 'created_at', sortOrder = 'desc' } = pagination;

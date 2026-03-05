@@ -15,28 +15,28 @@ const configLoader = require('../config/js_files/config-loader');
 
 class ReportCleanupJob {
     constructor() {
-        // Cron configuration
-        this.cronExpression = '0 2 * * *'; // Daily at 2:00 AM
+        this.cronExpression = '0 2 * * *';
         this.timezone = 'America/Santiago';
         this.isRunning = false;
         this.jobInstance = null;
-
-        // Configuration
-        this.retentionDays = configLoader.getValue('reports_module_config.report_retention_days') || 90;
-        this.storagePath = configLoader.getValue('reports_module_config.reports_storage_path') || '../storage/reports';
-
-        // Statistics
+        this.retentionDays = 90;
+        this.storagePath = '../storage/reports';
         this.lastExecutionTime = null;
         this.lastExecutionStatus = null;
         this.lastExecutionDuration = null;
         this.executionCount = 0;
         this.successCount = 0;
         this.errorCount = 0;
-
-        // Retry configuration
         this.maxRetries = 3;
-        this.retryDelay = 60000; // 1 minute in milliseconds
+        this.retryDelay = 60000;
+    }
 
+    /**
+     * Carga config. Llamar desde boot() tras configLoader.initialize(), antes de start().
+     */
+    init() {
+        this.retentionDays = configLoader.getValue('reports_module_config.report_retention_days') || 90;
+        this.storagePath = configLoader.getValue('reports_module_config.reports_storage_path') || '../storage/reports';
         console.log(`[ReportCleanup] 🔧 Job configurado: retención ${this.retentionDays} días, cron: ${this.cronExpression}`);
     }
 

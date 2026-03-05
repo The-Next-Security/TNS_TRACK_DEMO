@@ -8,9 +8,10 @@ const alertScheduleConfigService = require("./db/alertScheduleConfigService");
  */
 class BaseAlertService {
     constructor() {
-        this.config = this.loadConfiguration();
+        // No leer config en constructor (carga única en boot). Se asigna en initialize() vía loadConfiguration().
+        this.config = {};
         this.initialized = false;
-        this.timeZone = this.config.alertSystem?.timeZone || "America/Santiago";
+        this.timeZone = "America/Santiago";
 
         // Dynamic configuration cache - loaded from database
         // Falls back to hardcoded defaults if database is unavailable
@@ -25,8 +26,8 @@ class BaseAlertService {
             lastLoaded: null
         };
 
-        // Legacy working hours (kept for backward compatibility)
-        this.workingHours = this.config.alertSystem?.workingHours || {
+        // Legacy working hours (kept for backward compatibility). Se actualizan en initialize().
+        this.workingHours = {
             weekdays: { start: 8.5, end: 18.5 },
             saturday: { start: 8.5, end: 14.5 }
         };
@@ -86,6 +87,12 @@ class BaseAlertService {
         console.log('[BaseAlertService] Initializing base alert service...');
 
         try {
+            // Cargar config desde config-loader (solo en runtime, tras configLoader.initialize())
+            const loaded = this.loadConfiguration();
+            this.config = loaded;
+            this.timeZone = loaded?.timeZone || "America/Santiago";
+            this.workingHours = loaded?.workingHours || this.workingHours;
+
             // Load dynamic configuration from database
             await this.loadConfigFromDatabase();
 

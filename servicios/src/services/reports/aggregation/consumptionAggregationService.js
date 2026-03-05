@@ -18,15 +18,20 @@ const mysql = require('mysql2/promise');
 const configLoader = require('../../../config/js_files/config-loader');
 const moment = require('moment-timezone');
 
-// Database configuration from unified-config.json
-const dbConfigRaw = configLoader.getValue('database');
-const dbConfig = {
-  host: dbConfigRaw.host,
-  port: dbConfigRaw.port,
-  user: dbConfigRaw.username,  // Map username -> user for mysql2
-  password: dbConfigRaw.password,
-  database: dbConfigRaw.database
-};
+let _dbConfig = null;
+function getDbConfig() {
+  if (!_dbConfig) {
+    const raw = configLoader.getValue('database');
+    _dbConfig = {
+      host: raw.host,
+      port: raw.port,
+      user: raw.username,
+      password: raw.password,
+      database: raw.database
+    };
+  }
+  return _dbConfig;
+}
 
 // Timezone for calculations
 const TIMEZONE = 'America/Santiago';
@@ -68,7 +73,7 @@ async function calculateKPIs(deviceIds, startDate, endDate, tariffs = DEFAULT_TA
 
   let connection;
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     // Placeholders for device IDs
     const placeholders = deviceIds.map(() => '?').join(',');
@@ -188,7 +193,7 @@ async function getDeviceStatistics(deviceIds, startDate, endDate, tariffs = DEFA
   let connection;
 
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     const placeholders = deviceIds.map(() => '?').join(',');
 
@@ -272,7 +277,7 @@ async function getHourlyConsumption(deviceIds, startDate, endDate) {
   let connection;
 
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     const placeholders = deviceIds.map(() => '?').join(',');
 
@@ -349,7 +354,7 @@ async function getDailyConsumption(deviceIds, startDate, endDate) {
   let connection;
 
   try {
-    connection = await mysql.createConnection(dbConfig);
+    connection = await mysql.createConnection(getDbConfig());
 
     const placeholders = deviceIds.map(() => '?').join(',');
 
@@ -411,7 +416,7 @@ async function calculateCost(deviceIds, startDate, endDate, tariffs = DEFAULT_TA
   
   try {
     if (!connection) {
-      connection = await mysql.createConnection(dbConfig);
+      connection = await mysql.createConnection(getDbConfig());
     }
 
     const placeholders = deviceIds.map(() => '?').join(',');

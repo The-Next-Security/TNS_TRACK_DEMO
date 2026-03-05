@@ -28,12 +28,9 @@ import HeaderV2 from "./HeaderV2";
 import markerIcon from "../assets/images/pinazul.png";
 import "../utils/backButtonHandler.js";
 
-// API Keys
-const config = require("../config/jsons/config.json");
-mapboxgl.accessToken = config.maps.api_key;
-
 /**
  * HistoricalMovementsSearchV2 Component
+ * La config de Mapbox se obtiene del backend (GET /api/config/mapbox) desde la BD.
  *
  * @returns {JSX.Element} Componente de búsqueda de movimientos históricos
  */
@@ -47,7 +44,33 @@ const HistoricalMovementsSearchV2 = () => {
   const [data, setData] = useState([]);
   const [map, setMap] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [mapboxConfig, setMapboxConfig] = useState({
+    accessToken: null,
+    styleUrl: "mapbox://styles/mapbox/streets-v11",
+  });
   const today = useRef(new Date().toISOString().split("T")[0]);
+
+  /**
+   * Carga configuración de Mapbox desde el backend (config-loader / BD).
+   */
+  useEffect(() => {
+    const fetchMapboxConfig = async () => {
+      try {
+        const res = await axios.get("/api/config/mapbox");
+        const { accessToken, styleUrl } = res.data;
+        if (accessToken) {
+          mapboxgl.accessToken = accessToken;
+          setMapboxConfig({
+            accessToken,
+            styleUrl: styleUrl || "mapbox://styles/mapbox/streets-v11",
+          });
+        }
+      } catch (err) {
+        console.error("Error cargando configuración Mapbox:", err);
+      }
+    };
+    fetchMapboxConfig();
+  }, []);
 
   /**
    * Carga inicial de dispositivos disponibles
@@ -131,13 +154,21 @@ const HistoricalMovementsSearchV2 = () => {
   const plotRoute = (gpsData) => {
     console.log("Plotting route with GPS data:", gpsData);
 
+    if (!mapboxConfig.accessToken) {
+      setErrorMessage(
+        "Mapbox no está configurado. Configure mapbox.access_token en la base de datos."
+      );
+      return;
+    }
+    mapboxgl.accessToken = mapboxConfig.accessToken;
+
     if (map) {
       map.remove();
     }
 
     const mapInstance = new mapboxgl.Map({
       container: "map",
-      style: "mapbox://styles/mapbox/streets-v11",
+      style: mapboxConfig.styleUrl || "mapbox://styles/mapbox/streets-v11",
       center: [-70.6693, -33.4489],
       zoom: 10,
     });

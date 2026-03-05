@@ -66,6 +66,9 @@ router.post(
   tel_configController.setConfigUmbrales.bind(tel_configController)
 );
 
+// GET /api/config/mapbox - Configuración Mapbox para el cliente (token y estilo desde BD). Sin auth.
+router.get("/mapbox", tariffConfigController.getMapboxConfig);
+
 // ============================================================================
 // Alert Schedule Configuration Routes (Feature: 002-configurable-alert-schedules)
 // Issue: https://github.com/TNSTRACK/servicios/issues/19

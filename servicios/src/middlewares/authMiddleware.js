@@ -5,8 +5,17 @@ const { AuthenticationError, BusinessError } = require('../utils/errors');
 
 class AuthMiddleware {
     constructor() {
-        this.jwtSecret = process.env.JWT_SECRET || configLoader.getConfig().jwt.secret;
-        this.jwtIssuer = process.env.JWT_ISSUER || configLoader.getConfig().jwt.issuer;
+        this.jwtSecret = process.env.JWT_SECRET || '';
+        this.jwtIssuer = process.env.JWT_ISSUER || '';
+    }
+
+    /**
+     * Carga config JWT. Llamar desde boot() tras configLoader.initialize().
+     */
+    init() {
+        const cfg = configLoader.getConfig().jwt || {};
+        this.jwtSecret = process.env.JWT_SECRET || cfg.secret || this.jwtSecret;
+        this.jwtIssuer = process.env.JWT_ISSUER || cfg.issuer || this.jwtIssuer;
     }
 
     generateToken(payload) {

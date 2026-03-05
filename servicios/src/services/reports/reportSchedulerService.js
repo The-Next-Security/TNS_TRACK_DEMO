@@ -14,18 +14,29 @@ const reportGenerationService = require('./reportGenerationService');
 const emailService = require('../email/emailService');
 const moment = require('moment-timezone');
 
-// Database configuration from unified-config.json
-const dbConfigRaw = configLoader.getValue('database');
-const dbConfig = {
-  host: dbConfigRaw.host,
-  port: dbConfigRaw.port,
-  user: dbConfigRaw.username,  // Map username -> user for mysql2
-  password: dbConfigRaw.password,
-  database: dbConfigRaw.database
-};
+// Pool creado en init() tras configLoader.initialize()
+let pool = null;
 
-// Create connection pool
-const pool = mysql.createPool(dbConfig);
+function getPool() {
+  if (!pool) throw new Error('ReportSchedulerService no inicializado. Llamar init() desde boot().');
+  return pool;
+}
+
+/**
+ * Inicializa el servicio (config y pool). Llamar desde boot() tras configLoader.initialize().
+ */
+function init() {
+  if (pool) return;
+  const dbConfigRaw = configLoader.getValue('database');
+  const dbConfig = {
+    host: dbConfigRaw.host,
+    port: dbConfigRaw.port,
+    user: dbConfigRaw.username,
+    password: dbConfigRaw.password,
+    database: dbConfigRaw.database
+  };
+  pool = mysql.createPool(dbConfig);
+}
 
 // Mapa de trabajos cron activos: scheduleId -> cronJob
 const activeJobs = new Map();
@@ -140,7 +151,7 @@ function calculateDynamicPeriod(periodType) {
  * @returns {Promise<Object>} - { scheduleId, nextExecution }
  */
 async function createSchedule(config) {
-  const connection = await pool.getConnection();
+  const connection = await getPool().getConnection();
 
   try {
     const {
@@ -232,7 +243,7 @@ async function createSchedule(config) {
  * @returns {Promise<Object>} - Schedule actualizado
  */
 async function updateSchedule(scheduleId, updates) {
-  const connection = await pool.getConnection();
+  const connection = await getPool().getConnection();
 
   try {
     // Obtener schedule actual
@@ -327,7 +338,7 @@ async function updateSchedule(scheduleId, updates) {
  * @returns {Promise<boolean>} - true si se eliminó exitosamente
  */
 async function deleteSchedule(scheduleId) {
-  const connection = await pool.getConnection();
+  const connection = await getPool().getConnection();
 
   try {
     // Detener cron job si existe
@@ -421,7 +432,7 @@ function stopCronJob(scheduleId) {
  * @param {Object} config - Configuración del reporte
  */
 async function executeScheduledReport(scheduleId, config) {
-  const connection = await pool.getConnection();
+  const connection = await getPool().getConnection();
 
   try {
     const { name, reportType, periodType, deviceIds, options, createdBy } = config;
@@ -536,7 +547,7 @@ async function executeScheduledReport(scheduleId, config) {
  * Debe llamarse al iniciar el servidor
  */
 async function loadActiveSchedules() {
-  const connection = await pool.getConnection();
+  const connection = await getPool().getConnection();
 
   try {
     // Obtener todos los schedules activos (including email_recipients)
@@ -585,7 +596,7 @@ async function loadActiveSchedules() {
  * @returns {Promise<Array>} - Lista de schedules
  */
 async function listSchedules(filters = {}) {
-  const connection = await pool.getConnection();
+  const connection = await getPool().getConnection();
 
   try {
     let query = `
@@ -644,7 +655,7 @@ async function listSchedules(filters = {}) {
  * @returns {Promise<number>} Cantidad de schedules activos
  */
 async function getActiveSchedulesCount() {
-  const connection = await pool.getConnection();
+  const connection = await getPool().getConnection();
   try {
     const [rows] = await connection.execute(
       `SELECT COUNT(*) as count
@@ -662,6 +673,7 @@ async function getActiveSchedulesCount() {
 }
 
 module.exports = {
+  init,
   createSchedule,
   updateSchedule,
   deleteSchedule,
@@ -670,7 +682,7 @@ module.exports = {
   listSchedules,
   getActiveSchedulesCount,
   calculateNextExecution,
-  executeScheduledReport, // Exportar para testing
-  startCronJob, // Exportar para testing
-  stopCronJob   // Exportar para testing
+  executeScheduledReport,
+  startCronJob,
+  stopCronJob
 };
