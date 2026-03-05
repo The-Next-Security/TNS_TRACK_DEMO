@@ -494,7 +494,13 @@ async function boot() {
 }
 
 boot().catch((err) => {
-  console.error("💥 [Init] Error fatal al arrancar la aplicación:", err.message);
+  const details = [
+    err.message,
+    err.code && `[code: ${err.code}]`,
+    err.sqlMessage && `[sqlMessage: ${err.sqlMessage}]`,
+    err.errno != null && `[errno: ${err.errno}]`,
+  ].filter(Boolean).join(' ');
+  console.error("💥 [Init] Error fatal al arrancar la aplicación:", details);
   console.error(err.stack);
   process.exit(1);
 });
