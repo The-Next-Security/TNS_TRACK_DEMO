@@ -26,19 +26,14 @@ class UbibotCollector {
    *   - `lastSuccessTime`: The timestamp of the last successful collection.
    */
   constructor() {
-    const { ubibot: ubibotConfig, alertSystem } = config.getConfig();
-    this.collectionInterval = ubibotConfig.collectionInterval || 240000; // Default 10 minutos
+    // No leer config en constructor. Se asigna en init() tras configLoader.initialize().
+    this.collectionInterval = 240000;
     this.isRunning = false;
     this.intervalId = null;
     this.retryCount = 0;
     this.maxRetries = 3;
     this.retryDelay = 5000;
-
-    // Obtener el valor de disconnectionAlertThreshold de la configuración centralizada
-    // Este valor determina cuántos minutos debe pasar un sensor sin conexión
-    // antes de considerarse desconectado y enviar alerta
-    this.disconnectionThreshold = alertSystem?.intervals?.disconnection?.initialDelay || 55; // minutos
-
+    this.disconnectionThreshold = 55;
     this.metrics = {
       successfulCollections: 0,
       failedCollections: 0,
@@ -46,6 +41,15 @@ class UbibotCollector {
       lastError: null,
       lastSuccessTime: null,
     };
+  }
+
+  /**
+   * Carga config. Llamar desde initializeServices() tras configLoader.initialize().
+   */
+  init() {
+    const { ubibot: ubibotConfig, alertSystem } = config.getConfig();
+    this.collectionInterval = ubibotConfig.collectionInterval || 240000;
+    this.disconnectionThreshold = alertSystem?.intervals?.disconnection?.initialDelay || 55;
   }
 
 
