@@ -11,16 +11,25 @@ const temperatureAnalyzer = require("../utils/TemperatureAnalyzer"); // Asumo qu
 
 class UbibotController {
   /**
-   * Initializes a new instance of the UbibotController class.
-   * Retrieves and sets the account key and resolves the absolute token file path.
-   * @throws {Error} If critical configuration (accountKey, tokenFile) is missing or token path cannot be resolved.
+   * Constructor. No usa config-loader aquí; la config se carga en init() tras configLoader.initialize().
    */
   constructor() {
     console.log("[UbibotController] Constructor: Creando instancia...");
+    this._configInitialized = false;
+  }
+
+  /**
+   * Inicializa la config de Ubibot desde config-loader. Debe llamarse desde server.js después de configLoader.initialize().
+   * @throws {Error} Si falta account_key, token_file o no se puede resolver la ruta del token.
+   */
+  init() {
+    if (this._configInitialized) {
+      console.log("[UbibotController] init: ya inicializado, omitiendo.");
+      return;
+    }
     try {
       const { ubibot: ubibotConfig } = config.getConfig();
 
-      // --- Validación de account_key (ya corregida antes) ---
       const accountKeyValue = ubibotConfig?.account_key;
       if (!accountKeyValue || typeof accountKeyValue !== 'string' || accountKeyValue.trim() === '') {
         console.error("❌ [UbibotController] Configuración crítica faltante o vacía: ubibot.account_key");
@@ -28,33 +37,38 @@ class UbibotController {
       }
       this.accountKey = accountKeyValue.trim();
 
-      // --- CORRECCIÓN AQUÍ: Usar 'token_file' (snake_case) ---
-      const tokenFilePathValue = ubibotConfig?.token_file; // Leer con guion bajo
-
-      // Validar que token_file existe y es un string no vacío
+      const tokenFilePathValue = ubibotConfig?.token_file;
       if (!tokenFilePathValue || typeof tokenFilePathValue !== 'string' || tokenFilePathValue.trim() === '') {
         console.error("❌ [UbibotController] Configuración crítica faltante o vacía: ubibot.token_file");
-        // Lanzar el error específico
         throw new Error("Falta token_file de Ubibot (o está vacía) en la configuración.");
       }
-      // Guardar la ruta relativa usando el valor leído con snake_case
       this.relativeTokenFilePath = tokenFilePathValue;
-
-      // --- Resto del constructor (resolución de ruta absoluta) ---
       this.absoluteTokenFilePath = this.resolveTokenPath(this.relativeTokenFilePath);
 
       if (!this.absoluteTokenFilePath) {
         throw new Error("No se pudo determinar la ruta absoluta para el archivo de token Ubibot.");
       }
 
-      console.log(`[UbibotController] Configuración Ubibot cargada.`);
-      console.log(`  -> Account Key: ${this.accountKey ? this.accountKey.substring(0, 5) + '...' : 'N/A'} (verificada)`);
-      console.log(`  -> Token Path (Relativo): ${this.relativeTokenFilePath} (verificado)`); // Indicar que se verificó
+      this._configInitialized = true;
+      console.log(`[UbibotController] Configuración Ubibot cargada (init).`);
+      console.log(`  -> Account Key: ${this.accountKey.substring(0, 5)}... (verificada)`);
+      console.log(`  -> Token Path (Relativo): ${this.relativeTokenFilePath}`);
       console.log(`  -> Token Path (Absoluto): ${this.absoluteTokenFilePath}`);
-
     } catch (error) {
-      console.error("💥 [UbibotController] Error CRÍTICO en el constructor:", error.message);
-      throw error; // Relanzar para detener
+      console.error("💥 [UbibotController] Error CRÍTICO en init():", error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * Asegura que init() se haya llamado. Lanzar error claro si no.
+   * @private
+   */
+  _ensureConfig() {
+    if (!this._configInitialized) {
+      throw new Error(
+        '[UbibotController] No inicializado. Debe llamarse init() después de configLoader.initialize() en server.js.'
+      );
     }
   }
 
@@ -92,6 +106,7 @@ class UbibotController {
    * @returns {Promise<string|null>} El token ID si se genera y guarda (o solo genera) exitosamente, o null si falla.
    */
   async getNewToken() {
+    this._ensureConfig();
     // Validar que accountKey existe
     if (!this.accountKey) {
       console.error("Ubibot: Falta accountKey para generar nuevo token.");
@@ -146,6 +161,7 @@ class UbibotController {
    * @returns {Promise<string|null>} El token leído o null si no se encuentra o hay error.
    */
   async readToken() {
+    this._ensureConfig();
     // Validar que tenemos la ruta
     if (!this.absoluteTokenFilePath) {
       console.error("Ubibot: No se puede leer token, ruta absoluta no definida.");

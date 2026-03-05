@@ -11,14 +11,17 @@ const { AuthenticationError } = require("../utils/errors");
 const jwtConfig = require("../config/js_files/jwt-config");
 const { validatePassword, formatPasswordErrors } = require("../utils/passwordValidator");
 
-// Configurar la API Key de SendGrid desde unified-config.json
-const sendgridKey = config.getValue('email.sendgrid_api_key');
-if (!sendgridKey) {
-  throw new Error('⚠️ SendGrid API Key no configurada en unified-config.json');
-}
-sgMail.setApiKey(sendgridKey);
-
 class usuariosController {
+  /**
+   * Configura SendGrid. Llamar desde boot() tras configLoader.initialize().
+   */
+  init() {
+    const sendgridKey = config.getValue('email.sendgrid_api_key');
+    if (!sendgridKey) {
+      throw new Error('⚠️ SendGrid API Key no configurada en unified-config.json');
+    }
+    sgMail.setApiKey(sendgridKey);
+  }
   async handleLogin(req, res, next) {
     const { email, password } = req.body;
     console.log(`[Login] Intento de login para email: ${email}`);

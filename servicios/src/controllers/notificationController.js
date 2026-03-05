@@ -11,42 +11,32 @@ const alertTrackingService = require("../services/alertTrackingService");
 
 class NotificationController {
     constructor() {
-        // --- Constructor: Solo inicialización básica de propiedades ---
+        // No leer config en constructor. Se asigna en init() tras configLoader.initialize().
         console.log("[NotificationCtrl] Constructor: Creando instancia...");
-        try {
-            // Cargar configuración necesaria inmediatamente
-            this.appConfig = configLoader.getConfig();
-            this.timeZone = this.appConfig.alertSystem?.timeZone || "America/Santiago";
+        this.appConfig = null;
+        this.timeZone = "America/Santiago";
+        this.workingHours = { weekdays: { start: 8.5, end: 18.5 }, saturday: { start: 8.5, end: 14.5 } };
+        this.disconnectionAlertThreshold = 55;
+        this.cleanupInterval = 720;
+        this.pool = null;
+        this.initialized = false;
+        this.disconnectionAlertsByHour = {};
+        this.hourlyProcessingTimer = null;
+        this.recurringHourlyTimer = null;
+        this.cleanupDisconnectTimer = null;
+        console.log("[NotificationCtrl] Constructor: Propiedades básicas (sin config) configuradas.");
+    }
 
-            // Configuraciones específicas o con defaults
-            this.workingHours = this.appConfig.alertSystem?.workingHours || {
-                weekdays: { start: 8.5, end: 18.5 },
-                saturday: { start: 8.5, end: 14.5 }
-            };
-            this.disconnectionAlertThreshold = this.appConfig.alertSystem?.intervals?.disconnection?.initialDelay || 55;
-            this.cleanupInterval = this.appConfig.alertSystem?.intervals?.cleanupMinutes || 720; // 12 horas
-
-            // Estado y recursos que se inicializarán después
-            this.pool = null; // El pool se creará en initialize()
-            this.initialized = false; // Flag para estado de inicialización
-
-            // Buffers y Timers se inicializan como null
-            this.disconnectionAlertsByHour = {};
-            this.hourlyProcessingTimer = null;
-            this.recurringHourlyTimer = null;
-            this.cleanupDisconnectTimer = null;
-
-            console.log("[NotificationCtrl] Constructor: Propiedades básicas configuradas.");
-            console.log(`  - Zona horaria: ${this.timeZone}`);
-            console.log(`  - Horario laboral L-V: ${this.workingHours.weekdays?.start ?? 'N/A'} - ${this.workingHours.weekdays?.end ?? 'N/A'}`);
-            console.log(`  - Horario laboral Sábado: ${this.workingHours.saturday?.start ?? 'N/A'} - ${this.workingHours.saturday?.end ?? 'N/A'}`);
-            console.log(`  - Intervalo de limpieza (desconexión): ${this.cleanupInterval} minutos`);
-
-        } catch (error) {
-            console.error("❌ [NotificationCtrl] Error CRÍTICO en el constructor (probablemente cargando config):", error.message);
-            // Es vital lanzar el error aquí si la config falla, para detener el arranque.
-            throw error;
-        }
+    /**
+     * Carga config y propiedades derivadas. Llamar desde boot() tras configLoader.initialize().
+     */
+    init() {
+        this.appConfig = configLoader.getConfig();
+        this.timeZone = this.appConfig.alertSystem?.timeZone || "America/Santiago";
+        this.workingHours = this.appConfig.alertSystem?.workingHours || this.workingHours;
+        this.disconnectionAlertThreshold = this.appConfig.alertSystem?.intervals?.disconnection?.initialDelay || 55;
+        this.cleanupInterval = this.appConfig.alertSystem?.intervals?.cleanupMinutes || 720;
+        console.log(`[NotificationCtrl] init: Zona horaria: ${this.timeZone}, cleanupInterval: ${this.cleanupInterval} min`);
     }
 
     /**

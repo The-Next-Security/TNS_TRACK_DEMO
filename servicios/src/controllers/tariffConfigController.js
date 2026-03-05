@@ -4,6 +4,8 @@
  *
  * Handles tariff configuration for electrical consumption reports
  * Tariffs stored in unified-config.json under "tariffs" key
+ *
+ * Also exposes other client-safe config from config-loader (BD): e.g. Mapbox (GET /api/config/mapbox).
  */
 
 const configLoader = require('../config/js_files/config-loader');
@@ -224,10 +226,32 @@ async function resetTariffConfig(req, res) {
   }
 }
 
+/**
+ * GET /api/config/mapbox
+ * Devuelve la configuración de Mapbox para el cliente (token y estilo).
+ * Origen: config-loader (BD, rutas mapbox.access_token y mapbox.style_url).
+ * Sin autenticación: el token de cliente es público una vez en el navegador.
+ */
+async function getMapboxConfig(req, res) {
+  try {
+    const accessToken = configLoader.getValue('mapbox.access_token') ?? null;
+    const styleUrl =
+      configLoader.getValue('mapbox.style_url') || 'mapbox://styles/mapbox/streets-v11';
+
+    res.json({ accessToken, styleUrl });
+  } catch (error) {
+    console.error('[TariffConfig] Error getting Mapbox config:', error.message);
+    res.status(500).json({
+      error: 'Configuración no disponible'
+    });
+  }
+}
+
 module.exports = {
   getTariffConfig,
   updateTariffConfig,
   validateTariffConfig,
-  resetTariffConfig
+  resetTariffConfig,
+  getMapboxConfig
 };
 
