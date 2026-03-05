@@ -45,6 +45,16 @@ const emailService = require("./src/services/email/emailService");
 const smsService = require("./src/services/sms/smsService");
 const pushNotificationService = require("./src/services/push/pushNotificationService");
 const notificationController = require("./src/controllers/notificationController.js");
+const ubibotController = require("./src/controllers/ubibotController.js");
+const notificationService = require("./src/services/notificationService");
+const ubibotService = require("./src/services/ubibot/ubibotService");
+const shellyApiAdapter = require("./src/services/api/shelly-api-adapter");
+const mapboxApiAdapter = require("./src/services/api/mapbox-api-adapter");
+const openaiService = require("./src/services/openaiService");
+const ubibotServiceAdapter = require("./src/services/ubibot/ubibot-service-adapter");
+const usuariosController = require("./src/controllers/usuariosController");
+const authMiddleware = require("./src/middlewares/authMiddleware");
+const alertTrackingService = require("./src/services/alertTrackingService");
 
 // Importar job de agregación de métricas de alertas
 const metricsAggregationJob = require('./src/jobs/metricsAggregationJob');
@@ -302,6 +312,7 @@ class Server {
       // console.log("  [Server] ShellyCollector iniciado.");
 
       console.log("  [Server] Iniciando UbibotCollector...");
+      this.ubibotCollector.init();
       await this.ubibotCollector.start();
       console.log("  [Server] UbibotCollector iniciado.");
 
@@ -454,6 +465,21 @@ async function boot() {
   // DEBE ejecutarse antes de instanciar Server (los servicios usan configLoader.getConfig())
   console.log("[Init] Cargando configuración desde BD...");
   await configLoader.initialize();
+
+  // Módulos que dependen de config: inicializar tras configLoader.initialize()
+  ubibotController.init();
+  notificationService.init();
+  notificationController.init();
+  ubibotService.init();
+  shellyApiAdapter.init();
+  mapboxApiAdapter.init();
+  openaiService.init();
+  await ubibotServiceAdapter.init();
+  reportCleanupJob.init();
+  usuariosController.init();
+  reportSchedulerService.init();
+  authMiddleware.init();
+  alertTrackingService.init();
 
   console.log("[Init] Creando instancia del servidor...");
   const server = new Server();
