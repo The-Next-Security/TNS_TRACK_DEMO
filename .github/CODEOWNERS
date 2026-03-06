@@ -1,0 +1,63 @@
+# CODEOWNERS
+#
+# Este archivo define los Code Owners del proyecto TNS Track Bitumix.
+#
+# NOTA: En repositorios privados con GitHub Free, este archivo
+# NO es enforced automáticamente por GitHub. Sin embargo, nuestro
+# workflow de GitHub Actions (.github/workflows/protect-main.yml)
+# lo simula verificando aprobaciones de estos usuarios.
+#
+# Más información: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# =============================================================================
+# OWNERSHIP PRINCIPAL
+# =============================================================================
+
+# Todos los archivos requieren aprobación de Code Owners
+* @Bufigol @felipecleverox
+
+# =============================================================================
+# ARCHIVOS CRÍTICOS DE CONFIGURACIÓN
+# =============================================================================
+
+# Package management
+package.json @Bufigol @felipecleverox
+package-lock.json @Bufigol @felipecleverox
+servicios/package.json @Bufigol @felipecleverox
+servicios/package-lock.json @Bufigol @felipecleverox
+
+# GitHub configuration
+.github/** @Bufigol @felipecleverox
+
+# Documentación del proyecto
+CLAUDE.md @Bufigol @felipecleverox
+README.md @Bufigol @felipecleverox
+CHANGELOG.md @Bufigol @felipecleverox
+
+# =============================================================================
+# CI/CD Y WORKFLOWS
+# =============================================================================
+
+# Workflows de GitHub Actions
+.github/workflows/** @Bufigol @felipecleverox
+
+# Scripts de automatización
+.github/scripts/** @Bufigol @felipecleverox
+
+# =============================================================================
+# CONFIGURACIÓN DE SEGURIDAD
+# =============================================================================
+
+# Dependabot
+.github/dependabot.yml @Bufigol @felipecleverox
+
+# Archivos de entorno (si existen en repo)
+.env.example @Bufigol @felipecleverox
+
+# =============================================================================
+# DOCUMENTACIÓN
+# =============================================================================
+
+# Documentación general
+docs/** @Bufigol @felipecleverox
+*.md @Bufigol @felipecleverox
