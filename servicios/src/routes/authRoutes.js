@@ -78,7 +78,14 @@ router.get('/validate', authMiddleware.authenticate.bind(authMiddleware), async 
       aiAnalysisValue = req.user.ai_analysis === true || req.user.ai_analysis === 1 || req.user.ai_analysis === '1' || false;
     } else {
       const [users] = await databaseService.pool.query(
-        'SELECT permissions, ai_analysis FROM users WHERE id = ?',
+        `SELECT
+          GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.nombre SEPARATOR ',') as permissions,
+          MAX(CASE WHEN p.nombre = 'ai_analysis' THEN 1 ELSE 0 END) as ai_analysis
+        FROM gen_usuario g
+        LEFT JOIN gen_usuario_permisos up ON g.id_usuario = up.id_usuario AND up.activo = 1
+        LEFT JOIN gen_permiso p ON up.id_permiso = p.id_permiso AND p.activo = 1
+        WHERE g.id_usuario = ? AND g.activo = 1
+        GROUP BY g.id_usuario`,
         [userId]
       );
       
