@@ -86,12 +86,12 @@ class AuthMiddleware {
                 const databaseService = require('../services/database-service');
                 try {
                     const [users] = await databaseService.pool.query(
-                        'SELECT tokenVersion FROM users WHERE id = ?',
+                        'SELECT token_version FROM gen_usuario WHERE id_usuario = ? AND activo = 1',
                         [decoded.userId]
                     );
 
                     if (users && users[0]) {
-                        const currentVersion = users[0].tokenVersion || 0;
+                        const currentVersion = users[0].token_version || 0;
                         if (decoded.tokenVersion !== currentVersion) {
                             return next(new AuthenticationError('Token has been revoked'));
                         }
