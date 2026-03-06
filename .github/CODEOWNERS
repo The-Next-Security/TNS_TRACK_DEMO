@@ -14,50 +14,50 @@
 # =============================================================================
 
 # Todos los archivos requieren aprobación de Code Owners
-* @Bufigol @felipecleverox
+* @Bufigol @felipecleverox @TNSTRACK
 
 # =============================================================================
 # ARCHIVOS CRÍTICOS DE CONFIGURACIÓN
 # =============================================================================
 
 # Package management
-package.json @Bufigol @felipecleverox
-package-lock.json @Bufigol @felipecleverox
-servicios/package.json @Bufigol @felipecleverox
-servicios/package-lock.json @Bufigol @felipecleverox
+package.json @Bufigol @felipecleverox @TNSTRACK
+package-lock.json @Bufigol @felipecleverox @TNSTRACK
+servicios/package.json @Bufigol @felipecleverox @TNSTRACK
+servicios/package-lock.json @Bufigol @felipecleverox @TNSTRACK
 
 # GitHub configuration
-.github/** @Bufigol @felipecleverox
+.github/** @Bufigol @felipecleverox @TNSTRACK
 
 # Documentación del proyecto
-CLAUDE.md @Bufigol @felipecleverox
-README.md @Bufigol @felipecleverox
-CHANGELOG.md @Bufigol @felipecleverox
+CLAUDE.md @Bufigol @felipecleverox @TNSTRACK
+README.md @Bufigol @felipecleverox @TNSTRACK
+CHANGELOG.md @Bufigol @felipecleverox @TNSTRACK
 
 # =============================================================================
 # CI/CD Y WORKFLOWS
 # =============================================================================
 
 # Workflows de GitHub Actions
-.github/workflows/** @Bufigol @felipecleverox
+.github/workflows/** @Bufigol @felipecleverox @TNSTRACK
 
 # Scripts de automatización
-.github/scripts/** @Bufigol @felipecleverox
+.github/scripts/** @Bufigol @felipecleverox @TNSTRACK
 
 # =============================================================================
 # CONFIGURACIÓN DE SEGURIDAD
 # =============================================================================
 
 # Dependabot
-.github/dependabot.yml @Bufigol @felipecleverox
+.github/dependabot.yml @Bufigol @felipecleverox @TNSTRACK
 
 # Archivos de entorno (si existen en repo)
-.env.example @Bufigol @felipecleverox
+.env.example @Bufigol @felipecleverox @TNSTRACK
 
 # =============================================================================
 # DOCUMENTACIÓN
 # =============================================================================
 
 # Documentación general
-docs/** @Bufigol @felipecleverox
-*.md @Bufigol @felipecleverox
+docs/** @Bufigol @felipecleverox @TNSTRACK
+*.md @Bufigol @felipecleverox @TNSTRACK
