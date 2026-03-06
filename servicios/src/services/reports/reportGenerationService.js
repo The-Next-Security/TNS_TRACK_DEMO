@@ -351,11 +351,11 @@ async function generateReport(reportType, config, userId) {
     let generatedBy = 'Sistema';
     try {
       const [userRows] = await connection.execute(
-        'SELECT username, email FROM users WHERE id = ?',
+        'SELECT email FROM gen_usuario WHERE id_usuario = ?',
         [userId]
       );
       if (userRows.length > 0) {
-        generatedBy = userRows[0].username || userRows[0].email || 'Sistema';
+        generatedBy = userRows[0].email || 'Sistema';
       }
     } catch (error) {
       console.log('[ReportGeneration] User lookup failed, using default:', error.message);
@@ -581,14 +581,13 @@ async function getReportHistory(filters = {}, pagination = {}) {
         gr.generation_status,
         gr.generation_time_seconds,
         gr.created_by,
-        u.username,
         u.email,
         gr.source,
         gr.schedule_id,
         sr.name as schedule_name
       FROM generated_reports gr
       LEFT JOIN report_templates rt ON gr.template_id = rt.id
-      LEFT JOIN users u ON gr.created_by = u.id
+      LEFT JOIN gen_usuario u ON gr.created_by = u.id_usuario
       LEFT JOIN scheduled_reports sr ON gr.schedule_id = sr.id
       ${whereClause}
       ${orderByClause}
@@ -632,7 +631,7 @@ async function getReportHistory(filters = {}, pagination = {}) {
         fileSize: row.file_size_bytes,
         status: row.generation_status,
         generationTime: row.generation_time_seconds,
-        generatedBy: row.username || row.email || 'Sistema',
+        generatedBy: row.email || 'Sistema',
         source: row.source,
         scheduleId: row.schedule_id,
         scheduleName: row.schedule_name
