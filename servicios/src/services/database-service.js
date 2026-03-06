@@ -424,10 +424,10 @@ class DatabaseService {
   }
 
   /**
-   * Solicita reset de contraseña actualizando token en base de datos
+   * Solicita reset de contraseña guardando token en gen_password_reset
    * @param {string} email - Email del usuario
-   * @param {string} resetToken - Token generado (plano, NO hasheado)
-   * @param {number} resetTokenExpiry - Timestamp de expiración en milisegundos
+   * @param {string} resetToken - Token hasheado con SHA-256 (NO el token plano)
+   * @param {Date} resetTokenExpiry - Objeto Date con la fecha de expiración (se inserta como DATETIME en MySQL)
    * @returns {Promise<Object|null>} - Objeto con datos del usuario o null si no existe
    */
   async requestPasswordReset(email, resetToken, resetTokenExpiry) {
@@ -441,9 +441,9 @@ class DatabaseService {
 
     try {
       return await this.transaction(async (connection) => {
-        // 1. Verificar que el usuario existe
+        // 1. Verificar que el usuario existe y está activo
         const [users] = await connection.query(
-          'SELECT id, email, username FROM users WHERE email = ?',
+          'SELECT id_usuario, email FROM gen_usuario WHERE email = ? AND activo = 1',
           [email]
         );
 
@@ -453,23 +453,28 @@ class DatabaseService {
 
         const user = users[0];
 
-        // 2. Actualizar token (guardamos plano por ahora - Issue #3 para hashear)
-        const [updateResult] = await connection.query(
-          'UPDATE users SET resetToken = ?, resetTokenExpiry = ? WHERE id = ?',
-          [resetToken, resetTokenExpiry, user.id]
+        // 2. Eliminar tokens anteriores del usuario
+        await connection.query(
+          'DELETE FROM gen_password_reset WHERE id_usuario = ?',
+          [user.id_usuario]
         );
 
-        if (updateResult.affectedRows === 0) {
-          throw new Error('No se pudo actualizar el token de reset');
+        // 3. Insertar nuevo token en gen_password_reset
+        const [insertResult] = await connection.query(
+          'INSERT INTO gen_password_reset (id_usuario, token, fecha_expiracion) VALUES (?, ?, ?)',
+          [user.id_usuario, resetToken, resetTokenExpiry]
+        );
+
+        if (insertResult.affectedRows === 0) {
+          throw new Error('No se pudo guardar el token de reset');
         }
 
-        console.log(`✅ Token de reset generado para usuario ${user.username} (${email})`);
+        console.log(`✅ Token de reset generado para usuario (${email})`);
 
         return {
           success: true,
-          userId: user.id,
-          email: user.email,
-          username: user.username
+          userId: user.id_usuario,
+          email: user.email
         };
       });
     } catch (error) {
@@ -497,14 +502,13 @@ class DatabaseService {
 
     try {
       return await this.transaction(async (connection) => {
-        const now = Date.now();
-
-        // 1. Buscar usuario con token válido y no expirado
+        // 1. Buscar usuario con token válido y no expirado (comparación en MySQL con NOW())
         const [users] = await connection.query(
-          `SELECT id, email, username, resetToken, resetTokenExpiry
-           FROM users
-           WHERE resetToken = ? AND resetTokenExpiry > ?`,
-          [resetToken, now]
+          `SELECT g.id_usuario, g.email
+           FROM gen_password_reset pr
+           JOIN gen_usuario g ON g.id_usuario = pr.id_usuario AND g.activo = 1
+           WHERE pr.token = ? AND pr.fecha_expiracion > NOW()`,
+          [resetToken]
         );
 
         if (users.length === 0) {
@@ -513,28 +517,31 @@ class DatabaseService {
 
         const user = users[0];
 
-        // 2. Actualizar contraseña, limpiar tokens e incrementar tokenVersion
+        // 2. Actualizar contraseña e incrementar token_version para invalidar sesiones activas
         const [updateResult] = await connection.query(
-          `UPDATE users
+          `UPDATE gen_usuario
            SET password = ?,
-               resetToken = NULL,
-               resetTokenExpiry = NULL,
-               tokenVersion = tokenVersion + 1
-           WHERE id = ?`,
-          [newPasswordHash, user.id]
+               token_version = token_version + 1
+           WHERE id_usuario = ?`,
+          [newPasswordHash, user.id_usuario]
         );
 
         if (updateResult.affectedRows === 0) {
           throw new Error('No se pudo actualizar la contraseña');
         }
 
-        console.log(`✅ Contraseña reseteada para usuario ${user.username}`);
+        // 3. Eliminar el token usado
+        await connection.query(
+          'DELETE FROM gen_password_reset WHERE id_usuario = ?',
+          [user.id_usuario]
+        );
+
+        console.log(`✅ Contraseña reseteada para usuario (${user.email})`);
 
         return {
           success: true,
-          userId: user.id,
-          email: user.email,
-          username: user.username
+          userId: user.id_usuario,
+          email: user.email
         };
       });
     } catch (error) {
