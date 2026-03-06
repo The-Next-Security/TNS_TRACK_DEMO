@@ -27,9 +27,16 @@ class usuariosController {
     console.log(`[Login] Intento de login para email: ${email}`);
 
     try {
-      // 1) Buscar usuario en tabla local `users` por email
+      // 1) Buscar usuario en gen_usuario por email, con permisos via JOIN
       const [user] = await databaseService.pool.query(
-        "SELECT id, username, email, password, permissions, tokenVersion, ai_analysis FROM users WHERE email = ?",
+        `SELECT g.id_usuario, g.email, g.password, g.token_version,
+          GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.nombre SEPARATOR ',') as permissions,
+          MAX(CASE WHEN p.nombre = 'ai_analysis' THEN 1 ELSE 0 END) as ai_analysis
+        FROM gen_usuario g
+        LEFT JOIN gen_usuario_permisos up ON g.id_usuario = up.id_usuario AND up.activo = 1
+        LEFT JOIN gen_permiso p ON up.id_permiso = p.id_permiso AND p.activo = 1
+        WHERE g.email = ? AND g.activo = 1
+        GROUP BY g.id_usuario`,
         [email]
       );
 
@@ -39,7 +46,7 @@ class usuariosController {
       if (!localUser) {
         console.log(`[Login] ❌ Usuario no encontrado para email: ${email}`);
       } else {
-        console.log(`[Login] ✅ Usuario encontrado: ${localUser.username} (ID: ${localUser.id})`);
+        console.log(`[Login] ✅ Usuario encontrado: ${localUser.email} (ID: ${localUser.id_usuario})`);
       }
 
       if (localUser) {
@@ -64,8 +71,8 @@ class usuariosController {
         try {
           const newHash = await argon2.hash(password, { type: argon2.argon2id, memoryCost: 19456, timeCost: 2, parallelism: 1 });
           await databaseService.pool.query(
-            "UPDATE users SET password = ? WHERE id = ?",
-            [newHash, localUser.id]
+            "UPDATE gen_usuario SET password = ? WHERE id_usuario = ?",
+            [newHash, localUser.id_usuario]
           );
         } catch (_) { /* best-effort */ }
       }
@@ -73,23 +80,23 @@ class usuariosController {
       const tokenService = require("../services/tokenService");
       const authMiddleware = require("../middlewares/authMiddleware");
       const payload = {
-        userId: localUser.id,
+        userId: localUser.id_usuario,
         permissions: localUser.permissions,
-        username: localUser.username,
+        username: localUser.email,
         email: localUser.email,
-        tokenVersion: localUser.tokenVersion || 0, // ✅ Incluir versión del token
-        ai_analysis: localUser.ai_analysis || false, // ✅ Include AI analysis permission
+        tokenVersion: localUser.token_version || 0,
+        ai_analysis: localUser.ai_analysis || false,
       };
       const access = tokenService.signAccess(payload);
       const refresh = tokenService.signRefresh(payload);
       authMiddleware.setAuthCookies(req, res, access, refresh);
 
-      console.log(`[Login] Login exitoso para: ${localUser.email} (ID: ${localUser.id})`);
+      console.log(`[Login] Login exitoso para: ${localUser.email} (ID: ${localUser.id_usuario})`);
 
       res.json({
         user: {
-          id: localUser.id,
-          username: localUser.username,
+          id: localUser.id_usuario,
+          username: localUser.email,
           email: localUser.email,
           permissions: localUser.permissions,
           ai_analysis: localUser.ai_analysis || false,
@@ -104,7 +111,14 @@ class usuariosController {
   async getUsers(req, res) {
     try {
       const [users] = await databaseService.pool.query(
-        "SELECT id, username, email, permissions, ai_analysis FROM users"
+        `SELECT g.id_usuario as id, g.email, g.email as username,
+          GROUP_CONCAT(DISTINCT p.nombre ORDER BY p.nombre SEPARATOR ',') as permissions,
+          MAX(CASE WHEN p.nombre = 'ai_analysis' THEN 1 ELSE 0 END) as ai_analysis
+        FROM gen_usuario g
+        LEFT JOIN gen_usuario_permisos up ON g.id_usuario = up.id_usuario AND up.activo = 1
+        LEFT JOIN gen_permiso p ON up.id_permiso = p.id_permiso AND p.activo = 1
+        WHERE g.activo = 1
+        GROUP BY g.id_usuario`
       );
       res.json(users);
     } catch (error) {
@@ -224,23 +238,9 @@ class usuariosController {
         });
       }
 
-      // ✅ Verificar si el username ya existe
-      const [existingUsername] = await databaseService.pool.query(
-        "SELECT id FROM users WHERE username = ?",
-        [sanitizedUsername]
-      );
-
-      if (existingUsername.length > 0) {
-        console.log(`[RegisterUser] ❌ Username ya existe: ${sanitizedUsername}`);
-        return res.status(400).json({
-          success: false,
-          error: 'El nombre de usuario ya está en uso'
-        });
-      }
-
-      // ✅ Verificar si el email ya existe
+      // ✅ Verificar si el email ya existe (email actúa como username)
       const [existingEmail] = await databaseService.pool.query(
-        "SELECT id FROM users WHERE email = ?",
+        "SELECT id_usuario FROM gen_usuario WHERE email = ?",
         [sanitizedEmail]
       );
 
@@ -260,19 +260,37 @@ class usuariosController {
         parallelism: 1
       });
 
-      // ✅ Insertar nuevo usuario (incluyendo ai_analysis)
-      const aiAnalysisValue = ai_analysis === true || ai_analysis === 1 || ai_analysis === 'true' ? 1 : 0;
+      // ✅ Insertar usuario en gen_usuario (nombre usa sanitizedUsername de forma temporal)
       const [result] = await databaseService.pool.query(
-        "INSERT INTO users (username, password, email, permissions, tokenVersion, ai_analysis) VALUES (?, ?, ?, ?, 0, ?)",
-        [sanitizedUsername, hashedPassword, sanitizedEmail, permissions, aiAnalysisValue]
+        "INSERT INTO gen_usuario (nombre, apellido, password, email) VALUES (?, ?, ?, ?)",
+        [sanitizedUsername, '', hashedPassword, sanitizedEmail]
       );
 
-      console.log(`[RegisterUser] ✅ Usuario creado exitosamente: ${sanitizedUsername} (ID: ${result.insertId})`);
+      const newUserId = result.insertId;
+
+      // ✅ Combinar permisos: lista recibida + ai_analysis si aplica
+      const permissionNames = [...requestedPermissions];
+      const aiAnalysisIncluded = ai_analysis === true || ai_analysis === 1 || ai_analysis === 'true';
+      if (aiAnalysisIncluded && !permissionNames.includes('ai_analysis')) {
+        permissionNames.push('ai_analysis');
+      }
+
+      // ✅ Insertar permisos en gen_usuario_permisos
+      if (permissionNames.length > 0) {
+        await databaseService.pool.query(
+          `INSERT INTO gen_usuario_permisos (id_usuario, id_permiso, activo)
+           SELECT ?, id_permiso, 1 FROM gen_permiso
+           WHERE nombre IN (?) AND activo = 1`,
+          [newUserId, permissionNames]
+        );
+      }
+
+      console.log(`[RegisterUser] ✅ Usuario creado exitosamente: ${sanitizedUsername} (ID: ${newUserId})`);
 
       res.status(201).json({
         success: true,
         message: 'Usuario creado exitosamente',
-        userId: result.insertId
+        userId: newUserId
       });
 
     } catch (error) {
@@ -400,7 +418,7 @@ class usuariosController {
 
       // ✅ Verificar que el usuario a actualizar exista
       const [existingUser] = await databaseService.pool.query(
-        "SELECT id, username, email FROM users WHERE id = ?",
+        "SELECT id_usuario, email FROM gen_usuario WHERE id_usuario = ?",
         [userId]
       );
 
@@ -412,23 +430,10 @@ class usuariosController {
         });
       }
 
-      // ✅ Verificar si el nuevo username ya existe (excepto si es el mismo usuario)
-      const [usernameConflict] = await databaseService.pool.query(
-        "SELECT id FROM users WHERE username = ? AND id != ?",
-        [sanitizedUsername, parseInt(userId, 10)]
-      );
-
-      if (usernameConflict.length > 0) {
-        console.log(`[UpdateUser] ❌ Username ya existe: ${sanitizedUsername}`);
-        return res.status(400).json({
-          success: false,
-          error: 'El nombre de usuario ya está en uso por otro usuario'
-        });
-      }
-
       // ✅ Verificar si el nuevo email ya existe (excepto si es el mismo usuario)
+      // email actúa como username, no hay campo username separado
       const [emailConflict] = await databaseService.pool.query(
-        "SELECT id FROM users WHERE email = ? AND id != ?",
+        "SELECT id_usuario FROM gen_usuario WHERE email = ? AND id_usuario != ?",
         [sanitizedEmail, parseInt(userId, 10)]
       );
 
@@ -437,7 +442,7 @@ class usuariosController {
         userId: userId,
         userIdInt: parseInt(userId, 10),
         conflictsFound: emailConflict.length,
-        conflictIds: emailConflict.map(u => u.id)
+        conflictIds: emailConflict.map(u => u.id_usuario)
       });
 
       if (emailConflict.length > 0) {
@@ -448,29 +453,36 @@ class usuariosController {
         });
       }
 
-      // ✅ Actualizar usuario (SIN modificar password, incluyendo ai_analysis)
-      const aiAnalysisValue = ai_analysis === true || ai_analysis === 1 || ai_analysis === 'true' ? 1 : 0;
-      
-      console.log(`[UpdateUser] 🔍 ai_analysis recibido:`, ai_analysis, `(tipo: ${typeof ai_analysis})`);
-      console.log(`[UpdateUser] 🔍 aiAnalysisValue calculado:`, aiAnalysisValue);
-      
+      // ✅ Actualizar email en gen_usuario (nombre/apellido no se modifica en este endpoint)
       const [updateResult] = await databaseService.pool.query(
-        "UPDATE users SET username = ?, email = ?, permissions = ?, ai_analysis = ? WHERE id = ?",
-        [sanitizedUsername, sanitizedEmail, permissions, aiAnalysisValue, parseInt(userId, 10)]
+        "UPDATE gen_usuario SET email = ? WHERE id_usuario = ?",
+        [sanitizedEmail, parseInt(userId, 10)]
       );
-      
-      console.log(`[UpdateUser] 🔍 Resultado del UPDATE:`, updateResult);
-      console.log(`[UpdateUser] 🔍 Rows affected:`, updateResult.affectedRows);
-      console.log(`[UpdateUser] 🔍 Changed rows:`, updateResult.changedRows);
 
-      // Verificar que se guardó correctamente
-      const [verifyResult] = await databaseService.pool.query(
-        "SELECT ai_analysis FROM users WHERE id = ?",
+      console.log(`[UpdateUser] 🔍 Rows affected:`, updateResult.affectedRows);
+
+      // ✅ Actualizar permisos: eliminar los actuales e insertar los nuevos
+      const permissionNames = [...requestedPermissions];
+      const aiAnalysisIncluded = ai_analysis === true || ai_analysis === 1 || ai_analysis === 'true';
+      if (aiAnalysisIncluded && !permissionNames.includes('ai_analysis')) {
+        permissionNames.push('ai_analysis');
+      }
+
+      await databaseService.pool.query(
+        "DELETE FROM gen_usuario_permisos WHERE id_usuario = ?",
         [parseInt(userId, 10)]
       );
-      console.log(`[UpdateUser] 🔍 Verificación post-UPDATE - ai_analysis en BD:`, verifyResult[0]?.ai_analysis);
 
-      console.log(`[UpdateUser] ✅ Usuario actualizado exitosamente: ${sanitizedUsername} (ID: ${userId})`);
+      if (permissionNames.length > 0) {
+        await databaseService.pool.query(
+          `INSERT INTO gen_usuario_permisos (id_usuario, id_permiso, activo)
+           SELECT ?, id_permiso, 1 FROM gen_permiso
+           WHERE nombre IN (?) AND activo = 1`,
+          [parseInt(userId, 10), permissionNames]
+        );
+      }
+
+      console.log(`[UpdateUser] ✅ Usuario actualizado exitosamente: ${sanitizedEmail} (ID: ${userId})`);
 
       res.json({
         success: true,
@@ -541,7 +553,7 @@ class usuariosController {
 
       // ✅ Verificar que el usuario exista
       const [existingUser] = await databaseService.pool.query(
-        "SELECT id, username, tokenVersion FROM users WHERE id = ?",
+        "SELECT id_usuario, email, token_version FROM gen_usuario WHERE id_usuario = ? AND activo = 1",
         [userId]
       );
 
@@ -554,7 +566,7 @@ class usuariosController {
       }
 
       const user = existingUser[0];
-      const currentTokenVersion = user.tokenVersion || 0;
+      const currentTokenVersion = user.token_version || 0;
 
       // ✅ Hash de contraseña con argon2id
       const hashedPassword = await argon2.hash(newPassword, {
@@ -564,13 +576,13 @@ class usuariosController {
         parallelism: 1
       });
 
-      // ✅ Actualizar contraseña E incrementar tokenVersion para invalidar sesiones anteriores
+      // ✅ Actualizar contraseña E incrementar token_version para invalidar sesiones anteriores
       await databaseService.pool.query(
-        "UPDATE users SET password = ?, tokenVersion = ? WHERE id = ?",
+        "UPDATE gen_usuario SET password = ?, token_version = ? WHERE id_usuario = ?",
         [hashedPassword, currentTokenVersion + 1, userId]
       );
 
-      console.log(`[ChangePassword] ✅ Contraseña actualizada exitosamente para usuario: ${user.username} (ID: ${userId})`);
+      console.log(`[ChangePassword] ✅ Contraseña actualizada exitosamente para usuario: ${user.email} (ID: ${userId})`);
       console.log(`[ChangePassword] 🔒 TokenVersion incrementado de ${currentTokenVersion} a ${currentTokenVersion + 1}`);
 
       res.json({
@@ -598,7 +610,7 @@ class usuariosController {
       // Hashear el token con SHA-256 antes de guardarlo en BD
       const hashedToken = crypto.createHash('sha256').update(plainToken).digest('hex');
 
-      const resetTokenExpiry = Date.now() + 3600000; // 1 hora de validez
+      const resetTokenExpiry = new Date(Date.now() + 3600000); // 1 hora de validez (objeto Date → DATETIME en MySQL)
 
       const resetData = await databaseService.requestPasswordReset(
         email,
