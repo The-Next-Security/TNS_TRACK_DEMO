@@ -317,7 +317,7 @@ CREATE TABLE `ubi_lecturas_sensor` (
   `id_canal` INT UNSIGNED NOT NULL COMMENT 'FK a ubi_canal',
   `temperatura` DECIMAL(8,4) NOT NULL COMMENT 'Temperatura ambiente interior del sensor - field1',
   `humedad` DECIMAL(8,4) NOT NULL COMMENT 'Humedad registrada por el sensor - field2',
-  `luz` DECIMAL(8,4) NOT NULL COMMENT 'Nivel de luz registrado por el sensor - field3',
+  `luz` DECIMAL(12,4) NOT NULL COMMENT 'Nivel de luz registrado por el sensor - field3',
   `voltaje` DECIMAL(8,4) NOT NULL COMMENT 'Voltaje registrado por el sensor - field4',
   `temperatura_externa` DECIMAL(8,4) NULL DEFAULT NULL COMMENT 'Temperatura sonda externa de refrigeración - field8 (dato principal del negocio)',
   `fecha_lectura_externa` DATETIME NULL DEFAULT NULL COMMENT 'Timestamp de la sonda externa - field8.created_at',
