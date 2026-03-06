@@ -379,10 +379,16 @@ class EmailService extends BaseAlertService {
     const html = `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e1e1e1; border-radius: 5px;">
                 <h2 style="color: #333; border-bottom: 1px solid #e1e1e1; padding-bottom: 10px;">Contraseña Restablecida</h2>
-                <p>Tu contraseña ha sido restablecida exitosamente.</p>
-                <p>Si tú no realizaste este cambio, contacta a soporte inmediatamente.</p>
+                <p>Su contraseña ha sido restablecida exitosamente.</p>
+                <div style="margin: 20px 0; padding: 15px; background-color: #fff3cd; border-left: 4px solid #ffc107; border-radius: 4px;">
+                    <p style="margin: 0; color: #856404;">
+                        <strong>⚠️ Aviso de seguridad:</strong> Si usted no realizó este cambio de contraseña,
+                        por favor contacte con el equipo de <strong>${this.companyName}</strong> de inmediato,
+                        ya que su cuenta podría estar comprometida.
+                    </p>
+                </div>
                 <div style="margin-top: 30px; padding-top: 15px; border-top: 1px solid #e1e1e1; font-size: 12px; color: #777;">
-                <p>Este es un mensaje automático del sistema de ${this.companyName}. Por favor no responda a este correo.</p>
+                    <p>Este es un mensaje automático del sistema de ${this.companyName}. Por favor no responda a este correo.</p>
                 </div>
             </div>
         `;
