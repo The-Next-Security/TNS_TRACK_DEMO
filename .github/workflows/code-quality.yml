@@ -135,7 +135,7 @@ jobs:
           echo "- ESLint y Prettier son **warnings** (no bloquean)" >> $GITHUB_STEP_SUMMARY
           echo "- Build verification es **bloqueante** para PRs a main" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Ver constitución: `.specify/memory/constitution.md`" >> $GITHUB_STEP_SUMMARY
+          echo "Ver convenciones: \`DOCUMENTACIÓN/Info_Github.md\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Comentar en PR con resultados
         if: |
@@ -189,7 +189,7 @@ jobs:
             }
 
             message += '---\n';
-            message += '📖 **Referencia**: [Constitución - Principio VI](.specify/memory/constitution.md#vi-code-review-y-dependencias-actualizadas)\n';
+            message += '📖 **Referencia**: [Convenciones del Proyecto](DOCUMENTACIÓN/Info_Github.md)\n';
 
             // Verificar si ya existe comentario
             const { data: comments } = await github.rest.issues.listComments({
