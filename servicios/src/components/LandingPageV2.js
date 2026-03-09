@@ -15,7 +15,7 @@ import storageImage from '../assets/images/storage-logo.png';
 import thermometerIcon from '../assets/images/thermometer.png';
 import analyticsService from '../services/analyticsService';
 import { Eye, EyeOff } from 'lucide-react';
-import { getLogoutReason, clearLogoutReason } from '../utils/sessionUtils';
+import { getLogoutReason, clearLogoutReason } from '../utils/session_Utils';
 import { getLogoutMessage } from '../constants/logoutReason_Constants';
 
 const LandingPageV2 = () => {

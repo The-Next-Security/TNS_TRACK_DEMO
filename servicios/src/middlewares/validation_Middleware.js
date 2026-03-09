@@ -1,5 +1,5 @@
 const { ValidationError } = require("../utils/errors_Utils");
-const dateUtils = require("../utils/dateUtils");
+const dateUtils = require("../utils/date_Utils");
 const { DateTime } = require("luxon");
 
 class ValidationMiddleware {

@@ -39,7 +39,7 @@ import Header from "./HeaderV2";
 import DeviceSelector from "./consumption/DeviceSelectorV2";
 import ConsumptionChart from "./consumption/ConsumptionChartV2";
 import DashboardStats from "./consumption/DashboardStatsV2";
-import DeviceUtils from "../utils/consumption/deviceUtils";
+import DeviceUtils from "../utils/consumption/device_Utils";
 import iconoHeader from "../assets/images/consumototaldiario.png";
 
 // Utilidad para combinar clases

@@ -3,8 +3,8 @@
 // Feature: 003-fix-session-expiry-handling
 
 import { useEffect } from 'react';
-import { parseLogoutBroadcast } from '../utils/crossTabSync';
-import { setLogoutReason } from '../utils/sessionUtils';
+import { parseLogoutBroadcast } from '../utils/crossTabSync_Utils';
+import { setLogoutReason } from '../utils/session_Utils';
 import { LogoutReason } from '../constants/logoutReason_Constants';
 import analyticsService from '../services/analyticsService';
 

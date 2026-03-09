@@ -1,6 +1,6 @@
 // src/controllers/contadorCiclosController.js
 const databaseService = require("../services/database-service");
-const contadorCiclosUtils = require("../utils/contadorCiclosUtils");
+const contadorCiclosUtils = require("../utils/contadorCiclos_Utils");
 
 /**
  * Controlador para el manejo de ciclos de descongelamiento

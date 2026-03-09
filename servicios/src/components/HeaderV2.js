@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import analyticsService from "../services/analyticsService";
 import { LogoutReason } from "../constants/logoutReason_Constants";
-import { setLogoutReason } from "../utils/sessionUtils";
-import { broadcastLogout } from "../utils/crossTabSync";
+import { setLogoutReason } from "../utils/session_Utils";
+import { broadcastLogout } from "../utils/crossTabSync_Utils";
 
 // Assets
 import homeIcon from "../assets/images/home_white.png";

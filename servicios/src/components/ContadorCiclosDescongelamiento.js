@@ -19,7 +19,7 @@ import {
   generarOpcionesGrafico,
   validarDatosGrafico,
   formatearFechaTooltip,
-} from "../utils/chartConfigCiclos";
+} from "../utils/chartConfigCiclos_Utils";
 import "../assets/css/ContadorCiclosDescongelamiento.css";
 
 // Registrar componentes de Chart.js

@@ -1,10 +1,10 @@
 // controllers/totalesController.js - Versión Refactorizada
 const databaseService = require("../services/database-service");
-const transformUtils = require("../utils/transformUtils");
+const transformUtils = require("../utils/transform_Utils");
 const {
   calculateCategoryData,
   createEmptyCategoryStructure,
-} = require("../utils/consumption/categoryUtils");
+} = require("../utils/consumption/category_Utils");
 const { DateTime } = require("luxon");
 
 class TotalesController {

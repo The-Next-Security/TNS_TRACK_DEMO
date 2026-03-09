@@ -1,6 +1,6 @@
 // src/utils/consumption/chartUtils.js
 import moment from "moment-timezone";
-import { CATEGORY_COLORS, CATEGORY_LABELS } from "./categoryUtils";
+import { CATEGORY_COLORS, CATEGORY_LABELS } from "./category_Utils";
 
 // Configurar zona horaria por defecto
 moment.tz.setDefault("America/Santiago");

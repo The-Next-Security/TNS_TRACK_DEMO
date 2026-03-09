@@ -3,7 +3,7 @@
 // Feature: 003-fix-session-expiry-handling
 
 import { useState } from 'react';
-import { authenticatedFetch } from '../utils/httpInterceptor';
+import { authenticatedFetch } from '../utils/httpInterceptor_Utils';
 import analyticsService from '../services/analyticsService';
 
 /**

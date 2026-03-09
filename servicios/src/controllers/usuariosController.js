@@ -9,7 +9,7 @@ const databaseService = require("../../src/services/database-service");
 const emailService = require("../services/email/emailService");
 const { AuthenticationError } = require("../utils/errors_Utils");
 const jwtConfig = require("../config/js_files/jwt_Config");
-const { validatePassword, formatPasswordErrors } = require("../utils/passwordValidator");
+const { validatePassword, formatPasswordErrors } = require("../utils/passwordValidator_Utils");
 
 class usuariosController {
   /**

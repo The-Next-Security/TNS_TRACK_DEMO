@@ -17,7 +17,7 @@ import {
   generateMixedChartDatasets,
   generateChartOptions,
   validateChartData,
-} from "../../utils/consumption/chartUtils";
+} from "../../utils/consumption/chart_Utils";
 import { Skeleton } from "../ui/skeleton";
 import { Alert, AlertDescription } from "../ui/alert";
 import { cn } from "../../lib/utils";

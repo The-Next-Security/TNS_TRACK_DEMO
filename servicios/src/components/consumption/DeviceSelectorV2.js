@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import DeviceUtils from "../../utils/consumption/deviceUtils";
+import DeviceUtils from "../../utils/consumption/device_Utils";
 import { toast } from "react-toastify";
 import {
   Select,

@@ -6,7 +6,7 @@ import {
   formatCurrency,
   formatEnergy,
   formatNumber,
-} from "../../utils/consumption/chartUtils";
+} from "../../utils/consumption/chart_Utils";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { cn } from "../../lib/utils";
 

@@ -3,7 +3,7 @@
 const express = require("express");
 const router = express.Router();
 const Joi = require("joi"); // Import Joi
-const { procesarPosibleIncidencia } = require("../utils/control_incidencias.js");
+const { procesarPosibleIncidencia } = require("../utils/controlIncidencias_Utils");
 
 const schemas = {
   303: {

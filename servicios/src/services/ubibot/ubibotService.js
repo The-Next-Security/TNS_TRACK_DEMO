@@ -3,7 +3,7 @@
 const mysql = require("mysql2/promise");
 const configLoader = require("../../config/js_files/configLoader_Config");
 const notificationController = require("../../controllers/notificationController");
-const { convertToMySQLDateTime } = require("../../utils/transformUtils");
+const { convertToMySQLDateTime } = require("../../utils/transform_Utils");
 const moment = require("moment-timezone");
 
 // Variable para el pool, se inicializará después de cargar la config
