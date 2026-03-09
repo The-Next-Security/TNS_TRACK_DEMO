@@ -1,6 +1,6 @@
 // Dependencias requeridas
 const mysql = require("mysql2/promise");
-const configLoader = require("../config/js_files/config-loader");
+const configLoader = require("../config/js_files/configLoader_Config");
 const moment = require('moment');
 const axios = require('axios');
 
