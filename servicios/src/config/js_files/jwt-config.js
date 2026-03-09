@@ -1,5 +1,5 @@
 // config/js_files/jwt-config.js
-const BaseConfigLoader = require("./base-config-loader");
+const BaseConfigLoader = require("./baseConfigLoader_Config");
 
 class JwtConfigLoader extends BaseConfigLoader {
   constructor() {
