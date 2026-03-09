@@ -183,7 +183,7 @@ export NODE_OPTIONS="--max-old-space-size=4096"
 **Solución**:
 
 **Si estás en migración a BD**:
-1. Verificar que `config-loader.js` esté leyendo de BD
+1. Verificar que `configLoader_Config.js` esté leyendo de BD
 2. Verificar conexión a BD funcionando
 3. Verificar tabla de configuración existe
 

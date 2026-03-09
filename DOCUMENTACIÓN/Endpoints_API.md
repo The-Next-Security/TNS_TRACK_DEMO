@@ -426,7 +426,7 @@ app.use("/TNSTrack/api/...", router);
 ### Migración de Configuración
 El sistema está **migrando de archivos JSON a base de datos**:
 - ⚠️ `/api/config` está en transición
-- ✅ `config-loader.js` ya lee de BD
+- ✅ `configLoader_Config.js` ya lee de BD
 - 🟡 `unified-config.json` es LEGACY
 
 ---
