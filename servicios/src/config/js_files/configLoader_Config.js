@@ -1,4 +1,4 @@
-// src/config/js_files/config-loader.js
+// src/config/js_files/configLoader_Config.js
 //
 // Carga de configuración en dos fases:
 //   Fase 1: Lee connection-config.json (síncrono) → credenciales DB
