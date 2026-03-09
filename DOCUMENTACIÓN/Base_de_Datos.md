@@ -24,6 +24,7 @@ USE tns_cool_track;
 
 ## 📋 Convenciones de Nomenclatura
 
+> Los estándares completos de nomenclatura SQL y de base de datos están documentados en **[Estandares_Nomenclatura_SQL.md](./Estandares_Nomenclatura_SQL.md)**.
 
 ### Nombres de Tablas
 
