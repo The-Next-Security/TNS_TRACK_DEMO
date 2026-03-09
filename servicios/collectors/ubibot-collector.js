@@ -1,6 +1,6 @@
 // collectors/ubibot-collector.js
 
-const config = require("../src/config/js_files/config-loader");
+const config = require("../src/config/js_files/configLoader_Config");
 const ubibotController = require("../src/controllers/ubibotController");
 const ubibotService = require("../src/services/ubibot/ubibotService");
 
