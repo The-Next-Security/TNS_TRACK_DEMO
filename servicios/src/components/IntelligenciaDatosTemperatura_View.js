@@ -54,7 +54,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 // Components
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 
 // Registrar locale en español
 registerLocale("es", es);

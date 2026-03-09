@@ -24,7 +24,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 import markerIcon from "../assets/images/pinazul.png";
 import "../utils/backButtonHandler_Utils";
 

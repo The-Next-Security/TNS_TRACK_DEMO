@@ -25,7 +25,7 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Skeleton } from './ui/skeleton';
 
 // Componentes custom y assets
-import HeaderV2 from './HeaderV2';
+import HeaderV2 from './Header_View';
 import planoBase from '../assets/images/PLANO_STORAGE.jpg';
 import personal1Icon from '../assets/images/forklift_orange_1.png';
 import personal2Icon from '../assets/images/forklift_Blue_2.png';

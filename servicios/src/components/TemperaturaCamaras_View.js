@@ -59,7 +59,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 import { cn } from "@/lib/utils";
 
 // Configurar moment para usar la zona horaria de Santiago

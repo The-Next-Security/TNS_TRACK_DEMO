@@ -1,11 +1,13 @@
 /**
- * @fileoverview Componente de Consumo Total Anual V2 - Migrado a Shadcn/UI con UI Premium
- * @description Visualiza el consumo anual con gráficos de área stacked y comparación YoY
+ * @fileoverview Componente de Consumo Total Diario V2 - Migrado a Shadcn/UI con UI Premium
+ * @description Visualiza el consumo diario con gráficos de línea con área gradient
  * @version 2.0.0
  */
 
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
+import DatePicker, { registerLocale } from "react-datepicker";
+import { es } from "date-fns/locale";
 import moment from "moment-timezone";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -20,13 +22,9 @@ import {
   BarChart3,
   Clock,
   RefreshCw,
+  FileDown,
   ChevronUp,
-  ChevronDown,
-  DollarSign,
-  Percent,
-  CalendarRange,
-  ChevronLeft,
-  ChevronRight
+  ChevronDown
 } from "lucide-react";
 
 // Componentes Shadcn/UI
@@ -37,47 +35,41 @@ import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 
 // Componentes internos
-import Header from "./HeaderV2";
+import Header from "./Header_View";
 import DeviceSelector from "./consumption/DeviceSelectorV2";
 import ConsumptionChart from "./consumption/ConsumptionChartV2";
 import DashboardStats from "./consumption/DashboardStatsV2";
 import DeviceUtils from "../utils/consumption/device_Utils";
-import { createEmptyCategoryStructure } from "../utils/consumption/category_Utils";
-import consumototalano from "../assets/images/consumototalano.png";
+import iconoHeader from "../assets/images/consumototaldiario.png";
 
 // Utilidad para combinar clases
 import { cn } from "../lib/utils";
 
 // Estilos
+import "react-datepicker/dist/react-datepicker.css";
 import "react-toastify/dist/ReactToastify.css";
 
 // Configuraciones iniciales
 moment.tz.setDefault("America/Santiago");
-moment.locale("es");
-
-const MONTHS_TEMPLATE = Array.from({ length: 12 }, (_, i) => ({
-  number: (i + 1).toString().padStart(2, "0"),
-  name: moment().month(i).format("MMM"),
-  fullName: moment().month(i).format("MMMM"),
-}));
+registerLocale("es", es);
 
 /**
- * Componente ConsumoTotalAnualV2
+ * Componente ConsumoTotalDiarioV2
  * @component
- * @description Visualiza el consumo eléctrico anual con gráficos premium
+ * @description Visualiza el consumo eléctrico diario con gráficos premium
  */
-const ConsumoTotalAnualV2 = () => {
+const ConsumoTotalDiarioV2 = () => {
   // ============ ESTADO ============
-  const [rawData, setRawData] = useState([]);
+  const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(moment().year());
+  const [selectedDate, setSelectedDate] = useState(moment().toDate());
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [showContent, setShowContent] = useState(false);
-  const [yearComparison, setYearComparison] = useState(null);
+  const [comparisonData, setComparisonData] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
 
-  const currentMaxYear = useRef(moment().year());
+  const today = useRef(moment().tz("America/Santiago").endOf("day").toDate());
   const initialDeviceLoadDone = useRef(false);
   const currentFetchId = useRef(0);
 
@@ -91,7 +83,7 @@ const ConsumoTotalAnualV2 = () => {
         setSelectedDevice(device);
         initialDeviceLoadDone.current = true;
       } catch (err) {
-        console.error("Error cargando dispositivo inicial (Anual):", err);
+        console.error("Error cargando dispositivo inicial (Diario):", err);
         toast.error(err.message || "Error cargando dispositivos disponibles.");
         setError(
           "No se pudo cargar la información del dispositivo. Intente recargar la página."
@@ -104,10 +96,10 @@ const ConsumoTotalAnualV2 = () => {
   }, []);
 
   useEffect(() => {
-    if (initialDeviceLoadDone.current && selectedDevice && selectedYear) {
-      handleFetchData(selectedDevice, selectedYear);
+    if (initialDeviceLoadDone.current && selectedDevice && selectedDate) {
+      handleFetchData(selectedDevice, selectedDate);
     }
-  }, [selectedDevice, selectedYear]);
+  }, [selectedDevice, selectedDate]);
 
   // ============ HANDLERS ============
   const handleDeviceChange = (newDevice) => {
@@ -116,28 +108,16 @@ const ConsumoTotalAnualV2 = () => {
     }
   };
 
-  const handleYearChange = (e) => {
-    const year = parseInt(e.target.value);
-    if (year >= 2000 && year <= currentMaxYear.current) {
-      setSelectedYear(year);
-    } else if (year > currentMaxYear.current) {
-      toast.warning(
-        `No se puede seleccionar un año futuro. Máximo: ${currentMaxYear.current}.`
-      );
+  const handleDateChange = (date) => {
+    if (moment(date).isSameOrBefore(moment(), "day")) {
+      setSelectedDate(date);
     } else {
-      toast.warning("Año inválido. Mínimo: 2000.");
+      toast.warning("No se puede seleccionar una fecha futura.");
     }
   };
 
-  const handleYearNavigation = (direction) => {
-    const newYear = selectedYear + (direction === 'next' ? 1 : -1);
-    if (newYear >= 2000 && newYear <= currentMaxYear.current) {
-      setSelectedYear(newYear);
-    }
-  };
-
-  const handleFetchData = async (deviceToFetch, yearToFetch) => {
-    if (!deviceToFetch || !yearToFetch) {
+  const handleFetchData = async (deviceToFetch, dateToFetch) => {
+    if (!deviceToFetch || !dateToFetch) {
       setShowContent(true);
       setLoading(false);
       return;
@@ -150,7 +130,8 @@ const ConsumoTotalAnualV2 = () => {
     setError(null);
 
     try {
-      const response = await axios.get(`/api/totals/yearly/${yearToFetch}`, {
+      const formattedDate = moment(dateToFetch).format("YYYY-MM-DD");
+      const response = await axios.get(`/api/totals/daily/${formattedDate}`, {
         params: { deviceId: deviceToFetch.shelly_id },
       });
 
@@ -159,50 +140,42 @@ const ConsumoTotalAnualV2 = () => {
       }
 
       const responseData = response.data.data || [];
-      setRawData(responseData);
+      setData(responseData);
 
-      // Calcular comparación YoY
+      // Calcular datos de comparación
       if (responseData.length > 0) {
-        const totalThisYear = responseData.reduce((acc, item) =>
-          acc + (item.energia_activa_total || 0), 0
-        );
-        const totalCostThisYear = responseData.reduce((acc, item) =>
-          acc + (item.costo_total || 0), 0
-        );
+        const avgConsumption = responseData.reduce((acc, item) => acc + item.energia_activa_total, 0) / responseData.length;
+        const maxConsumption = Math.max(...responseData.map(item => item.energia_activa_total));
+        const minConsumption = Math.min(...responseData.map(item => item.energia_activa_total));
 
-        // Simular datos del año anterior (en producción vendría del backend)
-        const totalPreviousYear = totalThisYear * (0.85 + Math.random() * 0.3);
-        const totalCostPreviousYear = totalCostThisYear * (0.85 + Math.random() * 0.3);
-
-        setYearComparison({
-          totalEnergy: totalThisYear,
-          totalCost: totalCostThisYear,
-          previousEnergy: totalPreviousYear,
-          previousCost: totalCostPreviousYear,
-          energyChange: ((totalThisYear - totalPreviousYear) / totalPreviousYear * 100).toFixed(1),
-          costChange: ((totalCostThisYear - totalCostPreviousYear) / totalCostPreviousYear * 100).toFixed(1),
-          avgMonthly: totalThisYear / 12,
-          efficiency: totalCostThisYear > 0 ? (totalThisYear / totalCostThisYear * 100).toFixed(2) : 0
+        setComparisonData({
+          average: avgConsumption,
+          max: maxConsumption,
+          min: minConsumption,
+          total: responseData.reduce((acc, item) => acc + item.energia_activa_total, 0),
+          peakHour: responseData.find(item => item.energia_activa_total === maxConsumption)?.periodo
+            ? moment(responseData.find(item => item.energia_activa_total === maxConsumption)?.periodo).format('HH:mm')
+            : "N/A"
         });
       }
 
       if (responseData.length === 0) {
         toast.info(
-          "No hay datos disponibles para el año y dispositivo seleccionados."
+          "No hay datos disponibles para la fecha y dispositivo seleccionados."
         );
       }
     } catch (err) {
       if (fetchId !== currentFetchId.current) {
         return;
       }
-      console.error("Error fetching yearly data:", err);
+      console.error("Error fetching daily data:", err);
       const errorMessage =
         err.response?.data?.message ||
-        "Error al cargar los datos anuales. Intente nuevamente.";
+        "Error al cargar los datos. Intente nuevamente.";
       toast.error(errorMessage);
       setError(errorMessage);
-      setRawData([]);
-      setYearComparison(null);
+      setData([]);
+      setComparisonData(null);
     } finally {
       if (fetchId === currentFetchId.current) {
         setLoading(false);
@@ -212,7 +185,7 @@ const ConsumoTotalAnualV2 = () => {
   };
 
   const handleExportData = async () => {
-    if (!chartData || chartData.length === 0) {
+    if (!data || data.length === 0) {
       toast.warning("No hay datos para exportar");
       return;
     }
@@ -220,11 +193,10 @@ const ConsumoTotalAnualV2 = () => {
     setExportLoading(true);
     try {
       // Crear CSV
-      const csvHeader = "Mes,Energía (kWh),Costo ($)\n";
-      const csvData = chartData.map(item => {
-        const monthName = MONTHS_TEMPLATE.find(m => parseInt(m.number) === item.mes)?.fullName || `Mes ${item.mes}`;
-        return `${monthName},${item.energia_activa_total || 0},${item.costo_total || 0}`;
-      }).join("\n");
+      const csvHeader = "Hora,Energía (kWh)\n";
+      const csvData = data.map(item =>
+        `${moment(item.periodo).format('HH:mm')},${item.energia_activa_total}`
+      ).join("\n");
 
       const csv = csvHeader + csvData;
       const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -232,7 +204,7 @@ const ConsumoTotalAnualV2 = () => {
       const url = URL.createObjectURL(blob);
 
       link.setAttribute("href", url);
-      link.setAttribute("download", `consumo_anual_${selectedYear}.csv`);
+      link.setAttribute("download", `consumo_diario_${moment(selectedDate).format('YYYY-MM-DD')}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
@@ -244,68 +216,6 @@ const ConsumoTotalAnualV2 = () => {
       toast.error("Error al exportar los datos");
     } finally {
       setExportLoading(false);
-    }
-  };
-
-  // ============ DATOS PROCESADOS ============
-  const chartData = useMemo(() => {
-    if (!selectedDevice) return [];
-
-    const dataByMonth = new Map();
-    rawData.forEach((item) => {
-      const monthNum = parseInt(item.mes || item.month);
-      if (monthNum >= 1 && monthNum <= 12) {
-        dataByMonth.set(monthNum, item);
-      }
-    });
-
-    return MONTHS_TEMPLATE.map((monthInfo) => {
-      const monthNum = parseInt(monthInfo.number);
-      const existingData = dataByMonth.get(monthNum);
-
-      if (existingData) {
-        return {
-          ...existingData,
-          periodo:
-            existingData.periodo || `${selectedYear}-${monthInfo.number}-01`,
-          mes: monthNum,
-          anio: parseInt(selectedYear),
-          categorias: existingData.categorias || createEmptyCategoryStructure(),
-        };
-      } else {
-        return {
-          periodo: `${selectedYear}-${monthInfo.number}-01`,
-          periodo_tipo: "yearly",
-          mes: monthNum,
-          anio: parseInt(selectedYear),
-          shelly_id: selectedDevice.shelly_id,
-          ubicacion_nombre: selectedDevice.ubicacion_nombre,
-          dispositivo_nombre: selectedDevice.dispositivo_nombre,
-          grupo_id: selectedDevice.grupo_id,
-          grupo_nombre: selectedDevice.grupo_nombre,
-          costo_total: 0,
-          energia_activa_total: 0,
-          precio_kwh_promedio: 0,
-          categorias: createEmptyCategoryStructure(),
-          metadata: {
-            cantidad_datos: 0,
-            dias_con_datos: 0,
-            horas_con_datos: 0,
-            fecha_actualizacion: null,
-          },
-        };
-      }
-    });
-  }, [rawData, selectedYear, selectedDevice]);
-
-  const handleChartClick = (clickData) => {
-    console.log("Yearly chart clicked:", clickData);
-    const clickedMonthData = clickData.dataPoint;
-    if (clickedMonthData && clickedMonthData.mes) {
-      const monthName =
-        MONTHS_TEMPLATE.find((m) => parseInt(m.number) === clickedMonthData.mes)
-          ?.fullName || `Mes ${clickedMonthData.mes}`;
-      toast.info(`Mes seleccionado: ${monthName} ${selectedYear}`);
     }
   };
 
@@ -328,11 +238,7 @@ const ConsumoTotalAnualV2 = () => {
       );
     }
 
-    const hasMeaningfulData = chartData.some(
-      (month) => month.costo_total > 0 || month.energia_activa_total > 0
-    );
-
-    if (error && !loading && !hasMeaningfulData) {
+    if (error && !loading && data.length === 0) {
       return (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
@@ -349,9 +255,8 @@ const ConsumoTotalAnualV2 = () => {
 
     return (
       <AnimatePresence mode="wait">
-
         {/* ============ STATS DASHBOARD ============ */}
-        {selectedDevice && (hasMeaningfulData || loading) && (
+        {selectedDevice && (data.length > 0 || loading) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -359,11 +264,11 @@ const ConsumoTotalAnualV2 = () => {
             className="mb-4"
           >
             <DashboardStats
-              data={chartData}
-              period="yearly"
+              data={data}
+              period="daily"
               deviceInfo={selectedDevice}
               showDeviceInfo={true}
-              showCategoryBreakdown={hasMeaningfulData}
+              showCategoryBreakdown={data.length > 0}
             />
           </motion.div>
         )}
@@ -389,7 +294,7 @@ const ConsumoTotalAnualV2 = () => {
                   <div className="p-2 bg-blue-500/10 rounded-lg">
                     <BarChart3 className="h-5 w-5 text-blue-600" />
                   </div>
-                  Consumo Mensual {selectedYear}
+                  Consumo por Hora
                 </CardTitle>
 
                 <motion.div
@@ -398,7 +303,7 @@ const ConsumoTotalAnualV2 = () => {
                 >
                   <Button
                     onClick={handleExportData}
-                    disabled={exportLoading || !hasMeaningfulData}
+                    disabled={exportLoading || data.length === 0}
                     className={cn(
                       "bg-gradient-to-r from-blue-600 to-cyan-600",
                       "hover:from-blue-700 hover:to-cyan-700",
@@ -426,29 +331,37 @@ const ConsumoTotalAnualV2 = () => {
                   "border border-gray-200/40"
                 )}>
                   <ConsumptionChart
-                    data={chartData}
-                    period="yearly"
+                    data={data}
+                    period="daily"
                     loading={loading}
                     error={null}
-                    onBarClick={handleChartClick}
-                    showStackedAreas={true}
-                    showYearComparison={true}
+                    showGradient={true}
+                    showPeakMarkers={true}
                     animateOnLoad={true}
                     theme="premium"
                   />
                 </div>
 
-                {/* Chart info */}
-                {hasMeaningfulData && (
+                {/* Peak markers legend */}
+                {comparisonData && data.length > 0 && (
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="mt-4 flex items-center justify-center text-xs md:text-sm text-gray-600"
+                    className="mt-4 flex flex-wrap items-center justify-center gap-4 md:gap-6 text-xs md:text-sm"
                   >
-                    <Badge variant="outline" className="bg-blue-50/50 border-blue-200/50">
-                      Año {selectedYear}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-red-500 shadow-sm" />
+                      <span className="text-gray-700 font-medium">Consumo máximo</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-blue-500 shadow-sm" />
+                      <span className="text-gray-700 font-medium">Consumo promedio</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full bg-green-500 shadow-sm" />
+                      <span className="text-gray-700 font-medium">Consumo mínimo</span>
+                    </div>
                   </motion.div>
                 )}
               </CardContent>
@@ -457,7 +370,7 @@ const ConsumoTotalAnualV2 = () => {
         )}
 
         {/* ============ NO DATA MESSAGE ============ */}
-        {!loading && !error && !hasMeaningfulData && selectedDevice && initialDeviceLoadDone.current && (
+        {!loading && !error && data.length === 0 && selectedDevice && initialDeviceLoadDone.current && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -475,7 +388,7 @@ const ConsumoTotalAnualV2 = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50/30 to-cyan-50/20">
-      <Header title="Consumo Total Anual" image={consumototalano} />
+      <Header title="Consumo Total Diario" image={iconoHeader} />
 
       <div className="flex-1 p-4 md:p-6">
         <div className="max-w-7xl mx-auto">
@@ -487,7 +400,7 @@ const ConsumoTotalAnualV2 = () => {
             className="text-center mb-8"
           >
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              Consumo Total Anual
+              Consumo Total Diario
             </h1>
           </motion.div>
 
@@ -520,7 +433,7 @@ const ConsumoTotalAnualV2 = () => {
                   </div>
                 </div>
 
-                {/* Year Selector */}
+                {/* Date Picker */}
                 <div className={cn(
                   "inline-flex items-center gap-3 px-4 py-2 w-full md:w-auto",
                   "bg-white backdrop-blur-sm",
@@ -531,23 +444,20 @@ const ConsumoTotalAnualV2 = () => {
                   "transition-all duration-300"
                 )}>
                   <Calendar className="h-5 w-5 text-[#6b9fd4]" />
-                  <input
-                    type="number"
-                    value={selectedYear}
-                    onChange={handleYearChange}
-                    min="2000"
-                    max={currentMaxYear.current}
+                  <DatePicker
+                    selected={selectedDate}
+                    onChange={handleDateChange}
+                    dateFormat="dd-MM-yyyy"
                     className={cn(
-                      "px-3 py-2 text-base w-24",
+                      "px-3 py-2 text-base",
                       "bg-transparent",
                       "border border-gray-300 rounded-lg",
                       "focus:outline-none focus:ring-2 focus:ring-[#6b9fd4] focus:border-transparent",
                       "transition-all duration-200",
-                      "cursor-pointer hover:bg-gray-50/50",
-                      "[appearance:textfield]",
-                      "[&::-webkit-outer-spin-button]:appearance-none",
-                      "[&::-webkit-inner-spin-button]:appearance-none"
+                      "cursor-pointer hover:bg-gray-50/50"
                     )}
+                    locale="es"
+                    maxDate={today.current}
                     disabled={loading && !initialDeviceLoadDone.current}
                   />
                 </div>
@@ -563,4 +473,4 @@ const ConsumoTotalAnualV2 = () => {
   );
 };
 
-export default ConsumoTotalAnualV2;
+export default ConsumoTotalDiarioV2;

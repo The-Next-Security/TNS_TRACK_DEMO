@@ -88,7 +88,7 @@ import {
   Trash2,
   RefreshCw,
 } from "lucide-react";
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 import { cn } from "@/lib/utils";
 import paramTempIcon from "../assets/images/param_temp.png";
 import AlertScheduleConfig from "./AlertScheduleConfig";

@@ -36,7 +36,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 
 // Componentes internos
-import Header from "./HeaderV2";
+import Header from "./Header_View";
 import DeviceSelector from "./consumption/DeviceSelectorV2";
 import ConsumptionChart from "./consumption/ConsumptionChartV2";
 import DashboardStats from "./consumption/DashboardStatsV2";

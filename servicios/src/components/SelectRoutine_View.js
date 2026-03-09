@@ -6,9 +6,9 @@ import { motion } from "framer-motion";
 import { Card, CardContent, CardFooter } from "./ui/card";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
-import Header from "./HeaderV2";
-import analyticsService from "../services/analyticsService";
-// import SideNav from "./SideNavV2"; // Oculto temporalmente
+import Header from "./Header_View";
+import analyticsService from "../services/analytics_Service";
+// import SideNav from "./SideNav_View"; // Oculto temporalmente
 
 // Import all routine images - preserving exact imports from original
 import dashboardImage from "../assets/images/dashboard.png";

@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { io } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import analyticsService from "../services/analyticsService";
+import analyticsService from "../services/analytics_Service";
 import { LogoutReason } from "../constants/logoutReason_Constants";
 import { setLogoutReason } from "../utils/session_Utils";
 import { broadcastLogout } from "../utils/crossTabSync_Utils";

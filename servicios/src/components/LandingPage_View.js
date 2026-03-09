@@ -13,7 +13,7 @@ import tnsLogo from '../assets/images/tns_logo_blanco.png';
 import theNextLogo from '../assets/images/thenextlogo.png';
 import storageImage from '../assets/images/storage-logo.png';
 import thermometerIcon from '../assets/images/thermometer.png';
-import analyticsService from '../services/analyticsService';
+import analyticsService from '../services/analytics_Service';
 import { Eye, EyeOff } from 'lucide-react';
 import { getLogoutReason, clearLogoutReason } from '../utils/session_Utils';
 import { getLogoutMessage } from '../constants/logoutReason_Constants';

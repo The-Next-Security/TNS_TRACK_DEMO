@@ -10,7 +10,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
 import { motion } from "framer-motion";
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Skeleton } from "./ui/skeleton";

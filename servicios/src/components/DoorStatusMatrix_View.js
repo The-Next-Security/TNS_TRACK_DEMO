@@ -42,7 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 
 /**
  * Componente principal de matriz de estado de puertas

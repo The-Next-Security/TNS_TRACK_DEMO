@@ -26,7 +26,7 @@ import 'chartjs-adapter-date-fns';
 import { es } from 'date-fns/locale';
 import DatePicker, { registerLocale } from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import Header from './HeaderV2';
+import Header from './Header_View';
 import moment from 'moment-timezone';
 import { motion, AnimatePresence } from 'framer-motion';
 import {

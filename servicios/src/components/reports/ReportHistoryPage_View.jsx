@@ -7,7 +7,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import HeaderV2 from '../HeaderV2';
+import HeaderV2 from '../Header_View';
 import { Card, CardContent } from '../ui/card';
 import { Button } from '../ui/button';
 import {

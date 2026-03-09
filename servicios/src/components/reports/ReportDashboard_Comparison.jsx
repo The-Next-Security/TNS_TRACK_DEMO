@@ -23,8 +23,8 @@ import {
 } from "lucide-react";
 
 // Import both versions
-import ReportDashboardV2 from "./ReportDashboardV2";
-import ReportDashboardV2Enhanced from "./ReportDashboardV2Enhanced";
+import ReportDashboardV2 from "./ReportDashboard_View";
+import ReportDashboardV2Enhanced from "./ReportDashboard_View_Enhanced";
 
 /**
  * Feature comparison data

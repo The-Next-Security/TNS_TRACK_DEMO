@@ -29,7 +29,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 import { cn } from "../lib/utils";
 
 // Shadcn UI Components
