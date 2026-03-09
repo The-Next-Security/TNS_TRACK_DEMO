@@ -5,7 +5,7 @@
  * @module emailValidator
  */
 
-const configLoader = require('../../config/js_files/config-loader');
+const configLoader = require('../../config/js_files/configLoader_Config');
 
 // RFC 5322 compliant email regex (simplified)
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
