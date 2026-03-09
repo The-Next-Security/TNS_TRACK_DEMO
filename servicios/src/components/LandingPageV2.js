@@ -16,7 +16,7 @@ import thermometerIcon from '../assets/images/thermometer.png';
 import analyticsService from '../services/analyticsService';
 import { Eye, EyeOff } from 'lucide-react';
 import { getLogoutReason, clearLogoutReason } from '../utils/sessionUtils';
-import { getLogoutMessage } from '../constants/LogoutReason';
+import { getLogoutMessage } from '../constants/logoutReason_Constants';
 
 const LandingPageV2 = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
