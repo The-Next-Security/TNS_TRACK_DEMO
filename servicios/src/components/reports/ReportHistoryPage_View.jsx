@@ -21,7 +21,7 @@ import ResponsiveReportsTable from './components/ResponsiveReportsTable';
 import EmailModal from './components/EmailModal';
 import ReportFilters from './components/ReportFilters';
 import Pagination from '../ui/Pagination';
-import reportsApiService from '../../services/reportsApiService';
+import reportsApiService from '../../services/reportsApi_Service';
 
 /**
  * Report History Page - Complete history view with advanced filtering
