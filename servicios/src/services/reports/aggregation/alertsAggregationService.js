@@ -7,7 +7,7 @@
  */
 
 const mysql = require('mysql2/promise');
-const configLoader = require('../../../config/js_files/config-loader');
+const configLoader = require('../../../config/js_files/configLoader_Config');
 
 let _dbConfig = null;
 function getDbConfig() {
