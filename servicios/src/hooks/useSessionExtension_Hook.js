@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { authenticatedFetch } from '../utils/httpInterceptor_Utils';
-import analyticsService from '../services/analyticsService';
+import analyticsService from '../services/analytics_Service';
 
 /**
  * Session extension hook

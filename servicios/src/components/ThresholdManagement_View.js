@@ -49,8 +49,8 @@ import {
 } from './ui/dropdown-menu';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { useToast } from '../hooks/use-toast';
-import HeaderV2 from './HeaderV2';
+import { useToast } from '../hooks/useToast_Hook';
+import HeaderV2 from './Header_View';
 import axios from 'axios';
 
 // Presets de temperatura

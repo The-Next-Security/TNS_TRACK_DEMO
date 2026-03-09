@@ -8,7 +8,7 @@
 
 import { useState, useCallback } from 'react';
 import reportsApiService from '../services/reportsApiService';
-import { useToast } from './use-toast';
+import { useToast } from './useToast_Hook';
 
 /**
  * Custom hook para manejar la generación de reportes

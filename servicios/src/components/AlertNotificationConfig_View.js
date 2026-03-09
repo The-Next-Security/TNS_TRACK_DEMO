@@ -8,7 +8,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion } from "framer-motion";
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 import PushNotificationManager from "./PushNotificationManager";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Button } from "./ui/button";
@@ -19,7 +19,7 @@ import { Checkbox } from "./ui/checkbox";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Skeleton } from "./ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { useToast } from "../hooks/use-toast";
+import { useToast } from "../hooks/useToast_Hook";
 import { cn } from "../lib/utils";
 import {
   Settings,

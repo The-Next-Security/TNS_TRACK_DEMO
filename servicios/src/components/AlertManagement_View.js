@@ -11,7 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import moment from "moment";
 
 // UI Components
-import HeaderV2 from "./HeaderV2";
+import HeaderV2 from "./Header_View";
 import AlertHistoryTable from "./AlertHistoryTable";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -51,7 +51,7 @@ import {
 } from "./alerts/components";
 
 // Hooks
-import { useToast } from "../hooks/use-toast";
+import { useToast } from "../hooks/useToast_Hook";
 import { cn } from "../lib/utils";
 
 /**
