@@ -1,6 +1,6 @@
 //controllers/smsController.js
 const databaseService = require("../services/database-service");
-const { ValidationError } = require("../utils/errors");
+const { ValidationError } = require("../utils/errors_Utils");
 
 class SmsController {
   async fetchSMSdata(req, res) {

@@ -1,5 +1,5 @@
 const databaseService = require("../services/database-service");
-const { ValidationError } = require("../utils/errors");
+const { ValidationError } = require("../utils/errors_Utils");
 
 class tel_ConfigController {
   async getSystemParameters(req, res, next) {

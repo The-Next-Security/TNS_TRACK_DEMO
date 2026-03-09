@@ -1,5 +1,5 @@
 const databaseService = require('../services/database-service');
-const { NotFoundError, ValidationError } = require('../utils/errors');
+const { NotFoundError, ValidationError } = require('../utils/errors_Utils');
 
 class GroupController {
     async getGroupAverages(req, res, next) {

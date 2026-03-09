@@ -1,7 +1,7 @@
 const databaseService = require('../services/database-service');
 const energyAveragesService = require('../services/energy-averages-service');
 const totalEnergyService = require('../services/total-energy-service');
-const { ValidationError } = require('../utils/errors');
+const { ValidationError } = require('../utils/errors_Utils');
 const { DateTime } = require('luxon');
 
 class EnergyController {

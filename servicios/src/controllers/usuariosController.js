@@ -7,7 +7,7 @@ const crypto = require("crypto");
 const config = require("../config/js_files/configLoader_Config");
 const databaseService = require("../../src/services/database-service");
 const emailService = require("../services/email/emailService");
-const { AuthenticationError } = require("../utils/errors");
+const { AuthenticationError } = require("../utils/errors_Utils");
 const jwtConfig = require("../config/js_files/jwt_Config");
 const { validatePassword, formatPasswordErrors } = require("../utils/passwordValidator");
 

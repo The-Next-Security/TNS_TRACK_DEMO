@@ -1,4 +1,4 @@
-const { ValidationError } = require("../utils/errors");
+const { ValidationError } = require("../utils/errors_Utils");
 const dateUtils = require("../utils/dateUtils");
 const { DateTime } = require("luxon");
 

@@ -1,5 +1,5 @@
 const databaseService = require("../services/database-service");
-const { DeviceError, NotFoundError } = require("../utils/errors");
+const { DeviceError, NotFoundError } = require("../utils/errors_Utils");
 const transformUtils = require("../utils/transformUtils");
 
 class DeviceController {

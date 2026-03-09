@@ -1,5 +1,5 @@
 // error_Middleware.js
-const { isKnownError } = require('../utils/errors');
+const { isKnownError } = require('../utils/errors_Utils');
 
 class ErrorMiddleware {
     handle(err, req, res, next) {
