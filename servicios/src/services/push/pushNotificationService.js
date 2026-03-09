@@ -3,7 +3,7 @@
 
 const webpush = require('web-push');
 const mysql = require("mysql2/promise");
-const configLoader = require("../../config/js_files/config-loader");
+const configLoader = require("../../config/js_files/configLoader_Config");
 const moment = require("moment-timezone");
 const alertScheduleConfigService = require("../db/alertScheduleConfigService");
 
