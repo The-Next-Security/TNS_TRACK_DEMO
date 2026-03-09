@@ -2,7 +2,7 @@
 
 const mysql = require("mysql2/promise");
 const moment = require("moment-timezone");
-const configLoader = require("../config/js_files/config-loader"); // Usar configLoader consistentemente
+const configLoader = require("../config/js_files/configLoader_Config");
 const emailService = require("../services/email/emailService");
 const smsService = require("../services/sms/smsService");
 const notificationService = require("../services/notificationService");
