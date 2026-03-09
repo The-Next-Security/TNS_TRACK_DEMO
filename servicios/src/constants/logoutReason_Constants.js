@@ -1,4 +1,4 @@
-// LogoutReason.js
+// logoutReason_Constants.js
 // Constants for logout reasons and their user-facing messages
 // Feature: 003-fix-session-expiry-handling
 
