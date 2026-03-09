@@ -13,8 +13,8 @@ const router = express.Router();
 // Middleware
 // TODO: Update path to actual auth middleware location
 // const { authenticateUser } = require('../middleware/auth');
-const reportPermissions = require('../middleware/reportPermissions');
-const devAuthBypass = require('../middleware/devAuthBypass');
+const reportPermissions = require('../middlewares/reportPermissions_Middleware');
+const devAuthBypass = require('../middlewares/devAuthBypass_Middleware');
 
 // Controllers
 const reportController = require('../controllers/reportController');

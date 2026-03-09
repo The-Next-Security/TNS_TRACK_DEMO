@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const aiAnalysisController = require('../controllers/aiAnalysisController');
-const authMiddleware = require('../middlewares/authMiddleware');
+const authMiddleware = require('../middlewares/auth_Middleware');
 
 /**
  * Middleware to check ai_analysis permission

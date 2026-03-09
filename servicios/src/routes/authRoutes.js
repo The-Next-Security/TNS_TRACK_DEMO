@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const authMiddleware = require('../middlewares/authMiddleware');
+const authMiddleware = require('../middlewares/auth_Middleware');
 const tokenService = require('../services/tokenService');
-const devAuthBypass = require('../middleware/devAuthBypass');
+const devAuthBypass = require('../middlewares/devAuthBypass_Middleware');
 
 // Dev-only auth bypass (inject mock user in development)
 router.use(devAuthBypass);
