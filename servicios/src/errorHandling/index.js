@@ -1,6 +1,6 @@
 // src/errorHandling/index.js
 
-const databaseErrors = require('./databaseErrors');
+const databaseErrors = require('./database_Handler');
 
 module.exports = {
     ...databaseErrors,

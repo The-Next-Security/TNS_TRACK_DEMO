@@ -1,4 +1,4 @@
-// src/errorHandling/databaseErrors.js
+// src/errorHandling/database_Handler.js
 
 /**
  * Errores específicos para operaciones de base de datos
