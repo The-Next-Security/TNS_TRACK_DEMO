@@ -1,4 +1,4 @@
-// src/jobs/metricsAggregationJob.js
+// src/jobs/metricsAggregation_Job.js
 // Job para agregar métricas de alertas cada hora
 
 const cron = require('node-cron');
@@ -233,7 +233,7 @@ module.exports = metricsAggregationJob;
  *
  * 1. INICIALIZACIÓN EN SERVER.JS:
  *
- *    const metricsAggregationJob = require('./src/jobs/metricsAggregationJob');
+ *    const metricsAggregationJob = require('./src/jobs/metricsAggregation_Job');
  *
  *    // Al iniciar el servidor
  *    metricsAggregationJob.start();
