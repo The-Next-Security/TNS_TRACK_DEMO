@@ -22,7 +22,7 @@ const pdfGeneratorService = require('./pdfGeneratorService');
 const executiveTemperatureTemplate = require('./templates/executiveTemperatureTemplate');
 const executiveAlertsTemplate = require('./templates/executiveAlertsTemplate');
 const executiveConsumptionTemplate = require('./templates/executiveConsumptionTemplate'); // Phase 9 (T096)
-const configLoader = require('../../config/js_files/config-loader');
+const configLoader = require('../../config/js_files/configLoader_Config');
 
 let _dbConfig = null;
 let _storagePath = null;
