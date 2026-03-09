@@ -1,5 +1,5 @@
 const OpenAI = require('openai');
-const configLoader = require('../config/js_files/config-loader');
+const configLoader = require('../config/js_files/configLoader_Config');
 
 class OpenAIService {
   constructor() {
