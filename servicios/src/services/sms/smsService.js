@@ -2,7 +2,7 @@
 
 const axios = require("axios");
 const BaseAlertService = require("../baseAlertService"); // Hereda de BaseAlertService
-const config = require("../../config/js_files/config-loader");
+const config = require("../../config/js_files/configLoader_Config");
 const moment = require("moment-timezone");
 
 /**
