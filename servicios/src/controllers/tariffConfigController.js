@@ -8,7 +8,7 @@
  * Also exposes other client-safe config from config-loader (BD): e.g. Mapbox (GET /api/config/mapbox).
  */
 
-const configLoader = require('../config/js_files/config-loader');
+const configLoader = require('../config/js_files/configLoader_Config');
 const fs = require('fs').promises;
 const path = require('path');
 
