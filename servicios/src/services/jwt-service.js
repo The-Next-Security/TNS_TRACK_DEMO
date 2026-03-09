@@ -1,6 +1,6 @@
 // src/services/jwt-service.js
 const jwt = require('jsonwebtoken');
-const jwtConfig = require('../config/js_files/jwt-config-loader');
+const jwtConfig = require('../config/js_files/jwt_Config');
 
 class JwtService {
     constructor() {
