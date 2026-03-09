@@ -1,4 +1,4 @@
-// errorMiddleware.js
+// error_Middleware.js
 const { isKnownError } = require('../utils/errors');
 
 class ErrorMiddleware {

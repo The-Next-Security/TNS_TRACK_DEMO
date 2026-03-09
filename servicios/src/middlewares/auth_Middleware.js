@@ -1,4 +1,4 @@
-// authMiddleware.js
+// auth_Middleware.js
 const configLoader = require('../config/js_files/configLoader_Config');
 const jwt = require('jsonwebtoken');
 const { AuthenticationError, BusinessError } = require('../utils/errors');

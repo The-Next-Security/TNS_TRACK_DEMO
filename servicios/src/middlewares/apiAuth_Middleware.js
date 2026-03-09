@@ -1,4 +1,4 @@
-// src/middlewares/apiAuthMiddleware.js
+// src/middlewares/apiAuth_Middleware.js
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
 const path = require("path");
