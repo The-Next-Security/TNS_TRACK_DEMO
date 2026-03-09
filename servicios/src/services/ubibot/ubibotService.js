@@ -1,7 +1,7 @@
 // src/services/ubibot/ubibotService.js
 
 const mysql = require("mysql2/promise");
-const configLoader = require("../../config/js_files/config-loader");
+const configLoader = require("../../config/js_files/configLoader_Config");
 const notificationController = require("../../controllers/notificationController");
 const { convertToMySQLDateTime } = require("../../utils/transformUtils");
 const moment = require("moment-timezone");
