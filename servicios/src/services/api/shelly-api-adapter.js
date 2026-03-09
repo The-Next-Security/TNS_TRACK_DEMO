@@ -1,5 +1,5 @@
 // src/services/api/shelly-api-adapter.js
-const config = require('../../config/js_files/config-loader');
+const config = require('../../config/js_files/configLoader_Config');
 const axios = require('axios');
 
 /**
