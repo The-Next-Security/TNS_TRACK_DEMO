@@ -11,7 +11,7 @@ const emailValidator = require('../services/reports/emailValidator');
 const path = require('path');
 const fs = require('fs').promises;
 const moment = require('moment');
-const configLoader = require('../config/js_files/config-loader');
+const configLoader = require('../config/js_files/configLoader_Config');
 
 // Database configuration aligned with unified-config.json (same as services)
 const dbConfigRaw = configLoader.getValue('database') || {};
@@ -161,7 +161,7 @@ async function generateReport(req, res) {
  */
 async function getTemplates(req, res) {
   const mysql = require('mysql2/promise');
-  const configLoader = require('../config/js_files/config-loader');
+  const configLoader = require('../config/js_files/configLoader_Config');
 
   try {
     const dbConfigRaw = configLoader.getValue('database');
