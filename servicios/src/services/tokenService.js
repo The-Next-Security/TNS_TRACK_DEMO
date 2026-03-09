@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const configLoader = require('../config/js_files/config-loader');
+const configLoader = require('../config/js_files/configLoader_Config');
 
 // Tiempos de vida por defecto
 const ACCESS_TTL_SECONDS = 15 * 60;          // 15 minutos
