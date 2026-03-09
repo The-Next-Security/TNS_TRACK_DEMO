@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import HeaderV2 from "./HeaderV2";
 import markerIcon from "../assets/images/pinazul.png";
-import "../utils/backButtonHandler.js";
+import "../utils/backButtonHandler_Utils";
 
 /**
  * HistoricalMovementsSearchV2 Component

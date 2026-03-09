@@ -1,6 +1,6 @@
-const { procesarDatosGPS_GPS_DATA } = require('./nuevo_dato_GPS_data_table');
-const { triggerGPSRegistroTemperatura } = require('./trigger_GPS_registro_temperatura');
-const { GPS_DATa_To_Door_Status } = require('./GPSDATAaDoorStatus');
+const { procesarDatosGPS_GPS_DATA } = require('./nuevoDatoGpsDataTable_Utils');
+const { triggerGPSRegistroTemperatura } = require('./triggerGpsRegistroTemperatura_Utils');
+const { GPS_DATa_To_Door_Status } = require('./gpsDataDoorStatus_Utils');
 const mysql = require('mysql2/promise');
 const ddbb_data = require('../../config/database.json');
 

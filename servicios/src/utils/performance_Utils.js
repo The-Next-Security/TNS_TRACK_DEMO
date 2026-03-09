@@ -452,7 +452,7 @@ import {
     validateTemperatureData,
     sanitizeTemperatureData,
     CacheManager
-} from '../utils/performanceUtils';
+} from '../utils/performance_Utils';
 
 describe('Performance Utils', () => {
     describe('debounce', () => {
