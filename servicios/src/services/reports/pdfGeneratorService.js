@@ -9,7 +9,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs').promises;
 const path = require('path');
-const configLoader = require('../../config/js_files/config-loader');
+const configLoader = require('../../config/js_files/configLoader_Config');
 
 // Configuración leída en primer uso (no en carga del módulo)
 let _maxBrowserInstances = null;
