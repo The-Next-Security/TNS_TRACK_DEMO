@@ -1,5 +1,5 @@
 const moment = require("moment-timezone");
-const config = require("../config/js_files/config-loader");
+const config = require("../config/js_files/configLoader_Config");
 const alertScheduleConfigService = require("./db/alertScheduleConfigService");
 
 /**
