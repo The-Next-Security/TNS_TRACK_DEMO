@@ -78,7 +78,7 @@ class usuariosController {
       }
 
       const tokenService = require("../services/tokenService");
-      const authMiddleware = require("../middlewares/authMiddleware");
+      const authMiddleware = require("../middlewares/auth_Middleware");
       const payload = {
         userId: localUser.id_usuario,
         permissions: localUser.permissions,
