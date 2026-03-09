@@ -2,7 +2,7 @@
 // Servicio para gestionar el ciclo de vida completo de alertas en el sistema de notificaciones push
 
 const mysql = require("mysql2/promise");
-const configLoader = require("../config/js_files/config-loader");
+const configLoader = require("../config/js_files/configLoader_Config");
 const moment = require("moment-timezone");
 
 // Pool interno del servicio
