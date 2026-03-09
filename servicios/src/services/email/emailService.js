@@ -2,7 +2,7 @@
 
 const sgMail = require("@sendgrid/mail");
 const BaseAlertService = require("../baseAlertService"); // Hereda de BaseAlertService
-const configLoader = require("../../config/js_files/config-loader"); // USAR CAMELCASE CONSISTENTE
+const configLoader = require("../../config/js_files/configLoader_Config");
 const moment = require("moment-timezone");
 
 /**
