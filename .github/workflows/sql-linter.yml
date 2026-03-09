@@ -1,0 +1,119 @@
+name: SQL Linter
+
+# Valida sintaxis de archivos SQL en PRs que modifiquen SQL_FILES/
+# Usa sqlfluff con dialecto MySQL
+# Reporta como warnings — no bloquea el merge
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+    paths:
+      - 'SQL_FILES/**/*.sql'
+      - 'SQL_FILES/**/*.SQL'
+  workflow_dispatch:
+
+jobs:
+  sql-lint:
+    runs-on: ubuntu-latest
+    name: Validar Sintaxis SQL
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar sqlfluff
+        run: pip install sqlfluff
+
+      - name: Obtener archivos SQL modificados
+        id: changed-files
+        uses: tj-actions/changed-files@v46
+        with:
+          files: |
+            SQL_FILES/**/*.sql
+            SQL_FILES/**/*.SQL
+
+      - name: Ejecutar SQL Linter
+        id: lint
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "🔍 Archivos SQL modificados:"
+          echo "${{ steps.changed-files.outputs.all_changed_files }}"
+          echo ""
+
+          # Crear configuración temporal de sqlfluff
+          cat > .sqlfluff <<'SQLFLUFF_CONFIG'
+          [sqlfluff]
+          dialect = mysql
+          templater = raw
+          # Ignorar reglas de estilo — solo validar sintaxis crítica
+          exclude_rules = AL01, AL02, AL03, AL04, AL05, AL06, AL07,
+              AM01, AM02, AM03, AM04, AM05, AM06, AM07,
+              CV01, CV02, CV03, CV04, CV05, CV06, CV07, CV08, CV09, CV10, CV11,
+              LT01, LT02, LT03, LT04, LT05, LT06, LT07, LT08, LT09, LT10, LT11, LT12, LT13,
+              RF01, RF02, RF03, RF04, RF05, RF06
+          max_line_length = 0
+
+          [sqlfluff:indentation]
+          indent_unit = space
+          tab_space_size = 4
+          SQLFLUFF_CONFIG
+
+          LINT_FAILED=0
+          TOTAL_FILES=0
+          FILES_WITH_ERRORS=0
+
+          for file in ${{ steps.changed-files.outputs.all_changed_files }}; do
+            TOTAL_FILES=$((TOTAL_FILES + 1))
+            echo "📄 Analizando: $file"
+
+            if sqlfluff lint "$file" --format human; then
+              echo "  ✅ Sin errores de sintaxis"
+            else
+              FILES_WITH_ERRORS=$((FILES_WITH_ERRORS + 1))
+              echo "  ⚠️  Se encontraron advertencias"
+              LINT_FAILED=1
+            fi
+            echo ""
+          done
+
+          echo "total_files=$TOTAL_FILES" >> $GITHUB_OUTPUT
+          echo "files_with_errors=$FILES_WITH_ERRORS" >> $GITHUB_OUTPUT
+          echo "lint_failed=$LINT_FAILED" >> $GITHUB_OUTPUT
+
+          # Warning en log pero NO falla el job
+          if [ $LINT_FAILED -eq 1 ]; then
+            echo "::warning::Se encontraron advertencias de SQL en $FILES_WITH_ERRORS de $TOTAL_FILES archivos"
+          fi
+
+          # Limpiar config temporal
+          rm -f .sqlfluff
+
+        continue-on-error: true
+
+      - name: Sin archivos SQL modificados
+        if: steps.changed-files.outputs.any_changed == 'false'
+        run: echo "ℹ️  No hay archivos SQL modificados en este PR"
+
+      - name: Generar resumen
+        if: always() && steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "## 🗄️ Reporte SQL Linter" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Métrica | Valor |" >> $GITHUB_STEP_SUMMARY
+          echo "|---------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Archivos analizados | ${{ steps.lint.outputs.total_files }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Archivos con advertencias | ${{ steps.lint.outputs.files_with_errors }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Dialecto**: MySQL" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> ⚠️ Las advertencias de SQL son **informativas** y no bloquean el merge." >> $GITHUB_STEP_SUMMARY
