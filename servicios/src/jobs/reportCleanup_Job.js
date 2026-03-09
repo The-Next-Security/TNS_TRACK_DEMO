@@ -327,7 +327,7 @@ module.exports = reportCleanupJob;
 // ========================================
 //
 // 1. INICIALIZACIÓN EN SERVER.JS
-//    const reportCleanupJob = require('./src/jobs/reportCleanupJob');
+//    const reportCleanupJob = require('./src/jobs/reportCleanup_Job');
 //    reportCleanupJob.start();
 //
 // 2. EJECUCIÓN MANUAL (TESTING)
@@ -368,7 +368,7 @@ module.exports = reportCleanupJob;
 //    VALUES (DATE_SUB(NOW(), INTERVAL 91 DAY), 'completed', 'test_old_report.pdf', 'Test Report');
 //
 //    -- Ejecutar manualmente
-//    const reportCleanupJob = require('./src/jobs/reportCleanupJob');
+//    const reportCleanupJob = require('./src/jobs/reportCleanup_Job');
 //    await reportCleanupJob.executeNow();
 //
 //    -- Verificar resultado

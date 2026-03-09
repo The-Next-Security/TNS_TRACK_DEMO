@@ -32,3 +32,4 @@ SQL_FILES/01_creacion_desde_cero/04_valores_reales.sql
 SQL_FILES/01_creacion_desde_cero/04_valores_produccion.sql
 
 SPRINGBOOT_MIGRATION_CONTEXT.md
+.cursor/rules/no-crear-archivos-sin-consentimiento.mdc
