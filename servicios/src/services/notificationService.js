@@ -2,7 +2,7 @@
 // VERSIÓN FINAL - Pool interno, logging a BD, robustez por canal
 
 const mysql = require("mysql2/promise");
-const configLoader = require("../config/js_files/config-loader");
+const configLoader = require("../config/js_files/configLoader_Config");
 const moment = require("moment-timezone");
 
 // Pool interno del servicio
