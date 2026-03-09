@@ -1,16 +1,21 @@
 -- ==============================================================================
--- 03_inserts_base.sql
+-- 04_inserts_base.sql
 -- Datos semilla (core) para la base de datos tns_cool_track.
 -- Solo datos de catálogo y configuración estática. Sin datos transaccionales.
 --
 -- Orden de ejecución respeta dependencias FK:
---   1. gen_ubicaciones_reales
---   2. sem_grupos
---   3. sem_tipos_parametros
---   4. sem_configuracion
---   5. sem_dispositivos
---   6. ubi_presets_temperatura
---   7. ubi_canal
+--   1. gen_feriados_cl, gen_tipos_origen, gen_horario_operacional
+--   2. gen_ubicaciones_reales
+--   3. sem_grupos
+--   4. sem_tipos_parametros
+--   5. sem_configuracion
+--   6. sem_dispositivos
+--   7. ubi_presets_temperatura
+--   8. ubi_canal
+--   9. gen_tipos_parametros → gen_cofiguracion_grupos
+--      → gen_cofiguracion_parametros → gen_cofiguracion_valores
+--  10. rep_tipo_reporte → rep_plantillas
+--  11. ale_tipo_alerta
 -- ==============================================================================
 
 USE tns_cool_track;
@@ -103,6 +108,33 @@ INSERT INTO `gen_feriados_cl` (`fecha`, `nombre`) VALUES
 ('2026-12-31' , 'Fin de año');
 
 
+-- ==============================================================================
+-- gen_tipos_origen
+--    Catálogo transversal de orígenes de datos del sistema.
+--    Usado en alertas, logs y auditorías. Ampliar según crezca el sistema.
+-- ==============================================================================
+
+INSERT INTO `gen_tipos_origen` (`id_tipo_origen`, `nombre`, `descripcion`, `activo`) VALUES
+(1, 'ubibot',  'Sensores de temperatura y conectividad Ubibot',                     1),
+(2, 'shelly',  'Dispositivos de medición eléctrica Shelly',                         1),
+(3, 'sistema', 'Origen interno del sistema (eventos automáticos, scheduler, etc.)', 1);
+
+
+-- ==============================================================================
+-- gen_horario_operacional
+--    Horario operacional por día de la semana (7 filas fijas).
+--    Valores base migrados desde alertSystem.workingHours en gen_cofiguracion_*.
+--    Parámetros globales (respetar_feriados, criticas_ignoran_horario) en gen_cofiguracion_*.
+-- ==============================================================================
+
+INSERT INTO `gen_horario_operacional` (`id_horario_operacional`, `dia_semana`, `nombre_dia`, `hora_inicio`, `hora_fin`, `activo`) VALUES
+(1, 1, 'Lunes',     '08:30:00', '18:30:00', 1),
+(2, 2, 'Martes',    '08:30:00', '18:30:00', 1),
+(3, 3, 'Miércoles', '08:30:00', '18:30:00', 1),
+(4, 4, 'Jueves',    '08:30:00', '18:30:00', 1),
+(5, 5, 'Viernes',   '08:30:00', '18:30:00', 1),
+(6, 6, 'Sábado',    '08:30:00', '14:30:00', 1),
+(7, 7, 'Domingo',   '00:00:00', '00:00:00', 0);
 
 
 -- ==============================================================================
@@ -286,7 +318,7 @@ INSERT INTO `gen_cofiguracion_grupos` (`id_cofiguracion_grupos`, `nombre`, `desc
 (8,  'tracking',              'Configuración de tracking de eventos de usuario',                         8,  1),
 (9,  'api',                   'Configuración de APIs externas (Shelly Cloud)',                           9,  1),
 (10, 'ubibot',                'Configuración del colector de sensores Ubibot',                          10, 1),
-(11, 'sms',                   'Configuración del módem SMS local (on-premise)',                         11, 1),
+-- id=11 eliminado: 'sms' → módulo SMS local (módem HiLink) eliminado del sistema
 -- id=12 eliminado: 'measurement' → parámetros gestionados por sem_configuracion (no duplicar)
 (13, 'alertSystem',           'Configuración del sistema de alertas de temperatura',                    13, 1),
 (14, 'pushNotifications',     'Configuración de notificaciones push PWA (claves VAPID)',                14, 1),
@@ -364,18 +396,8 @@ INSERT INTO `gen_cofiguracion_parametros`
 (35, 10, 4, 'ubibot.excluded_channels',                'excluded_channels',    2, 'ubibot',                    0, 'Array de channel_id a excluir del ciclo de recolección',                           '[]',                        0, 1),
 (36, 10, 7, 'ubibot.collection_interval',              'collection_interval',  2, 'ubibot',                    0, 'Intervalo de recolección de datos Ubibot en milisegundos (default: 5 min)',         '300000',                    0, 1),
 
--- ── Grupo sms (id_grupo=11) → ids 37-47 ──────────────────────────────────────
-(37, 11, 1, 'sms.modem.url',                           'url',                  3, 'sms.modem',                 0, 'URL base del módem GSM local (router Huawei HiLink)',                              'http://192.168.8.1',   1, 1),
-(38, 11, 1, 'sms.modem.apiPath',                       'apiPath',              3, 'sms.modem',                 0, 'Ruta de la API REST del módem HiLink',                                             '/api',                 0, 1),
-(39, 11, 7, 'sms.modem.timeout',                       'timeout',              3, 'sms.modem',                 0, 'Timeout en milisegundos para peticiones HTTP al módem',                            '15000',                0, 1),
-(40, 11, 7, 'sms.modem.retry.maxRetries',              'maxRetries',           4, 'sms.modem.retry',           0, 'Número máximo de reintentos al fallar el envío de un SMS',                         '2',                    0, 1),
-(41, 11, 4, 'sms.modem.retry.retryDelays',             'retryDelays',          4, 'sms.modem.retry',           0, 'Array de delays en ms entre reintentos de SMS (uno por intento)',                  '[10000,7000]',         0, 1),
-(42, 11, 7, 'sms.modem.retry.timeBetweenRecipients',   'timeBetweenRecipients',4, 'sms.modem.retry',           0, 'Espera en ms entre envíos consecutivos a distintos destinatarios',                 '8000',                 0, 1),
-(43, 11, 6, 'sms.workingHours.weekdays.start',         'start',                4, 'sms.workingHours.weekdays', 0, 'Hora de inicio del horario laboral días de semana (ej: 8.5 = 08:30)',              '8.5',                  0, 1),
-(44, 11, 6, 'sms.workingHours.weekdays.end',           'end',                  4, 'sms.workingHours.weekdays', 0, 'Hora de fin del horario laboral días de semana (ej: 18.5 = 18:30)',                '18.5',                 0, 1),
-(45, 11, 6, 'sms.workingHours.saturday.start',         'start',                4, 'sms.workingHours.saturday', 0, 'Hora de inicio del horario laboral el sábado',                                    '8.5',                  0, 1),
-(46, 11, 6, 'sms.workingHours.saturday.end',           'end',                  4, 'sms.workingHours.saturday', 0, 'Hora de fin del horario laboral el sábado',                                       '14.5',                 0, 1),
-(47, 11, 5, 'sms.recipients',                          'recipients',           2, 'sms',                       1, 'JSON con listas de destinatarios SMS por tipo de alerta (teléfonos)',              '[CONFIGURAR]',         1, 1),
+-- ids 37-47 eliminados: grupo sms (módem HiLink local) — módulo SMS eliminado del sistema
+-- ids 37-47 eliminados: grupo sms (módem HiLink local) — módulo SMS eliminado del sistema
 
 -- ── Grupo alertSystem (id_grupo=13) → ids 48-58 ───────────────────────────────
 (48, 13, 7, 'alertSystem.intervals.processing',                 'processing',   4, 'alertSystem.intervals',              0, 'Intervalo en ms del ciclo de procesamiento de alertas pendientes',             '3600000',  0, 1),
