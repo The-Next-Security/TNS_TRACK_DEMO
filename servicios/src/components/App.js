@@ -7,7 +7,7 @@ import { SessionManager } from "./SessionManager";
 import { Toaster } from "./ui/toaster"; // Componente para las notificaciones toast
 import "../styles/globals.css"; // Tailwind CSS
 import analyticsService from "../services/analyticsService";
-import { LogoutReason } from "../constants/LogoutReason";
+import { LogoutReason } from "../constants/logoutReason_Constants";
 import { setLogoutReason } from "../utils/sessionUtils";
 import { setupAxiosInterceptor } from "../utils/axiosInterceptor";
 
