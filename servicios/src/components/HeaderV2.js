@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import analyticsService from "../services/analyticsService";
-import { LogoutReason } from "../constants/LogoutReason";
+import { LogoutReason } from "../constants/logoutReason_Constants";
 import { setLogoutReason } from "../utils/sessionUtils";
 import { broadcastLogout } from "../utils/crossTabSync";
 
