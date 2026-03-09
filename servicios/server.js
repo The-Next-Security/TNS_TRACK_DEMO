@@ -53,7 +53,7 @@ const mapboxApiAdapter = require("./src/services/api/mapbox-api-adapter");
 const openaiService = require("./src/services/openaiService");
 const ubibotServiceAdapter = require("./src/services/ubibot/ubibot-service-adapter");
 const usuariosController = require("./src/controllers/usuariosController");
-const authMiddleware = require("./src/middlewares/authMiddleware");
+const authMiddleware = require("./src/middlewares/auth_Middleware");
 const alertTrackingService = require("./src/services/alertTrackingService");
 
 // Importar job de agregación de métricas de alertas
