@@ -11,7 +11,7 @@ const cron = require('node-cron');
 const fs = require('fs').promises;
 const path = require('path');
 const databaseService = require('../services/database-service');
-const configLoader = require('../config/js_files/config-loader');
+const configLoader = require('../config/js_files/configLoader_Config');
 
 class ReportCleanupJob {
     constructor() {
