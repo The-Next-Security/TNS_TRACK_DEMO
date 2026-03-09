@@ -41,18 +41,18 @@ const aiAnalysisRoutes = require('./src/routes/aiAnalysis_Routes');
 const configLoader = require('./src/config/js_files/configLoader_Config');
 
 // Importar servicios de notificación (asegurarse de importar los correctos después de la refactorización)
-const emailService = require("./src/services/email/emailService");
-const smsService = require("./src/services/sms/smsService");
-const pushNotificationService = require("./src/services/push/pushNotificationService");
-const notificationController = require("./src/controllers/notificationController.js");
-const ubibotController = require("./src/controllers/ubibotController.js");
+const emailService = require("./src/services/email/email_Service");
+const smsService = require("./src/services/sms/sms_Service");
+const pushNotificationService = require("./src/services/push/pushNotification_Service");
+const notificationController = require("./src/controllers/notification_Controller.js");
+const ubibotController = require("./src/controllers/ubibot_Controller.js");
 const notificationService = require("./src/services/notification_Service");
-const ubibotService = require("./src/services/ubibot/ubibotService");
+const ubibotService = require("./src/services/ubibot/ubibot_Service");
 const shellyApiAdapter = require("./src/services/api/shellyApi_Adapter");
 const mapboxApiAdapter = require("./src/services/api/mapboxApi_Adapter");
 const openaiService = require("./src/services/openai_Service");
 const ubibotServiceAdapter = require("./src/services/ubibot/ubibot_Adapter");
-const usuariosController = require("./src/controllers/usuariosController");
+const usuariosController = require("./src/controllers/usuarios_Controller");
 const authMiddleware = require("./src/middlewares/auth_Middleware");
 const alertTrackingService = require("./src/services/alertTracking_Service");
 
@@ -63,7 +63,7 @@ const metricsAggregationJob = require('./src/jobs/metricsAggregation_Job');
 const reportCleanupJob = require('./src/jobs/reportCleanup_Job');
 
 // Importar servicio de scheduler de reportes (Phase 4 - T030)
-const reportSchedulerService = require('./src/services/reports/reportSchedulerService');
+const reportSchedulerService = require('./src/services/reports/reportScheduler_Service');
 
 class Server {
   /**

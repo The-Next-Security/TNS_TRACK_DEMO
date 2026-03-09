@@ -21,7 +21,7 @@ const {
   generateCoverPage,
   generateFooter,
   convertImageToBase64
-} = require('./executiveTemperatureTemplate');
+} = require('./executiveTemperature_Template');
 const path = require('path');
 
 /**

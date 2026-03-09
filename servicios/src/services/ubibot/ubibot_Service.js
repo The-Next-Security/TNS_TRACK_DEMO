@@ -2,7 +2,7 @@
 
 const mysql = require("mysql2/promise");
 const configLoader = require("../../config/js_files/configLoader_Config");
-const notificationController = require("../../controllers/notificationController");
+const notificationController = require("../../controllers/notification_Controller");
 const { convertToMySQLDateTime } = require("../../utils/transform_Utils");
 const moment = require("moment-timezone");
 

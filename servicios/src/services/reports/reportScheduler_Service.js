@@ -10,8 +10,8 @@ const cron = require('node-cron');
 const cronParser = require('cron-parser');
 const mysql = require('mysql2/promise');
 const configLoader = require('../../config/js_files/configLoader_Config');
-const reportGenerationService = require('./reportGenerationService');
-const emailService = require('../email/emailService');
+const reportGenerationService = require('./reportGeneration_Service');
+const emailService = require('../email/email_Service');
 const moment = require('moment-timezone');
 
 // Pool creado en init() tras configLoader.initialize()

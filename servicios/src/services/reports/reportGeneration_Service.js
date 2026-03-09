@@ -14,14 +14,14 @@
 const mysql = require('mysql2/promise');
 const path = require('path');
 const fs = require('fs').promises;
-const temperatureAggregationService = require('./aggregation/temperatureAggregationService');
-const alertsAggregationService = require('./aggregation/alertsAggregationService');
-const consumptionAggregationService = require('./aggregation/consumptionAggregationService'); // Phase 9 (T096)
-const reportAnalyticsService = require('./reportAnalyticsService');
-const pdfGeneratorService = require('./pdfGeneratorService');
-const executiveTemperatureTemplate = require('./templates/executiveTemperatureTemplate');
-const executiveAlertsTemplate = require('./templates/executiveAlertsTemplate');
-const executiveConsumptionTemplate = require('./templates/executiveConsumptionTemplate'); // Phase 9 (T096)
+const temperatureAggregationService = require('./aggregation/temperatureAggregation_Service');
+const alertsAggregationService = require('./aggregation/alertsAggregation_Service');
+const consumptionAggregationService = require('./aggregation/consumptionAggregation_Service'); // Phase 9 (T096)
+const reportAnalyticsService = require('./reportAnalytics_Service');
+const pdfGeneratorService = require('./pdfGenerator_Service');
+const executiveTemperatureTemplate = require('./templates/executiveTemperature_Template');
+const executiveAlertsTemplate = require('./templates/executiveAlerts_Template');
+const executiveConsumptionTemplate = require('./templates/executiveConsumption_Template'); // Phase 9 (T096)
 const configLoader = require('../../config/js_files/configLoader_Config');
 
 let _dbConfig = null;

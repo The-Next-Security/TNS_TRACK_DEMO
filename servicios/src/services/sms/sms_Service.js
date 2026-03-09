@@ -1,7 +1,7 @@
 // src/services/sms/smsService.js
 
 const axios = require("axios");
-const BaseAlertService = require("../baseAlertService"); // Hereda de BaseAlertService
+const BaseAlertService = require("../baseAlert_Service"); // Hereda de BaseAlertService
 const config = require("../../config/js_files/configLoader_Config");
 const moment = require("moment-timezone");
 

@@ -3,7 +3,7 @@ const mysql = require('mysql2/promise');
 const config = require('../../config/js_files/configLoader_Config');
 const { convertToMySQLDateTime } = require('../../utils/transform_Utils');
 const moment = require('moment-timezone');
-const notificationController = require('../../controllers/notificationController');
+const notificationController = require('../../controllers/notification_Controller');
 
 /**
  * Adaptador para el servicio Ubibot
