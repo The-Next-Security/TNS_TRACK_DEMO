@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { SessionExpiryWarning } from './SessionExpiryWarning';
-import { LogoutReason } from '../constants/LogoutReason';
+import { LogoutReason } from '../constants/logoutReason_Constants';
 import { setLogoutReason } from '../utils/sessionUtils';
 import { broadcastLogout } from '../utils/crossTabSync';
 import { useCrossTabLogout } from '../hooks/useCrossTabLogout';
