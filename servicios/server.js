@@ -38,7 +38,7 @@ const reportsRoutes = require('./src/routes/reportsRoutes');
 const aiAnalysisRoutes = require('./src/routes/aiAnalysisRoutes');
 
 // Importar Config Loader (¡Importante!)
-const configLoader = require('./src/config/js_files/config-loader');
+const configLoader = require('./src/config/js_files/configLoader_Config');
 
 // Importar servicios de notificación (asegurarse de importar los correctos después de la refactorización)
 const emailService = require("./src/services/email/emailService");
