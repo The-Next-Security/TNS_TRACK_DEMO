@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { validationMiddleware } = require('../middlewares');
-const gpsController = require('../controllers/gpsController');
+const gpsController = require('../controllers/gps_Controller');
 
 
 router.get('/historical-gps-data',

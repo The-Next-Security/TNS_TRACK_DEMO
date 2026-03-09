@@ -3,11 +3,11 @@
 const mysql = require("mysql2/promise");
 const moment = require("moment-timezone");
 const configLoader = require("../config/js_files/configLoader_Config");
-const emailService = require("../services/email/emailService");
-const smsService = require("../services/sms/smsService");
-const notificationService = require("../services/notificationService");
-const pushNotificationService = require("../services/push/pushNotificationService");
-const alertTrackingService = require("../services/alertTrackingService");
+const emailService = require("../services/email/email_Service");
+const smsService = require("../services/sms/sms_Service");
+const notificationService = require("../services/notification_Service");
+const pushNotificationService = require("../services/push/pushNotification_Service");
+const alertTrackingService = require("../services/alertTracking_Service");
 
 class NotificationController {
     constructor() {

@@ -1,7 +1,7 @@
 // src/routes/ubibotRoutes.js
 const express = require("express");
 const router = express.Router();
-const ubibotController = require("../controllers/ubibotController.js");
+const ubibotController = require("../controllers/ubibot_Controller.js");
 
 router.get("/temperature-range-data", (req, res) =>
   ubibotController.getTemperatureRangeData(req, res)

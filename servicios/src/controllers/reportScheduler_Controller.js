@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 
-const reportSchedulerService = require('../services/reports/reportSchedulerService');
+const reportSchedulerService = require('../services/reports/reportScheduler_Service');
 const moment = require('moment-timezone');
 
 /**

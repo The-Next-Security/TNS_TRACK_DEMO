@@ -1,7 +1,7 @@
 // src/routes/beaconsRoutes.js
 const express = require('express');
 const router = express.Router();
-const beaconsController = require('../controllers/beaconsController.js');
+const beaconsController = require('../controllers/beacons_Controller.js');
 
 router.get('/door-status',
     beaconsController.getDoorStatus.bind(beaconsController)

@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const deviceController = require("../controllers/deviceController");
-const energyController = require("../controllers/energyController");
+const deviceController = require("../controllers/device_Controller");
+const energyController = require("../controllers/energy_Controller");
 const { validationMiddleware } = require("../middlewares");
 
 // =================== RUTAS EXISTENTES ===================

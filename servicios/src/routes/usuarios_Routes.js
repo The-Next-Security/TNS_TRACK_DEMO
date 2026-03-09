@@ -11,7 +11,7 @@ const loginLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false
 });
-const usuariosController = require('../controllers/usuariosController');
+const usuariosController = require('../controllers/usuarios_Controller');
 
 router.post('/login', loginLimiter, usuariosController.handleLogin.bind(usuariosController));
 

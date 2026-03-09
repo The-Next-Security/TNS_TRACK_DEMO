@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { validationMiddleware } = require('../middlewares');
-const personalController = require('../controllers/personalController');
+const personalController = require('../controllers/personal_Controller');
 
 router.get('/personal', 
     validationMiddleware.validateDateParams.bind(validationMiddleware),

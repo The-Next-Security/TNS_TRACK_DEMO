@@ -1,6 +1,6 @@
 const openaiService = require('../services/openai_Service');
 const aiDataService = require('../services/aiData_Service');
-const costTracker = require('../services/aiCostTracker');
+const costTracker = require('../services/aiCostTracker_Service');
 const databaseService = require('../services/database_Service');
 const moment = require('moment');
 

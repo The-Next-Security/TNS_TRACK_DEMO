@@ -3,7 +3,7 @@
 
 const express = require('express');
 const router = express.Router();
-const pushNotificationService = require('../services/push/pushNotificationService');
+const pushNotificationService = require('../services/push/pushNotification_Service');
 
 /**
  * Helper para asegurar que el servicio esté inicializado antes de usarlo

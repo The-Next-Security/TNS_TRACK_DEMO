@@ -17,8 +17,8 @@ const reportPermissions = require('../middlewares/reportPermissions_Middleware')
 const devAuthBypass = require('../middlewares/devAuthBypass_Middleware');
 
 // Controllers
-const reportController = require('../controllers/reportController');
-const reportSchedulerController = require('../controllers/reportSchedulerController'); // Phase 4 - T041
+const reportController = require('../controllers/report_Controller');
+const reportSchedulerController = require('../controllers/reportScheduler_Controller'); // Phase 4 - T041
 
 // Dev-only auth bypass
 router.use(devAuthBypass);

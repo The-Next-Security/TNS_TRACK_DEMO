@@ -1,7 +1,7 @@
 // src/routes/totalesRoutes.js
 const express = require('express');
 const router = express.Router();
-const totalesController = require('../controllers/totalesController');
+const totalesController = require('../controllers/totales_Controller');
 const { validationMiddleware } = require('../middlewares');
 
 // Endpoint para obtener los totales diarios por dispositivo

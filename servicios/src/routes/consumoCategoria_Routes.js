@@ -1,7 +1,7 @@
 // src/routes/consumoCategoriaRoutes.js
 const express = require('express');
 const router = express.Router();
-const consumoCategoriaController = require('../controllers/consumoCategoriaController');
+const consumoCategoriaController = require('../controllers/consumoCategoria_Controller');
 
 // Endpoint para obtener la categoría de consumo
 router.get('/categoria',

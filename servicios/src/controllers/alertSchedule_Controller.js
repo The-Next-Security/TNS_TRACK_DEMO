@@ -10,7 +10,7 @@
  * @module controllers/alertScheduleController
  */
 
-const alertScheduleConfigService = require('../services/db/alertScheduleConfigService');
+const alertScheduleConfigService = require('../services/db/alertScheduleConfig_Service');
 
 /**
  * GET /api/config/alert-schedules

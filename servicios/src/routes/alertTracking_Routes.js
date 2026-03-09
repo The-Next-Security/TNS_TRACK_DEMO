@@ -6,7 +6,7 @@
 
 const express = require('express');
 const router = express.Router();
-const alertTrackingController = require('../controllers/alertTrackingController');
+const alertTrackingController = require('../controllers/alertTracking_Controller');
 
 /**
  * ======================

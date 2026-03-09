@@ -1,10 +1,10 @@
 // src/routes/configRoutes.js
 const express = require("express");
 const router = express.Router();
-const sem_configController = require("../controllers/sem_configController");
-const tel_configController = require("../controllers/tel_configController");
-const alertScheduleController = require("../controllers/alertScheduleController");
-const tariffConfigController = require("../controllers/tariffConfigController");
+const sem_configController = require("../controllers/semConfig_Controller");
+const tel_configController = require("../controllers/telConfig_Controller");
+const alertScheduleController = require("../controllers/alertSchedule_Controller");
+const tariffConfigController = require("../controllers/tariffConfig_Controller");
 const { authMiddleware } = require("../middlewares");
 
 // Get current system parameters

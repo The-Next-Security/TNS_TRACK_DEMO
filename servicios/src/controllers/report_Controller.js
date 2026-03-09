@@ -5,9 +5,9 @@
  * Handles API requests for report generation, templates, history, and downloads
  */
 
-const reportGenerationService = require('../services/reports/reportGenerationService');
-const emailService = require('../services/email/emailService');
-const emailValidator = require('../services/reports/emailValidator');
+const reportGenerationService = require('../services/reports/reportGeneration_Service');
+const emailService = require('../services/email/email_Service');
+const emailValidator = require('../services/reports/emailValidator_Utils');
 const path = require('path');
 const fs = require('fs').promises;
 const moment = require('moment');

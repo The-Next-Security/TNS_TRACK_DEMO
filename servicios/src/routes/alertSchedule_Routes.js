@@ -11,7 +11,7 @@
 
 const express = require('express');
 const router = express.Router();
-const alertScheduleController = require('../controllers/alertScheduleController');
+const alertScheduleController = require('../controllers/alertSchedule_Controller');
 
 // Note: Authentication middleware should be applied in the main routes file
 // All routes assume req.user is available from session

@@ -1,7 +1,7 @@
 // src/routes/contadorCiclosRoutes.js
 const express = require("express");
 const router = express.Router();
-const contadorCiclosController = require("../controllers/contadorCiclosController");
+const contadorCiclosController = require("../controllers/contadorCiclos_Controller");
 
 /**
  * Rutas para la gestión de ciclos de descongelamiento

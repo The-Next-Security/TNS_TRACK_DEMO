@@ -1,8 +1,8 @@
 // src/routes/dashboardRoutes.js
 const express = require("express");
 const router = express.Router();
-const electricDashboardController = require("../controllers/electricDashboardController");
-const temperatureDashboardController = require("../controllers/temperatureDashboardController");
+const electricDashboardController = require("../controllers/electricDashboard_Controller");
+const temperatureDashboardController = require("../controllers/temperatureDashboard_Controller");
 
 /**
  * Rutas para los dashboards optimizados
