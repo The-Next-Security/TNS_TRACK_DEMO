@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 import { parseLogoutBroadcast } from '../utils/crossTabSync';
 import { setLogoutReason } from '../utils/sessionUtils';
-import { LogoutReason } from '../constants/LogoutReason';
+import { LogoutReason } from '../constants/logoutReason_Constants';
 import analyticsService from '../services/analyticsService';
 
 /**
