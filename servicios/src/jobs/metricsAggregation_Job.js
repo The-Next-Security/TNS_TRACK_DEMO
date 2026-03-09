@@ -2,7 +2,7 @@
 // Job para agregar métricas de alertas cada hora
 
 const cron = require('node-cron');
-const databaseService = require('../services/database-service');
+const databaseService = require('../services/database_Service');
 
 /**
  * Clase para gestionar el job de agregación de métricas de alertas

@@ -1,6 +1,6 @@
 /* controllers/gpsController.js */
 const moment = require('moment');
-const { pool } = require("../services/database-service.js");
+const { pool } = require("../services/database_Service.js");
 
 class gpsController {
   async getHistoricalGpsData(req, res) {

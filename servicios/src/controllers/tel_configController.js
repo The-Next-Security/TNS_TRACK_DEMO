@@ -1,4 +1,4 @@
-const databaseService = require("../services/database-service");
+const databaseService = require("../services/database_Service");
 const { ValidationError } = require("../utils/errors_Utils");
 
 class tel_ConfigController {

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authMiddleware = require('../middlewares/auth_Middleware');
-const tokenService = require('../services/tokenService');
+const tokenService = require('../services/token_Service');
 const devAuthBypass = require('../middlewares/devAuthBypass_Middleware');
 
 // Dev-only auth bypass (inject mock user in development)
@@ -65,7 +65,7 @@ router.get('/validate', authMiddleware.authenticate.bind(authMiddleware), async 
   let permissionsValue = req.user.permissions;
   
   try {
-    const databaseService = require('../services/database-service');
+    const databaseService = require('../services/database_Service');
     const userId = req.user.userId || req.user.id;
     
     if (!userId) {

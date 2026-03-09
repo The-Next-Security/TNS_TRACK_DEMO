@@ -5,7 +5,7 @@ const argon2 = require("argon2");
 const sgMail = require("@sendgrid/mail");
 const crypto = require("crypto");
 const config = require("../config/js_files/configLoader_Config");
-const databaseService = require("../../src/services/database-service");
+const databaseService = require("../../src/services/database_Service");
 const emailService = require("../services/email/emailService");
 const { AuthenticationError } = require("../utils/errors_Utils");
 const jwtConfig = require("../config/js_files/jwt_Config");
@@ -77,7 +77,7 @@ class usuariosController {
         } catch (_) { /* best-effort */ }
       }
 
-      const tokenService = require("../services/tokenService");
+      const tokenService = require("../services/token_Service");
       const authMiddleware = require("../middlewares/auth_Middleware");
       const payload = {
         userId: localUser.id_usuario,

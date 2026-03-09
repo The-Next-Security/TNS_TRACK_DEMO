@@ -1,5 +1,5 @@
 // src/controllers/electricDashboardController.js
-const electricDashboardService = require("../services/electricDashboardService");
+const electricDashboardService = require("../services/electricDashboard_Service");
 
 /**
  * Controlador optimizado para el Dashboard Eléctrico

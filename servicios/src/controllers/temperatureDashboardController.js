@@ -1,5 +1,5 @@
 // src/controllers/temperatureDashboardController.js
-const temperatureDashboardService = require("../services/temperatureDashboardService");
+const temperatureDashboardService = require("../services/temperatureDashboard_Service");
 
 /**
  * Controlador optimizado para el Dashboard de Temperatura

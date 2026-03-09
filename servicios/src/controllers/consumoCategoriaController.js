@@ -1,5 +1,5 @@
 // src/controllers/consumoCategoriaController.js (versión corregida)
-const consumoCategoriaService = require('../services/consumo-categoria-service');
+const consumoCategoriaService = require('../services/consumoCategoria_Service');
 
 class ConsumoCategoriaController {
   /**

@@ -1,5 +1,5 @@
 // controllers/totalesController.js - Versión Refactorizada
-const databaseService = require("../services/database-service");
+const databaseService = require("../services/database_Service");
 const transformUtils = require("../utils/transform_Utils");
 const {
   calculateCategoryData,

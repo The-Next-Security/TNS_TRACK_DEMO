@@ -83,7 +83,7 @@ class AuthMiddleware {
 
             // ✅ Validar tokenVersion si existe en el token
             if (decoded.tokenVersion !== undefined && decoded.userId) {
-                const databaseService = require('../services/database-service');
+                const databaseService = require('../services/database_Service');
                 try {
                     const [users] = await databaseService.pool.query(
                         'SELECT token_version FROM gen_usuario WHERE id_usuario = ? AND activo = 1',

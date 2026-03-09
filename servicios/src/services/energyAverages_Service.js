@@ -1,5 +1,5 @@
 // energy-averages-service.js
-const databaseService = require('./database-service');
+const databaseService = require('./database_Service');
 
 class EnergyAveragesService {
     constructor() {

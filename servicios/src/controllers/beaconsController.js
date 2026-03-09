@@ -1,5 +1,5 @@
 // src/controllers/beaconsController.js
-const databaseService = require('../services/database-service');
+const databaseService = require('../services/database_Service');
 const moment = require('moment-timezone');
 
 class beaconsController {

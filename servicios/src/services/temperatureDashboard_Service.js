@@ -1,5 +1,5 @@
 // src/services/temperatureDashboardService.js
-const databaseService = require("./database-service");
+const databaseService = require("./database_Service");
 const moment = require("moment");
 
 /**

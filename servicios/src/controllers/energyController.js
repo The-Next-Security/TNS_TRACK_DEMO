@@ -1,6 +1,6 @@
-const databaseService = require('../services/database-service');
-const energyAveragesService = require('../services/energy-averages-service');
-const totalEnergyService = require('../services/total-energy-service');
+const databaseService = require('../services/database_Service');
+const energyAveragesService = require('../services/energyAverages_Service');
+const totalEnergyService = require('../services/totalEnergy_Service');
 const { ValidationError } = require('../utils/errors_Utils');
 const { DateTime } = require('luxon');
 

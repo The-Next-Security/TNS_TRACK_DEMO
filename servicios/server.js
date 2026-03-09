@@ -11,9 +11,9 @@ const cookieParser = require("cookie-parser");
 // Importar Collectors y Servicios principales
 const ShellyCollector = require("./collectors/shelly-collector");
 const UbibotCollector = require("./collectors/ubibot-collector");
-const databaseService = require("./src/services/database-service");
-const energyAveragesService = require("./src/services/energy-averages-service");
-const totalEnergyService = require("./src/services/total-energy-service");
+const databaseService = require("./src/services/database_Service");
+const energyAveragesService = require("./src/services/energyAverages_Service");
+const totalEnergyService = require("./src/services/totalEnergy_Service");
 
 // Importar Rutas
 const deviceRoutes = require("./src/routes/device_Routes");
@@ -46,15 +46,15 @@ const smsService = require("./src/services/sms/smsService");
 const pushNotificationService = require("./src/services/push/pushNotificationService");
 const notificationController = require("./src/controllers/notificationController.js");
 const ubibotController = require("./src/controllers/ubibotController.js");
-const notificationService = require("./src/services/notificationService");
+const notificationService = require("./src/services/notification_Service");
 const ubibotService = require("./src/services/ubibot/ubibotService");
-const shellyApiAdapter = require("./src/services/api/shelly-api-adapter");
-const mapboxApiAdapter = require("./src/services/api/mapbox-api-adapter");
-const openaiService = require("./src/services/openaiService");
-const ubibotServiceAdapter = require("./src/services/ubibot/ubibot-service-adapter");
+const shellyApiAdapter = require("./src/services/api/shellyApi_Adapter");
+const mapboxApiAdapter = require("./src/services/api/mapboxApi_Adapter");
+const openaiService = require("./src/services/openai_Service");
+const ubibotServiceAdapter = require("./src/services/ubibot/ubibot_Adapter");
 const usuariosController = require("./src/controllers/usuariosController");
 const authMiddleware = require("./src/middlewares/auth_Middleware");
-const alertTrackingService = require("./src/services/alertTrackingService");
+const alertTrackingService = require("./src/services/alertTracking_Service");
 
 // Importar job de agregación de métricas de alertas
 const metricsAggregationJob = require('./src/jobs/metricsAggregation_Job');

@@ -4,7 +4,7 @@
  * Integra con alertTrackingService para operaciones CRUD y métricas
  */
 
-const alertTrackingService = require('../services/alertTrackingService');
+const alertTrackingService = require('../services/alertTracking_Service');
 
 class AlertTrackingController {
     /**

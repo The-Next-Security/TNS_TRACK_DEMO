@@ -1,4 +1,4 @@
-const databaseService = require("../services/database-service");
+const databaseService = require("../services/database_Service");
 const { DeviceError, NotFoundError } = require("../utils/errors_Utils");
 const transformUtils = require("../utils/transform_Utils");
 

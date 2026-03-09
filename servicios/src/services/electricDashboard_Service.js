@@ -1,5 +1,5 @@
 // src/services/electricDashboardService.js
-const databaseService = require("./database-service");
+const databaseService = require("./database_Service");
 
 /**
  * Servicio optimizado para el Dashboard Eléctrico

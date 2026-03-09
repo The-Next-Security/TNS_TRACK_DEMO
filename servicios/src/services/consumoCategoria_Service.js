@@ -1,5 +1,5 @@
 // src/services/consumo-categoria-service.js (versión corregida)
-const databaseService = require('./database-service');
+const databaseService = require('./database_Service');
 const config = require('../config/js_files/configLoader_Config');
 
 class ConsumoCategoriaService {

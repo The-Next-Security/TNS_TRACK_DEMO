@@ -1,4 +1,4 @@
-const databaseService = require('../services/database-service');
+const databaseService = require('../services/database_Service');
 
 class SystemController {
     async getSystemStatus(req, res, next) {

@@ -5,7 +5,7 @@ const axios = require("axios");
 const fs = require("fs").promises; // Usar promesas de fs
 const path = require("path"); // <--- Importante: Añadido import de path
 const config = require("../config/js_files/configLoader_Config");
-const databaseService = require("../services/database-service");
+const databaseService = require("../services/database_Service");
 const WeeklyTemperatureAnalyzer = require("../utils/weeklyTemperatureAnalyzer_Utils");
 const temperatureAnalyzer = require("../utils/temperatureAnalyzer_Utils"); // Asumo que este es el correcto para reportes diarios
 
