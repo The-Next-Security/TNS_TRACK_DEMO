@@ -397,9 +397,8 @@ INSERT INTO `gen_cofiguracion_parametros`
 (36, 10, 7, 'ubibot.collection_interval',              'collection_interval',  2, 'ubibot',                    0, 'Intervalo de recolección de datos Ubibot en milisegundos (default: 5 min)',         '300000',                    0, 1),
 
 -- ids 37-47 eliminados: grupo sms (módem HiLink local) — módulo SMS eliminado del sistema
--- ids 37-47 eliminados: grupo sms (módem HiLink local) — módulo SMS eliminado del sistema
 
--- ── Grupo alertSystem (id_grupo=13) → ids 48-58 ───────────────────────────────
+-- ── Grupo alertSystem (id_grupo=13) → ids 48-54 ───────────────────────────────
 (48, 13, 7, 'alertSystem.intervals.processing',                 'processing',   4, 'alertSystem.intervals',              0, 'Intervalo en ms del ciclo de procesamiento de alertas pendientes',             '3600000',  0, 1),
 (49, 13, 7, 'alertSystem.intervals.cleanup',                    'cleanup',      4, 'alertSystem.intervals',              0, 'Intervalo en ms del ciclo de limpieza de alertas antiguas',                    '43200000', 0, 1),
 (50, 13, 7, 'alertSystem.intervals.temperature.initialDelay',   'initialDelay', 5, 'alertSystem.intervals.temperature',  0, 'Minutos sin cambio antes de enviar primera alerta de temperatura',             '60',       0, 1),
@@ -407,10 +406,7 @@ INSERT INTO `gen_cofiguracion_parametros`
 (52, 13, 7, 'alertSystem.intervals.disconnection.initialDelay', 'initialDelay', 5, 'alertSystem.intervals.disconnection',0, 'Minutos desconectado antes de enviar primera alerta de desconexión',           '55',       0, 1),
 (53, 13, 7, 'alertSystem.intervals.disconnection.betweenAlerts','betweenAlerts',5, 'alertSystem.intervals.disconnection',0, 'Minutos mínimos entre alertas consecutivas de desconexión',                    '55',       0, 1),
 (54, 13, 7, 'alertSystem.retention.maxAgeHours',                'maxAgeHours',  3, 'alertSystem.retention',              0, 'Horas máximas de retención del historial de alertas',                          '24',       0, 1),
-(55, 13, 6, 'alertSystem.workingHours.weekdays.start',          'start',        4, 'alertSystem.workingHours.weekdays',  0, 'Hora de inicio del horario laboral semana (ej: 8.5 = 08:30)',                  '8.5',      0, 1),
-(56, 13, 6, 'alertSystem.workingHours.weekdays.end',            'end',          4, 'alertSystem.workingHours.weekdays',  0, 'Hora de fin del horario laboral semana (ej: 18.5 = 18:30)',                    '18.5',     0, 1),
-(57, 13, 6, 'alertSystem.workingHours.saturday.start',          'start',        4, 'alertSystem.workingHours.saturday',  0, 'Hora de inicio del horario laboral sábado',                                    '8.5',      0, 1),
-(58, 13, 6, 'alertSystem.workingHours.saturday.end',            'end',          4, 'alertSystem.workingHours.saturday',  0, 'Hora de fin del horario laboral sábado',                                       '14.5',     0, 1),
+-- ids 55-58 eliminados: alertSystem.workingHours.* — reemplazado por tabla gen_horario_operacional
 
 -- ── Grupo pushNotifications (id_grupo=14) → ids 59-62 ─────────────────────────
 (59, 14, 2, 'pushNotifications.enabled',                        'enabled',        2, 'pushNotifications', 0, 'Habilitar notificaciones push PWA mediante Web Push API',                         'false',         0, 1),
@@ -438,7 +434,11 @@ INSERT INTO `gen_cofiguracion_parametros`
 -- ── Grupo appInfo (id_grupo=18) → ids 74-76 ──────────────────────────────────
 (74, 18, 1, 'appInfo.appName',                                  'appName',     2, 'appInfo', 0, 'Nombre de la aplicación mostrado en notificaciones y reportes',                        'Sistema de Monitoreo',   0, 1),
 (75, 18, 1, 'appInfo.companyName',                              'companyName', 2, 'appInfo', 0, 'Nombre de la empresa operadora mostrado en notificaciones y reportes',                 'The Next Security',      0, 1),
-(76, 18, 1, 'appInfo.version',                                  'version',     2, 'appInfo', 0, 'Versión actual de la aplicación (semver)',                                              '1.0.0',                  0, 1);
+(76, 18, 1, 'appInfo.version',                                  'version',     2, 'appInfo', 0, 'Versión actual de la aplicación (semver)',                                              '1.0.0',                  0, 1),
+
+-- ── Grupo alertSystem (id_grupo=13) → ids 77-78 (parámetros globales) ─────────
+(77, 13, 2, 'alertSystem.respetar_feriados',          'respetar_feriados',         2, 'alertSystem', 0, 'Si es true, no se envían notificaciones en días feriados definidos en gen_feriados_cl', 'true', 0, 1),
+(78, 13, 2, 'alertSystem.criticas_ignoran_horario',   'criticas_ignoran_horario',  2, 'alertSystem', 0, 'Si es true, las alertas críticas se envían fuera del horario operacional',             'true', 0, 1);
 
 
 -- ==============================================================================
@@ -496,19 +496,8 @@ INSERT INTO `gen_cofiguracion_valores` (`id_cofiguracion_parametros`, `valor`, `
 (34, './src/config/token_id.txt',                                  1, 1),
 (35, '[]',                                                         1, 1),
 (36, '300000',                                                     1, 1),
--- sms (ids 37-47)
-(37, 'http://192.168.8.1',                                         1, 1),
-(38, '/api',                                                       1, 1),
-(39, '15000',                                                      1, 1),
-(40, '2',                                                          1, 1),
-(41, '[10000,7000]',                                               1, 1),
-(42, '8000',                                                       1, 1),
-(43, '8.5',                                                        1, 1),
-(44, '18.5',                                                       1, 1),
-(45, '8.5',                                                        1, 1),
-(46, '14.5',                                                       1, 1),
-(47, '[CONFIGURAR]',                                               1, 1),
--- alertSystem (ids 48-58)
+-- ids 37-47 eliminados: grupo sms (módem HiLink local) — módulo SMS eliminado del sistema
+-- alertSystem (ids 48-54)
 (48, '3600000',                                                    1, 1),
 (49, '43200000',                                                   1, 1),
 (50, '60',                                                         1, 1),
@@ -516,10 +505,7 @@ INSERT INTO `gen_cofiguracion_valores` (`id_cofiguracion_parametros`, `valor`, `
 (52, '55',                                                         1, 1),
 (53, '55',                                                         1, 1),
 (54, '24',                                                         1, 1),
-(55, '8.5',                                                        1, 1),
-(56, '18.5',                                                       1, 1),
-(57, '8.5',                                                        1, 1),
-(58, '14.5',                                                       1, 1),
+-- ids 55-58 eliminados: alertSystem.workingHours.* — reemplazado por tabla gen_horario_operacional
 -- pushNotifications (ids 59-62)
 (59, 'false',                                                      1, 1),
 (60, '[CONFIGURAR]',                                               1, 1),
@@ -542,7 +528,10 @@ INSERT INTO `gen_cofiguracion_valores` (`id_cofiguracion_parametros`, `valor`, `
 -- appInfo (ids 74-76)
 (74, 'Sistema de Monitoreo',                                       1, 1),
 (75, 'The Next Security',                                          1, 1),
-(76, '1.0.0',                                                      1, 1);
+(76, '1.0.0',                                                      1, 1),
+-- alertSystem global (ids 77-78)
+(77, 'true',                                                       1, 1),
+(78, 'true',                                                       1, 1);
 
 
 -- ==============================================================================
@@ -576,3 +565,18 @@ INSERT INTO `rep_plantillas` (`id_plantilla`, `clave_plantilla`, `id_tipo_report
 (3, 'executive_consumption', 2,
    'Reporte Ejecutivo Consumo Eléctrico',
    'Análisis de consumo, demanda máxima, factor de carga y costos eléctricos con KPIs operacionales, gráficos de tendencias y ranking de dispositivos', 1);
+
+
+-- ==============================================================================
+-- MÓDULO DE ALERTAS
+-- ==============================================================================
+
+
+-- ==============================================================================
+-- 14. ale_tipo_alerta
+--     Catálogo de tipos de alerta del sistema.
+-- ==============================================================================
+
+INSERT INTO `ale_tipo_alerta` (`id_tipo_alerta`, `nombre`, `descripcion`, `activo`) VALUES
+(1, 'temperatura',  'Alerta por temperatura fuera de umbral configurado',         1),
+(2, 'desconexion',  'Alerta por desconexión de sensor sin reportar lecturas',     1);
