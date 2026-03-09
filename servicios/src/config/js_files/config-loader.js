@@ -8,7 +8,7 @@
 //   await configLoader.initialize();   // UNA vez antes de new Server()
 //   configLoader.getConfig();          // síncono, usa caché de 5 min
 
-const BaseConfigLoader = require('./base-config-loader');
+const BaseConfigLoader = require('./baseConfigLoader_Config');
 const path = require('path');
 const fs = require('fs');
 const mysql = require('mysql2/promise');
