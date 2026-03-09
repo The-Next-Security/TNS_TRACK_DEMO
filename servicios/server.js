@@ -57,10 +57,10 @@ const authMiddleware = require("./src/middlewares/authMiddleware");
 const alertTrackingService = require("./src/services/alertTrackingService");
 
 // Importar job de agregación de métricas de alertas
-const metricsAggregationJob = require('./src/jobs/metricsAggregationJob');
+const metricsAggregationJob = require('./src/jobs/metricsAggregation_Job');
 
 // Importar job de limpieza de reportes expirados (Phase 5 - T045)
-const reportCleanupJob = require('./src/jobs/reportCleanupJob');
+const reportCleanupJob = require('./src/jobs/reportCleanup_Job');
 
 // Importar servicio de scheduler de reportes (Phase 4 - T030)
 const reportSchedulerService = require('./src/services/reports/reportSchedulerService');
