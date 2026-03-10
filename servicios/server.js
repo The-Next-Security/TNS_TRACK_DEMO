@@ -22,7 +22,6 @@ const totalesRoutes = require("./src/routes/totales_Routes");
 const analysisRoutes = require("./src/routes/analysis_Routes");
 const usuariosRoutes = require("./src/routes/usuarios_Routes");
 const personalRoutes = require("./src/routes/personal_Routes");
-const smsRoutes = require("./src/routes/sms_Routes");
 const sectoresRoutes = require("./src/routes/sectores_Routes");
 const powerAnalysisRoutes = require("./src/routes/powerAnalysis_Routes");
 const gpsRoutes = require("./src/routes/gps_Routes");
@@ -42,7 +41,6 @@ const configLoader = require('./src/config/js_files/configLoader_Config');
 
 // Importar servicios de notificación (asegurarse de importar los correctos después de la refactorización)
 const emailService = require("./src/services/email/email_Service");
-const smsService = require("./src/services/sms/sms_Service");
 const pushNotificationService = require("./src/services/push/pushNotification_Service");
 const notificationController = require("./src/controllers/notification_Controller.js");
 const ubibotController = require("./src/controllers/ubibot_Controller.js");
@@ -80,9 +78,7 @@ class Server {
       database: databaseService,
       energyAverages: energyAveragesService,
       totalEnergy: totalEnergyService,
-      // Podrías añadir los servicios de email y sms aquí si quieres un acceso centralizado
       email: emailService,
-      sms: smsService,
     };
     this.setupMiddleware();
     this.setupRoutes();
@@ -166,7 +162,6 @@ class Server {
     mountApiRoute("/api/analysis", analysisRoutes);
     mountApiRoute("/api/usuarios", usuariosRoutes);
     mountApiRoute("/api/personal", personalRoutes);
-    mountApiRoute("/api/sms", smsRoutes);
     mountApiRoute("/api/sectores", sectoresRoutes);
     mountApiRoute("/api/powerAnalysis", powerAnalysisRoutes);
     mountApiRoute("/api/gps", gpsRoutes);
@@ -276,18 +271,6 @@ class Server {
         // throw new Error("Fallo al inicializar EmailService");
       } else {
         console.log("  [Server] EmailService inicializado."); // Log 14
-      }
-
-
-      // 5. Inicializar SmsService (usa la instancia importada)
-      console.log("  [Server] Inicializando SmsService..."); // Log 15
-      await smsService.initialize(); // Asume que initialize es async o devuelve Promise
-      if (!smsService.initialized) { // Chequeo adicional
-        console.warn("  [Server] SmsService no se inicializó correctamente (ver logs anteriores).");
-        // Decidir si continuar o lanzar error
-        // throw new Error("Fallo al inicializar SmsService");
-      } else {
-        console.log("  [Server] SmsService inicializado."); // Log 16
       }
 
       // 5b. Inicializar PushNotificationService (usa la instancia importada)
@@ -447,7 +430,6 @@ class Server {
 
       // 4. (Opcional) Detener otros servicios si tienen lógica de cleanup
       // if (emailService?.stop) await emailService.stop();
-      // if (smsService?.stop) await smsService.stop();
 
       console.log("🏁 [Server] Cierre ordenado completado.");
       process.exit(0); // Salir sin error

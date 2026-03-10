@@ -68,3 +68,6 @@ SPRINGBOOT_MIGRATION_CONTEXT.md
 .specify
 .cursor/rules/no-crear-archivos-sin-consentimiento.mdc
 
+# Script de migración (herramienta interna, no va a GitHub)
+migracion/
+

@@ -4,7 +4,6 @@ const mysql = require("mysql2/promise");
 const moment = require("moment-timezone");
 const configLoader = require("../config/js_files/configLoader_Config");
 const emailService = require("../services/email/email_Service");
-const smsService = require("../services/sms/sms_Service");
 const notificationService = require("../services/notification_Service");
 const pushNotificationService = require("../services/push/pushNotification_Service");
 const alertTrackingService = require("../services/alertTracking_Service");
@@ -305,24 +304,6 @@ class NotificationController {
                 await this.logError(`Fallo envío email desconexión impidió actualización BD para hora ${prevHourKey}.`);
             }
 
-            // ==================== SMS DISABLED - Stand-by for future reactivation ====================
-            // REASON: SMS notifications temporarily disabled (2025-10-20) to reduce operational costs
-            // TO RE-ENABLE: Uncomment this block and remove "_DISABLED" flag from smsConfig.json
-            // ALTERNATIVE CHANNELS: Email (emailService) and Push (pushNotificationService) remain active
-            //
-            /*
-            try {
-                console.log(`[NotificationCtrl] processHourlyAlerts: Intentando enviar SMS de conexión/desconexión...`);
-                // sendDisconnectionAlert usa destinatarios específicos + default de config SMS
-                await smsService.sendDisconnectionAlert(disconnectionResults.formattedAlerts, null, true); // Forzar envío
-                console.log("  -> Llamada a sendDisconnectionAlert (SMS) completada.");
-            } catch (smsError) {
-                console.error("  -> Error CRÍTICO enviando SMS de conexión/desconexión:", smsError.message);
-                await this.logError(`Fallo envío SMS desconexión: ${smsError.message}`);
-            }
-            */
-            console.log(`[SMS DISABLED] Disconnection alert SMS skipped (Email + Push sent) - Re-enable in smsConfig.json if needed`);
-            // =====================================================================================
 
             // **MODIFICADO: Enviar Push Notifications CON alertIds**
             try {
@@ -390,23 +371,6 @@ class NotificationController {
                         await this.logError(`Fallo envío email temperatura: ${emailTempError.message}`);
                     }
 
-                    // ==================== SMS DISABLED - Stand-by for future reactivation ====================
-                    // REASON: SMS notifications temporarily disabled (2025-10-20) to reduce operational costs
-                    // TO RE-ENABLE: Uncomment this block and remove "_DISABLED" flag from smsConfig.json
-                    // ALTERNATIVE CHANNELS: Email (emailService) and Push (pushNotificationService) remain active
-                    //
-                    /*
-                    try {
-                        console.log("  -> Enviando SMS de temperatura...");
-                        await smsService.sendTemperatureAlert(channelsInAlert, null, true); // Forzar envío
-                        console.log("  -> Llamada a sendTemperatureAlert (SMS) completada.");
-                    } catch (smsTempError) {
-                        console.error(`❌ Error enviando SMS de temperatura para hora ${endTime.format('HH:mm')}:`, smsTempError);
-                        await this.logError(`Fallo envío SMS temperatura: ${smsTempError.message}`);
-                    }
-                    */
-                    console.log(`[SMS DISABLED] Temperature alert SMS skipped (Email + Push sent) - Re-enable in smsConfig.json if needed`);
-                    // =====================================================================================
 
                     // **MODIFICADO: Enviar Push Notifications CON alertIds**
                     try {
@@ -808,37 +772,6 @@ class NotificationController {
 
 
 
-    formatDisconnectionAlertsForSMS(alerts) {
-        const count = alerts.length;
-        let message = `ALERTA CONEXION: ${count} sensor${count > 1 ? 'es' : ''} reportados. `;
-        const maxSizePerBatch = this.appConfig.sms?.queue?.maxSizePerBatch || 3;
-        const detailLimit = Math.min(maxSizePerBatch, count);
-        for (let i = 0; i < detailLimit; i++) {
-            const alert = alerts[i];
-            const status = alert.finalStatus === "DESCONECTADO" ? "DESCONECT" : "CONECTADO";
-            message += `${alert.name}: ${status}. `;
-        }
-        if (count > detailLimit) message += `Y ${count - detailLimit} más. `;
-        message += `${moment().tz(this.timeZone).format("DD/MM HH:mm")}`;
-        return message;
-    }
-
-    formatTemperatureAlertsForSMS(alerts) {
-        const count = alerts.length;
-        let message = `ALERTA TEMPERATURA: ${count} sensor${count > 1 ? 'es' : ''} fuera de rango. `;
-        const maxSizePerBatch = this.appConfig.sms?.queue?.maxSizePerBatch || 3;
-        const detailLimit = Math.min(maxSizePerBatch, count);
-        for (let i = 0; i < detailLimit; i++) {
-            const alert = alerts[i];
-            // Usar averageTemperature ahora, o mantener el formato anterior?
-            // Mantengamos el formato anterior por simplicidad, usando el promedio
-            const tempFormatted = alert.averageTemperature?.toFixed(1) ?? 'N/A';
-            message += `${alert.channelName}: ${tempFormatted}°C. `; // Usar channelName
-        }
-        if (count > detailLimit) message += `Y ${count - detailLimit} más. `;
-        message += `${moment().tz(this.timeZone).format("DD/MM HH:mm")}`;
-        return message;
-    }
 
     async logToDatabase(message) {
         if (!this.pool || !this.initialized) {
