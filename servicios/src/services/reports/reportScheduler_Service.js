@@ -2,8 +2,13 @@
  * @fileoverview Report Scheduler Service - Gestión de Reportes Programados
  * @description Servicio que maneja la programación automática de reportes usando node-cron.
  * Permite crear, actualizar, eliminar y ejecutar schedules de reportes de forma automática.
- * @feature 004-reportes-base-core (T029, T030, T031, T032)
- * @version 1.0.0
+ *
+ * La tabla rep_reportes_programados almacena la expresión cron directamente (expresion_cron),
+ * eliminando la necesidad de convertir frequency/dayOfWeek/time a formato cron.
+ *
+ * @feature 004-reportes-base-core
+ * Issue: #12 — migración de scheduled_reports a rep_reportes_programados
+ * @version 2.0.0
  */
 
 const cron = require('node-cron');
@@ -38,198 +43,65 @@ function init() {
   pool = mysql.createPool(dbConfig);
 }
 
-// Mapa de trabajos cron activos: scheduleId -> cronJob
+// Mapa de trabajos cron activos: id_reporte_programado -> cronJob
 const activeJobs = new Map();
 
 // Timezone para Chile
 const TIMEZONE = 'America/Santiago';
 
 /**
- * Calcula la próxima ejecución basada en frecuencia y configuración
- * @param {string} frequency - 'daily' o 'weekly'
- * @param {number} dayOfWeek - 0-6 (Domingo=0, Lunes=1, etc.) - solo para weekly
- * @param {string} time - Hora en formato 'HH:MM' (ej: '08:00')
- * @returns {Date} - Próxima fecha de ejecución
+ * Calcula la próxima ejecución de una expresión cron
+ * @param {string} cronExpression - Expresión cron (ej: '0 8 * * 1')
+ * @returns {Date|null} Próxima fecha de ejecución, o null si la expresión es inválida
  */
-function calculateNextExecution(frequency, dayOfWeek, time) {
-  const [hour, minute] = time.split(':').map(Number);
-  const now = moment.tz(TIMEZONE);
-
-  let nextExecution;
-
-  if (frequency === 'daily') {
-    // Ejecutar diariamente a la hora especificada
-    nextExecution = moment.tz(TIMEZONE).hour(hour).minute(minute).second(0);
-
-    // Si ya pasó la hora de hoy, programar para mañana
-    if (nextExecution.isSameOrBefore(now)) {
-      nextExecution.add(1, 'day');
-    }
-  } else if (frequency === 'weekly') {
-    // Ejecutar semanalmente en el día especificado
-    nextExecution = moment.tz(TIMEZONE);
-    nextExecution.day(dayOfWeek); // 0=Sunday, 1=Monday, etc.
-    nextExecution.hour(hour);
-    nextExecution.minute(minute);
-    nextExecution.second(0);
-
-    // Si ya pasó esta semana, programar para la siguiente
-    if (nextExecution.isSameOrBefore(now)) {
-      nextExecution.add(1, 'week');
-    }
-  } else {
-    throw new Error(`Frecuencia no soportada: ${frequency}`);
+function calculateNextExecution(cronExpression) {
+  try {
+    const interval = cronParser.parseExpression(cronExpression, { tz: TIMEZONE });
+    return interval.next().toDate();
+  } catch (error) {
+    console.error(`[Scheduler] Expresión cron inválida "${cronExpression}":`, error.message);
+    return null;
   }
-
-  return nextExecution.toDate();
-}
-
-/**
- * Convierte configuración de schedule a expresión cron
- * @param {string} frequency - 'daily' o 'weekly'
- * @param {number} dayOfWeek - 0-6 (solo para weekly)
- * @param {string} time - 'HH:MM'
- * @returns {string} - Expresión cron (ej: '0 8 * * 1' para Lunes 8:00 AM)
- */
-function buildCronExpression(frequency, dayOfWeek, time) {
-  const [hour, minute] = time.split(':').map(Number);
-
-  if (frequency === 'daily') {
-    // Ejecutar diariamente a la hora especificada
-    // Formato: minuto hora * * *
-    return `${minute} ${hour} * * *`;
-  } else if (frequency === 'weekly') {
-    // Ejecutar semanalmente en día específico
-    // Formato: minuto hora * * día_semana
-    return `${minute} ${hour} * * ${dayOfWeek}`;
-  }
-
-  throw new Error(`Frecuencia no soportada: ${frequency}`);
-}
-
-/**
- * Calcula período dinámico basado en period_type
- * @param {string} periodType - 'last_day', 'last_week', 'last_month'
- * @returns {Object} - { startDate, endDate }
- */
-function calculateDynamicPeriod(periodType) {
-  const now = moment.tz(TIMEZONE);
-
-  if (periodType === 'last_day') {
-    // Ayer completo (00:00:00 a 23:59:59)
-    const startDate = now.clone().subtract(1, 'day').startOf('day').toDate();
-    const endDate = now.clone().subtract(1, 'day').endOf('day').toDate();
-    return { startDate, endDate };
-  } else if (periodType === 'last_week') {
-    // Semana completa anterior (Lunes a Domingo)
-    const startDate = now.clone().subtract(1, 'week').startOf('isoWeek').toDate();
-    const endDate = now.clone().subtract(1, 'week').endOf('isoWeek').toDate();
-    return { startDate, endDate };
-  } else if (periodType === 'last_month') {
-    // Mes completo anterior
-    const startDate = now.clone().subtract(1, 'month').startOf('month').toDate();
-    const endDate = now.clone().subtract(1, 'month').endOf('month').toDate();
-    return { startDate, endDate };
-  }
-
-  throw new Error(`Tipo de período no soportado: ${periodType}`);
 }
 
 /**
  * Crear un nuevo schedule de reporte
  * @param {Object} config - Configuración del schedule
- * @param {string} config.name - Nombre descriptivo del schedule
- * @param {string} config.reportType - Tipo de reporte (ej: 'executive_temperature')
- * @param {string} config.frequency - 'daily' o 'weekly'
- * @param {number} config.dayOfWeek - 0-6 (solo para weekly)
- * @param {string} config.time - Hora en formato 'HH:MM'
- * @param {string} config.periodType - 'last_day', 'last_week', 'last_month'
- * @param {Array<number>} config.deviceIds - IDs de dispositivos
- * @param {Object} config.options - Opciones adicionales (includeComparative, etc.)
- * @param {boolean} config.active - Si el schedule debe estar activo
- * @param {number} config.createdBy - User ID del creador
- * @returns {Promise<Object>} - { scheduleId, nextExecution }
+ * @param {number} config.id_plantilla - ID de la plantilla de reporte
+ * @param {string} config.nombre - Nombre descriptivo del schedule
+ * @param {string} [config.descripcion] - Descripción opcional
+ * @param {string} config.expresion_cron - Expresión cron (ej: '0 8 * * 1' para Lunes 8:00)
+ * @returns {Promise<Object>} - { id_reporte_programado, proxima_ejecucion }
  */
-async function createSchedule(config) {
+async function createSchedule({ id_plantilla, nombre, descripcion = null, expresion_cron }) {
+  if (!id_plantilla || !nombre || !expresion_cron) {
+    throw new Error('Campos requeridos: id_plantilla, nombre, expresion_cron');
+  }
+
+  if (!cron.validate(expresion_cron)) {
+    throw new Error(`Expresión cron inválida: ${expresion_cron}`);
+  }
+
+  const proxima_ejecucion = calculateNextExecution(expresion_cron);
+
   const connection = await getPool().getConnection();
-
   try {
-    const {
-      name,
-      reportType,
-      frequency,
-      dayOfWeek,
-      time,
-      periodType,
-      deviceIds,
-      options = {},
-      active = true,
-      createdBy
-    } = config;
-
-    // Validaciones
-    if (!name || !reportType || !frequency || !time || !periodType || !deviceIds || !createdBy) {
-      throw new Error('Campos requeridos: name, reportType, frequency, time, periodType, deviceIds, createdBy');
-    }
-
-    if (frequency === 'weekly' && (dayOfWeek === undefined || dayOfWeek === null)) {
-      throw new Error('dayOfWeek es requerido para frecuencia weekly');
-    }
-
-    if (!['daily', 'weekly'].includes(frequency)) {
-      throw new Error('frequency debe ser "daily" o "weekly"');
-    }
-
-    if (!['last_day', 'last_week', 'last_month'].includes(periodType)) {
-      throw new Error('periodType debe ser "last_day", "last_week" o "last_month"');
-    }
-
-    // Calcular próxima ejecución
-    const nextExecution = calculateNextExecution(frequency, dayOfWeek, time);
-
-    // Insertar en base de datos
     const [result] = await connection.execute(
-      `INSERT INTO scheduled_reports
-       (name, report_type, frequency, day_of_week, execution_time, period_type,
-        device_ids, options, active, next_execution, created_by, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-      [
-        name,
-        reportType,
-        frequency,
-        dayOfWeek || null,
-        time,
-        periodType,
-        JSON.stringify(deviceIds),
-        JSON.stringify(options),
-        active,
-        nextExecution,
-        createdBy
-      ]
+      `INSERT INTO rep_reportes_programados (id_plantilla, nombre, descripcion, expresion_cron, activo, proxima_ejecucion)
+       VALUES (?, ?, ?, ?, 1, ?)`,
+      [id_plantilla, nombre, descripcion, expresion_cron, proxima_ejecucion]
     );
 
-    const scheduleId = result.insertId;
+    const id_reporte_programado = result.insertId;
 
-    // Si está activo, crear el cron job
-    if (active) {
-      startCronJob(scheduleId, frequency, dayOfWeek, time, {
-        name,
-        reportType,
-        periodType,
-        deviceIds,
-        options,
-        createdBy
-      });
-    }
+    // Iniciar cron job
+    startCronJob(id_reporte_programado, expresion_cron, { nombre, id_plantilla });
 
-    console.log(`[Scheduler] Created schedule #${scheduleId}: "${name}" (${frequency} at ${time})`);
+    console.log(`[Scheduler] Schedule #${id_reporte_programado} creado: "${nombre}" (${expresion_cron})`);
 
-    return {
-      scheduleId,
-      nextExecution
-    };
+    return { id_reporte_programado, proxima_ejecucion };
   } catch (error) {
-    console.error('[Scheduler] Error creating schedule:', error);
+    console.error('[Scheduler] Error al crear schedule:', error);
     throw error;
   } finally {
     connection.release();
@@ -238,94 +110,59 @@ async function createSchedule(config) {
 
 /**
  * Actualizar un schedule existente
- * @param {number} scheduleId - ID del schedule
+ * @param {number} id - ID del schedule (id_reporte_programado)
  * @param {Object} updates - Campos a actualizar
+ * @param {string} [updates.nombre]
+ * @param {string} [updates.descripcion]
+ * @param {string} [updates.expresion_cron]
+ * @param {boolean} [updates.activo]
  * @returns {Promise<Object>} - Schedule actualizado
  */
-async function updateSchedule(scheduleId, updates) {
+async function updateSchedule(id, { nombre, descripcion, expresion_cron, activo }) {
   const connection = await getPool().getConnection();
 
   try {
-    // Obtener schedule actual
-    const [schedules] = await connection.execute(
-      'SELECT * FROM scheduled_reports WHERE id = ?',
-      [scheduleId]
+    // Verificar que existe
+    const [rows] = await connection.execute(
+      'SELECT * FROM rep_reportes_programados WHERE id_reporte_programado = ?',
+      [id]
     );
 
-    if (schedules.length === 0) {
-      throw new Error(`Schedule #${scheduleId} no encontrado`);
+    if (rows.length === 0) {
+      throw new Error(`Schedule #${id} no encontrado`);
     }
 
-    const currentSchedule = schedules[0];
+    const current = rows[0];
 
-    // Mergear updates con valores actuales
-    const updatedConfig = {
-      name: updates.name || currentSchedule.name,
-      reportType: updates.reportType || currentSchedule.report_type,
-      frequency: updates.frequency || currentSchedule.frequency,
-      dayOfWeek: updates.dayOfWeek !== undefined ? updates.dayOfWeek : currentSchedule.day_of_week,
-      time: updates.time || currentSchedule.execution_time,
-      periodType: updates.periodType || currentSchedule.period_type,
-      deviceIds: updates.deviceIds || (typeof currentSchedule.device_ids === 'string' ? JSON.parse(currentSchedule.device_ids) : currentSchedule.device_ids),
-      options: updates.options || (typeof currentSchedule.options === 'string' ? JSON.parse(currentSchedule.options || '{}') : (currentSchedule.options || {})),
-      active: updates.active !== undefined ? updates.active : currentSchedule.active
-    };
+    const nuevoNombre = nombre ?? current.nombre;
+    const nuevaDescripcion = descripcion ?? current.descripcion;
+    const nuevaCron = expresion_cron ?? current.expresion_cron;
+    const nuevoActivo = activo !== undefined ? activo : Boolean(current.activo);
 
-    // Recalcular próxima ejecución si cambió frecuencia o tiempo
-    let nextExecution = currentSchedule.next_execution;
-    if (updates.frequency || updates.dayOfWeek !== undefined || updates.time) {
-      nextExecution = calculateNextExecution(
-        updatedConfig.frequency,
-        updatedConfig.dayOfWeek,
-        updatedConfig.time
-      );
+    if (expresion_cron && !cron.validate(expresion_cron)) {
+      throw new Error(`Expresión cron inválida: ${expresion_cron}`);
     }
 
-    // Actualizar en base de datos
+    const proxima_ejecucion = calculateNextExecution(nuevaCron);
+
     await connection.execute(
-      `UPDATE scheduled_reports
-       SET name = ?, report_type = ?, frequency = ?, day_of_week = ?, execution_time = ?,
-           period_type = ?, device_ids = ?, options = ?, active = ?, next_execution = ?
-       WHERE id = ?`,
-      [
-        updatedConfig.name,
-        updatedConfig.reportType,
-        updatedConfig.frequency,
-        updatedConfig.dayOfWeek,
-        updatedConfig.time,
-        updatedConfig.periodType,
-        JSON.stringify(updatedConfig.deviceIds),
-        JSON.stringify(updatedConfig.options),
-        updatedConfig.active,
-        nextExecution,
-        scheduleId
-      ]
+      `UPDATE rep_reportes_programados
+       SET nombre = ?, descripcion = ?, expresion_cron = ?, activo = ?, proxima_ejecucion = ?
+       WHERE id_reporte_programado = ?`,
+      [nuevoNombre, nuevaDescripcion, nuevaCron, nuevoActivo ? 1 : 0, proxima_ejecucion, id]
     );
 
-    // Detener cron job anterior si existía
-    stopCronJob(scheduleId);
-
-    // Iniciar nuevo cron job si está activo
-    if (updatedConfig.active) {
-      startCronJob(scheduleId, updatedConfig.frequency, updatedConfig.dayOfWeek, updatedConfig.time, {
-        name: updatedConfig.name,
-        reportType: updatedConfig.reportType,
-        periodType: updatedConfig.periodType,
-        deviceIds: updatedConfig.deviceIds,
-        options: updatedConfig.options,
-        createdBy: currentSchedule.created_by
-      });
+    // Reiniciar cron job con nueva configuración
+    stopCronJob(id);
+    if (nuevoActivo) {
+      startCronJob(id, nuevaCron, { nombre: nuevoNombre, id_plantilla: current.id_plantilla });
     }
 
-    console.log(`[Scheduler] Updated schedule #${scheduleId}: "${updatedConfig.name}"`);
+    console.log(`[Scheduler] Schedule #${id} actualizado: "${nuevoNombre}"`);
 
-    return {
-      scheduleId,
-      ...updatedConfig,
-      nextExecution
-    };
+    return { id_reporte_programado: id, nombre: nuevoNombre, expresion_cron: nuevaCron, activo: nuevoActivo, proxima_ejecucion };
   } catch (error) {
-    console.error('[Scheduler] Error updating schedule:', error);
+    console.error('[Scheduler] Error al actualizar schedule:', error);
     throw error;
   } finally {
     connection.release();
@@ -334,30 +171,27 @@ async function updateSchedule(scheduleId, updates) {
 
 /**
  * Eliminar un schedule
- * @param {number} scheduleId - ID del schedule
- * @returns {Promise<boolean>} - true si se eliminó exitosamente
+ * @param {number} id - ID del schedule (id_reporte_programado)
+ * @returns {Promise<boolean>}
  */
-async function deleteSchedule(scheduleId) {
+async function deleteSchedule(id) {
   const connection = await getPool().getConnection();
-
   try {
-    // Detener cron job si existe
-    stopCronJob(scheduleId);
+    stopCronJob(id);
 
-    // Eliminar de base de datos
     const [result] = await connection.execute(
-      'DELETE FROM scheduled_reports WHERE id = ?',
-      [scheduleId]
+      'DELETE FROM rep_reportes_programados WHERE id_reporte_programado = ?',
+      [id]
     );
 
     if (result.affectedRows === 0) {
-      throw new Error(`Schedule #${scheduleId} no encontrado`);
+      throw new Error(`Schedule #${id} no encontrado`);
     }
 
-    console.log(`[Scheduler] Deleted schedule #${scheduleId}`);
+    console.log(`[Scheduler] Schedule #${id} eliminado`);
     return true;
   } catch (error) {
-    console.error('[Scheduler] Error deleting schedule:', error);
+    console.error('[Scheduler] Error al eliminar schedule:', error);
     throw error;
   } finally {
     connection.release();
@@ -366,222 +200,149 @@ async function deleteSchedule(scheduleId) {
 
 /**
  * Activar/desactivar un schedule
- * @param {number} scheduleId - ID del schedule
- * @param {boolean} active - true para activar, false para desactivar
- * @returns {Promise<boolean>} - Estado actualizado
+ * @param {number} id - ID del schedule
+ * @param {boolean} activo
  */
-async function toggleSchedule(scheduleId, active) {
-  return updateSchedule(scheduleId, { active });
+async function toggleSchedule(id, activo) {
+  return updateSchedule(id, { activo });
 }
 
 /**
  * Iniciar un cron job para un schedule
- * @param {number} scheduleId - ID del schedule
- * @param {string} frequency - 'daily' o 'weekly'
- * @param {number} dayOfWeek - 0-6
- * @param {string} time - 'HH:MM'
- * @param {Object} config - Configuración del reporte
+ * @param {number} id - ID del schedule (id_reporte_programado)
+ * @param {string} cronExpression - Expresión cron almacenada en BD
+ * @param {Object} options - { nombre, id_plantilla }
  */
-function startCronJob(scheduleId, frequency, dayOfWeek, time, config) {
+function startCronJob(id, cronExpression, options) {
   try {
-    // Si ya existe un job para este schedule, detenerlo primero
-    if (activeJobs.has(scheduleId)) {
-      stopCronJob(scheduleId);
+    if (activeJobs.has(id)) {
+      stopCronJob(id);
     }
 
-    // Construir expresión cron
-    const cronExpression = buildCronExpression(frequency, dayOfWeek, time);
+    console.log(`[Scheduler] Iniciando cron job #${id}: "${options.nombre}" con expresión: ${cronExpression}`);
 
-    console.log(`[Scheduler] Starting cron job #${scheduleId}: "${config.name}" with expression: ${cronExpression}`);
-
-    // Crear y programar el cron job
     const job = cron.schedule(cronExpression, async () => {
-      console.log(`[Scheduler] Executing scheduled report #${scheduleId}: "${config.name}"`);
-      await executeScheduledReport(scheduleId, config);
+      console.log(`[Scheduler] Ejecutando reporte programado #${id}: "${options.nombre}"`);
+      await executeScheduledReport(id, options);
     }, {
       scheduled: true,
       timezone: TIMEZONE
     });
 
-    // Guardar referencia al job
-    activeJobs.set(scheduleId, job);
-
-    console.log(`[Scheduler] Cron job #${scheduleId} started successfully`);
+    activeJobs.set(id, job);
+    console.log(`[Scheduler] Cron job #${id} iniciado exitosamente`);
   } catch (error) {
-    console.error(`[Scheduler] Error starting cron job #${scheduleId}:`, error);
+    console.error(`[Scheduler] Error al iniciar cron job #${id}:`, error);
     throw error;
   }
 }
 
 /**
  * Detener un cron job
- * @param {number} scheduleId - ID del schedule
+ * @param {number} id - ID del schedule
  */
-function stopCronJob(scheduleId) {
-  if (activeJobs.has(scheduleId)) {
-    const job = activeJobs.get(scheduleId);
+function stopCronJob(id) {
+  if (activeJobs.has(id)) {
+    const job = activeJobs.get(id);
     job.stop();
-    activeJobs.delete(scheduleId);
-    console.log(`[Scheduler] Stopped cron job #${scheduleId}`);
+    activeJobs.delete(id);
+    console.log(`[Scheduler] Cron job #${id} detenido`);
+  }
+}
+
+/**
+ * Actualizar estado de última ejecución en BD
+ * @param {number} id - ID del schedule (id_reporte_programado)
+ * @param {Object} datos
+ * @param {Date} datos.ultima_ejecucion
+ * @param {string} datos.estado - 'exitoso' | 'fallido'
+ * @param {Date|null} datos.proxima_ejecucion
+ */
+async function updateEjecucion(id, { ultima_ejecucion, estado, proxima_ejecucion }) {
+  const connection = await getPool().getConnection();
+  try {
+    await connection.execute(
+      `UPDATE rep_reportes_programados
+       SET ultima_ejecucion = ?, ultima_ejecucion_estado = ?, proxima_ejecucion = ?
+       WHERE id_reporte_programado = ?`,
+      [ultima_ejecucion, estado, proxima_ejecucion, id]
+    );
+  } catch (error) {
+    console.error(`[Scheduler] Error al actualizar ejecución #${id}:`, error);
+  } finally {
+    connection.release();
   }
 }
 
 /**
  * Ejecutar un reporte programado
- * @param {number} scheduleId - ID del schedule
- * @param {Object} config - Configuración del reporte
+ * @param {number} id - ID del schedule
+ * @param {Object} options - { nombre, id_plantilla }
  */
-async function executeScheduledReport(scheduleId, config) {
-  const connection = await getPool().getConnection();
+async function executeScheduledReport(id, options) {
+  const { nombre, id_plantilla } = options;
+  const ahora = new Date();
 
   try {
-    const { name, reportType, periodType, deviceIds, options, createdBy } = config;
+    console.log(`[Scheduler] Generando reporte para schedule #${id} (plantilla ${id_plantilla})`);
 
-    // Calcular período dinámico
-    const { startDate, endDate } = calculateDynamicPeriod(periodType);
+    // Generar el reporte usando la plantilla configurada
+    const result = await reportGenerationService.generateReport(id_plantilla, { scheduleId: id, scheduleName: nombre });
 
-    console.log(`[Scheduler] Generating report for schedule #${scheduleId}:`, {
-      reportType,
-      periodType,
-      startDate: moment(startDate).format('YYYY-MM-DD'),
-      endDate: moment(endDate).format('YYYY-MM-DD'),
-      deviceIds: deviceIds.length
-    });
-
-    // Generar el reporte
-    const reportConfig = {
-      reportType,
-      startDate: moment(startDate).format('YYYY-MM-DD'),
-      endDate: moment(endDate).format('YYYY-MM-DD'),
-      deviceIds,
-      includeComparative: options.includeComparative || false,
-      scheduleName: name, // Tag para identificar reportes automáticos
-      scheduleId
-    };
-
-    const result = await reportGenerationService.generateReport(
-      reportType,
-      reportConfig,
-      createdBy
+    // Calcular próxima ejecución basada en la expresión cron del schedule
+    const [rows] = await getPool().execute(
+      'SELECT expresion_cron FROM rep_reportes_programados WHERE id_reporte_programado = ?',
+      [id]
     );
+    const proxima_ejecucion = rows.length > 0 ? calculateNextExecution(rows[0].expresion_cron) : null;
 
-    // Actualizar schedule: incrementar execution_count, actualizar last_execution, calcular next_execution
-    const nextExecution = calculateNextExecution(
-      config.frequency || 'weekly',
-      config.dayOfWeek,
-      config.time || '08:00'
-    );
+    // Actualizar estado en BD
+    await updateEjecucion(id, { ultima_ejecucion: ahora, estado: 'exitoso', proxima_ejecucion });
 
-    await connection.execute(
-      `UPDATE scheduled_reports
-       SET last_execution = NOW(),
-           execution_count = execution_count + 1,
-           next_execution = ?
-       WHERE id = ?`,
-      [nextExecution, scheduleId]
-    );
-
-    console.log(`[Scheduler] Successfully generated report for schedule #${scheduleId}. Next execution: ${moment(nextExecution).format('YYYY-MM-DD HH:mm')}`);
-
-    // AUTO-SEND EMAIL (Phase 7: Email Notifications)
-    // Si el schedule tiene email_recipients configurado, enviar automáticamente
-    if (config.emailRecipients && Array.isArray(config.emailRecipients) && config.emailRecipients.length > 0) {
-      console.log(`[Scheduler] Sending email notification to ${config.emailRecipients.length} recipient(s) for schedule #${scheduleId}`);
-
-      try {
-        const emailSubject = `Reporte Programado: ${name}`;
-        const emailMessage = `Se ha generado automáticamente el reporte programado "${name}" para el período ${moment(startDate).format('DD/MM/YYYY')} a ${moment(endDate).format('DD/MM/YYYY')}.`;
-
-        // Prepare metadata for enhanced email template
-        const reportMetadata = {
-          reportName: name,
-          periodStart: moment(startDate).format('DD/MM/YYYY'),
-          periodEnd: moment(endDate).format('DD/MM/YYYY'),
-          reportType: reportType
-        };
-
-        const emailSent = await emailService.sendReportEmail(
-          config.emailRecipients,
-          emailSubject,
-          emailMessage,
-          result.filePath,
-          reportMetadata
-        );
-
-        if (emailSent) {
-          console.log(`[Scheduler] ✅ Email notification sent successfully for schedule #${scheduleId}`);
-        } else {
-          console.error(`[Scheduler] ❌ Failed to send email notification for schedule #${scheduleId}`);
-        }
-      } catch (emailError) {
-        console.error(`[Scheduler] Error sending email for schedule #${scheduleId}:`, emailError.message);
-        // No fallar la generación del reporte si falla el envío de email
-      }
-    } else {
-      console.log(`[Scheduler] No email recipients configured for schedule #${scheduleId}, skipping email notification`);
-    }
+    console.log(`[Scheduler] Reporte #${id} generado exitosamente. Próxima ejecución: ${proxima_ejecucion ? moment(proxima_ejecucion).format('YYYY-MM-DD HH:mm') : 'N/A'}`);
 
     return result;
   } catch (error) {
-    console.error(`[Scheduler] Error executing scheduled report #${scheduleId}:`, error);
+    console.error(`[Scheduler] Error al ejecutar reporte programado #${id}:`, error);
 
-    // Log error en tabla de ejecuciones (opcional - si existe la tabla)
-    try {
-      await connection.execute(
-        `INSERT INTO schedule_execution_log (schedule_id, execution_time, execution_status, error_message)
-         VALUES (?, NOW(), 'failed', ?)`,
-        [scheduleId, error.message]
-      );
-    } catch (logError) {
-      console.error('[Scheduler] Error logging execution error:', logError);
-    }
+    // Registrar el fallo en BD
+    await updateEjecucion(id, { ultima_ejecucion: ahora, estado: 'fallido', proxima_ejecucion: null });
 
     throw error;
-  } finally {
-    connection.release();
   }
 }
 
 /**
- * Cargar schedules activos desde la base de datos y reiniciar cron jobs
- * Debe llamarse al iniciar el servidor
+ * Cargar schedules activos desde la base de datos y reiniciar cron jobs.
+ * Debe llamarse al iniciar el servidor.
  */
 async function loadActiveSchedules() {
   const connection = await getPool().getConnection();
 
   try {
-    // Obtener todos los schedules activos (including email_recipients)
     const [schedules] = await connection.execute(
-      `SELECT id, name, report_type, frequency, day_of_week, execution_time,
-              period_type, device_ids, options, email_recipients, created_by
-       FROM scheduled_reports
-       WHERE active = 1`
+      `SELECT id_reporte_programado, nombre, descripcion, id_plantilla,
+              expresion_cron, activo, proxima_ejecucion, ultima_ejecucion
+       FROM rep_reportes_programados
+       WHERE activo = 1`
     );
 
-    console.log(`[Scheduler] Loading ${schedules.length} active schedules...`);
+    console.log(`[Scheduler] Cargando ${schedules.length} schedules activos...`);
 
     for (const schedule of schedules) {
       try {
-        startCronJob(schedule.id, schedule.frequency, schedule.day_of_week, schedule.execution_time, {
-          name: schedule.name,
-          reportType: schedule.report_type,
-          periodType: schedule.period_type,
-          deviceIds: typeof schedule.device_ids === 'string' ? JSON.parse(schedule.device_ids) : schedule.device_ids,
-          options: typeof schedule.options === 'string' ? JSON.parse(schedule.options || '{}') : (schedule.options || {}),
-          emailRecipients: typeof schedule.email_recipients === 'string' ? JSON.parse(schedule.email_recipients) : schedule.email_recipients,
-          createdBy: schedule.created_by,
-          frequency: schedule.frequency,
-          dayOfWeek: schedule.day_of_week,
-          time: schedule.execution_time
+        startCronJob(schedule.id_reporte_programado, schedule.expresion_cron, {
+          nombre: schedule.nombre,
+          id_plantilla: schedule.id_plantilla
         });
       } catch (error) {
-        console.error(`[Scheduler] Error loading schedule #${schedule.id}:`, error);
+        console.error(`[Scheduler] Error al cargar schedule #${schedule.id_reporte_programado}:`, error);
       }
     }
 
-    console.log(`[Scheduler] Successfully loaded ${activeJobs.size} active cron jobs`);
+    console.log(`[Scheduler] ${activeJobs.size} cron jobs activos cargados exitosamente`);
   } catch (error) {
-    console.error('[Scheduler] Error loading active schedules:', error);
+    console.error('[Scheduler] Error al cargar schedules activos:', error);
     throw error;
   } finally {
     connection.release();
@@ -589,61 +350,47 @@ async function loadActiveSchedules() {
 }
 
 /**
- * Obtener lista de schedules (con filtros opcionales)
+ * Obtener lista de schedules
  * @param {Object} filters - Filtros opcionales
- * @param {number} filters.createdBy - Filtrar por usuario creador
- * @param {boolean} filters.activeOnly - Solo schedules activos
- * @returns {Promise<Array>} - Lista de schedules
+ * @param {boolean} [filters.activeOnly] - Solo schedules activos
+ * @returns {Promise<Array>}
  */
 async function listSchedules(filters = {}) {
   const connection = await getPool().getConnection();
 
   try {
     let query = `
-      SELECT id, name, report_type, frequency, day_of_week, execution_time,
-             period_type, device_ids, options, active,
-             next_execution, last_execution, execution_count,
-             created_by, created_at
-      FROM scheduled_reports
+      SELECT id_reporte_programado, nombre, descripcion, id_plantilla,
+             expresion_cron, activo, proxima_ejecucion, ultima_ejecucion,
+             ultima_ejecucion_estado, fecha_creacion
+      FROM rep_reportes_programados
       WHERE 1=1
     `;
     const params = [];
 
-    if (filters.createdBy) {
-      query += ' AND created_by = ?';
-      params.push(filters.createdBy);
-    }
-
     if (filters.activeOnly) {
-      query += ' AND active = 1';
+      query += ' AND activo = 1';
     }
 
-    query += ' ORDER BY created_at DESC';
+    query += ' ORDER BY fecha_creacion DESC';
 
     const [schedules] = await connection.execute(query, params);
 
-    // Parsear JSON fields y formatear fechas
-    // Nota: mysql2 ya parsea automáticamente los campos JSON a objetos
     return schedules.map(schedule => ({
-      id: schedule.id,
-      name: schedule.name,
-      reportType: schedule.report_type,
-      frequency: schedule.frequency,
-      dayOfWeek: schedule.day_of_week,
-      executionTime: schedule.execution_time,
-      periodType: schedule.period_type,
-      deviceIds: typeof schedule.device_ids === 'string' ? JSON.parse(schedule.device_ids) : schedule.device_ids,
-      options: typeof schedule.options === 'string' ? JSON.parse(schedule.options || '{}') : (schedule.options || {}),
-      active: Boolean(schedule.active),
-      nextExecution: schedule.next_execution,
-      lastExecution: schedule.last_execution,
-      executionCount: schedule.execution_count,
-      createdBy: schedule.created_by,
-      createdAt: schedule.created_at,
-      isRunning: activeJobs.has(schedule.id) // Indicar si el cron job está activo
+      id: schedule.id_reporte_programado,
+      nombre: schedule.nombre,
+      descripcion: schedule.descripcion,
+      id_plantilla: schedule.id_plantilla,
+      expresion_cron: schedule.expresion_cron,
+      activo: Boolean(schedule.activo),
+      proxima_ejecucion: schedule.proxima_ejecucion,
+      ultima_ejecucion: schedule.ultima_ejecucion,
+      ultima_ejecucion_estado: schedule.ultima_ejecucion_estado,
+      fecha_creacion: schedule.fecha_creacion,
+      isRunning: activeJobs.has(schedule.id_reporte_programado)
     }));
   } catch (error) {
-    console.error('[Scheduler] Error listing schedules:', error);
+    console.error('[Scheduler] Error al listar schedules:', error);
     throw error;
   } finally {
     connection.release();
@@ -652,20 +399,17 @@ async function listSchedules(filters = {}) {
 
 /**
  * Obtener el contador de schedules activos
- * @returns {Promise<number>} Cantidad de schedules activos
+ * @returns {Promise<number>}
  */
 async function getActiveSchedulesCount() {
   const connection = await getPool().getConnection();
   try {
     const [rows] = await connection.execute(
-      `SELECT COUNT(*) as count
-       FROM scheduled_reports
-       WHERE active = 1`
+      'SELECT COUNT(*) as count FROM rep_reportes_programados WHERE activo = 1'
     );
-
     return rows[0].count;
   } catch (error) {
-    console.error('[Scheduler] Error counting active schedules:', error);
+    console.error('[Scheduler] Error al contar schedules activos:', error);
     throw error;
   } finally {
     connection.release();
@@ -683,6 +427,7 @@ module.exports = {
   getActiveSchedulesCount,
   calculateNextExecution,
   executeScheduledReport,
+  updateEjecucion,
   startCronJob,
   stopCronJob
 };
