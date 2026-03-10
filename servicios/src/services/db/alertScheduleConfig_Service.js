@@ -58,7 +58,7 @@ class AlertScheduleConfigService {
 
       // Consulta parámetros globales del sistema de alertas (ids 77 y 78)
       const [parametros] = await this.databaseService.pool.execute(`
-        SELECT p.clave_sistema, v.valor
+        SELECT p.nombre_parametro, v.valor
         FROM gen_cofiguracion_parametros p
         JOIN gen_cofiguracion_valores v ON v.id_cofiguracion_parametros = p.id_cofiguracion_parametros
         WHERE p.id_cofiguracion_parametros IN (77, 78) AND v.activo = 1
@@ -68,7 +68,7 @@ class AlertScheduleConfigService {
       const params = {};
       parametros.forEach(row => {
         // La clave viene como 'alertSystem.respetar_feriados' → extraer la parte final
-        const clave = row.clave_sistema.split('.').pop();
+        const clave = row.nombre_parametro;
         params[clave] = row.valor;
       });
 
@@ -221,7 +221,7 @@ class AlertScheduleConfigService {
         UPDATE gen_cofiguracion_valores v
         JOIN gen_cofiguracion_parametros p ON v.id_cofiguracion_parametros = p.id_cofiguracion_parametros
         SET v.valor = ?
-        WHERE p.clave_sistema = ? AND v.activo = 1
+        WHERE p.ruta_completa = ? AND v.activo = 1
       `, [valor, clave]);
 
       // Invalidar cache
