@@ -14,8 +14,8 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import alertScheduleService from '../services/alertScheduleService';
-import analyticsService from '../services/analyticsService';
+import alertScheduleService from '../services/alertSchedule_Service';
+import analyticsService from '../services/analytics_Service';
 import CurrentConfigDisplay from './CurrentConfigDisplay';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

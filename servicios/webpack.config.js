@@ -81,7 +81,7 @@ module.exports = {
     extensions: [".js", ".jsx"],
     fallback: {
       buffer: require.resolve("buffer/"),
-      crypto: require.resolve("crypto-browserify"),
+      crypto: false, // sin polyfill — ningún componente browser usa crypto directamente
       vm: require.resolve("vm-browserify"),
       stream: require.resolve("stream-browserify"),
       util: require.resolve("util/"),

@@ -11,50 +11,57 @@ const cookieParser = require("cookie-parser");
 // Importar Collectors y Servicios principales
 const ShellyCollector = require("./collectors/shelly-collector");
 const UbibotCollector = require("./collectors/ubibot-collector");
-// const OnPremiseCollector = require("./collectors/onPremise-collector"); // Descomentar si se usa
-const databaseService = require("./src/services/database-service");
-const energyAveragesService = require("./src/services/energy-averages-service");
-const totalEnergyService = require("./src/services/total-energy-service");
+const databaseService = require("./src/services/database_Service");
+const energyAveragesService = require("./src/services/energyAverages_Service");
+const totalEnergyService = require("./src/services/totalEnergy_Service");
 
 // Importar Rutas
-const deviceRoutes = require("./src/routes/deviceRoutes");
-const configRoutes = require("./src/routes/configRoutes");
-const totalesRoutes = require("./src/routes/totalesRoutes");
-const analysisRoutes = require("./src/routes/analysisRoutes");
-const usuariosRoutes = require("./src/routes/usuariosRoutes");
-const personalRoutes = require("./src/routes/personalRoutes");
-const smsRoutes = require("./src/routes/smsRoutes");
-const sectoresRoutes = require("./src/routes/sectoresRoutes.js");
-const powerAnalysisRoutes = require("./src/routes/powerAnalysisRoutes");
-const gpsRoutes = require("./src/routes/gpsRoutes");
-const beaconsRoutes = require("./src/routes/beaconsRoutes");
-const ubibotRoutes = require("./src/routes/ubibotRoutes");
-const gpsDataRoutes = require("./src/routes/gpsDataRoutes");
-const blindSpotRoutes = require("./src/routes/blindSpotRoutes");
-const consumoCategoriaRoutes = require('./src/routes/consumoCategoriaRoutes');
-const pushNotificationRoutes = require('./src/routes/pushNotificationRoutes');
-const alertTrackingRoutes = require('./src/routes/alertTrackingRoutes');
-const presetsRoutes = require('./src/routes/presetsRoutes');
-const reportsRoutes = require('./src/routes/reportsRoutes');
-const aiAnalysisRoutes = require('./src/routes/aiAnalysisRoutes');
+const deviceRoutes = require("./src/routes/device_Routes");
+const configRoutes = require("./src/routes/config_Routes");
+const totalesRoutes = require("./src/routes/totales_Routes");
+const analysisRoutes = require("./src/routes/analysis_Routes");
+const usuariosRoutes = require("./src/routes/usuarios_Routes");
+const personalRoutes = require("./src/routes/personal_Routes");
+const sectoresRoutes = require("./src/routes/sectores_Routes");
+const powerAnalysisRoutes = require("./src/routes/powerAnalysis_Routes");
+const gpsRoutes = require("./src/routes/gps_Routes");
+const beaconsRoutes = require("./src/routes/beacons_Routes");
+const ubibotRoutes = require("./src/routes/ubibot_Routes");
+const gpsDataRoutes = require("./src/routes/gpsData_Routes");
+const blindSpotRoutes = require("./src/routes/blindSpot_Routes");
+const consumoCategoriaRoutes = require('./src/routes/consumoCategoria_Routes');
+const pushNotificationRoutes = require('./src/routes/pushNotification_Routes');
+const alertTrackingRoutes = require('./src/routes/alertTracking_Routes');
+const presetsRoutes = require('./src/routes/presets_Routes');
+const reportsRoutes = require('./src/routes/reports_Routes');
+const aiAnalysisRoutes = require('./src/routes/aiAnalysis_Routes');
 
 // Importar Config Loader (¡Importante!)
-const configLoader = require('./src/config/js_files/config-loader');
+const configLoader = require('./src/config/js_files/configLoader_Config');
 
 // Importar servicios de notificación (asegurarse de importar los correctos después de la refactorización)
-const emailService = require("./src/services/email/emailService");
-const smsService = require("./src/services/sms/smsService");
-const pushNotificationService = require("./src/services/push/pushNotificationService");
-const notificationController = require("./src/controllers/notificationController.js");
+const emailService = require("./src/services/email/email_Service");
+const pushNotificationService = require("./src/services/push/pushNotification_Service");
+const notificationController = require("./src/controllers/notification_Controller.js");
+const ubibotController = require("./src/controllers/ubibot_Controller.js");
+const notificationService = require("./src/services/notification_Service");
+const ubibotService = require("./src/services/ubibot/ubibot_Service");
+const shellyApiAdapter = require("./src/services/api/shellyApi_Adapter");
+const mapboxApiAdapter = require("./src/services/api/mapboxApi_Adapter");
+const openaiService = require("./src/services/openai_Service");
+const ubibotServiceAdapter = require("./src/services/ubibot/ubibot_Adapter");
+const usuariosController = require("./src/controllers/usuarios_Controller");
+const authMiddleware = require("./src/middlewares/auth_Middleware");
+const alertTrackingService = require("./src/services/alertTracking_Service");
 
 // Importar job de agregación de métricas de alertas
-const metricsAggregationJob = require('./src/jobs/metricsAggregationJob');
+const metricsAggregationJob = require('./src/jobs/metricsAggregation_Job');
 
 // Importar job de limpieza de reportes expirados (Phase 5 - T045)
-const reportCleanupJob = require('./src/jobs/reportCleanupJob');
+const reportCleanupJob = require('./src/jobs/reportCleanup_Job');
 
 // Importar servicio de scheduler de reportes (Phase 4 - T030)
-const reportSchedulerService = require('./src/services/reports/reportSchedulerService');
+const reportSchedulerService = require('./src/services/reports/reportScheduler_Service');
 
 class Server {
   /**
@@ -67,14 +74,11 @@ class Server {
     this.port = process.env.PORT || 1337;
     this.shellyCollector = new ShellyCollector();
     this.ubibotCollector = new UbibotCollector();
-    // this.onPremiseCollector = new OnPremiseCollector(); // Descomentar si se usa
     this.services = {
       database: databaseService,
       energyAverages: energyAveragesService,
       totalEnergy: totalEnergyService,
-      // Podrías añadir los servicios de email y sms aquí si quieres un acceso centralizado
       email: emailService,
-      sms: smsService,
     };
     this.setupMiddleware();
     this.setupRoutes();
@@ -158,7 +162,6 @@ class Server {
     mountApiRoute("/api/analysis", analysisRoutes);
     mountApiRoute("/api/usuarios", usuariosRoutes);
     mountApiRoute("/api/personal", personalRoutes);
-    mountApiRoute("/api/sms", smsRoutes);
     mountApiRoute("/api/sectores", sectoresRoutes);
     mountApiRoute("/api/powerAnalysis", powerAnalysisRoutes);
     mountApiRoute("/api/gps", gpsRoutes);
@@ -167,7 +170,7 @@ class Server {
     mountApiRoute("/api/blindspot", blindSpotRoutes);
     mountApiRoute("/gps-data", gpsDataRoutes); // ¿Debería estar bajo /api?
     
-    const authRoutes = require("./src/routes/authRoutes");
+    const authRoutes = require("./src/routes/auth_Routes");
     mountApiRoute("/api/auth", authRoutes);
     mountApiRoute('/api/consumo', consumoCategoriaRoutes); // paraa las categorias de consumo electrico
     mountApiRoute('/api/push', pushNotificationRoutes); // Push Notifications PWA
@@ -240,17 +243,7 @@ class Server {
     console.log("⏳ [Server] Inicializando servicios..."); // Log 10
 
     try {
-      // 1. Forzar carga/verificación de config primero
-      try {
-        console.log("  [Server] Verificando carga inicial de configuración...");
-        configLoader.getConfig(); // Llama a getConfig para asegurar que se cargó/validó
-        console.log("  [Server] Configuración verificada/cargada.");
-      } catch (configError) {
-        console.error("  [Server] ¡Fallo crítico al cargar configuración inicial!", configError);
-        throw configError; // Relanzar para detener el arranque
-      }
-
-      // 2. Inicializar DatabaseService
+      // 1. Inicializar DatabaseService
       console.log("  [Server] Inicializando DatabaseService..."); // Log 11
       await this.services.database.initialize();
       const dbConnected = await this.services.database.testConnection();
@@ -280,18 +273,6 @@ class Server {
         console.log("  [Server] EmailService inicializado."); // Log 14
       }
 
-
-      // 5. Inicializar SmsService (usa la instancia importada)
-      console.log("  [Server] Inicializando SmsService..."); // Log 15
-      await smsService.initialize(); // Asume que initialize es async o devuelve Promise
-      if (!smsService.initialized) { // Chequeo adicional
-        console.warn("  [Server] SmsService no se inicializó correctamente (ver logs anteriores).");
-        // Decidir si continuar o lanzar error
-        // throw new Error("Fallo al inicializar SmsService");
-      } else {
-        console.log("  [Server] SmsService inicializado."); // Log 16
-      }
-
       // 5b. Inicializar PushNotificationService (usa la instancia importada)
       console.log("  [Server] Inicializando PushNotificationService...");
       try {
@@ -314,13 +295,10 @@ class Server {
       // console.log("  [Server] ShellyCollector iniciado.");
 
       console.log("  [Server] Iniciando UbibotCollector...");
+      this.ubibotCollector.init();
       await this.ubibotCollector.start();
       console.log("  [Server] UbibotCollector iniciado.");
 
-      // console.log("  [Server] Iniciando OnPremiseCollector..."); // Descomentar si se usa
-      // await this.onPremiseCollector.start();
-      // console.log("  [Server] OnPremiseCollector iniciado.");
-      
       console.log("  [Server] Inicializando NotificationController...");
       try {
         // Asumiendo que notificationController es la instancia singleton importada
@@ -433,8 +411,6 @@ class Server {
       console.log("  ✅ [Server] ShellyCollector detenido.");
       if (this.ubibotCollector?.stop) this.ubibotCollector.stop();
       console.log("  ✅ [Server] UbibotCollector detenido.");
-      // if (this.onPremiseCollector?.stop) this.onPremiseCollector.stop(); // Descomentar si se usa
-      // console.log("  ✅ [Server] OnPremiseCollector detenido.");
 
       console.log("  [Server] Deteniendo MetricsAggregationJob...");
       if (metricsAggregationJob?.stop) metricsAggregationJob.stop();
@@ -454,7 +430,6 @@ class Server {
 
       // 4. (Opcional) Detener otros servicios si tienen lógica de cleanup
       // if (emailService?.stop) await emailService.stop();
-      // if (smsService?.stop) await smsService.stop();
 
       console.log("🏁 [Server] Cierre ordenado completado.");
       process.exit(0); // Salir sin error
@@ -467,13 +442,47 @@ class Server {
 }
 
 // --- Arranque del Servidor ---
-console.log("[Init] Creando instancia del servidor...");
-const server = new Server();
-console.log("[Init] Llamando a server.start()...");
-server.start(); // start() ahora maneja su propio error fatal y sale.
+async function boot() {
+  // Fase 1+2: cargar configuración desde connection-config.json + BD
+  // DEBE ejecutarse antes de instanciar Server (los servicios usan configLoader.getConfig())
+  console.log("[Init] Cargando configuración desde BD...");
+  await configLoader.initialize();
 
-// Exportar para posibles pruebas o uso programático
-module.exports = {
-  server,
-  app: server.app, // Exportar la instancia de app Express
-};
+  // Módulos que dependen de config: inicializar tras configLoader.initialize()
+  ubibotController.init();
+  notificationService.init();
+  notificationController.init();
+  ubibotService.init();
+  shellyApiAdapter.init();
+  mapboxApiAdapter.init();
+  openaiService.init();
+  await ubibotServiceAdapter.init();
+  reportCleanupJob.init();
+  usuariosController.init();
+  reportSchedulerService.init();
+  authMiddleware.init();
+  alertTrackingService.init();
+
+  console.log("[Init] Creando instancia del servidor...");
+  const server = new Server();
+  console.log("[Init] Llamando a server.start()...");
+  await server.start();
+
+  // Exportar para posibles pruebas o uso programático
+  module.exports = {
+    server,
+    app: server.app,
+  };
+}
+
+boot().catch((err) => {
+  const details = [
+    err.message,
+    err.code && `[code: ${err.code}]`,
+    err.sqlMessage && `[sqlMessage: ${err.sqlMessage}]`,
+    err.errno != null && `[errno: ${err.errno}]`,
+  ].filter(Boolean).join(' ');
+  console.error("💥 [Init] Error fatal al arrancar la aplicación:", details);
+  console.error(err.stack);
+  process.exit(1);
+});

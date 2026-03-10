@@ -29,29 +29,24 @@ jobs:
 
             console.log('Labels actuales: ' + (hasLabels ? labelNames.join(', ') : 'ninguno'));
 
-            // Verificar labels recomendados
+            // Verificar labels recomendados (según DOCUMENTACIÓN/Info_Github.md)
             const recommendedLabels = {
               tipo: ['bug', 'enhancement', 'technical-debt', 'documentation', 'architecture', 'refactoring'],
-              prioridad: ['P0', 'P1', 'P2'],
-              size: ['XS', 'S', 'M', 'L', 'XL'],
-              area: ['Front End', 'Backend', 'Database', 'DevOps']
+              area: ['back-end', 'front-end', 'SQL - BBDD', 'analytics']
             };
 
             let hasTipo = labelNames.some(l => recommendedLabels.tipo.includes(l));
-            let hasPrioridad = labelNames.some(l => recommendedLabels.prioridad.includes(l));
-            let hasSize = labelNames.some(l => recommendedLabels.size.includes(l));
+            let hasArea = labelNames.some(l => recommendedLabels.area.includes(l));
 
             core.setOutput('has_labels', hasLabels);
             core.setOutput('has_tipo', hasTipo);
-            core.setOutput('has_prioridad', hasPrioridad);
-            core.setOutput('has_size', hasSize);
+            core.setOutput('has_area', hasArea);
 
             if (!hasLabels) {
               console.log('⚠️  Issue no tiene labels');
             } else {
               if (!hasTipo) console.log('⚠️  Falta label de tipo (bug, enhancement, etc.)');
-              if (!hasPrioridad) console.log('⚠️  Falta label de prioridad (P0, P1, P2)');
-              if (!hasSize) console.log('⚠️  Falta label de size (XS, S, M, L, XL)');
+              if (!hasArea) console.log('⚠️  Falta label de área (back-end, front-end, SQL - BBDD, analytics)');
             }
 
       - name: Verificar assignees
@@ -119,8 +114,7 @@ jobs:
 
             const hasLabels = '${{ steps.check-labels.outputs.has_labels }}' === 'true';
             const hasTipo = '${{ steps.check-labels.outputs.has_tipo }}' === 'true';
-            const hasPrioridad = '${{ steps.check-labels.outputs.has_prioridad }}' === 'true';
-            const hasSize = '${{ steps.check-labels.outputs.has_size }}' === 'true';
+            const hasArea = '${{ steps.check-labels.outputs.has_area }}' === 'true';
             const hasAssignees = '${{ steps.check-assignees.outputs.has_assignees }}' === 'true';
             const hasDescripcion = '${{ steps.check-content.outputs.has_descripcion }}' === 'true';
             const hasObjetivo = '${{ steps.check-content.outputs.has_objetivo }}' === 'true';
@@ -129,16 +123,16 @@ jobs:
 
             let suggestions = [];
 
-            // Generar sugerencias basadas en análisis
+            // Generar sugerencias basadas en análisis (labels según DOCUMENTACIÓN/Info_Github.md)
             if (!hasLabels) {
               suggestions.push({
                 emoji: '🏷️',
                 title: 'Agregar Labels',
                 description: 'Este issue no tiene labels. Considera agregar:',
                 items: [
-                  '**Tipo**: `bug`, `enhancement`, `technical-debt`, `documentation`',
-                  '**Prioridad**: `P0` (crítica), `P1` (alta), `P2` (media)',
-                  '**Size**: `XS`, `S`, `M`, `L`, `XL` (estimación de complejidad)'
+                  '**Tipo**: `bug`, `enhancement`, `technical-debt`, `documentation`, `refactoring`, `architecture`',
+                  '**Área**: `back-end`, `front-end`, `SQL - BBDD`, `analytics`',
+                  '**Prioridad máxima**: `IMPORTANT` (solo si requiere atención inmediata)'
                 ]
               });
             } else {
@@ -146,26 +140,16 @@ jobs:
                 suggestions.push({
                   emoji: '📝',
                   title: 'Label de Tipo',
-                  description: 'Falta label de tipo. Opciones:',
-                  items: ['`bug`, `enhancement`, `technical-debt`, `documentation`, `architecture`']
+                  description: 'Falta label de tipo. Opciones disponibles:',
+                  items: ['`bug`, `enhancement`, `technical-debt`, `documentation`, `refactoring`, `architecture`']
                 });
               }
-              if (!hasPrioridad) {
+              if (!hasArea) {
                 suggestions.push({
-                  emoji: '🚨',
-                  title: 'Label de Prioridad',
-                  description: 'Falta label de prioridad. Opciones:',
-                  items: ['`P0` (crítica), `P1` (alta), `P2` (media)']
-                });
-              }
-              if (!hasSize) {
-                suggestions.push({
-                  emoji: '📏',
-                  title: 'Label de Size',
-                  description: 'Falta estimación de complejidad. Opciones:',
-                  items: [
-                    '`XS` (1-2h), `S` (4-8h), `M` (12-16h), `L` (20-24h), `XL` (28-32h)'
-                  ]
+                  emoji: '🗂️',
+                  title: 'Label de Área',
+                  description: 'Falta label de área técnica. Opciones disponibles:',
+                  items: ['`back-end`, `front-end`, `SQL - BBDD`, `analytics`']
                 });
               }
             }
@@ -201,7 +185,7 @@ jobs:
                 emoji: '📋',
                 title: 'Completar Template',
                 description: `Faltan secciones del template: ${missing.join(', ')}`,
-                items: ['Ver template completo en [Constitución - Gestión de Issues](.specify/memory/constitution.md#creación-de-issues)']
+                items: ['Ver templates disponibles en `.github/ISSUE_TEMPLATE/`']
               });
             }
 
@@ -213,7 +197,7 @@ jobs:
 
             // Construir mensaje
             let message = '## 💡 Sugerencias para Mejorar este Issue\n\n';
-            message += '*Estas sugerencias se basan en la [Constitución del Proyecto](.specify/memory/constitution.md) (Principio III - Gestión GitHub-First)*\n\n';
+            message += '*Estas sugerencias se basan en las [Convenciones del Proyecto](DOCUMENTACIÓN/Info_Github.md)*\n\n';
 
             suggestions.forEach(s => {
               message += `### ${s.emoji} ${s.title}\n\n`;
@@ -227,7 +211,7 @@ jobs:
 
             message += '---\n';
             message += '💡 **Nota**: Estas son sugerencias **opcionales** para mejorar la documentación del issue.\n\n';
-            message += '📖 **Referencia**: [Constitución - Gestión de Issues](.specify/memory/constitution.md#gestión-de-issues-y-sprints)\n';
+            message += '📖 **Referencia**: [Convenciones de Issues](DOCUMENTACIÓN/Info_Github.md)\n';
 
             // Verificar si ya existe comentario
             const { data: comments } = await github.rest.issues.listComments({

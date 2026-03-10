@@ -1,16 +1,21 @@
 -- ==============================================================================
--- 03_inserts_base.sql
+-- 04_inserts_base.sql
 -- Datos semilla (core) para la base de datos tns_cool_track.
 -- Solo datos de catálogo y configuración estática. Sin datos transaccionales.
 --
 -- Orden de ejecución respeta dependencias FK:
---   1. gen_ubicaciones_reales
---   2. sem_grupos
---   3. sem_tipos_parametros
---   4. sem_configuracion
---   5. sem_dispositivos
---   6. ubi_presets_temperatura
---   7. ubi_canal
+--   1. gen_feriados_cl, gen_tipos_origen, gen_horario_operacional
+--   2. gen_ubicaciones_reales
+--   3. sem_grupos
+--   4. sem_tipos_parametros
+--   5. sem_configuracion
+--   6. sem_dispositivos
+--   7. ubi_presets_temperatura
+--   8. ubi_canal
+--   9. gen_tipos_parametros → gen_cofiguracion_grupos
+--      → gen_cofiguracion_parametros → gen_cofiguracion_valores
+--  10. rep_tipo_reporte → rep_plantillas
+--  11. ale_tipo_alerta
 -- ==============================================================================
 
 USE tns_cool_track;
@@ -103,6 +108,33 @@ INSERT INTO `gen_feriados_cl` (`fecha`, `nombre`) VALUES
 ('2026-12-31' , 'Fin de año');
 
 
+-- ==============================================================================
+-- gen_tipos_origen
+--    Catálogo transversal de orígenes de datos del sistema.
+--    Usado en alertas, logs y auditorías. Ampliar según crezca el sistema.
+-- ==============================================================================
+
+INSERT INTO `gen_tipos_origen` (`id_tipo_origen`, `nombre`, `descripcion`, `activo`) VALUES
+(1, 'ubibot',  'Sensores de temperatura y conectividad Ubibot',                     1),
+(2, 'shelly',  'Dispositivos de medición eléctrica Shelly',                         1),
+(3, 'sistema', 'Origen interno del sistema (eventos automáticos, scheduler, etc.)', 1);
+
+
+-- ==============================================================================
+-- gen_horario_operacional
+--    Horario operacional por día de la semana (7 filas fijas).
+--    Valores base migrados desde alertSystem.workingHours en gen_cofiguracion_*.
+--    Parámetros globales (respetar_feriados, criticas_ignoran_horario) en gen_cofiguracion_*.
+-- ==============================================================================
+
+INSERT INTO `gen_horario_operacional` (`id_horario_operacional`, `dia_semana`, `nombre_dia`, `hora_inicio`, `hora_fin`, `activo`) VALUES
+(1, 1, 'Lunes',     '08:30:00', '18:30:00', 1),
+(2, 2, 'Martes',    '08:30:00', '18:30:00', 1),
+(3, 3, 'Miércoles', '08:30:00', '18:30:00', 1),
+(4, 4, 'Jueves',    '08:30:00', '18:30:00', 1),
+(5, 5, 'Viernes',   '08:30:00', '18:30:00', 1),
+(6, 6, 'Sábado',    '08:30:00', '14:30:00', 1),
+(7, 7, 'Domingo',   '00:00:00', '00:00:00', 0);
 
 
 -- ==============================================================================
@@ -276,23 +308,24 @@ INSERT INTO `gen_tipos_parametros` (`id_tipo_parametro`, `nombre`, `descripcion`
 -- ==============================================================================
 
 INSERT INTO `gen_cofiguracion_grupos` (`id_cofiguracion_grupos`, `nombre`, `descripcion`, `orden`, `activo`) VALUES
-(1,  'database',              'Configuración de conexión a base de datos (desarrollo y producción)',   1,  1),
-(2,  'jwt',                   'Configuración de autenticación JWT',                                    2,  1),
-(3,  'websocket',             'Configuración del servidor WebSocket',                                   3,  1),
-(4,  'email',                 'Configuración del proveedor de correo electrónico (SendGrid)',           4,  1),
-(5,  'notifications',         'Habilitación de canales de notificación (email, SMS)',                   5,  1),
-(6,  'mapbox',                'Configuración de Mapbox para visualización de mapas',                    6,  1),
-(7,  'posthog',               'Configuración de analítica de uso PostHog',                              7,  1),
-(8,  'tracking',              'Configuración de tracking de eventos de usuario',                        8,  1),
-(9,  'api',                   'Configuración de APIs externas (Shelly Cloud)',                          9,  1),
-(10, 'ubibot',                'Configuración del colector de sensores Ubibot',                         10, 1),
-(11, 'sms',                   'Configuración del módem SMS local (on-premise)',                        11, 1),
-(12, 'measurement',           'Parámetros de medición y cálculo eléctrico',                           12, 1),
-(13, 'alertSystem',           'Configuración del sistema de alertas de temperatura',                   13, 1),
-(14, 'pushNotifications',     'Configuración de notificaciones push PWA (claves VAPID)',               14, 1),
-(15, 'reports_module_config', 'Configuración del módulo de generación de reportes PDF',                15, 1),
-(16, 'OpenAI_API',            'Configuración de la API de OpenAI para módulo de análisis AI',         16, 1),
-(17, 'twilio',                'Configuración de Twilio como proveedor SMS alternativo',                17, 1);
+(1,  'system',                'Configuración del entorno de ejecución del sistema',                     1,  1),
+(2,  'jwt',                   'Configuración de autenticación JWT',                                     2,  1),
+(3,  'websocket',             'Configuración del servidor WebSocket',                                    3,  1),
+(4,  'email',                 'Configuración del proveedor de correo electrónico (SendGrid)',            4,  1),
+(5,  'notifications',         'Habilitación de canales de notificación (email)',                         5,  1),
+(6,  'mapbox',                'Configuración de Mapbox para visualización de mapas',                     6,  1),
+(7,  'posthog',               'Configuración de analítica de uso PostHog',                               7,  1),
+(8,  'tracking',              'Configuración de tracking de eventos de usuario',                         8,  1),
+(9,  'api',                   'Configuración de APIs externas (Shelly Cloud)',                           9,  1),
+(10, 'ubibot',                'Configuración del colector de sensores Ubibot',                          10, 1),
+-- id=11 eliminado: 'sms' → módulo SMS local (módem HiLink) eliminado del sistema
+-- id=12 eliminado: 'measurement' → parámetros gestionados por sem_configuracion (no duplicar)
+(13, 'alertSystem',           'Configuración del sistema de alertas de temperatura',                    13, 1),
+(14, 'pushNotifications',     'Configuración de notificaciones push PWA (claves VAPID)',                14, 1),
+(15, 'reports_module_config', 'Configuración del módulo de generación de reportes PDF',                 15, 1),
+(16, 'OpenAI_API',            'Configuración de la API de OpenAI para módulo de análisis AI',          16, 1),
+(17, 'twilio',                'Configuración de Twilio como proveedor SMS alternativo',                 17, 1),
+(18, 'appInfo',               'Información de la aplicación (nombre, empresa, versión)',                19, 1);
 
 
 -- ==============================================================================
@@ -307,56 +340,105 @@ INSERT INTO `gen_cofiguracion_parametros`
    `ruta_completa`, `nombre_parametro`, `nivel_anidacion`, `ruta_padre`,
    `es_sensible`, `descripcion`, `valor_default`, `es_requerido`, `activo`) VALUES
 
--- Grupo database - entorno development (id_grupo=1)
-(1,  1, 1, 'database.development.host',            'host',            3, 'database.development', 0, 'Host del servidor MySQL de desarrollo',                    'localhost',      1, 1),
-(2,  1, 7, 'database.development.port',            'port',            3, 'database.development', 0, 'Puerto TCP del servidor MySQL de desarrollo',              '3306',           1, 1),
-(3,  1, 1, 'database.development.user',            'user',            3, 'database.development', 0, 'Usuario MySQL de desarrollo',                              '[CONFIGURAR]',   1, 1),
-(4,  1, 1, 'database.development.password',        'password',        3, 'database.development', 1, 'Contraseña MySQL de desarrollo',                           '[CONFIGURAR]',   1, 1),
-(5,  1, 1, 'database.development.database',        'database',        3, 'database.development', 0, 'Nombre de la base de datos de desarrollo',                 'tns_cool_track', 1, 1),
-(6,  1, 7, 'database.development.connectionLimit', 'connectionLimit', 3, 'database.development', 0, 'Límite máximo de conexiones en el pool de desarrollo',     '10',             0, 1),
+-- ── Grupo system (id_grupo=1) → id 1 ─────────────────────────────────────────
+(1,  1, 7, 'system.environment',                       'environment',          2, 'system',                    0, 'Entorno de ejecución activo: 0=development, 1=production',                          '0',     1, 1),
 
--- Grupo database - entorno production (id_grupo=1)
-(7,  1, 1, 'database.production.host',            'host',            3, 'database.production', 0, 'Host del servidor MySQL de producción',                     '[CONFIGURAR]',   1, 1),
-(8,  1, 7, 'database.production.port',            'port',            3, 'database.production', 0, 'Puerto TCP del servidor MySQL de producción',               '3306',           1, 1),
-(9,  1, 1, 'database.production.user',            'user',            3, 'database.production', 0, 'Usuario MySQL de producción',                               '[CONFIGURAR]',   1, 1),
-(10, 1, 1, 'database.production.password',        'password',        3, 'database.production', 1, 'Contraseña MySQL de producción',                            '[CONFIGURAR]',   1, 1),
-(11, 1, 1, 'database.production.database',        'database',        3, 'database.production', 0, 'Nombre de la base de datos de producción',                  '[CONFIGURAR]',   1, 1),
-(12, 1, 7, 'database.production.connectionLimit', 'connectionLimit', 3, 'database.production', 0, 'Límite máximo de conexiones en el pool de producción',      '20',             0, 1),
+-- ── Grupo jwt (id_grupo=2) → ids 2-6 ─────────────────────────────────────────
+(2,  2, 1, 'jwt.secret',                               'secret',               2, 'jwt',                       1, 'Secreto HMAC-SHA256 para firma de tokens JWT (mínimo 64 caracteres hex)',            '[CONFIGURAR]',   1, 1),
+(3,  2, 1, 'jwt.expiresIn',                            'expiresIn',            2, 'jwt',                       0, 'Duración del token JWT (ej: 1h, 24h, 7d)',                                          '1h',             1, 1),
+(4,  2, 1, 'jwt.algorithm',                            'algorithm',            2, 'jwt',                       0, 'Algoritmo de firma JWT soportado por jsonwebtoken',                                 'HS256',          1, 1),
+(5,  2, 1, 'jwt.issuer',                               'issuer',               2, 'jwt',                       0, 'Identificador del emisor del token JWT (claim iss)',                                'TNS_TRACK',      1, 1),
+(6,  2, 1, 'jwt.audience',                             'audience',             2, 'jwt',                       0, 'Audiencia objetivo del token JWT (claim aud)',                                      'bitumix-users',  1, 1),
 
--- Grupo jwt (id_grupo=2)
-(13, 2, 1, 'jwt.secret',    'secret',    2, 'jwt', 1, 'Secreto HMAC-SHA256 para firma de tokens JWT (mínimo 64 caracteres)', '[CONFIGURAR]',   1, 1),
-(14, 2, 1, 'jwt.expiresIn', 'expiresIn', 2, 'jwt', 0, 'Duración del token JWT (ej: 1h, 24h, 7d)',                            '1h',             1, 1),
-(15, 2, 1, 'jwt.algorithm', 'algorithm', 2, 'jwt', 0, 'Algoritmo de firma JWT',                                               'HS256',          1, 1),
-(16, 2, 1, 'jwt.issuer',    'issuer',    2, 'jwt', 0, 'Identificador del emisor del token JWT',                               'TNS_TRACK',      1, 1),
-(17, 2, 1, 'jwt.audience',  'audience',  2, 'jwt', 0, 'Audiencia objetivo del token JWT',                                     'bitumix-users',  1, 1),
+-- ── Grupo websocket (id_grupo=3) → ids 7-10 ──────────────────────────────────
+(7,  3, 2, 'websocket.enabled',                        'enabled',              2, 'websocket',                 0, 'Habilitar servidor WebSocket para comunicación en tiempo real',                     'true',  1, 1),
+(8,  3, 7, 'websocket.port',                           'port',                 2, 'websocket',                 0, 'Puerto de escucha del servidor WebSocket',                                          '1337',  1, 1),
+(9,  3, 4, 'websocket.cors.origin',                    'origin',               3, 'websocket.cors',            0, 'Orígenes permitidos para conexiones WebSocket (CORS)',                             '["http://localhost:3000","http://localhost:1337"]', 0, 1),
+(10, 3, 4, 'websocket.cors.methods',                   'methods',              3, 'websocket.cors',            0, 'Métodos HTTP permitidos en negociación CORS del WebSocket',                        '["GET","POST"]', 0, 1),
 
--- Grupo email (id_grupo=4)
-(18, 4, 1, 'email.sendgrid_api_key',               'sendgrid_api_key',   2, 'email',                0, 'API Key de SendGrid para envío de correos (comienza con SG.)', '[CONFIGURAR]', 1, 1),
-(19, 4, 1, 'email.email_contacto.from_verificado', 'from_verificado',    3, 'email.email_contacto', 0, 'Correo remitente verificado en SendGrid',                       '[CONFIGURAR]', 1, 1),
-(20, 4, 1, 'email.email_contacto.from_name',       'from_name',          3, 'email.email_contacto', 0, 'Nombre visible del remitente en los correos enviados',          'TNS TRACK',    0, 1),
-(21, 4, 1, 'email.emergency_recipient',            'emergency_recipient',2, 'email',                0, 'Correo destinatario de alertas críticas del sistema',           '[CONFIGURAR]', 1, 1),
+-- ── Grupo email (id_grupo=4) → ids 11-14 ─────────────────────────────────────
+(11, 4, 1, 'email.sendgrid_api_key',                   'sendgrid_api_key',     2, 'email',                     1, 'API Key de SendGrid para envío de correos (comienza con SG.)',                     '[CONFIGURAR]', 1, 1),
+(12, 4, 1, 'email.email_contacto.from_verificado',     'from_verificado',      3, 'email.email_contacto',      0, 'Correo remitente verificado en SendGrid',                                          '[CONFIGURAR]', 1, 1),
+(13, 4, 1, 'email.email_contacto.from_name',           'from_name',            3, 'email.email_contacto',      0, 'Nombre visible del remitente en los correos enviados',                             'TNS TRACK',    0, 1),
+(14, 4, 1, 'email.emergency_recipient',                'emergency_recipient',  2, 'email',                     0, 'Correo destinatario de alertas críticas del sistema',                              '[CONFIGURAR]', 1, 1),
 
--- Grupo api - Shelly Cloud (id_grupo=9)
-(22, 9, 1, 'api.shelly_cloud.url',                 'url',                 3, 'api.shelly_cloud', 0, 'URL base de la API Shelly Cloud',                            '[CONFIGURAR]', 1, 1),
-(23, 9, 1, 'api.shelly_cloud.device_id',           'device_id',           3, 'api.shelly_cloud', 1, 'ID del dispositivo Shelly Cloud (identificador único)',      '[CONFIGURAR]', 1, 1),
-(24, 9, 1, 'api.shelly_cloud.auth_key',            'auth_key',            3, 'api.shelly_cloud', 1, 'Clave de autenticación de la API Shelly Cloud',             '[CONFIGURAR]', 1, 1),
-(25, 9, 7, 'api.shelly_cloud.collection_interval', 'collection_interval', 3, 'api.shelly_cloud', 0, 'Intervalo de recolección de datos Shelly en milisegundos',  '10000',        0, 1),
+-- ── Grupo notifications (id_grupo=5) → id 15 ────────────────────────────────
+-- id=16 eliminado: notifications.sms.enabled — módulo SMS (módem HiLink local) eliminado del sistema
+(15, 5, 2, 'notifications.email.enabled',              'enabled',              3, 'notifications.email',       0, 'Habilitar envío de notificaciones por correo electrónico',                         'true',  0, 1),
 
--- Grupo mapbox (id_grupo=6)
-(26, 6, 1, 'mapbox.access_token', 'access_token', 2, 'mapbox', 1, 'Token de acceso Mapbox para renderizado de mapas en el cliente',      '[CONFIGURAR]',                        1, 1),
-(27, 6, 1, 'mapbox.style_url',    'style_url',    2, 'mapbox', 0, 'URL del estilo de mapa Mapbox a utilizar en la aplicación',           'mapbox://styles/mapbox/satellite-v9', 0, 1),
+-- ── Grupo mapbox (id_grupo=6) → ids 17-18 ────────────────────────────────────
+(17, 6, 1, 'mapbox.access_token',                      'access_token',         2, 'mapbox',                    1, 'Token de acceso Mapbox para renderizado de mapas en el cliente',                   '[CONFIGURAR]',                        1, 1),
+(18, 6, 1, 'mapbox.style_url',                         'style_url',            2, 'mapbox',                    0, 'URL del estilo de mapa Mapbox a utilizar en la aplicación',                       'mapbox://styles/mapbox/satellite-v9', 0, 1),
 
--- Grupo posthog (id_grupo=7)
-(28, 7, 1, 'posthog.project_API_key',    'project_API_key',    2, 'posthog', 1, 'API Key del proyecto PostHog para analítica de uso',       '[CONFIGURAR]',             0, 1),
-(29, 7, 1, 'posthog.project_host_url',   'project_host_url',   2, 'posthog', 0, 'URL del servidor PostHog (US o EU cloud)',                  'https://us.i.posthog.com', 0, 1),
-(30, 7, 7, 'posthog.sesion_sample_rate', 'sesion_sample_rate', 2, 'posthog', 0, 'Porcentaje de sesiones a muestrear en PostHog (0-100)',     '100',                      0, 1),
+-- ── Grupo posthog (id_grupo=7) → ids 19-21 ───────────────────────────────────
+(19, 7, 1, 'posthog.project_API_key',                  'project_API_key',      2, 'posthog',                   1, 'API Key del proyecto PostHog para analítica de uso (phc_...)',                     '[CONFIGURAR]',             0, 1),
+(20, 7, 1, 'posthog.project_host_url',                 'project_host_url',     2, 'posthog',                   0, 'URL del servidor PostHog (US o EU cloud)',                                         'https://us.i.posthog.com', 0, 1),
+(21, 7, 7, 'posthog.sesion_sample_rate',               'sesion_sample_rate',   2, 'posthog',                   0, 'Porcentaje de sesiones a muestrear en PostHog (0-100)',                            '100',                      0, 1),
 
--- Grupo notifications (id_grupo=5)
-(31, 5, 2, 'notifications.email.enabled', 'enabled', 3, 'notifications.email', 0, 'Habilitar envío de notificaciones por correo electrónico', 'true',  0, 1),
-(32, 5, 2, 'notifications.sms.enabled',   'enabled', 3, 'notifications.sms',   0, 'Habilitar envío de notificaciones por SMS',                 'false', 0, 1),
+-- ── Grupo tracking (id_grupo=8) → ids 22-28 ──────────────────────────────────
+(22, 8, 2, 'tracking.enabled',                         'enabled',              2, 'tracking',                  0, 'Habilitar sistema de tracking de eventos de usuario',                              'true',  1, 1),
+(23, 8, 7, 'tracking.mysql.batchSize',                 'batchSize',            3, 'tracking.mysql',            0, 'Número de eventos a acumular antes de flush a MySQL',                              '75',    0, 1),
+(24, 8, 7, 'tracking.mysql.flushIntervalSeconds',      'flushIntervalSeconds', 3, 'tracking.mysql',            0, 'Intervalo en segundos entre flush automático a MySQL',                             '5',     0, 1),
+(25, 8, 7, 'tracking.posthog.batchSize',               'batchSize',            3, 'tracking.posthog',          0, 'Número de eventos a acumular antes de enviar a PostHog',                           '20',    0, 1),
+(26, 8, 7, 'tracking.posthog.flushIntervalSeconds',    'flushIntervalSeconds', 3, 'tracking.posthog',          0, 'Intervalo en segundos entre envíos a PostHog',                                    '3',     0, 1),
+(27, 8, 7, 'tracking.rateLimiting.maxEventsPerSecond', 'maxEventsPerSecond',   3, 'tracking.rateLimiting',     0, 'Máximo de eventos por segundo permitidos (rate limiter)',                           '10',    0, 1),
+(28, 8, 7, 'tracking.logRetentionDays',                'logRetentionDays',     2, 'tracking',                  0, 'Días de retención de logs de tracking antes de purga automática',                  '90',    0, 1),
 
--- Grupo OpenAI_API (id_grupo=16)
-(33, 16, 1, 'OpenAI_API.OPENAI_API_KEY', 'OPENAI_API_KEY', 2, 'OpenAI_API', 1, 'API Key de OpenAI para módulo de análisis AI de cámaras', '[CONFIGURAR]', 0, 1);
+-- ── Grupo api - Shelly Cloud (id_grupo=9) → ids 29-32 ────────────────────────
+(29, 9, 1, 'api.shelly_cloud.url',                     'url',                  3, 'api.shelly_cloud',          0, 'URL base de la API Shelly Cloud',                                                  '[CONFIGURAR]', 1, 1),
+(30, 9, 1, 'api.shelly_cloud.device_id',               'device_id',            3, 'api.shelly_cloud',          1, 'ID del dispositivo Shelly Cloud (identificador único)',                            '[CONFIGURAR]', 1, 1),
+(31, 9, 1, 'api.shelly_cloud.auth_key',                'auth_key',             3, 'api.shelly_cloud',          1, 'Clave de autenticación de la API Shelly Cloud',                                    '[CONFIGURAR]', 1, 1),
+(32, 9, 7, 'api.shelly_cloud.collection_interval',     'collection_interval',  3, 'api.shelly_cloud',          0, 'Intervalo de recolección de datos Shelly en milisegundos',                         '10000',        0, 1),
+
+-- ── Grupo ubibot (id_grupo=10) → ids 33-36 ───────────────────────────────────
+(33, 10, 1, 'ubibot.account_key',                      'account_key',          2, 'ubibot',                    1, 'Account Key Ubibot para autenticación con la API (32 chars hex)',                   '[CONFIGURAR]',              1, 1),
+(34, 10, 1, 'ubibot.token_file',                       'token_file',           2, 'ubibot',                    0, 'Ruta al archivo local donde se persiste el access token de la API Ubibot',          './src/config/token_id.txt', 1, 1),
+(35, 10, 4, 'ubibot.excluded_channels',                'excluded_channels',    2, 'ubibot',                    0, 'Array de channel_id a excluir del ciclo de recolección',                           '[]',                        0, 1),
+(36, 10, 7, 'ubibot.collection_interval',              'collection_interval',  2, 'ubibot',                    0, 'Intervalo de recolección de datos Ubibot en milisegundos (default: 5 min)',         '300000',                    0, 1),
+
+-- ids 37-47 eliminados: grupo sms (módem HiLink local) — módulo SMS eliminado del sistema
+
+-- ── Grupo alertSystem (id_grupo=13) → ids 48-54 ───────────────────────────────
+(48, 13, 7, 'alertSystem.intervals.processing',                 'processing',   4, 'alertSystem.intervals',              0, 'Intervalo en ms del ciclo de procesamiento de alertas pendientes',             '3600000',  0, 1),
+(49, 13, 7, 'alertSystem.intervals.cleanup',                    'cleanup',      4, 'alertSystem.intervals',              0, 'Intervalo en ms del ciclo de limpieza de alertas antiguas',                    '43200000', 0, 1),
+(50, 13, 7, 'alertSystem.intervals.temperature.initialDelay',   'initialDelay', 5, 'alertSystem.intervals.temperature',  0, 'Minutos sin cambio antes de enviar primera alerta de temperatura',             '60',       0, 1),
+(51, 13, 7, 'alertSystem.intervals.temperature.betweenAlerts',  'betweenAlerts',5, 'alertSystem.intervals.temperature',  0, 'Minutos mínimos entre alertas consecutivas de temperatura',                    '60',       0, 1),
+(52, 13, 7, 'alertSystem.intervals.disconnection.initialDelay', 'initialDelay', 5, 'alertSystem.intervals.disconnection',0, 'Minutos desconectado antes de enviar primera alerta de desconexión',           '55',       0, 1),
+(53, 13, 7, 'alertSystem.intervals.disconnection.betweenAlerts','betweenAlerts',5, 'alertSystem.intervals.disconnection',0, 'Minutos mínimos entre alertas consecutivas de desconexión',                    '55',       0, 1),
+(54, 13, 7, 'alertSystem.retention.maxAgeHours',                'maxAgeHours',  3, 'alertSystem.retention',              0, 'Horas máximas de retención del historial de alertas',                          '24',       0, 1),
+-- ids 55-58 eliminados: alertSystem.workingHours.* — reemplazado por tabla gen_horario_operacional
+
+-- ── Grupo pushNotifications (id_grupo=14) → ids 59-62 ─────────────────────────
+(59, 14, 2, 'pushNotifications.enabled',                        'enabled',        2, 'pushNotifications', 0, 'Habilitar notificaciones push PWA mediante Web Push API',                         'false',         0, 1),
+(60, 14, 1, 'pushNotifications.vapidPublicKey',                 'vapidPublicKey', 2, 'pushNotifications', 1, 'Clave pública VAPID para autenticar el servidor de notificaciones push',           '[CONFIGURAR]',  1, 1),
+(61, 14, 1, 'pushNotifications.vapidPrivateKey',                'vapidPrivateKey',2, 'pushNotifications', 1, 'Clave privada VAPID (nunca exponer al cliente)',                                   '[CONFIGURAR]',  1, 1),
+(62, 14, 1, 'pushNotifications.vapidSubject',                   'vapidSubject',   2, 'pushNotifications', 0, 'Identificador de contacto del servidor push (mailto: o URL)',                     '[CONFIGURAR]',  0, 1),
+
+-- ── Grupo reports_module_config (id_grupo=15) → ids 63-67 ────────────────────
+(63, 15, 1, 'reports_module_config.storage_path',               'storage_path',           2, 'reports_module_config', 0, 'Ruta de almacenamiento de reportes PDF generados',                            '../storage/reports', 1, 1),
+(64, 15, 2, 'reports_module_config.scheduler_enabled',          'scheduler_enabled',      2, 'reports_module_config', 0, 'Habilitar generación automática de reportes programados',                     'true',               0, 1),
+(65, 15, 1, 'reports_module_config.scheduler_timezone',         'scheduler_timezone',     2, 'reports_module_config', 0, 'Zona horaria para el scheduler de reportes (IANA timezone)',                  'America/Santiago',   0, 1),
+(66, 15, 7, 'reports_module_config.retention_days',             'retention_days',         2, 'reports_module_config', 0, 'Días de retención de reportes PDF antes de eliminación automática',           '90',                 0, 1),
+(67, 15, 7, 'reports_module_config.max_concurrent_reports',     'max_concurrent_reports', 2, 'reports_module_config', 0, 'Máximo de reportes que pueden generarse en paralelo',                         '5',                  0, 1),
+
+-- ── Grupo OpenAI_API (id_grupo=16) → id 68 ───────────────────────────────────
+(68, 16, 1, 'OpenAI_API.OPENAI_API_KEY',                        'OPENAI_API_KEY', 2, 'OpenAI_API', 1, 'API Key de OpenAI para módulo de análisis AI de cámaras',                                         '[CONFIGURAR]', 0, 1),
+
+-- ── Grupo twilio (id_grupo=17) → ids 69-73 ───────────────────────────────────
+(69, 17, 1, 'twilio.accountSid',                                'accountSid',    2, 'twilio', 1, 'SID de la cuenta Twilio (comienza con AC)',                                            '[CONFIGURAR]', 1, 1),
+(70, 17, 1, 'twilio.authToken',                                 'authToken',     2, 'twilio', 1, 'Token de autenticación de la cuenta Twilio',                                           '[CONFIGURAR]', 1, 1),
+(71, 17, 1, 'twilio.phoneNumber',                               'phoneNumber',   2, 'twilio', 0, 'Número de teléfono Twilio emisor en formato E.164 (ej: +13149166784)',                  '[CONFIGURAR]', 1, 1),
+(72, 17, 1, 'twilio.url_llamada',                               'url_llamada',   2, 'twilio', 0, 'URL del TwiML Bin para llamadas de voz de alerta',                                     '[CONFIGURAR]', 0, 1),
+(73, 17, 4, 'twilio.destinatarios',                             'destinatarios', 2, 'twilio', 1, 'Array de números de teléfono destinatarios de llamadas Twilio en formato E.164',       '[CONFIGURAR]', 1, 1),
+
+-- ── Grupo appInfo (id_grupo=18) → ids 74-76 ──────────────────────────────────
+(74, 18, 1, 'appInfo.appName',                                  'appName',     2, 'appInfo', 0, 'Nombre de la aplicación mostrado en notificaciones y reportes',                        'Sistema de Monitoreo',   0, 1),
+(75, 18, 1, 'appInfo.companyName',                              'companyName', 2, 'appInfo', 0, 'Nombre de la empresa operadora mostrado en notificaciones y reportes',                 'The Next Security',      0, 1),
+(76, 18, 1, 'appInfo.version',                                  'version',     2, 'appInfo', 0, 'Versión actual de la aplicación (semver)',                                              '1.0.0',                  0, 1),
+
+-- ── Grupo alertSystem (id_grupo=13) → ids 77-78 (parámetros globales) ─────────
+(77, 13, 2, 'alertSystem.respetar_feriados',          'respetar_feriados',         2, 'alertSystem', 0, 'Si es true, no se envían notificaciones en días feriados definidos en gen_feriados_cl', 'true', 0, 1),
+(78, 13, 2, 'alertSystem.criticas_ignoran_horario',   'criticas_ignoran_horario',  2, 'alertSystem', 0, 'Si es true, las alertas críticas se envían fuera del horario operacional',             'true', 0, 1);
 
 
 -- ==============================================================================
@@ -365,49 +447,91 @@ INSERT INTO `gen_cofiguracion_parametros`
 --     ⚠️  Reemplazar todos los '[CONFIGURAR]' antes de desplegar en producción.
 -- ==============================================================================
 
+-- ⚠️  Todos los valores '[CONFIGURAR]' deben ser reemplazados antes de desplegar.
+-- ⚠️  Usar el archivo 04_valores_reales.sql (gitignored) para actualizar con valores reales.
 INSERT INTO `gen_cofiguracion_valores` (`id_cofiguracion_parametros`, `valor`, `version`, `activo`) VALUES
--- database development
-(1,  'localhost',         1, 1),
-(2,  '3306',              1, 1),
-(3,  '[CONFIGURAR]',      1, 1),
-(4,  '[CONFIGURAR]',      1, 1),
-(5,  'tns_cool_track',    1, 1),
-(6,  '10',                1, 1),
--- database production
-(7,  '[CONFIGURAR]',      1, 1),
-(8,  '3306',              1, 1),
-(9,  '[CONFIGURAR]',      1, 1),
-(10, '[CONFIGURAR]',      1, 1),
-(11, '[CONFIGURAR]',      1, 1),
-(12, '20',                1, 1),
--- jwt
-(13, '[CONFIGURAR]',      1, 1),
-(14, '1h',                1, 1),
-(15, 'HS256',             1, 1),
-(16, 'TNS_TRACK',         1, 1),
-(17, 'bitumix-users',     1, 1),
--- email
-(18, '[CONFIGURAR]',      1, 1),
-(19, '[CONFIGURAR]',      1, 1),
-(20, 'TNS TRACK',         1, 1),
-(21, '[CONFIGURAR]',      1, 1),
--- api shelly cloud
-(22, '[CONFIGURAR]',      1, 1),
-(23, '[CONFIGURAR]',      1, 1),
-(24, '[CONFIGURAR]',      1, 1),
-(25, '10000',             1, 1),
--- mapbox
-(26, '[CONFIGURAR]',      1, 1),
-(27, 'mapbox://styles/mapbox/satellite-v9', 1, 1),
--- posthog
-(28, '[CONFIGURAR]',      1, 1),
-(29, 'https://us.i.posthog.com', 1, 1),
-(30, '100',               1, 1),
--- notifications
-(31, 'true',              1, 1),
-(32, 'false',             1, 1),
--- OpenAI_API
-(33, '[CONFIGURAR]',      1, 1);
+-- system (id 1)
+(1,  '0',                                                          1, 1),
+-- jwt (ids 2-6)
+(2,  '[CONFIGURAR]',                                               1, 1),
+(3,  '1h',                                                         1, 1),
+(4,  'HS256',                                                      1, 1),
+(5,  'TNS_TRACK',                                                  1, 1),
+(6,  'bitumix-users',                                              1, 1),
+-- websocket (ids 7-10)
+(7,  'true',                                                       1, 1),
+(8,  '1337',                                                       1, 1),
+(9,  '["http://localhost:3000","http://localhost:1337"]',           1, 1),
+(10, '["GET","POST"]',                                             1, 1),
+-- email (ids 11-14)
+(11, '[CONFIGURAR]',                                               1, 1),
+(12, '[CONFIGURAR]',                                               1, 1),
+(13, 'TNS TRACK',                                                  1, 1),
+(14, '[CONFIGURAR]',                                               1, 1),
+-- notifications (id 15)
+-- id=16 eliminado: notifications.sms.enabled — módulo SMS (módem HiLink local) eliminado del sistema
+(15, 'true',                                                       1, 1),
+-- mapbox (ids 17-18)
+(17, '[CONFIGURAR]',                                               1, 1),
+(18, 'mapbox://styles/mapbox/satellite-v9',                        1, 1),
+-- posthog (ids 19-21)
+(19, '[CONFIGURAR]',                                               1, 1),
+(20, 'https://us.i.posthog.com',                                   1, 1),
+(21, '100',                                                        1, 1),
+-- tracking (ids 22-28)
+(22, 'true',                                                       1, 1),
+(23, '75',                                                         1, 1),
+(24, '5',                                                          1, 1),
+(25, '20',                                                         1, 1),
+(26, '3',                                                          1, 1),
+(27, '10',                                                         1, 1),
+(28, '90',                                                         1, 1),
+-- api shelly cloud (ids 29-32)
+(29, '[CONFIGURAR]',                                               1, 1),
+(30, '[CONFIGURAR]',                                               1, 1),
+(31, '[CONFIGURAR]',                                               1, 1),
+(32, '10000',                                                      1, 1),
+-- ubibot (ids 33-36)
+(33, '[CONFIGURAR]',                                               1, 1),
+(34, './src/config/token_id.txt',                                  1, 1),
+(35, '[]',                                                         1, 1),
+(36, '300000',                                                     1, 1),
+-- ids 37-47 eliminados: grupo sms (módem HiLink local) — módulo SMS eliminado del sistema
+-- alertSystem (ids 48-54)
+(48, '3600000',                                                    1, 1),
+(49, '43200000',                                                   1, 1),
+(50, '60',                                                         1, 1),
+(51, '60',                                                         1, 1),
+(52, '55',                                                         1, 1),
+(53, '55',                                                         1, 1),
+(54, '24',                                                         1, 1),
+-- ids 55-58 eliminados: alertSystem.workingHours.* — reemplazado por tabla gen_horario_operacional
+-- pushNotifications (ids 59-62)
+(59, 'false',                                                      1, 1),
+(60, '[CONFIGURAR]',                                               1, 1),
+(61, '[CONFIGURAR]',                                               1, 1),
+(62, '[CONFIGURAR]',                                               1, 1),
+-- reports_module_config (ids 63-67)
+(63, '../storage/reports',                                         1, 1),
+(64, 'true',                                                       1, 1),
+(65, 'America/Santiago',                                           1, 1),
+(66, '90',                                                         1, 1),
+(67, '5',                                                          1, 1),
+-- OpenAI_API (id 68)
+(68, '[CONFIGURAR]',                                               1, 1),
+-- twilio (ids 69-73)
+(69, '[CONFIGURAR]',                                               1, 1),
+(70, '[CONFIGURAR]',                                               1, 1),
+(71, '[CONFIGURAR]',                                               1, 1),
+(72, '[CONFIGURAR]',                                               1, 1),
+(73, '[CONFIGURAR]',                                               1, 1),
+-- appInfo (ids 74-76)
+(74, 'Sistema de Monitoreo',                                       1, 1),
+(75, 'The Next Security',                                          1, 1),
+(76, '1.0.0',                                                      1, 1),
+-- alertSystem global (ids 77-78)
+(77, 'true',                                                       1, 1),
+(78, 'true',                                                       1, 1);
 
 
 -- ==============================================================================
@@ -441,3 +565,18 @@ INSERT INTO `rep_plantillas` (`id_plantilla`, `clave_plantilla`, `id_tipo_report
 (3, 'executive_consumption', 2,
    'Reporte Ejecutivo Consumo Eléctrico',
    'Análisis de consumo, demanda máxima, factor de carga y costos eléctricos con KPIs operacionales, gráficos de tendencias y ranking de dispositivos', 1);
+
+
+-- ==============================================================================
+-- MÓDULO DE ALERTAS
+-- ==============================================================================
+
+
+-- ==============================================================================
+-- 14. ale_tipo_alerta
+--     Catálogo de tipos de alerta del sistema.
+-- ==============================================================================
+
+INSERT INTO `ale_tipo_alerta` (`id_tipo_alerta`, `nombre`, `descripcion`, `activo`) VALUES
+(1, 'temperatura',  'Alerta por temperatura fuera de umbral configurado',         1),
+(2, 'desconexion',  'Alerta por desconexión de sensor sin reportar lecturas',     1);

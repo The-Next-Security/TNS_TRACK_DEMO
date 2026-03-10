@@ -1,0 +1,41 @@
+# Configuración del PR Auto Labeler
+# Mapea rutas de archivos a labels definidos en Info_Github.md
+# Usado por .github/workflows/pr-labeler.yml
+
+"back-end":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "servicios/src/**/*.js"
+      - "servicios/src/**/*.jsx"
+      - "servicios/package.json"
+      - "servicios/package-lock.json"
+      - "servicios/webpack.config.js"
+      - "servicios/eslint.config.js"
+
+"front-end":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "servicios/src/components/**"
+      - "servicios/src/pages/**"
+      - "servicios/src/styles/**"
+      - "servicios/src/hooks/**"
+      - "servicios/src/context/**"
+
+"SQL - BBDD":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "SQL_FILES/**/*.sql"
+      - "SQL_FILES/**/*.SQL"
+
+"documentation":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "DOCUMENTACIÓN/**"
+      - "*.md"
+      - ".github/**/*.md"
+
+"analytics":
+  - changed-files:
+    - any-glob-to-any-file:
+      - "servicios/src/**/analytics/**"
+      - "servicios/src/**/reports/**"

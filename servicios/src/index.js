@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './components/App';
-import { registerServiceWorker } from './utils/registerServiceWorker';
+import { registerServiceWorker } from './utils/registerServiceWorker_Utils';
 
 const container = document.getElementById('root');
 const root = createRoot(container);

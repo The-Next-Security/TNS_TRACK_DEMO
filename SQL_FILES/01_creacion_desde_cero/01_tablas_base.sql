@@ -15,6 +15,7 @@ CREATE TABLE `gen_usuario` (
   `apellido` VARCHAR(100) NOT NULL,
   `password` VARCHAR(255) NOT NULL,
   `email` VARCHAR(255) NOT NULL,
+  `token_version` INT UNSIGNED NOT NULL DEFAULT 0,
   `activo` TINYINT(1) NOT NULL DEFAULT 1,
   `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -113,6 +114,17 @@ CREATE TABLE `gen_tipos_parametros` (
   INDEX `idx_gen_tipos_parametros_categoria` (`categoria`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Catálogo centralizado de tipos de parámetros para todo el sistema';
 
+-- Catálogo de tipos de origen de datos — transversal al sistema (alertas, logs, auditorías, etc.)
+CREATE TABLE `gen_tipos_origen` (
+  `id_tipo_origen` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(30) NOT NULL COMMENT 'Identificador del origen: ubibot, shelly, sistema, teltonika...',
+  `descripcion` VARCHAR(255) NULL COMMENT 'Descripción del origen de datos',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = origen activo y en uso',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_tipo_origen`),
+  UNIQUE KEY `uk_gen_tipos_origen_nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Catálogo de tipos de origen de datos del sistema — uso transversal';
+
 -- Grupos principales de configuración del sistema
 CREATE TABLE `gen_cofiguracion_grupos` (
   `id_cofiguracion_grupos` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -188,6 +200,19 @@ CREATE TABLE `gen_cofiguracion_valores` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Valores reales de configuración con versionado e historial';
 
+-- Horario operacional del sistema por día de la semana para control de notificaciones y alertas
+CREATE TABLE `gen_horario_operacional` (
+  `id_horario_operacional` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `dia_semana` TINYINT UNSIGNED NOT NULL COMMENT '1=Lunes, 2=Martes, 3=Miércoles, 4=Jueves, 5=Viernes, 6=Sábado, 7=Domingo',
+  `nombre_dia` VARCHAR(20) NOT NULL COMMENT 'Nombre del día de la semana',
+  `hora_inicio` TIME NOT NULL COMMENT 'Hora de inicio del horario operacional',
+  `hora_fin` TIME NOT NULL COMMENT 'Hora de fin del horario operacional',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = este registro de horario está habilitado y debe utilizarse',
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_horario_operacional`),
+  UNIQUE KEY `uk_gen_horario_operacional_dia_semana` (`dia_semana`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Horario operacional por día de la semana para control de notificaciones y alertas';
+
 -- ============================================
 -- TABLAS DE REPORTERÍA (rep_)
 -- ============================================
@@ -228,17 +253,24 @@ CREATE TABLE `rep_reportes_programados` (
   `id_plantilla` INT UNSIGNED NOT NULL COMMENT 'FK a rep_plantillas',
   `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre del reporte programado',
   `descripcion` VARCHAR(255) NOT NULL COMMENT 'Descripción del reporte programado',
+  `expresion_cron` VARCHAR(100) NOT NULL COMMENT 'Expresión cron de node-cron para programación (ej: 0 8 * * 1-5)',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = job de reporte activo y programado',
+  `proxima_ejecucion` DATETIME NULL COMMENT 'Próxima ejecución programada (persiste el estado para restaurar jobs al reiniciar)',
+  `ultima_ejecucion` DATETIME NULL COMMENT 'Fecha y hora de la última ejecución',
+  `ultima_ejecucion_estado` ENUM('exitoso', 'fallido', 'omitido') NULL COMMENT 'Estado de la última ejecución',
   `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_reporte_programado`),
   UNIQUE KEY `uk_rep_reportes_programados_nombre` (`nombre`),
   INDEX `idx_rep_reportes_programados_id_plantilla` (`id_plantilla`),
+  INDEX `idx_rep_reportes_programados_activo` (`activo`),
+  INDEX `idx_rep_reportes_programados_proxima_ejecucion` (`proxima_ejecucion`),
   CONSTRAINT `fk_reportes_programados_id_plantilla_plantillas_id_plantilla`
     FOREIGN KEY (`id_plantilla`)
     REFERENCES `rep_plantillas`(`id_plantilla`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reportes programados';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reportes programados con configuración de scheduling para node-cron';
 
 -- Tabla de reportes generados
 CREATE TABLE `rep_reportes_generados` (
@@ -292,6 +324,11 @@ CREATE TABLE `ubi_canal` (
   `fecha_actualizacion_umbral` DATETIME NULL DEFAULT NULL COMMENT 'Fecha de última actualización del umbral',
   `usuario_actualizacion_umbral` VARCHAR(100) NOT NULL COMMENT 'Usuario que actualizó el umbral',
   `ultima_alerta_enviada` DATETIME NULL DEFAULT NULL COMMENT 'Fecha de última alerta enviada',
+  `fuera_linea_desde` DATETIME NULL DEFAULT NULL COMMENT 'Fecha desde la cual el canal está sin conexión (NULL = actualmente en línea)',
+  `serial` VARCHAR(20) NULL DEFAULT NULL COMMENT 'Número de serie físico del dispositivo (full_serial de Ubibot)',
+  `ultima_lectura_ubibot` DATETIME NULL DEFAULT NULL COMMENT 'Fecha last_entry_date reportada por Ubibot API — para detectar sensores silenciosos',
+  `ultima_ip` VARCHAR(45) NULL DEFAULT NULL COMMENT 'Última IP reportada por Ubibot (last_ip) — para diagnóstico de red',
+  `puntaje_salud` TINYINT UNSIGNED NULL DEFAULT NULL COMMENT 'Puntaje de salud del dispositivo 0-100 (device_health.score) — para mantenimiento preventivo',
   `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si el canal está activo',
   `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -309,11 +346,15 @@ CREATE TABLE `ubi_canal` (
 CREATE TABLE `ubi_lecturas_sensor` (
   `id_lectura_sensor` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `id_canal` INT UNSIGNED NOT NULL COMMENT 'FK a ubi_canal',
-  `temperatura` DECIMAL(10,2) NOT NULL COMMENT 'Temperatura registrada por el sensor',
-  `humedad` DECIMAL(10,2) NOT NULL COMMENT 'Humedad registrada por el sensor',
-  `luz` DECIMAL(10,2) NOT NULL COMMENT 'Nivel de luz registrado por el sensor',
-  `voltaje` DECIMAL(10,2) NOT NULL COMMENT 'Voltaje registrado por el sensor',
-  `fecha_lectura` DATETIME NOT NULL COMMENT 'Fecha y hora exacta de la lectura del sensor',
+  `temperatura` DECIMAL(8,4) NOT NULL COMMENT 'Temperatura ambiente interior del sensor - field1',
+  `humedad` DECIMAL(8,4) NOT NULL COMMENT 'Humedad registrada por el sensor - field2',
+  `luz` DECIMAL(12,4) NOT NULL COMMENT 'Nivel de luz registrado por el sensor - field3',
+  `voltaje` DECIMAL(8,4) NOT NULL COMMENT 'Voltaje registrado por el sensor - field4',
+  `temperatura_externa` DECIMAL(8,4) NULL DEFAULT NULL COMMENT 'Temperatura sonda externa de refrigeración - field8 (dato principal del negocio)',
+  `fecha_lectura_externa` DATETIME NULL DEFAULT NULL COMMENT 'Timestamp de la sonda externa - field8.created_at',
+  `wifi_rssi` SMALLINT NULL DEFAULT NULL COMMENT 'Intensidad señal WiFi en dBm - field5',
+  `en_linea_lectura` TINYINT(1) NULL DEFAULT NULL COMMENT 'Estado online del canal al momento de la lectura - channel.net',
+  `fecha_lectura` DATETIME NOT NULL COMMENT 'Fecha y hora exacta de la lectura del sensor - field1.created_at',
   `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'Fecha y hora de inserción del registro',
   PRIMARY KEY (`id_lectura_sensor`),
   INDEX `idx_ubi_lecturas_sensor_id_canal` (`id_canal`),
@@ -613,17 +654,26 @@ CREATE TABLE `ubi_contador_ciclos` (
 -- TABLAS DE ALERTAS Y NOTIFICACIONES (ale_)
 -- ============================================
 
--- Seguimiento de alertas de temperatura y desconexión de sensores
+-- Catálogo de tipos de alerta (reemplaza ENUM en ale_seguimiento para extensibilidad sin ALTER TABLE)
+CREATE TABLE `ale_tipo_alerta` (
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre` VARCHAR(50) NOT NULL COMMENT 'Identificador único del tipo de alerta',
+  `descripcion` VARCHAR(255) NULL COMMENT 'Descripción del tipo de alerta',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = tipo de alerta activo y en uso',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_tipo_alerta`),
+  UNIQUE KEY `uk_ale_tipo_alerta_nombre` (`nombre`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Catálogo de tipos de alerta del sistema';
+
+-- Seguimiento de alertas del sistema (genérica — datos específicos en ale_datos_*)
 CREATE TABLE `ale_seguimiento` (
   `id_alerta` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `id_canal` INT UNSIGNED NULL COMMENT 'FK a ubi_canal (NULL si el canal fue eliminado)',
-  `tipo_alerta` ENUM('temperatura', 'desconexion') NOT NULL COMMENT 'Tipo de alerta generada',
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL COMMENT 'FK a ale_tipo_alerta',
+  `id_origen_tipo` TINYINT UNSIGNED NOT NULL COMMENT 'FK a gen_tipos_origen — qué sistema generó la alerta',
+  `origen_id` INT UNSIGNED NULL COMMENT 'ID del dispositivo de origen en su tabla nativa (ej: id_canal de ubi_canal)',
   `estado` ENUM('pendiente', 'confirmado', 'resuelto', 'falsa_alarma') NOT NULL DEFAULT 'pendiente',
   `severidad` ENUM('baja', 'media', 'critica') NOT NULL DEFAULT 'media',
-  `datos_alerta` JSON NULL COMMENT 'Datos adicionales de la alerta en formato JSON',
-  `valor_temperatura` DECIMAL(5,2) NULL COMMENT 'Temperatura media cuando se disparó la alerta',
-  `umbral_minimo` DECIMAL(5,2) NULL COMMENT 'Umbral mínimo configurado al momento de la alerta',
-  `umbral_maximo` DECIMAL(5,2) NULL COMMENT 'Umbral máximo configurado al momento de la alerta',
+  `datos_alerta` JSON NULL COMMENT 'Metadatos adicionales no estructurados de la alerta',
   `es_falsa_alarma` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = alerta marcada como falsa alarma',
   `notificado_push` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = notificación push enviada',
   `tiempo_respuesta_minutos` DECIMAL(10,2) NULL COMMENT 'Tiempo desde generación hasta confirmación en minutos',
@@ -632,18 +682,75 @@ CREATE TABLE `ale_seguimiento` (
   `fecha_confirmacion` DATETIME NULL COMMENT 'Fecha y hora de confirmación de la alerta',
   `fecha_resolucion` DATETIME NULL COMMENT 'Fecha y hora de resolución de la alerta',
   PRIMARY KEY (`id_alerta`),
-  INDEX `idx_ale_seguimiento_id_canal` (`id_canal`),
-  INDEX `idx_ale_seguimiento_tipo_alerta` (`tipo_alerta`),
+  INDEX `idx_ale_seguimiento_id_tipo_alerta` (`id_tipo_alerta`),
+  INDEX `idx_ale_seguimiento_id_origen_tipo` (`id_origen_tipo`),
+  INDEX `idx_ale_seguimiento_origen_id` (`origen_id`),
   INDEX `idx_ale_seguimiento_estado` (`estado`),
   INDEX `idx_ale_seguimiento_severidad` (`severidad`),
   INDEX `idx_ale_seguimiento_fecha_alerta` (`fecha_alerta`),
   INDEX `idx_ale_seguimiento_estado-fecha_alerta` (`estado`, `fecha_alerta`),
-  CONSTRAINT `fk_ale_seguimiento_id_canal_ubi_canal_id_canal`
+  CONSTRAINT `fk_ale_seguimiento_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+    FOREIGN KEY (`id_tipo_alerta`)
+    REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_seguimiento_id_origen_tipo_gen_tipos_origen_id_tipo_origen`
+    FOREIGN KEY (`id_origen_tipo`)
+    REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Seguimiento genérico de alertas del sistema — datos específicos en ale_datos_*';
+
+-- Datos específicos de alertas de temperatura (relación 1:1 con ale_seguimiento)
+CREATE TABLE `ale_datos_temperatura` (
+  `id_ale_datos_temperatura` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_alerta` INT UNSIGNED NOT NULL COMMENT 'FK a ale_seguimiento',
+  `id_canal` INT UNSIGNED NULL COMMENT 'FK a ubi_canal (NULL si el canal fue eliminado)',
+  `valor_temperatura` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura media cuando se disparó la alerta',
+  `umbral_minimo` DECIMAL(5,2) NOT NULL COMMENT 'Umbral mínimo configurado al momento de la alerta',
+  `umbral_maximo` DECIMAL(5,2) NOT NULL COMMENT 'Umbral máximo configurado al momento de la alerta',
+  PRIMARY KEY (`id_ale_datos_temperatura`),
+  UNIQUE KEY `uk_ale_datos_temperatura_id_alerta` (`id_alerta`),
+  INDEX `idx_ale_datos_temperatura_id_canal` (`id_canal`),
+  INDEX `idx_ale_datos_temperatura_valor_temperatura` (`valor_temperatura`),
+  CONSTRAINT `fk_ale_datos_temperatura_id_alerta_ale_seguimiento_id_alerta`
+    FOREIGN KEY (`id_alerta`)
+    REFERENCES `ale_seguimiento`(`id_alerta`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_datos_temperatura_id_canal_ubi_canal_id_canal`
     FOREIGN KEY (`id_canal`)
     REFERENCES `ubi_canal`(`id_canal`)
     ON DELETE SET NULL
     ON UPDATE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Seguimiento de alertas de temperatura y desconexión de sensores Ubibot';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Datos específicos de alertas de temperatura — extiende ale_seguimiento';
+
+-- Datos específicos de alertas de desconexión de sensores (relación 1:1 con ale_seguimiento)
+CREATE TABLE `ale_datos_desconexion` (
+  `id_ale_datos_desconexion` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_alerta` INT UNSIGNED NOT NULL COMMENT 'FK a ale_seguimiento',
+  `id_canal` INT UNSIGNED NULL COMMENT 'FK a ubi_canal (NULL si el canal fue eliminado)',
+  `ultima_lectura_antes` DATETIME NOT NULL COMMENT 'Timestamp de la última lectura recibida antes de la desconexión',
+  `primera_lectura_tras_reconexion` DATETIME NULL COMMENT 'Timestamp de la primera lectura tras reconexión (NULL si sigue desconectado)',
+  `duracion_desconexion_minutos` DECIMAL(10,2) NULL COMMENT 'Minutos de desconexión materializado — NULL mientras sigue desconectado',
+  `umbral_minutos_configurado` INT UNSIGNED NOT NULL COMMENT 'Threshold en minutos que disparó la alerta, tomado de alertSystem.intervals.disconnection.initialDelay al momento de crear la alerta',
+  `lecturas_perdidas_estimadas` INT UNSIGNED NULL COMMENT 'Lecturas que deberían haber llegado durante el período de desconexión',
+  `ultimo_valor_temperatura` DECIMAL(5,2) NULL COMMENT 'Última temperatura registrada antes de la desconexión (contexto)',
+  PRIMARY KEY (`id_ale_datos_desconexion`),
+  UNIQUE KEY `uk_ale_datos_desconexion_id_alerta` (`id_alerta`),
+  INDEX `idx_ale_datos_desconexion_id_canal` (`id_canal`),
+  INDEX `idx_ale_datos_desconexion_ultima_lectura_antes` (`ultima_lectura_antes`),
+  CONSTRAINT `fk_ale_datos_desconexion_id_alerta_ale_seguimiento_id_alerta`
+    FOREIGN KEY (`id_alerta`)
+    REFERENCES `ale_seguimiento`(`id_alerta`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_datos_desconexion_id_canal_ubi_canal_id_canal`
+    FOREIGN KEY (`id_canal`)
+    REFERENCES `ubi_canal`(`id_canal`)
+    ON DELETE SET NULL
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Datos específicos de alertas de desconexión de sensores — extiende ale_seguimiento';
 
 -- Métricas resumen de alertas por día y hora
 CREATE TABLE `ale_metricas_resumen` (

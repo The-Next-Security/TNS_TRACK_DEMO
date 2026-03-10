@@ -25,9 +25,9 @@ updates:
       - "dependencies"
       - "security"
       - "npm"
-    # Revisor por defecto (ajustar según equipo)
-    reviewers:
-      - "thenextsecurity-team"
+    # Assignee por defecto para seguimiento de dependencias
+    assignees:
+      - "andresTNS"
     # Agrupar actualizaciones de desarrollo
     groups:
       development-dependencies:

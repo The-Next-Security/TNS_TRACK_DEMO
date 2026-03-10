@@ -1,9 +1,8 @@
 // collectors/ubibot-collector.js
 
-const config = require("../src/config/js_files/config-loader");
-const ubibotController = require("../src/controllers/ubibotController");
-const ubibotService = require("../src/services/ubibot/ubibotService");
-const databaseService = require("../src/services/database-service");
+const config = require("../src/config/js_files/configLoader_Config");
+const ubibotController = require("../src/controllers/ubibot_Controller");
+const ubibotService = require("../src/services/ubibot/ubibot_Service");
 
 
 class UbibotCollector {
@@ -27,19 +26,14 @@ class UbibotCollector {
    *   - `lastSuccessTime`: The timestamp of the last successful collection.
    */
   constructor() {
-    const { ubibot: ubibotConfig, alertSystem } = config.getConfig();
-    this.collectionInterval = ubibotConfig.collectionInterval || 240000; // Default 10 minutos
+    // No leer config en constructor. Se asigna en init() tras configLoader.initialize().
+    this.collectionInterval = 240000;
     this.isRunning = false;
     this.intervalId = null;
     this.retryCount = 0;
     this.maxRetries = 3;
     this.retryDelay = 5000;
-
-    // Obtener el valor de disconnectionAlertThreshold de la configuración centralizada
-    // Este valor determina cuántos minutos debe pasar un sensor sin conexión
-    // antes de considerarse desconectado y enviar alerta
-    this.disconnectionThreshold = alertSystem?.intervals?.disconnection?.initialDelay || 55; // minutos
-
+    this.disconnectionThreshold = 55;
     this.metrics = {
       successfulCollections: 0,
       failedCollections: 0,
@@ -47,6 +41,15 @@ class UbibotCollector {
       lastError: null,
       lastSuccessTime: null,
     };
+  }
+
+  /**
+   * Carga config. Llamar desde initializeServices() tras configLoader.initialize().
+   */
+  init() {
+    const { ubibot: ubibotConfig, alertSystem } = config.getConfig();
+    this.collectionInterval = ubibotConfig.collectionInterval || 240000;
+    this.disconnectionThreshold = alertSystem?.intervals?.disconnection?.initialDelay || 55;
   }
 
 
@@ -134,7 +137,8 @@ class UbibotCollector {
             await ubibotService.processChannelData(channelData);
             await ubibotService.processSensorReadings(
               channelData.channel_id,
-              JSON.parse(channelData.last_values)
+              JSON.parse(channelData.last_values),
+              channelData.net
             );
           }
         } catch (error) {
@@ -205,7 +209,7 @@ class UbibotCollector {
       // Enviar alerta si hay sensores desconectados
       if (disconnectedChannels.length > 0) {
         try {
-          const emailService = require("../src/services/email/emailService");
+          const emailService = require("../src/services/email/email_Service");
           await emailService.sendDisconnectedSensorsEmail(disconnectedChannels);
           console.log(
             `Alerta enviada para ${disconnectedChannels.length} sensores desconectados`

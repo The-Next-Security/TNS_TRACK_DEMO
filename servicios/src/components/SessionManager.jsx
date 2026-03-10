@@ -4,11 +4,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { SessionExpiryWarning } from './SessionExpiryWarning';
-import { LogoutReason } from '../constants/LogoutReason';
-import { setLogoutReason } from '../utils/sessionUtils';
-import { broadcastLogout } from '../utils/crossTabSync';
-import { useCrossTabLogout } from '../hooks/useCrossTabLogout';
-import analyticsService from '../services/analyticsService';
+import { LogoutReason } from '../constants/logoutReason_Constants';
+import { setLogoutReason } from '../utils/session_Utils';
+import { broadcastLogout } from '../utils/crossTabSync_Utils';
+import { useCrossTabLogout } from '../hooks/useCrossTabLogout_Hook';
+import analyticsService from '../services/analytics_Service';
 
 // Warning threshold: show warning 5 minutes before expiry
 const WARNING_THRESHOLD_SECONDS = 300;

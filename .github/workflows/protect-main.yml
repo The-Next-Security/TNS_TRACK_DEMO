@@ -27,17 +27,17 @@ jobs:
 
           echo "🔍 Validando título del PR: $PR_TITLE"
 
-          # Validar formato "Release vX.Y.Z" o "HOTFIX:"
-          if [[ "$PR_TITLE" =~ ^Release\ v[0-9]+\.[0-9]+\.[0-9]+ ]] || \
-             [[ "$PR_TITLE" =~ ^HOTFIX: ]]; then
+          # Validar formato "[RELEASE]" o "[HOTFIX]" (según Info_Github.md)
+          if [[ "$PR_TITLE" =~ ^\[RELEASE\] ]] || \
+             [[ "$PR_TITLE" =~ ^\[HOTFIX\] ]]; then
             echo "✅ Título del PR es válido"
             echo "valid=true" >> $GITHUB_OUTPUT
           else
             echo "❌ Formato de título inválido"
             echo ""
             echo "Formatos esperados:"
-            echo "  - Release vX.Y.Z - Descripción"
-            echo "  - HOTFIX: Descripción"
+            echo "  - [RELEASE] Paso a producción [v.XX.YY.ZZ]"
+            echo "  - [HOTFIX] Descripción del fix crítico"
             echo ""
             echo "Recibido: $PR_TITLE"
             exit 1
@@ -97,8 +97,8 @@ jobs:
   require-approval:
     runs-on: ubuntu-latest
     name: Require Code Owner Approval
-    # Valida que PRs a main tengan aprobación de @Bufigol o @felipecleverox
-    # Alineado con Principio II (Git Flow) y Principio VI (Code Review)
+    # Valida que PRs a main tengan aprobación de @felipecleverox o @TNSTRACK
+    # Alineado con Info_Github.md: protección de rama main
 
     steps:
       - name: Check for Code Owner Approval
@@ -120,8 +120,8 @@ jobs:
 
             console.log(`Total de reviews: ${reviews.length}`);
 
-            // Code Owners definidos (simulados)
-            const codeOwners = ['Bufigol', 'felipecleverox'];
+            // Code Owners definidos (según Info_Github.md: Product Manager + Tech Lead)
+            const codeOwners = ['felipecleverox', 'TNSTRACK'];
             console.log(`Code Owners: ${codeOwners.join(', ')}`);
 
             // Filtrar aprobaciones de Code Owners
@@ -142,8 +142,8 @@ jobs:
                 '❌ Este PR requiere aprobación de un Code Owner',
                 '',
                 '**Code Owners autorizados:**',
-                '- @Bufigol',
                 '- @felipecleverox',
+                '- @TNSTRACK',
                 '',
                 '**Acción requerida:**',
                 'Por favor solicita review de uno de los Code Owners.',
@@ -198,8 +198,8 @@ jobs:
               '',
               'Este PR necesita ser aprobado por uno de los siguientes Code Owners:',
               '',
-              '- @Bufigol',
               '- @felipecleverox',
+              '- @TNSTRACK',
               '',
               '### ¿Cómo proceder?',
               '',

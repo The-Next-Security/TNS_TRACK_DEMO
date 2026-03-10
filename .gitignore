@@ -1,5 +1,5 @@
 servicios/node_modules/
-servicios/src/config/jsons/
+servicios/src/config/jsons/connection-config.json
 servicios/src/config/token_id.txt
 servicios/public/
 # ============================================
@@ -27,4 +27,12 @@ push-notification-test.log
 # Lecciones aprendidas del proyecto
 LECCIONES_APRENDIDAS.md
 
+# Archivos SQL con credenciales reales (nunca subir a git)
+SQL_FILES/01_creacion_desde_cero/04_valores_reales.sql
+SQL_FILES/01_creacion_desde_cero/04_valores_produccion.sql
+
 SPRINGBOOT_MIGRATION_CONTEXT.md
+.cursor/rules/no-crear-archivos-sin-consentimiento.mdc
+
+# Script de migración (herramienta interna, no va a GitHub)
+migracion/
