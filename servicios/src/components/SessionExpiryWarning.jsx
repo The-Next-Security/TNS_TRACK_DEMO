@@ -3,9 +3,9 @@
 // Feature: 003-fix-session-expiry-handling
 
 import React, { useEffect } from 'react';
-import { toast } from '../hooks/use-toast';
-import { useSessionExtension } from '../hooks/useSessionExtension';
-import analyticsService from '../services/analyticsService';
+import { toast } from '../hooks/useToast_Hook';
+import { useSessionExtension } from '../hooks/useSessionExtension_Hook';
+import analyticsService from '../services/analytics_Service';
 
 /**
  * Session Expiry Warning Component

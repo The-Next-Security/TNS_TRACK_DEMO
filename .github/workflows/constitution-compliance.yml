@@ -1,0 +1,192 @@
+name: Constitution Compliance Check
+
+# Workflow de validación de cumplimiento de convenciones del proyecto
+# Verifica adherencia a principios definidos en DOCUMENTACIÓN/Info_Github.md
+# Se ejecuta en PRs a dev y main para garantizar estándares de calidad
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:
+
+jobs:
+  validate-commits:
+    runs-on: ubuntu-latest
+    name: Validar Formato de Commits
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Necesario para git log completo
+
+      - name: Validar formato de commits
+        id: check-commits
+        run: |
+          echo "🔍 Validando formato de commits según Constitución..."
+          echo ""
+          echo "Formato esperado: tipo(módulo): descripción"
+          echo "Tipos válidos: feat, fix, docs, chore, refactor, test, perf, style, build, ci, revert"
+          echo ""
+
+          # Obtener commits entre base branch y HEAD
+          BASE_BRANCH="${{ github.base_ref }}"
+          COMMITS=$(git log --format=%s origin/$BASE_BRANCH..${{ github.sha }} 2>/dev/null || echo "")
+
+          if [ -z "$COMMITS" ]; then
+            echo "⚠️  No se encontraron commits para validar"
+            exit 0
+          fi
+
+          INVALID_COMMITS=0
+          TOTAL_COMMITS=0
+
+          while IFS= read -r commit_msg; do
+            TOTAL_COMMITS=$((TOTAL_COMMITS + 1))
+
+            # Regex para formato tipo(módulo): descripción
+            if [[ ! "$commit_msg" =~ ^(feat|fix|docs|chore|refactor|test|perf|style|build|ci|revert)\([a-zA-Z0-9_-]+\):\ .+ ]]; then
+              echo "❌ Formato inválido: $commit_msg"
+              INVALID_COMMITS=$((INVALID_COMMITS + 1))
+            else
+              echo "✅ Formato válido: $commit_msg"
+            fi
+          done <<< "$COMMITS"
+
+          echo ""
+          echo "📊 Resumen:"
+          echo "   Total commits: $TOTAL_COMMITS"
+          echo "   Commits válidos: $((TOTAL_COMMITS - INVALID_COMMITS))"
+          echo "   Commits inválidos: $INVALID_COMMITS"
+
+          # Guardar para usar en summary
+          echo "total=$TOTAL_COMMITS" >> $GITHUB_OUTPUT
+          echo "invalid=$INVALID_COMMITS" >> $GITHUB_OUTPUT
+
+          if [ $INVALID_COMMITS -gt 0 ]; then
+            echo ""
+            echo "::warning::Se encontraron $INVALID_COMMITS commits con formato inválido"
+            echo "::warning::Formato correcto: tipo(módulo): descripción"
+            echo "::warning::Ejemplo: feat(dashboard): agregar gráfico de temperaturas"
+          fi
+
+      - name: Verificar referencias a issues
+        id: check-issues
+        run: |
+          echo "🔍 Verificando referencias a issues en commits significativos..."
+          echo ""
+
+          BASE_BRANCH="${{ github.base_ref }}"
+
+          # Commits que NO son docs/chore/style (requieren issue reference)
+          SIGNIFICANT_COMMITS=$(git log --format=%B origin/$BASE_BRANCH..${{ github.sha }} | \
+            grep -v "^docs:" | \
+            grep -v "^chore:" | \
+            grep -v "^style:" 2>/dev/null || echo "")
+
+          if [ -z "$SIGNIFICANT_COMMITS" ]; then
+            echo "ℹ️  No hay commits significativos para validar"
+            echo "has_missing=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Verificar si tienen referencia a issue (#número)
+          COMMITS_WITHOUT_ISSUE=$(echo "$SIGNIFICANT_COMMITS" | grep -v "#[0-9]" || true)
+
+          if [ ! -z "$COMMITS_WITHOUT_ISSUE" ]; then
+            echo "⚠️  Algunos commits significativos no referencian issues:"
+            echo "$COMMITS_WITHOUT_ISSUE"
+            echo ""
+            echo "::warning::Se recomienda referenciar issues en commits feat/fix/refactor"
+            echo "::warning::Formato: Issue: #123 al final del commit message"
+            echo "has_missing=true" >> $GITHUB_OUTPUT
+          else
+            echo "✅ Todos los commits significativos referencian issues"
+            echo "has_missing=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Generar resumen de validación
+        if: always()
+        run: |
+          echo "## 📋 Validación de Constitución - Commits" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Resultado |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Formato de commits | ${{ steps.check-commits.outputs.invalid == '0' && '✅ Todos válidos' || format('⚠️ {0} inválidos', steps.check-commits.outputs.invalid) }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Referencias a issues | ${{ steps.check-issues.outputs.has_missing == 'false' && '✅ Completo' || '⚠️ Algunas faltantes' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📖 Principios Aplicados" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Principio II**: Git Flow Estructurado - Formato de commits" >> $GITHUB_STEP_SUMMARY
+          echo "- **Principio III**: Gestión GitHub-First - Referencias a issues" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Ver convenciones: \`DOCUMENTACIÓN/Info_Github.md\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comentar en PR si hay issues
+        if: |
+          always() &&
+          github.event_name == 'pull_request' &&
+          (steps.check-commits.outputs.invalid != '0' || steps.check-issues.outputs.has_missing == 'true')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const invalidCommits = '${{ steps.check-commits.outputs.invalid }}';
+            const hasMissingIssues = '${{ steps.check-issues.outputs.has_missing }}';
+
+            let message = '## ⚠️ Validación de Constitución\n\n';
+
+            if (invalidCommits !== '0') {
+              message += `### Formato de Commits\n\n`;
+              message += `Se encontraron **${invalidCommits} commits** con formato inválido.\n\n`;
+              message += `**Formato correcto** (Principio II - Git Flow):\n`;
+              message += '```\n';
+              message += 'tipo(módulo): Descripción clara del cambio\n\n';
+              message += 'Cambios técnicos específicos.\n\n';
+              message += 'Issue: #123\n';
+              message += '```\n\n';
+              message += `**Tipos válidos**: \`feat\`, \`fix\`, \`docs\`, \`chore\`, \`refactor\`, \`test\`, \`perf\`, \`style\`, \`build\`, \`ci\`, \`revert\`\n\n`;
+            }
+
+            if (hasMissingIssues === 'true') {
+              message += `### Referencias a Issues\n\n`;
+              message += `Algunos commits significativos no referencian issues de GitHub.\n\n`;
+              message += `**Recomendación** (Principio III - GitHub-First):\n`;
+              message += `- Incluir \`Issue: #número\` al final del commit message\n`;
+              message += `- Esto garantiza trazabilidad y documentación\n\n`;
+            }
+
+            message += `---\n`;
+            message += `📖 **Referencia**: [Convenciones del Proyecto](DOCUMENTACIÓN/Info_Github.md)\n`;
+            message += `💡 **Nota**: Estas validaciones son **informativas**, no bloquean el merge.\n`;
+
+            // Verificar si ya existe comentario similar
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.body.includes('Validación de Constitución')
+            );
+
+            if (botComment) {
+              // Actualizar comentario existente
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: message
+              });
+            } else {
+              // Crear nuevo comentario
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: message
+              });
+            }

@@ -411,7 +411,7 @@ posthog.init('phc_xxxxxxxxxxxxxxxx', {
 
 ### Ubicación Actual (⚠️ OBSOLETO)
 - **Archivo Principal**: `/servicios/src/config/jsons/unified-config.json` ⚠️ **OBSOLETO**
-- **Loader**: `/servicios/src/config/js_files/config-loader.js` (revisa BD periódicamente)
+- **Loader**: `/servicios/src/config/js_files/configLoader_Config.js` (revisa BD periódicamente)
 
 > **Nota**: Los archivos JSON están siendo reemplazados por configuración en base de datos. Ver Issue #3 (Tabla de configuración) para detalles de implementación.
 

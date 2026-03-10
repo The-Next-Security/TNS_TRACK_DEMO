@@ -11,59 +11,59 @@ const cookieParser = require("cookie-parser");
 // Importar Collectors y Servicios principales
 const ShellyCollector = require("./collectors/shelly-collector");
 const UbibotCollector = require("./collectors/ubibot-collector");
-const databaseService = require("./src/services/database-service");
-const energyAveragesService = require("./src/services/energy-averages-service");
-const totalEnergyService = require("./src/services/total-energy-service");
+const databaseService = require("./src/services/database_Service");
+const energyAveragesService = require("./src/services/energyAverages_Service");
+const totalEnergyService = require("./src/services/totalEnergy_Service");
 
 // Importar Rutas
-const deviceRoutes = require("./src/routes/deviceRoutes");
-const configRoutes = require("./src/routes/configRoutes");
-const totalesRoutes = require("./src/routes/totalesRoutes");
-const analysisRoutes = require("./src/routes/analysisRoutes");
-const usuariosRoutes = require("./src/routes/usuariosRoutes");
-const personalRoutes = require("./src/routes/personalRoutes");
-const smsRoutes = require("./src/routes/smsRoutes");
-const sectoresRoutes = require("./src/routes/sectoresRoutes.js");
-const powerAnalysisRoutes = require("./src/routes/powerAnalysisRoutes");
-const gpsRoutes = require("./src/routes/gpsRoutes");
-const beaconsRoutes = require("./src/routes/beaconsRoutes");
-const ubibotRoutes = require("./src/routes/ubibotRoutes");
-const gpsDataRoutes = require("./src/routes/gpsDataRoutes");
-const blindSpotRoutes = require("./src/routes/blindSpotRoutes");
-const consumoCategoriaRoutes = require('./src/routes/consumoCategoriaRoutes');
-const pushNotificationRoutes = require('./src/routes/pushNotificationRoutes');
-const alertTrackingRoutes = require('./src/routes/alertTrackingRoutes');
-const presetsRoutes = require('./src/routes/presetsRoutes');
-const reportsRoutes = require('./src/routes/reportsRoutes');
-const aiAnalysisRoutes = require('./src/routes/aiAnalysisRoutes');
+const deviceRoutes = require("./src/routes/device_Routes");
+const configRoutes = require("./src/routes/config_Routes");
+const totalesRoutes = require("./src/routes/totales_Routes");
+const analysisRoutes = require("./src/routes/analysis_Routes");
+const usuariosRoutes = require("./src/routes/usuarios_Routes");
+const personalRoutes = require("./src/routes/personal_Routes");
+const smsRoutes = require("./src/routes/sms_Routes");
+const sectoresRoutes = require("./src/routes/sectores_Routes");
+const powerAnalysisRoutes = require("./src/routes/powerAnalysis_Routes");
+const gpsRoutes = require("./src/routes/gps_Routes");
+const beaconsRoutes = require("./src/routes/beacons_Routes");
+const ubibotRoutes = require("./src/routes/ubibot_Routes");
+const gpsDataRoutes = require("./src/routes/gpsData_Routes");
+const blindSpotRoutes = require("./src/routes/blindSpot_Routes");
+const consumoCategoriaRoutes = require('./src/routes/consumoCategoria_Routes');
+const pushNotificationRoutes = require('./src/routes/pushNotification_Routes');
+const alertTrackingRoutes = require('./src/routes/alertTracking_Routes');
+const presetsRoutes = require('./src/routes/presets_Routes');
+const reportsRoutes = require('./src/routes/reports_Routes');
+const aiAnalysisRoutes = require('./src/routes/aiAnalysis_Routes');
 
 // Importar Config Loader (¡Importante!)
-const configLoader = require('./src/config/js_files/config-loader');
+const configLoader = require('./src/config/js_files/configLoader_Config');
 
 // Importar servicios de notificación (asegurarse de importar los correctos después de la refactorización)
-const emailService = require("./src/services/email/emailService");
-const smsService = require("./src/services/sms/smsService");
-const pushNotificationService = require("./src/services/push/pushNotificationService");
-const notificationController = require("./src/controllers/notificationController.js");
-const ubibotController = require("./src/controllers/ubibotController.js");
-const notificationService = require("./src/services/notificationService");
-const ubibotService = require("./src/services/ubibot/ubibotService");
-const shellyApiAdapter = require("./src/services/api/shelly-api-adapter");
-const mapboxApiAdapter = require("./src/services/api/mapbox-api-adapter");
-const openaiService = require("./src/services/openaiService");
-const ubibotServiceAdapter = require("./src/services/ubibot/ubibot-service-adapter");
-const usuariosController = require("./src/controllers/usuariosController");
-const authMiddleware = require("./src/middlewares/authMiddleware");
-const alertTrackingService = require("./src/services/alertTrackingService");
+const emailService = require("./src/services/email/email_Service");
+const smsService = require("./src/services/sms/sms_Service");
+const pushNotificationService = require("./src/services/push/pushNotification_Service");
+const notificationController = require("./src/controllers/notification_Controller.js");
+const ubibotController = require("./src/controllers/ubibot_Controller.js");
+const notificationService = require("./src/services/notification_Service");
+const ubibotService = require("./src/services/ubibot/ubibot_Service");
+const shellyApiAdapter = require("./src/services/api/shellyApi_Adapter");
+const mapboxApiAdapter = require("./src/services/api/mapboxApi_Adapter");
+const openaiService = require("./src/services/openai_Service");
+const ubibotServiceAdapter = require("./src/services/ubibot/ubibot_Adapter");
+const usuariosController = require("./src/controllers/usuarios_Controller");
+const authMiddleware = require("./src/middlewares/auth_Middleware");
+const alertTrackingService = require("./src/services/alertTracking_Service");
 
 // Importar job de agregación de métricas de alertas
-const metricsAggregationJob = require('./src/jobs/metricsAggregationJob');
+const metricsAggregationJob = require('./src/jobs/metricsAggregation_Job');
 
 // Importar job de limpieza de reportes expirados (Phase 5 - T045)
-const reportCleanupJob = require('./src/jobs/reportCleanupJob');
+const reportCleanupJob = require('./src/jobs/reportCleanup_Job');
 
 // Importar servicio de scheduler de reportes (Phase 4 - T030)
-const reportSchedulerService = require('./src/services/reports/reportSchedulerService');
+const reportSchedulerService = require('./src/services/reports/reportScheduler_Service');
 
 class Server {
   /**
@@ -175,7 +175,7 @@ class Server {
     mountApiRoute("/api/blindspot", blindSpotRoutes);
     mountApiRoute("/gps-data", gpsDataRoutes); // ¿Debería estar bajo /api?
     
-    const authRoutes = require("./src/routes/authRoutes");
+    const authRoutes = require("./src/routes/auth_Routes");
     mountApiRoute("/api/auth", authRoutes);
     mountApiRoute('/api/consumo', consumoCategoriaRoutes); // paraa las categorias de consumo electrico
     mountApiRoute('/api/push', pushNotificationRoutes); // Push Notifications PWA

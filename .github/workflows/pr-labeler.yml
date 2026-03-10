@@ -1,0 +1,24 @@
+name: PR Auto Labeler
+
+# Aplica labels automáticamente a PRs según los archivos modificados
+# Configuración de mapeo en .github/labeler.yml
+# Labels definidos en DOCUMENTACIÓN/Info_Github.md
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    name: Aplicar Labels Automáticos
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - name: Aplicar labels según archivos modificados
+        uses: actions/labeler@v5
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          configuration-path: .github/labeler.yml

@@ -22,8 +22,8 @@ El único dato que no puede vivir en la BD son las credenciales de conexión a l
 |---|---|
 | `src/config/jsons/connection-config.json` | Credenciales BD — **en .gitignore, nunca commitear** |
 | `src/config/jsons/connection-config.template.json` | Template público con placeholders |
-| `src/config/js_files/config-loader.js` | Lógica de carga — Singleton |
-| `src/config/js_files/base-config-loader.js` | Clase base con caché y helpers |
+| `src/config/js_files/configLoader_Config.js` | Lógica de carga — Singleton |
+| `src/config/js_files/baseConfigLoader_Config.js` | Clase base con caché y helpers |
 
 ---
 
@@ -162,7 +162,7 @@ Los valores en BD se almacenan siempre como texto. El `id_tipo_parametro` determ
 
 ---
 
-## API del config-loader (referencia para desarrolladores)
+## API del configLoader (referencia para desarrolladores)
 
 El loader es un Singleton accesible desde cualquier módulo del servidor. Expone los siguientes métodos:
 
@@ -188,7 +188,7 @@ El loader es un Singleton accesible desde cualquier módulo del servidor. Expone
 
 ## Arranque del sistema
 
-Al iniciar el servidor, el config-loader realiza dos pasos en orden:
+Al iniciar el servidor, el configLoader realiza dos pasos en orden:
 
 1. **Lee el archivo local** `connection-config.json` para obtener las credenciales de BD y el entorno activo.
 2. **Consulta la base de datos** y carga todos los parámetros activos, convirtiéndolos al tipo de dato correspondiente según `gen_tipos_parametros`.

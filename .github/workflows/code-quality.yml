@@ -1,0 +1,220 @@
+name: Code Quality Checks
+
+# Workflow de validación de calidad de código
+# Ejecuta ESLint, Prettier y Build verification
+# Alineado con Principio VI de la Constitución: Code Review y Enforcement Automático
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+    paths:
+      - 'servicios/**/*.js'
+      - 'servicios/**/*.jsx'
+      - 'servicios/package.json'
+      - 'servicios/webpack.config.js'
+      - 'servicios/eslint.config.js'
+  workflow_dispatch:
+
+jobs:
+  lint-format-build:
+    runs-on: ubuntu-latest
+    name: ESLint, Prettier y Build
+
+    defaults:
+      run:
+        working-directory: ./servicios
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: './servicios/package-lock.json'
+
+      - name: Instalar dependencias
+        run: npm ci
+
+      - name: Ejecutar ESLint
+        id: eslint
+        run: |
+          echo "🔍 Ejecutando ESLint..."
+          echo ""
+
+          # Ejecutar ESLint y capturar resultado
+          if npm run lint; then
+            echo "✅ ESLint pasó sin errores"
+            echo "result=success" >> $GITHUB_OUTPUT
+            echo "errors=0" >> $GITHUB_OUTPUT
+          else
+            LINT_EXIT=$?
+            echo "⚠️  ESLint encontró problemas"
+            echo "result=warning" >> $GITHUB_OUTPUT
+            echo "errors=$LINT_EXIT" >> $GITHUB_OUTPUT
+
+            # No fallar el job, solo warning
+            exit 0
+          fi
+        continue-on-error: true
+
+      - name: Verificar formato con Prettier
+        id: prettier
+        run: |
+          echo "🔍 Verificando formato con Prettier..."
+          echo ""
+
+          if npm run format:check; then
+            echo "✅ Formato de código correcto"
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "⚠️  Algunos archivos no siguen el formato de Prettier"
+            echo "result=warning" >> $GITHUB_OUTPUT
+            echo ""
+            echo "::warning::Ejecuta 'npm run format' para corregir automáticamente"
+
+            # No fallar el job, solo warning
+            exit 0
+          fi
+        continue-on-error: true
+
+      - name: Verificar Build
+        id: build
+        run: |
+          echo "🏗️  Verificando que el build se ejecuta correctamente..."
+          echo ""
+
+          if npm run build; then
+            echo "✅ Build exitoso"
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Build falló"
+            echo "result=failed" >> $GITHUB_OUTPUT
+
+            echo "::error::El build falló. Esto BLOQUEA el merge a main."
+            exit 1
+          fi
+
+      - name: Generar resumen de calidad
+        if: always()
+        run: |
+          echo "## 🔍 Reporte de Calidad de Código" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Estado | Notas |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|-------|" >> $GITHUB_STEP_SUMMARY
+
+          # ESLint
+          if [ "${{ steps.eslint.outputs.result }}" == "success" ]; then
+            echo "| ESLint | ✅ Pasó | Sin errores |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ESLint | ⚠️  Warning | Ver detalles arriba |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Prettier
+          if [ "${{ steps.prettier.outputs.result }}" == "success" ]; then
+            echo "| Prettier | ✅ Pasó | Formato correcto |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Prettier | ⚠️  Warning | Ejecutar \`npm run format\` |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Build
+          if [ "${{ steps.build.outputs.result }}" == "success" ]; then
+            echo "| Build | ✅ Pasó | Build exitoso |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Build | ❌ Falló | **BLOQUEA MERGE** |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📖 Principio Aplicado" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Principio VI - Code Review y Dependencias Actualizadas**:" >> $GITHUB_STEP_SUMMARY
+          echo "- ESLint y Prettier son **warnings** (no bloquean)" >> $GITHUB_STEP_SUMMARY
+          echo "- Build verification es **bloqueante** para PRs a main" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Ver convenciones: \`DOCUMENTACIÓN/Info_Github.md\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Comentar en PR con resultados
+        if: |
+          always() &&
+          github.event_name == 'pull_request' &&
+          (steps.eslint.outputs.result == 'warning' || steps.prettier.outputs.result == 'warning' || steps.build.outputs.result == 'failed')
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const eslintResult = '${{ steps.eslint.outputs.result }}';
+            const prettierResult = '${{ steps.prettier.outputs.result }}';
+            const buildResult = '${{ steps.build.outputs.result }}';
+
+            let message = '## 🔍 Reporte de Calidad de Código\n\n';
+
+            let hasWarnings = false;
+            let hasCritical = false;
+
+            if (eslintResult === 'warning') {
+              hasWarnings = true;
+              message += '### ⚠️  ESLint - Warnings Encontrados\n\n';
+              message += 'Se encontraron problemas de linting en el código.\n\n';
+              message += '**Acción recomendada**:\n';
+              message += '```bash\n';
+              message += 'cd servicios\n';
+              message += 'npm run lint:fix\n';
+              message += '```\n\n';
+            }
+
+            if (prettierResult === 'warning') {
+              hasWarnings = true;
+              message += '### ⚠️  Prettier - Formato Inconsistente\n\n';
+              message += 'Algunos archivos no siguen el formato estándar de Prettier.\n\n';
+              message += '**Acción recomendada**:\n';
+              message += '```bash\n';
+              message += 'cd servicios\n';
+              message += 'npm run format\n';
+              message += '```\n\n';
+            }
+
+            if (buildResult === 'failed') {
+              hasCritical = true;
+              message += '### ❌ Build - Falló\n\n';
+              message += '⚠️  **CRÍTICO**: El build falló. Esto **bloquea el merge a main**.\n\n';
+              message += 'Revisa los logs de build arriba para identificar el error.\n\n';
+            }
+
+            if (hasWarnings && !hasCritical) {
+              message += '---\n';
+              message += '💡 **Nota**: Los warnings de ESLint y Prettier **no bloquean el merge**, pero se recomienda corregirlos para mantener calidad de código.\n\n';
+            }
+
+            message += '---\n';
+            message += '📖 **Referencia**: [Convenciones del Proyecto](DOCUMENTACIÓN/Info_Github.md)\n';
+
+            // Verificar si ya existe comentario
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.body.includes('Reporte de Calidad de Código')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: message
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.payload.pull_request.number,
+                body: message
+              });
+            }

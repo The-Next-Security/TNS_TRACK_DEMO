@@ -6,7 +6,7 @@
 
 ## Configuración (client-safe)
 
-Endpoints que exponen valores de configuración permitidos para el cliente. Los datos provienen del config-loader (base de datos); no hay archivos de config adicionales en el frontend.
+Endpoints que exponen valores de configuración permitidos para el cliente. Los datos provienen del configLoader (base de datos); no hay archivos de config adicionales en el frontend.
 
 ---
 
@@ -28,6 +28,6 @@ Endpoints que exponen valores de configuración permitidos para el cliente. Los 
 - `accessToken`: Token de acceso Mapbox. Puede ser `null` si no está configurado en la BD.
 - `styleUrl`: URL del estilo del mapa. Valor por defecto si no hay en BD: `mapbox://styles/mapbox/streets-v11`.
 
-**Origen de datos:** config-loader (tablas `gen_cofiguracion_*`), rutas `mapbox.access_token` y `mapbox.style_url`. Ver `DOCUMENTACIÓN/Configuracion.md` (grupo `mapbox`).
+**Origen de datos:** configLoader (tablas `gen_cofiguracion_*`), rutas `mapbox.access_token` y `mapbox.style_url`. Ver `DOCUMENTACIÓN/Configuracion.md` (grupo `mapbox`).
 
 **Implementación:** Controlador `tariffConfigController.getMapboxConfig` (rutas en `configRoutes.js`).

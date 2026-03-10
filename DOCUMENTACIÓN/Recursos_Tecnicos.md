@@ -28,6 +28,8 @@
 - **[Base_de_Datos.md](./Base_de_Datos.md)** - Esquema de base de datos, tablas, stored procedures, triggers
 - **[Apis_externas.md](./Apis_externas.md)** - Documentación de las 8 APIs externas utilizadas
 - **[Info_Github.md](./Info_Github.md)** - Workflow Git, convenciones de commits, branches y PRs
+- **[Estandares_Nomenclatura.md](./Estandares_Nomenclatura.md)** - Estándares de nomenclatura de archivos JS y componentes React
+- **[Estandares_Nomenclatura_SQL.md](./Estandares_Nomenclatura_SQL.md)** - Estándares de nomenclatura SQL y base de datos
 
 #### Documentación Técnica
 - **[Decisiones_Tecnicas.md](./Decisiones_Tecnicas.md)** - Decisiones arquitectónicas y técnicas

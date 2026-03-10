@@ -1,7 +1,7 @@
 // index.js
-const errorMiddleware = require('./errorMiddleware');
-const authMiddleware = require('./authMiddleware');
-const validationMiddleware = require('./validationMiddleware');
+const errorMiddleware = require('./error_Middleware');
+const authMiddleware = require('./auth_Middleware');
+const validationMiddleware = require('./validation_Middleware');
 
 module.exports = {
     errorMiddleware,

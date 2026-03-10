@@ -1,36 +1,36 @@
 import React, { useState, useEffect } from "react";
 import { Route, Routes, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
-import DashboardElectrico from "./DashboardElectricoV2"; // Migrado a V2
-import ConsumoElectrico from "./ConsumoElectricoV2"; // Migrado a V2
-import ConsumoTotalDiario from "./ConsumoTotalDiarioV2" // Usa V2 components internamente
-import ConsumoTotalMensual from "./ConsumoTotalMensualV2"; // Usa V2 components internamente
-import ConsumoTotalAnual from "./ConsumoTotalAnualV2"; // Usa V2 components internamente
-import DashboardTemperatura from "./DashboardTemperaturaV2"; // Migrado a V2
-import LastKnownPosition from "./LastKnownPositionV2"; // Migrado a V2
-import UbicacionTiempoRealInteriores from "./UbicacionTiempoRealInteriorV2"; // Migrado a V2
-import PersonSearch from "./PersonSearchV2"; // Migrado a V2
-import LandingPage from "./LandingPageV2"; // Migrado a V2
-import SelectRoutine from "./SelectRoutineV2"; // Migrado a V2
-import HistoricalMovementsSearch from "./HistoricalMovementsSearchV2"; // Migrado a V2
-import Configuration from "./ConfigurationV2"; // Migrado a V2
-import DoorStatusMatrix from "./DoorStatusMatrixV2"; // Migrado a V2
-import UserRegistration from "./UserRegistrationV2"; // Migrado a V2
-import ForgotPassword from "./ForgotPasswordV2"; // Migrado a V2
-import ResetPassword from "./ResetPasswordV2"; // Migrado a V2
-import TemperaturaCamaras from "./TemperaturaCamarasV2"; // Migrado a V2
-import DefrostAnalysis from "./DefrostAnalysisV2"; // Migrado a V2
-import IntelligenciaDatosTemperatura from "./IntelligenciaDatosTemperaturaV2"; // Migrado a V2
-import ParametroTempCamaras from "./ParametroTempCamarasV2"; // Migrado a V2
-import TemperaturePowerAnalysis from "./TemperaturePowerAnalysisV2"; // Migrado a V2
-import AlertManagementV2 from "./AlertManagementV2"; // Sistema de gestión de alertas
-import AlertNotificationConfigV2 from "./AlertNotificationConfigV2"; // Configuración de notificaciones
-import AlertMetricsDashboardV2 from "./AlertMetricsDashboardV2"; // Dashboard de métricas de alertas
-import ReportDashboardV2 from "./reports/ReportDashboardV2"; // Dashboard de reportes (Feature 004)
-import AIAnalysisV2 from "./AIAnalysisV2"; // AI Cold Chamber Analysis (Feature 005)
-import ReportGeneratorV2 from "./reports/ReportGeneratorV2"; // Generador de reportes (Feature 004)
-import ReportSchedulerV2 from "./reports/ReportSchedulerV2"; // Scheduler de reportes (Feature 004 - Phase 4)
-import ReportHistoryPage from "./reports/ReportHistoryPage"; // Historial completo de reportes (Feature 004 - Phase 5)
+import DashboardElectrico from "./DashboardElectrico_View";
+import ConsumoElectrico from "./ConsumoElectrico_View";
+import ConsumoTotalDiario from "./ConsumoTotalDiario_View";
+import ConsumoTotalMensual from "./ConsumoTotalMensual_View";
+import ConsumoTotalAnual from "./ConsumoTotalAnual_View";
+import DashboardTemperatura from "./DashboardTemperatura_View";
+import LastKnownPosition from "./LastKnownPosition_View";
+import UbicacionTiempoRealInteriores from "./UbicacionTiempoRealInterior_View";
+import PersonSearch from "./PersonSearch_View";
+import LandingPage from "./LandingPage_View";
+import SelectRoutine from "./SelectRoutine_View";
+import HistoricalMovementsSearch from "./HistoricalMovementsSearch_View";
+import Configuration from "./Configuration_View";
+import DoorStatusMatrix from "./DoorStatusMatrix_View";
+import UserRegistration from "./UserRegistration_View";
+import ForgotPassword from "./ForgotPassword_View";
+import ResetPassword from "./ResetPassword_View";
+import TemperaturaCamaras from "./TemperaturaCamaras_View";
+import DefrostAnalysis from "./DefrostAnalysis_View";
+import IntelligenciaDatosTemperatura from "./IntelligenciaDatosTemperatura_View";
+import ParametroTempCamaras from "./ParametroTempCamaras_View";
+import TemperaturePowerAnalysis from "./TemperaturePowerAnalysis_View";
+import AlertManagementView from "./AlertManagement_View";
+import AlertNotificationConfigView from "./AlertNotificationConfig_View";
+import AlertMetricsDashboardView from "./AlertMetricsDashboard_View";
+import ReportDashboardView from "./reports/ReportDashboard_View";
+import AIAnalysisView from "./AIAnalysis_View";
+import ReportGeneratorView from "./reports/ReportGenerator_View";
+import ReportSchedulerView from "./reports/ReportScheduler_View";
+import ReportHistoryPageView from "./reports/ReportHistoryPage_View";
 import "core-js/stable";
 import "regenerator-runtime/runtime";
 
@@ -251,7 +251,7 @@ function AppContent() {
           path="/gestion-alertas"
           element={
             <PrivateRoute userPermissions={userPermissions}>
-              <AlertManagementV2 />
+              <AlertManagementView />
             </PrivateRoute>
           }
         />
@@ -259,7 +259,7 @@ function AppContent() {
           path="/configuracion-notificaciones"
           element={
             <PrivateRoute userPermissions={userPermissions}>
-              <AlertNotificationConfigV2 />
+              <AlertNotificationConfigView />
             </PrivateRoute>
           }
         />
@@ -267,7 +267,7 @@ function AppContent() {
           path="/metricas-alertas"
           element={
             <PrivateRoute userPermissions={userPermissions}>
-              <AlertMetricsDashboardV2 />
+              <AlertMetricsDashboardView />
             </PrivateRoute>
           }
         />
@@ -275,7 +275,7 @@ function AppContent() {
           path="/reports"
           element={
             <PrivateRoute userPermissions={userPermissions}>
-              <ReportDashboardV2 />
+              <ReportDashboardView />
             </PrivateRoute>
           }
         />
@@ -283,7 +283,7 @@ function AppContent() {
           path="/reports/generate"
           element={
             <PrivateRoute userPermissions={userPermissions}>
-              <ReportGeneratorV2 />
+              <ReportGeneratorView />
             </PrivateRoute>
           }
         />
@@ -291,7 +291,7 @@ function AppContent() {
           path="/reports/scheduled"
           element={
             <PrivateRoute userPermissions={userPermissions}>
-              <ReportSchedulerV2 />
+              <ReportSchedulerView />
             </PrivateRoute>
           }
         />
@@ -299,7 +299,7 @@ function AppContent() {
           path="/reports/history"
           element={
             <PrivateRoute userPermissions={userPermissions}>
-              <ReportHistoryPage userPermissions={userPermissions} />
+              <ReportHistoryPageView userPermissions={userPermissions} />
             </PrivateRoute>
           }
         />
@@ -307,7 +307,7 @@ function AppContent() {
           path="/ai-analysis"
           element={
             <PrivateRoute userPermissions={userPermissions}>
-              <AIAnalysisV2 userPermissions={userPermissions} />
+              <AIAnalysisView userPermissions={userPermissions} />
             </PrivateRoute>
           }
         />

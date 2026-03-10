@@ -1,8 +1,8 @@
 // collectors/ubibot-collector.js
 
-const config = require("../src/config/js_files/config-loader");
-const ubibotController = require("../src/controllers/ubibotController");
-const ubibotService = require("../src/services/ubibot/ubibotService");
+const config = require("../src/config/js_files/configLoader_Config");
+const ubibotController = require("../src/controllers/ubibot_Controller");
+const ubibotService = require("../src/services/ubibot/ubibot_Service");
 
 
 class UbibotCollector {
@@ -209,7 +209,7 @@ class UbibotCollector {
       // Enviar alerta si hay sensores desconectados
       if (disconnectedChannels.length > 0) {
         try {
-          const emailService = require("../src/services/email/emailService");
+          const emailService = require("../src/services/email/email_Service");
           await emailService.sendDisconnectedSensorsEmail(disconnectedChannels);
           console.log(
             `Alerta enviada para ${disconnectedChannels.length} sensores desconectados`

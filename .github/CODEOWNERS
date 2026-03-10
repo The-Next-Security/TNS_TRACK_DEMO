@@ -1,0 +1,63 @@
+# CODEOWNERS
+#
+# Este archivo define los Code Owners del proyecto TNS Track Bitumix.
+#
+# NOTA: En repositorios privados con GitHub Free, este archivo
+# NO es enforced automáticamente por GitHub. Sin embargo, nuestro
+# workflow de GitHub Actions (.github/workflows/protect-main.yml)
+# lo simula verificando aprobaciones de estos usuarios.
+#
+# Más información: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# =============================================================================
+# OWNERSHIP PRINCIPAL
+# =============================================================================
+
+# Todos los archivos requieren aprobación de Code Owners
+* @Bufigol @felipecleverox @TNSTRACK
+
+# =============================================================================
+# ARCHIVOS CRÍTICOS DE CONFIGURACIÓN
+# =============================================================================
+
+# Package management
+package.json @Bufigol @felipecleverox @TNSTRACK
+package-lock.json @Bufigol @felipecleverox @TNSTRACK
+servicios/package.json @Bufigol @felipecleverox @TNSTRACK
+servicios/package-lock.json @Bufigol @felipecleverox @TNSTRACK
+
+# GitHub configuration
+.github/** @Bufigol @felipecleverox @TNSTRACK
+
+# Documentación del proyecto
+CLAUDE.md @Bufigol @felipecleverox @TNSTRACK
+README.md @Bufigol @felipecleverox @TNSTRACK
+CHANGELOG.md @Bufigol @felipecleverox @TNSTRACK
+
+# =============================================================================
+# CI/CD Y WORKFLOWS
+# =============================================================================
+
+# Workflows de GitHub Actions
+.github/workflows/** @Bufigol @felipecleverox @TNSTRACK
+
+# Scripts de automatización
+.github/scripts/** @Bufigol @felipecleverox @TNSTRACK
+
+# =============================================================================
+# CONFIGURACIÓN DE SEGURIDAD
+# =============================================================================
+
+# Dependabot
+.github/dependabot.yml @Bufigol @felipecleverox @TNSTRACK
+
+# Archivos de entorno (si existen en repo)
+.env.example @Bufigol @felipecleverox @TNSTRACK
+
+# =============================================================================
+# DOCUMENTACIÓN
+# =============================================================================
+
+# Documentación general
+docs/** @Bufigol @felipecleverox @TNSTRACK
+*.md @Bufigol @felipecleverox @TNSTRACK

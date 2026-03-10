@@ -1,0 +1,64 @@
+# Dependabot Configuration para TNS Track (Bitumix)
+# Automatiza actualizaciones de dependencias npm con enfoque en seguridad
+# Alineado con Principio VI de la Constitución: Dependencias Actualizadas
+# Estrategia:
+#   - Parches sin breaking changes: Merge directo a dev
+#   - Minor updates: Merge a dev, testear durante desarrollo de features
+#   - Breaking changes: Integrar en desarrollo activo para testing orgánico
+# Zona horaria: America/Santiago (Chile)
+
+version: 2
+updates:
+  # Dependencias npm del proyecto servicios
+  - package-ecosystem: "npm"
+    directory: "/servicios"
+    schedule:
+      interval: "daily"
+      time: "09:00"
+      timezone: "America/Santiago"
+    # Abrir PRs solo para actualizaciones de seguridad y patches
+    open-pull-requests-limit: 5
+    # Configuración de versionado
+    versioning-strategy: increase
+    # Etiquetas para identificación
+    labels:
+      - "dependencies"
+      - "security"
+      - "npm"
+    # Assignee por defecto para seguimiento de dependencias
+    assignees:
+      - "andresTNS"
+    # Agrupar actualizaciones de desarrollo
+    groups:
+      development-dependencies:
+        patterns:
+          - "@babel/*"
+          - "@testing-library/*"
+          - "@playwright/*"
+          - "eslint*"
+          - "jest*"
+          - "webpack*"
+        update-types:
+          - "minor"
+          - "patch"
+      security-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+    # Ignorar dependencias específicas (si es necesario desactivar temporalmente)
+    # ignore:
+    #   - dependency-name: "nombre-paquete"
+    #     versions: ["x.x.x"]
+
+  # GitHub Actions (workflows de CI/CD)
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Santiago"
+    labels:
+      - "dependencies"
+      - "github-actions"
