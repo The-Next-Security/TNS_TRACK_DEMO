@@ -8,6 +8,7 @@ const smsService = require("../services/sms/sms_Service");
 const notificationService = require("../services/notification_Service");
 const pushNotificationService = require("../services/push/pushNotification_Service");
 const alertTrackingService = require("../services/alertTracking_Service");
+const alertScheduleConfigService = require("../services/db/alertScheduleConfig_Service");
 
 class NotificationController {
     constructor() {
@@ -15,7 +16,6 @@ class NotificationController {
         console.log("[NotificationCtrl] Constructor: Creando instancia...");
         this.appConfig = null;
         this.timeZone = "America/Santiago";
-        this.workingHours = { weekdays: { start: 8.5, end: 18.5 }, saturday: { start: 8.5, end: 14.5 } };
         this.disconnectionAlertThreshold = 55;
         this.cleanupInterval = 720;
         this.pool = null;
@@ -33,7 +33,6 @@ class NotificationController {
     init() {
         this.appConfig = configLoader.getConfig();
         this.timeZone = this.appConfig.alertSystem?.timeZone || "America/Santiago";
-        this.workingHours = this.appConfig.alertSystem?.workingHours || this.workingHours;
         this.disconnectionAlertThreshold = this.appConfig.alertSystem?.intervals?.disconnection?.initialDelay || 55;
         this.cleanupInterval = this.appConfig.alertSystem?.intervals?.cleanupMinutes || 720;
         console.log(`[NotificationCtrl] init: Zona horaria: ${this.timeZone}, cleanupInterval: ${this.cleanupInterval} min`);
@@ -215,38 +214,23 @@ class NotificationController {
 
     async isWithinWorkingHours(checkTime = null) {
         const now = checkTime ? moment(checkTime).tz(this.timeZone) : moment().tz(this.timeZone);
-        const hourDecimal = now.hour() + now.minute() / 60;
-        const dayOfWeek = now.day(); // 0 = Domingo, 6 = Sábado
 
-        // Si es domingo, siempre es fuera de horario laboral
-        if (dayOfWeek === 0) return false;
-
-        // Verificar si es un feriado (los feriados se comportan como domingos)
-        const isHolidayToday = await this.isHoliday(now);
-        if (isHolidayToday) {
-            console.log(`[NotificationCtrl] isWithinWorkingHours: Fecha ${now.format('YYYY-MM-DD')} es feriado, se considera fuera de horario laboral.`);
-            return false;
+        // Verificar feriados si respetar_feriados está habilitado (Nivel 1 - config global)
+        const configCache = alertScheduleConfigService.configCache;
+        if (configCache?.respetar_feriados) {
+            const isHolidayToday = await this.isHoliday(now);
+            if (isHolidayToday) {
+                console.log(`[NotificationCtrl] isWithinWorkingHours: Feriado ${now.format('YYYY-MM-DD')} — fuera de horario operacional`);
+                return false;
+            }
         }
 
-        // Obtener horarios configurados con valores por defecto seguros
-        const weekdaysStart = this.workingHours?.weekdays?.start ?? 8.5;
-        const weekdaysEnd = this.workingHours?.weekdays?.end ?? 18.5;
-        const saturdayStart = this.workingHours?.saturday?.start ?? 8.5;
-        const saturdayEnd = this.workingHours?.saturday?.end ?? 14.5;
+        // Delegar evaluación de horario al servicio (Nivel 1 — única fuente de verdad)
+        const resultado = await alertScheduleConfigService.isWithinOperationalHours(now);
 
-        // Agregar logs para depuración
-        console.log(`[DEBUG] Valores de comparación: dayOfWeek=${dayOfWeek}, hourDecimal=${hourDecimal}`);
-        console.log(`[DEBUG] Horarios: weekdaysStart=${weekdaysStart}, weekdaysEnd=${weekdaysEnd}, saturdayStart=${saturdayStart}, saturdayEnd=${saturdayEnd}`);
+        console.log(`[NotificationCtrl] isWithinWorkingHours: ${resultado.motivo}`);
 
-        let result = false;
-        if (dayOfWeek === 6) { // Sábado
-            result = hourDecimal >= saturdayStart && hourDecimal < saturdayEnd;
-        } else { // Lunes a Viernes (1-5)
-            result = hourDecimal >= weekdaysStart && hourDecimal < weekdaysEnd;
-        }
-
-        console.log(`[DEBUG] Resultado de isWithinWorkingHours: ${result}`);
-        return result;
+        return resultado.enHorario;
     }
 
     // --- MÉTODO PRINCIPAL REFACTORIZADO (processHourlyAlerts - Lógica Interna Sin Cambios) ---
