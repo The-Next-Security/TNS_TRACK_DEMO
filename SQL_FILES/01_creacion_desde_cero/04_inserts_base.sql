@@ -312,7 +312,7 @@ INSERT INTO `gen_cofiguracion_grupos` (`id_cofiguracion_grupos`, `nombre`, `desc
 (2,  'jwt',                   'Configuración de autenticación JWT',                                     2,  1),
 (3,  'websocket',             'Configuración del servidor WebSocket',                                    3,  1),
 (4,  'email',                 'Configuración del proveedor de correo electrónico (SendGrid)',            4,  1),
-(5,  'notifications',         'Habilitación de canales de notificación (email, SMS)',                    5,  1),
+(5,  'notifications',         'Habilitación de canales de notificación (email)',                         5,  1),
 (6,  'mapbox',                'Configuración de Mapbox para visualización de mapas',                     6,  1),
 (7,  'posthog',               'Configuración de analítica de uso PostHog',                               7,  1),
 (8,  'tracking',              'Configuración de tracking de eventos de usuario',                         8,  1),
@@ -362,9 +362,9 @@ INSERT INTO `gen_cofiguracion_parametros`
 (13, 4, 1, 'email.email_contacto.from_name',           'from_name',            3, 'email.email_contacto',      0, 'Nombre visible del remitente en los correos enviados',                             'TNS TRACK',    0, 1),
 (14, 4, 1, 'email.emergency_recipient',                'emergency_recipient',  2, 'email',                     0, 'Correo destinatario de alertas críticas del sistema',                              '[CONFIGURAR]', 1, 1),
 
--- ── Grupo notifications (id_grupo=5) → ids 15-16 ─────────────────────────────
+-- ── Grupo notifications (id_grupo=5) → id 15 ────────────────────────────────
+-- id=16 eliminado: notifications.sms.enabled — módulo SMS (módem HiLink local) eliminado del sistema
 (15, 5, 2, 'notifications.email.enabled',              'enabled',              3, 'notifications.email',       0, 'Habilitar envío de notificaciones por correo electrónico',                         'true',  0, 1),
-(16, 5, 2, 'notifications.sms.enabled',                'enabled',              3, 'notifications.sms',         0, 'Habilitar envío de notificaciones por SMS vía módem local',                        'false', 0, 1),
 
 -- ── Grupo mapbox (id_grupo=6) → ids 17-18 ────────────────────────────────────
 (17, 6, 1, 'mapbox.access_token',                      'access_token',         2, 'mapbox',                    1, 'Token de acceso Mapbox para renderizado de mapas en el cliente',                   '[CONFIGURAR]',                        1, 1),
@@ -468,9 +468,9 @@ INSERT INTO `gen_cofiguracion_valores` (`id_cofiguracion_parametros`, `valor`, `
 (12, '[CONFIGURAR]',                                               1, 1),
 (13, 'TNS TRACK',                                                  1, 1),
 (14, '[CONFIGURAR]',                                               1, 1),
--- notifications (ids 15-16)
+-- notifications (id 15)
+-- id=16 eliminado: notifications.sms.enabled — módulo SMS (módem HiLink local) eliminado del sistema
 (15, 'true',                                                       1, 1),
-(16, 'false',                                                      1, 1),
 -- mapbox (ids 17-18)
 (17, '[CONFIGURAR]',                                               1, 1),
 (18, 'mapbox://styles/mapbox/satellite-v9',                        1, 1),
