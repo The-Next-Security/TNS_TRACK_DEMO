@@ -141,7 +141,7 @@ class PushNotificationService {
             const connection = await this.pool.getConnection();
             try {
                 const [rows] = await connection.query(
-                    "SELECT COUNT(*) as total FROM push_subscriptions WHERE is_active = TRUE"
+                    "SELECT COUNT(*) as total FROM ale_push_suscripciones WHERE activo = TRUE"
                 );
                 this.stats.totalSubscriptions = rows[0]?.total || 0;
             } finally {
@@ -211,20 +211,19 @@ class PushNotificationService {
 
             // Verificar si ya existe (actualizar en lugar de insertar)
             const [existing] = await connection.query(
-                "SELECT subscription_id, is_active FROM push_subscriptions WHERE endpoint = ?",
+                "SELECT id_suscripcion, activo FROM ale_push_suscripciones WHERE endpoint = ?",
                 [endpoint]
             );
 
             if (existing.length > 0) {
                 // Actualizar suscripción existente
-                const subscriptionId = existing[0].subscription_id;
+                const subscriptionId = existing[0].id_suscripcion;
                 await connection.query(
-                    `UPDATE push_subscriptions
-                     SET p256dh_key = ?, auth_key = ?, is_active = TRUE,
-                         last_seen_at = NOW(), user_agent = ?,
-                         browser_name = ?, device_type = ?
-                     WHERE subscription_id = ?`,
-                    [p256dh, auth, userAgent, browserName, deviceType, subscriptionId]
+                    `UPDATE ale_push_suscripciones
+                     SET p256dh = ?, auth = ?, activo = TRUE,
+                         ultima_conexion = NOW(), tipo_dispositivo = ?
+                     WHERE id_suscripcion = ?`,
+                    [p256dh, auth, deviceType, subscriptionId]
                 );
 
                 console.log(`[PushNotificationService] Suscripción actualizada: ${subscriptionId}`);
@@ -233,11 +232,10 @@ class PushNotificationService {
 
             // Insertar nueva suscripción
             const [result] = await connection.query(
-                `INSERT INTO push_subscriptions
-                 (user_id, user_email, endpoint, p256dh_key, auth_key,
-                  user_agent, browser_name, device_type, last_seen_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
-                [userId, userEmail, endpoint, p256dh, auth, userAgent, browserName, deviceType]
+                `INSERT INTO ale_push_suscripciones
+                 (id_usuario, endpoint, p256dh, auth, tipo_dispositivo, ultima_conexion)
+                 VALUES (?, ?, ?, ?, ?, NOW())`,
+                [userId, endpoint, p256dh, auth, deviceType]
             );
 
             this.stats.totalSubscriptions++;
@@ -270,14 +268,14 @@ class PushNotificationService {
         try {
             if (hardDelete) {
                 const [result] = await connection.query(
-                    "DELETE FROM push_subscriptions WHERE endpoint = ?",
+                    "DELETE FROM ale_push_suscripciones WHERE endpoint = ?",
                     [endpoint]
                 );
                 console.log(`[PushNotificationService] Suscripción eliminada físicamente.`);
                 return result.affectedRows > 0;
             } else {
                 const [result] = await connection.query(
-                    "UPDATE push_subscriptions SET is_active = FALSE WHERE endpoint = ?",
+                    "UPDATE ale_push_suscripciones SET activo = FALSE WHERE endpoint = ?",
                     [endpoint]
                 );
                 console.log(`[PushNotificationService] Suscripción desactivada.`);
@@ -303,16 +301,16 @@ class PushNotificationService {
 
         const connection = await this.pool.getConnection();
         try {
-            let query = "SELECT * FROM push_subscriptions WHERE is_active = TRUE";
+            let query = "SELECT * FROM ale_push_suscripciones WHERE activo = TRUE";
             const params = [];
 
             if (filters.userId) {
-                query += " AND user_id = ?";
+                query += " AND id_usuario = ?";
                 params.push(filters.userId);
             }
 
             if (filters.deviceType) {
-                query += " AND device_type = ?";
+                query += " AND tipo_dispositivo = ?";
                 params.push(filters.deviceType);
             }
 
@@ -343,16 +341,16 @@ class PushNotificationService {
         try {
             const [rows] = await connection.query(
                 `SELECT
-                    preference_id as preferenceId,
-                    subscription_id as subscriptionId,
-                    dnd_enabled as dndEnabled,
-                    dnd_start_time as dndStartTime,
-                    dnd_end_time as dndEndTime,
-                    dnd_days as dndDays,
-                    allow_critical_alerts as allowCriticalAlerts,
-                    enabled_alert_types as enabledAlertTypes
-                 FROM push_notification_preferences
-                 WHERE subscription_id = ?`,
+                    id_preferencia as preferenceId,
+                    id_suscripcion as subscriptionId,
+                    dnd_habilitado as dndEnabled,
+                    hora_inicio_dnd as dndStartTime,
+                    hora_fin_dnd as dndEndTime,
+                    dias_dnd as dndDays,
+                    permitir_alertas_criticas as allowCriticalAlerts,
+                    tipos_alerta_habilitados as enabledAlertTypes
+                 FROM ale_preferencias_push
+                 WHERE id_suscripcion = ?`,
                 [subscriptionId]
             );
 
@@ -426,7 +424,7 @@ class PushNotificationService {
 
             // Verificar si ya existen preferencias
             const [existing] = await connection.query(
-                "SELECT preference_id FROM push_notification_preferences WHERE subscription_id = ?",
+                "SELECT id_preferencia FROM ale_preferencias_push WHERE id_suscripcion = ?",
                 [subscriptionId]
             );
 
@@ -434,12 +432,12 @@ class PushNotificationService {
 
             if (existing.length > 0) {
                 // Actualizar preferencias existentes
-                preferenceId = existing[0].preference_id;
+                preferenceId = existing[0].id_preferencia;
                 await connection.query(
-                    `UPDATE push_notification_preferences
-                     SET dnd_enabled = ?, dnd_start_time = ?, dnd_end_time = ?,
-                         dnd_days = ?, allow_critical_alerts = ?, enabled_alert_types = ?
-                     WHERE preference_id = ?`,
+                    `UPDATE ale_preferencias_push
+                     SET dnd_habilitado = ?, hora_inicio_dnd = ?, hora_fin_dnd = ?,
+                         dias_dnd = ?, permitir_alertas_criticas = ?, tipos_alerta_habilitados = ?
+                     WHERE id_preferencia = ?`,
                     [dndEnabled, dndStartTime, dndEndTime, dndDays,
                      allowCriticalAlerts, enabledAlertTypes, preferenceId]
                 );
@@ -449,9 +447,9 @@ class PushNotificationService {
             } else {
                 // Insertar nuevas preferencias
                 const [result] = await connection.query(
-                    `INSERT INTO push_notification_preferences
-                     (subscription_id, dnd_enabled, dnd_start_time, dnd_end_time,
-                      dnd_days, allow_critical_alerts, enabled_alert_types)
+                    `INSERT INTO ale_preferencias_push
+                     (id_suscripcion, dnd_habilitado, hora_inicio_dnd, hora_fin_dnd,
+                      dias_dnd, permitir_alertas_criticas, tipos_alerta_habilitados)
                      VALUES (?, ?, ?, ?, ?, ?, ?)`,
                     [subscriptionId, dndEnabled, dndStartTime, dndEndTime,
                      dndDays, allowCriticalAlerts, enabledAlertTypes]
@@ -483,14 +481,14 @@ class PushNotificationService {
             return true; // En caso de error, permitir el envío
         }
 
-        const subscriptionId = subscription.subscription_id;
+        const subscriptionId = subscription.id_suscripcion;
 
         try {
             // Usar la función MySQL para evaluar si se debe enviar
             const connection = await this.pool.getConnection();
             try {
                 const [rows] = await connection.query(
-                    "SELECT fn_should_send_notification(?, ?, ?) as should_send",
+                    "SELECT fun_should_send_notification(?, ?, ?) as should_send",
                     [subscriptionId, alertType, isCritical ? 1 : 0]
                 );
 
@@ -519,7 +517,7 @@ class PushNotificationService {
      */
     async _shouldSendToSubscriptionLocal(subscription, alertType, isCritical) {
         try {
-            const preferences = await this.getPreferences(subscription.subscription_id);
+            const preferences = await this.getPreferences(subscription.id_suscripcion);
 
             if (!preferences || !preferences.dndEnabled) {
                 return true; // Sin preferencias o DND deshabilitado
@@ -528,14 +526,14 @@ class PushNotificationService {
             // Verificar si el tipo de alerta está habilitado
             if (preferences.enabledAlertTypes && preferences.enabledAlertTypes.length > 0) {
                 if (!preferences.enabledAlertTypes.includes(alertType)) {
-                    console.log(`[PushNotificationService] Tipo de alerta '${alertType}' no habilitado para suscripción ${subscription.subscription_id}`);
+                    console.log(`[PushNotificationService] Tipo de alerta '${alertType}' no habilitado para suscripción ${subscription.id_suscripcion}`);
                     return false;
                 }
             }
 
             // Si es crítica y se permiten alertas críticas durante DND
             if (isCritical && preferences.allowCriticalAlerts) {
-                console.log(`[PushNotificationService] Permitiendo alerta crítica durante DND para suscripción ${subscription.subscription_id}`);
+                console.log(`[PushNotificationService] Permitiendo alerta crítica durante DND para suscripción ${subscription.id_suscripcion}`);
                 return true;
             }
 
@@ -543,7 +541,7 @@ class PushNotificationService {
             const isInDND = this._isInDNDWindow(new Date(), preferences);
 
             if (isInDND) {
-                console.log(`[PushNotificationService] Suscripción ${subscription.subscription_id} en ventana DND`);
+                console.log(`[PushNotificationService] Suscripción ${subscription.id_suscripcion} en ventana DND`);
                 return false;
             }
 
@@ -618,8 +616,8 @@ class PushNotificationService {
             const pushSubscription = {
                 endpoint: subscription.endpoint,
                 keys: {
-                    p256dh: subscription.p256dh_key,
-                    auth: subscription.auth_key
+                    p256dh: subscription.p256dh,
+                    auth: subscription.auth
                 }
             };
 
@@ -628,7 +626,7 @@ class PushNotificationService {
             await webpush.sendNotification(pushSubscription, payloadString);
 
             // Actualizar estadísticas en BD
-            await this._updateSubscriptionStats(subscription.subscription_id, true);
+            await this._updateSubscriptionStats(subscription.id_suscripcion, true);
 
             this.stats.totalSent++;
             this.stats.lastSentTime = new Date();
@@ -645,7 +643,7 @@ class PushNotificationService {
             }
 
             this.stats.totalFailed++;
-            await this._updateSubscriptionStats(subscription.subscription_id, false);
+            await this._updateSubscriptionStats(subscription.id_suscripcion, false);
 
             return false;
         }
@@ -687,7 +685,7 @@ class PushNotificationService {
                 eligibleSubs.push(sub);
             } else {
                 skippedByDND++;
-                console.log(`[PushNotificationService] Skipping sub ${sub.subscription_id} (DND active)`);
+                console.log(`[PushNotificationService] Skipping sub ${sub.id_suscripcion} (DND active)`);
             }
         }
 
@@ -715,7 +713,7 @@ class PushNotificationService {
                 results.sent++;
             } else {
                 results.failed++;
-                console.error(`[PushNotificationService] Fallo enviando a suscripción ${eligibleSubs[index].subscription_id}`);
+                console.error(`[PushNotificationService] Fallo enviando a suscripción ${eligibleSubs[index].id_suscripcion}`);
             }
         });
 
@@ -944,10 +942,9 @@ class PushNotificationService {
             const connection = await this.pool.getConnection();
             try {
                 await connection.query(
-                    `UPDATE push_subscriptions
-                     SET notification_count = notification_count + 1,
-                         last_notification_sent = NOW()
-                     WHERE subscription_id = ?`,
+                    `UPDATE ale_push_suscripciones
+                     SET ultima_notificacion_enviada = NOW()
+                     WHERE id_suscripcion = ?`,
                     [subscriptionId]
                 );
             } finally {
@@ -1018,7 +1015,7 @@ class PushNotificationService {
         const connection = await this.pool.getConnection();
         try {
             const [result] = await connection.query(
-                "CALL cleanup_old_push_subscriptions(?)",
+                "CALL stpr_cleanup_old_push_subscriptions(?)",
                 [daysInactive]
             );
 
