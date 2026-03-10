@@ -1,11 +1,13 @@
 /**
  * Alert Schedule Config Service
  *
- * Service for managing global alert schedule configuration.
- * Provides methods to load, update, and validate alert schedule parameters.
+ * Servicio para gestionar la configuración de horario operacional del sistema.
+ * Opera sobre dos niveles de configuración:
+ *   - gen_horario_operacional: 7 filas (una por día) con hora_inicio, hora_fin, activo
+ *   - gen_cofiguracion_valores ids 77-78: parámetros globales del sistema de alertas
  *
  * Feature: 002-configurable-alert-schedules
- * Issue: https://github.com/TNSTRACK/servicios/issues/19
+ * Issue: https://github.com/TNSTRACK/servicios/issues/12
  *
  * @module services/db/alertScheduleConfigService
  */
@@ -15,390 +17,315 @@ const databaseService = require('../database_Service');
 class AlertScheduleConfigService {
   constructor() {
     this.databaseService = databaseService;
+    this.configCache = null; // Cache en memoria para evitar queries frecuentes
   }
 
   /**
-   * Load all configuration records from database
+   * Cargar configuración completa desde la base de datos.
    *
-   * Reads all 5 config records (weekday_start, weekday_end, saturday_start,
-   * saturday_end, respect_holidays) and returns them as a structured object.
+   * Lee los 7 registros de gen_horario_operacional y los parámetros globales
+   * (respetar_feriados, criticas_ignoran_horario) y retorna una estructura nativa.
    *
-   * @returns {Promise<Object>} Configuration object with all parameters
-   * @throws {Error} If database query fails
+   * @returns {Promise<Object>} Configuración con horarios por día y parámetros globales
+   * @throws {Error} Si la consulta a la BD falla
    *
    * @example
    * const config = await service.loadAllConfig();
-   * // Returns:
+   * // Retorna:
    * // {
-   * //   weekday_start: '08:30:00',
-   * //   weekday_end: '18:30:00',
-   * //   saturday_start: '08:30:00',
-   * //   saturday_end: '14:30:00',
-   * //   respect_holidays: 'true',
-   * //   updated_at: '2025-10-21T10:15:43Z',
-   * //   updated_by: 'admin@storage.cl'
+   * //   horarios: [
+   * //     { dia_semana: 1, nombre_dia: 'Lunes', hora_inicio: '08:30:00', hora_fin: '18:30:00', activo: true },
+   * //     ...
+   * //     { dia_semana: 7, nombre_dia: 'Domingo', hora_inicio: '00:00:00', hora_fin: '00:00:00', activo: false }
+   * //   ],
+   * //   respetar_feriados: true,
+   * //   criticas_ignoran_horario: true,
+   * //   fecha_carga: Date
    * // }
    */
   async loadAllConfig() {
     try {
-      // Initialize database connection if needed
       if (!this.databaseService.connected) {
         await this.databaseService.initialize();
       }
 
-      const query = `
-        SELECT
-          config_key,
-          config_value,
-          updated_at,
-          updated_by
-        FROM alert_schedule_config
-        ORDER BY config_id
-      `;
+      // Consulta horarios operacionales (7 días de la semana)
+      const [horarios] = await this.databaseService.pool.execute(`
+        SELECT dia_semana, nombre_dia, hora_inicio, hora_fin, activo
+        FROM gen_horario_operacional
+        ORDER BY dia_semana
+      `);
 
-      const [rows] = await this.databaseService.pool.execute(query);
+      // Consulta parámetros globales del sistema de alertas (ids 77 y 78)
+      const [parametros] = await this.databaseService.pool.execute(`
+        SELECT p.clave_sistema, v.valor
+        FROM gen_cofiguracion_parametros p
+        JOIN gen_cofiguracion_valores v ON v.id_cofiguracion_parametros = p.id_cofiguracion_parametros
+        WHERE p.id_cofiguracion_parametros IN (77, 78) AND v.activo = 1
+      `);
 
-      // Transform array of rows into object
-      const config = {};
-      let latestUpdate = null;
-      let latestUpdatedBy = null;
-
-      rows.forEach(row => {
-        config[row.config_key] = row.config_value;
-
-        // Track latest update time across all records
-        if (!latestUpdate || row.updated_at > latestUpdate) {
-          latestUpdate = row.updated_at;
-          latestUpdatedBy = row.updated_by;
-        }
+      // Parsear parámetros globales a un mapa clave→valor
+      const params = {};
+      parametros.forEach(row => {
+        // La clave viene como 'alertSystem.respetar_feriados' → extraer la parte final
+        const clave = row.clave_sistema.split('.').pop();
+        params[clave] = row.valor;
       });
 
-      // Add metadata
-      config.updated_at = latestUpdate;
-      config.updated_by = latestUpdatedBy;
+      // Construir la configuración con tipos correctos
+      const config = {
+        horarios: horarios.map(row => ({
+          dia_semana: row.dia_semana,
+          nombre_dia: row.nombre_dia,
+          hora_inicio: row.hora_inicio,
+          hora_fin: row.hora_fin,
+          activo: row.activo === 1
+        })),
+        respetar_feriados: params.respetar_feriados === 'true',
+        criticas_ignoran_horario: params.criticas_ignoran_horario === 'true',
+        fecha_carga: new Date()
+      };
 
-      console.log(`[AlertScheduleConfigService] Loaded ${rows.length} configuration records`);
+      // Actualizar cache en memoria
+      this.configCache = config;
+
+      console.log(`[AlertScheduleConfigService] Configuración cargada: ${config.horarios.length} días de la semana`);
 
       return config;
     } catch (error) {
-      console.error('[AlertScheduleConfigService] Error loading config:', error);
-      throw new Error(`Failed to load alert schedule configuration: ${error.message}`);
+      console.error('[AlertScheduleConfigService] Error al cargar configuración:', error);
+      throw new Error(`Error al cargar configuración de horario: ${error.message}`);
     }
   }
 
   /**
-   * Update a single configuration parameter
+   * Determina si un momento dado está dentro del horario operacional del sistema.
    *
-   * Updates one config parameter in the database using parameterized query
-   * to prevent SQL injection.
+   * Única fuente de verdad (Nivel 1) para la decisión de envío de alertas.
+   * Utiliza el cache en memoria si está disponible; si no, lo carga desde BD.
    *
-   * @param {string} key - Configuration key (weekday_start|weekday_end|saturday_start|saturday_end|respect_holidays)
-   * @param {string} value - New value for the parameter
-   * @param {string} updatedBy - Email or username of user making the change
-   * @returns {Promise<Object>} Result with affectedRows count
-   * @throws {Error} If database update fails or key is invalid
+   * Nota: Este método solo evalúa el Nivel 1 (global). El Nivel 2 (DND por usuario)
+   * lo gestiona MySQL a través de fun_should_send_notification().
    *
-   * @example
-   * await service.updateConfig('weekday_start', '09:00:00', 'admin@storage.cl');
+   * Mapeo de días:
+   *   moment().day() → 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
+   *   gen_horario_operacional → 1=Lun, 2=Mar, ..., 6=Sáb, 7=Dom
+   *
+   * @param {Object} momentTime - Objeto moment con la fecha/hora a evaluar
+   * @returns {Promise<Object>} { enHorario: boolean, motivo: string }
    */
-  async updateConfig(key, value, updatedBy) {
+  async isWithinOperationalHours(momentTime) {
     try {
-      // Validate key is one of the allowed config keys
-      const validKeys = ['weekday_start', 'weekday_end', 'saturday_start', 'saturday_end', 'respect_holidays'];
-      if (!validKeys.includes(key)) {
-        throw new Error(`Invalid config key: ${key}. Must be one of: ${validKeys.join(', ')}`);
+      // Cargar config desde cache o BD
+      const config = this.configCache || await this.loadAllConfig();
+
+      // Convertir día de moment (0=Dom..6=Sáb) a formato de BD (1=Lun..7=Dom)
+      const diaMoment = momentTime.day(); // 0=Dom, 1=Lun, ..., 6=Sáb
+      const diaDB = diaMoment === 0 ? 7 : diaMoment; // Dom→7, el resto igual
+
+      // Buscar el horario para el día actual
+      const horarioDia = config.horarios.find(h => h.dia_semana === diaDB);
+
+      if (!horarioDia) {
+        return { enHorario: false, motivo: `No hay horario configurado para dia_semana=${diaDB}` };
       }
 
-      // Initialize database connection if needed
+      // Si el día está inactivo, está fuera del horario operacional
+      if (!horarioDia.activo) {
+        return { enHorario: false, motivo: `${horarioDia.nombre_dia} no está en horario operacional (activo=false)` };
+      }
+
+      // Comparar hora actual con el rango del día
+      const horaActual = momentTime.format('HH:mm:ss');
+      const enRango = horaActual >= horarioDia.hora_inicio && horaActual <= horarioDia.hora_fin;
+
+      if (enRango) {
+        return {
+          enHorario: true,
+          motivo: `${horarioDia.nombre_dia} en horario operacional (${horarioDia.hora_inicio} - ${horarioDia.hora_fin})`
+        };
+      } else {
+        return {
+          enHorario: false,
+          motivo: `${horarioDia.nombre_dia} fuera de horario operacional (${horarioDia.hora_inicio} - ${horarioDia.hora_fin})`
+        };
+      }
+    } catch (error) {
+      console.error('[AlertScheduleConfigService] Error al evaluar horario operacional:', error);
+      // En caso de error, asumir fuera de horario (conservador)
+      return { enHorario: false, motivo: `Error al evaluar horario: ${error.message}` };
+    }
+  }
+
+  /**
+   * Actualizar el horario operacional de un día de la semana.
+   *
+   * @param {number} dia_semana - Día a actualizar (1=Lunes .. 7=Domingo)
+   * @param {Object} datos - Datos a actualizar
+   * @param {string} datos.hora_inicio - Hora de inicio (HH:mm:ss)
+   * @param {string} datos.hora_fin - Hora de fin (HH:mm:ss)
+   * @param {boolean} datos.activo - Si el día está activo en el horario operacional
+   * @param {string} updatedBy - Usuario que realiza el cambio
+   * @returns {Promise<Object>} Resultado con affectedRows
+   * @throws {Error} Si la actualización falla
+   */
+  async updateHorario(dia_semana, { hora_inicio, hora_fin, activo }, updatedBy) {
+    try {
       if (!this.databaseService.connected) {
         await this.databaseService.initialize();
       }
 
-      const query = `
-        UPDATE alert_schedule_config
-        SET
-          config_value = ?,
-          updated_by = ?,
-          updated_at = CURRENT_TIMESTAMP
-        WHERE config_key = ?
-      `;
+      const [result] = await this.databaseService.pool.execute(`
+        UPDATE gen_horario_operacional
+        SET hora_inicio = ?, hora_fin = ?, activo = ?
+        WHERE dia_semana = ?
+      `, [hora_inicio, hora_fin, activo ? 1 : 0, dia_semana]);
 
-      const [result] = await this.databaseService.pool.execute(query, [value, updatedBy, key]);
+      // Invalidar cache para forzar recarga en próxima consulta
+      this.configCache = null;
 
-      console.log(`[AlertScheduleConfigService] Updated ${key} = ${value} (by ${updatedBy})`);
+      console.log(`[AlertScheduleConfigService] Horario dia=${dia_semana} actualizado por ${updatedBy}`);
 
       return {
         success: true,
         affectedRows: result.affectedRows,
-        key,
-        value,
+        dia_semana,
+        hora_inicio,
+        hora_fin,
+        activo,
         updatedBy
       };
     } catch (error) {
-      console.error('[AlertScheduleConfigService] Error updating config:', error);
-      throw new Error(`Failed to update configuration: ${error.message}`);
+      console.error('[AlertScheduleConfigService] Error al actualizar horario:', error);
+      throw new Error(`Error al actualizar horario: ${error.message}`);
     }
   }
 
   /**
-   * Update multiple configuration parameters at once
+   * Actualizar un parámetro global del sistema de alertas.
    *
-   * Updates multiple config parameters in a single transaction.
+   * Usado para modificar respetar_feriados y criticas_ignoran_horario.
    *
-   * @param {Object} updates - Object with key-value pairs to update
-   * @param {string} updatedBy - Email or username of user making the changes
-   * @returns {Promise<Object>} Result with count of updated records
-   * @throws {Error} If database update fails
-   *
-   * @example
-   * await service.updateMultipleConfigs({
-   *   weekday_start: '09:00:00',
-   *   weekday_end: '17:00:00',
-   *   respect_holidays: 'false'
-   * }, 'admin@storage.cl');
+   * @param {string} clave - Clave del parámetro (ej: 'alertSystem.respetar_feriados')
+   * @param {string} valor - Nuevo valor ('true' o 'false')
+   * @returns {Promise<Object>} Resultado con affectedRows
+   * @throws {Error} Si la actualización falla
    */
-  async updateMultipleConfigs(updates, updatedBy) {
+  async updateParametro(clave, valor) {
     try {
-      // Initialize database connection if needed
       if (!this.databaseService.connected) {
         await this.databaseService.initialize();
       }
 
-      const connection = await this.databaseService.pool.getConnection();
+      const [result] = await this.databaseService.pool.execute(`
+        UPDATE gen_cofiguracion_valores v
+        JOIN gen_cofiguracion_parametros p ON v.id_cofiguracion_parametros = p.id_cofiguracion_parametros
+        SET v.valor = ?
+        WHERE p.clave_sistema = ? AND v.activo = 1
+      `, [valor, clave]);
 
-      try {
-        await connection.beginTransaction();
+      // Invalidar cache
+      this.configCache = null;
 
-        const results = [];
+      console.log(`[AlertScheduleConfigService] Parámetro '${clave}' actualizado a '${valor}'`);
 
-        for (const [key, value] of Object.entries(updates)) {
-          const query = `
-            UPDATE alert_schedule_config
-            SET
-              config_value = ?,
-              updated_by = ?,
-              updated_at = CURRENT_TIMESTAMP
-            WHERE config_key = ?
-          `;
-
-          const [result] = await connection.execute(query, [value, updatedBy, key]);
-          results.push({ key, value, affectedRows: result.affectedRows });
-        }
-
-        await connection.commit();
-
-        console.log(`[AlertScheduleConfigService] Updated ${results.length} configuration records (by ${updatedBy})`);
-
-        return {
-          success: true,
-          updatedCount: results.length,
-          updates: results,
-          updatedBy
-        };
-      } catch (error) {
-        await connection.rollback();
-        throw error;
-      } finally {
-        connection.release();
-      }
+      return {
+        success: true,
+        affectedRows: result.affectedRows,
+        clave,
+        valor
+      };
     } catch (error) {
-      console.error('[AlertScheduleConfigService] Error updating multiple configs:', error);
-      throw new Error(`Failed to update multiple configurations: ${error.message}`);
+      console.error('[AlertScheduleConfigService] Error al actualizar parámetro:', error);
+      throw new Error(`Error al actualizar parámetro: ${error.message}`);
     }
   }
 
   /**
-   * Validate time format (HH:mm:ss)
+   * Restablecer configuración de horarios a valores por defecto.
    *
-   * Validates that a time string matches the expected HH:mm:ss format
-   * with valid hour (00-23), minute (00-59), and second (00-59) values.
+   * @param {string} updatedBy - Usuario que realiza el restablecimiento
+   * @returns {Promise<Object>} Resultado con número de registros actualizados
+   */
+  async resetToDefaults(updatedBy) {
+    const defaults = [
+      { dia_semana: 1, hora_inicio: '08:30:00', hora_fin: '18:30:00', activo: true },  // Lunes
+      { dia_semana: 2, hora_inicio: '08:30:00', hora_fin: '18:30:00', activo: true },  // Martes
+      { dia_semana: 3, hora_inicio: '08:30:00', hora_fin: '18:30:00', activo: true },  // Miércoles
+      { dia_semana: 4, hora_inicio: '08:30:00', hora_fin: '18:30:00', activo: true },  // Jueves
+      { dia_semana: 5, hora_inicio: '08:30:00', hora_fin: '18:30:00', activo: true },  // Viernes
+      { dia_semana: 6, hora_inicio: '08:30:00', hora_fin: '14:30:00', activo: true },  // Sábado
+      { dia_semana: 7, hora_inicio: '00:00:00', hora_fin: '00:00:00', activo: false }  // Domingo (inactivo)
+    ];
+
+    const resultados = [];
+    for (const dia of defaults) {
+      const res = await this.updateHorario(dia.dia_semana, dia, updatedBy);
+      resultados.push(res);
+    }
+
+    // Restablecer parámetros globales
+    await this.updateParametro('alertSystem.respetar_feriados', 'true');
+    await this.updateParametro('alertSystem.criticas_ignoran_horario', 'true');
+
+    return {
+      success: true,
+      updatedCount: resultados.length + 2,
+      updatedBy
+    };
+  }
+
+  /**
+   * Validar formato de hora (HH:mm:ss)
    *
-   * @param {string} value - Time string to validate
-   * @returns {boolean} True if valid, false otherwise
-   *
-   * @example
-   * validateTimeFormat('09:00:00') // true
-   * validateTimeFormat('25:00:00') // false (invalid hour)
-   * validateTimeFormat('09:00')    // false (missing seconds)
+   * @param {string} value - Hora a validar
+   * @returns {boolean} true si el formato es válido
    */
   validateTimeFormat(value) {
-    // Regex: HH:mm:ss with valid ranges
     const timeRegex = /^([01][0-9]|2[0-3]):([0-5][0-9]):([0-5][0-9])$/;
     return timeRegex.test(value);
   }
 
   /**
-   * Validate time range (start < end)
+   * Validar que hora de inicio sea anterior a hora de fin
    *
-   * Validates that a start time is before an end time.
-   * Both times must be in HH:mm:ss format.
-   *
-   * @param {string} start - Start time (HH:mm:ss)
-   * @param {string} end - End time (HH:mm:ss)
-   * @returns {boolean} True if start < end, false otherwise
-   *
-   * @example
-   * validateTimeRange('09:00:00', '17:00:00') // true
-   * validateTimeRange('17:00:00', '09:00:00') // false
+   * @param {string} start - Hora de inicio (HH:mm:ss)
+   * @param {string} end - Hora de fin (HH:mm:ss)
+   * @returns {boolean} true si start < end
    */
   validateTimeRange(start, end) {
-    // Validate format first
     if (!this.validateTimeFormat(start) || !this.validateTimeFormat(end)) {
       return false;
     }
-
-    // Compare as strings (HH:mm:ss format allows direct string comparison)
     return start < end;
   }
 
   /**
-   * Validate configuration object
+   * Validar un objeto de configuración de horarios
    *
-   * Validates an entire configuration object including:
-   * - Time format validation for all time fields
-   * - Range validation (start < end) for weekday and Saturday
-   * - Boolean value validation for respect_holidays
-   *
-   * @param {Object} config - Configuration object to validate
-   * @returns {Object} Validation result with success flag and errors array
-   *
-   * @example
-   * const result = service.validateConfig({
-   *   weekday_start: '09:00:00',
-   *   weekday_end: '17:00:00',
-   *   saturday_start: '09:00:00',
-   *   saturday_end: '13:00:00',
-   *   respect_holidays: 'true'
-   * });
-   * // Returns: { success: true, errors: [] }
+   * @param {Object} config - Configuración a validar
+   * @returns {Object} { success: boolean, errors: Array }
    */
   validateConfig(config) {
     const errors = [];
 
-    // Validate weekday times
-    if (config.weekday_start && !this.validateTimeFormat(config.weekday_start)) {
-      errors.push({
-        field: 'weekday_start',
-        code: 'INVALID_FORMAT',
-        message: 'Formato inválido. Use HH:mm:ss (00:00:00 - 23:59:59)'
-      });
+    if (config.hora_inicio && !this.validateTimeFormat(config.hora_inicio)) {
+      errors.push({ field: 'hora_inicio', code: 'INVALID_FORMAT', message: 'Formato inválido. Use HH:mm:ss' });
     }
 
-    if (config.weekday_end && !this.validateTimeFormat(config.weekday_end)) {
-      errors.push({
-        field: 'weekday_end',
-        code: 'INVALID_FORMAT',
-        message: 'Formato inválido. Use HH:mm:ss (00:00:00 - 23:59:59)'
-      });
+    if (config.hora_fin && !this.validateTimeFormat(config.hora_fin)) {
+      errors.push({ field: 'hora_fin', code: 'INVALID_FORMAT', message: 'Formato inválido. Use HH:mm:ss' });
     }
 
-    // Validate Saturday times
-    if (config.saturday_start && !this.validateTimeFormat(config.saturday_start)) {
-      errors.push({
-        field: 'saturday_start',
-        code: 'INVALID_FORMAT',
-        message: 'Formato inválido. Use HH:mm:ss (00:00:00 - 23:59:59)'
-      });
-    }
-
-    if (config.saturday_end && !this.validateTimeFormat(config.saturday_end)) {
-      errors.push({
-        field: 'saturday_end',
-        code: 'INVALID_FORMAT',
-        message: 'Formato inválido. Use HH:mm:ss (00:00:00 - 23:59:59)'
-      });
-    }
-
-    // Validate Sunday times
-    if (config.sunday_start && !this.validateTimeFormat(config.sunday_start)) {
-      errors.push({
-        field: 'sunday_start',
-        code: 'INVALID_FORMAT',
-        message: 'Formato inválido. Use HH:mm:ss (00:00:00 - 23:59:59)'
-      });
-    }
-
-    if (config.sunday_end && !this.validateTimeFormat(config.sunday_end)) {
-      errors.push({
-        field: 'sunday_end',
-        code: 'INVALID_FORMAT',
-        message: 'Formato inválido. Use HH:mm:ss (00:00:00 - 23:59:59)'
-      });
-    }
-
-    // Validate time ranges
-    if (config.weekday_start && config.weekday_end) {
-      if (!this.validateTimeRange(config.weekday_start, config.weekday_end)) {
-        errors.push({
-          field: 'weekday_start',
-          code: 'INVALID_RANGE',
-          message: 'Hora inicio debe ser anterior a hora fin'
-        });
+    if (config.hora_inicio && config.hora_fin && config.activo) {
+      if (!this.validateTimeRange(config.hora_inicio, config.hora_fin)) {
+        errors.push({ field: 'hora_inicio', code: 'INVALID_RANGE', message: 'Hora inicio debe ser anterior a hora fin' });
       }
     }
 
-    if (config.saturday_start && config.saturday_end) {
-      if (!this.validateTimeRange(config.saturday_start, config.saturday_end)) {
-        errors.push({
-          field: 'saturday_start',
-          code: 'INVALID_RANGE',
-          message: 'Hora inicio debe ser anterior a hora fin'
-        });
-      }
-    }
-
-    if (config.sunday_start && config.sunday_end) {
-      if (!this.validateTimeRange(config.sunday_start, config.sunday_end)) {
-        errors.push({
-          field: 'sunday_start',
-          code: 'INVALID_RANGE',
-          message: 'Hora inicio debe ser anterior a hora fin'
-        });
-      }
-    }
-
-    // Validate respect_holidays (must be 'true' or 'false' string)
-    if (config.respect_holidays !== undefined) {
-      if (config.respect_holidays !== 'true' && config.respect_holidays !== 'false') {
-        errors.push({
-          field: 'respect_holidays',
-          code: 'INVALID_VALUE',
-          message: 'Valor debe ser "true" o "false"'
-        });
-      }
-    }
-
-    return {
-      success: errors.length === 0,
-      errors
-    };
-  }
-
-  /**
-   * Reset configuration to default values
-   *
-   * Resets all configuration parameters to their default values.
-   *
-   * @param {string} updatedBy - Email or username of user performing the reset
-   * @returns {Promise<Object>} Result with count of reset records
-   *
-   * @example
-   * await service.resetToDefaults('admin@storage.cl');
-   */
-  async resetToDefaults(updatedBy) {
-    const defaults = {
-      weekday_start: '08:30:00',  // Horario laboral L-V: 08:30-18:30 (NO enviar en este rango)
-      weekday_end: '18:30:00',
-      saturday_start: '08:30:00',  // Horario laboral Sábado: 08:30-14:30 (NO enviar en este rango)
-      saturday_end: '14:30:00',
-      sunday_start: '23:59:59',   // start >= end = enviar todo el domingo (nunca en horario laboral)
-      sunday_end: '00:00:00',
-      respect_holidays: 'true'    // true = enviar en feriados (todo el día)
-    };
-
-    return await this.updateMultipleConfigs(defaults, updatedBy);
+    return { success: errors.length === 0, errors };
   }
 }
 
-// Export singleton instance
+// Exportar instancia singleton
 module.exports = new AlertScheduleConfigService();
