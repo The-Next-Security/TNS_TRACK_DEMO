@@ -13,24 +13,9 @@ class BaseAlertService {
         this.initialized = false;
         this.timeZone = "America/Santiago";
 
-        // Dynamic configuration cache - loaded from database
-        // Falls back to hardcoded defaults if database is unavailable
-        this.configCache = {
-            weekday_start: '08:30:00',  // Horario laboral L-V: 08:30-18:30 (NO enviar)
-            weekday_end: '18:30:00',
-            saturday_start: '08:30:00',  // Horario laboral Sábado: 08:30-14:30 (NO enviar)
-            saturday_end: '14:30:00',
-            sunday_start: '23:59:59',   // start >= end = enviar todo el domingo
-            sunday_end: '00:00:00',
-            respect_holidays: 'true',    // true = enviar en feriados
-            lastLoaded: null
-        };
-
-        // Legacy working hours (kept for backward compatibility). Se actualizan en initialize().
-        this.workingHours = {
-            weekdays: { start: 8.5, end: 18.5 },
-            saturday: { start: 8.5, end: 14.5 }
-        };
+        // Cache de configuración dinámica — cargada desde gen_horario_operacional
+        // Estructura: { horarios: [...], respetar_feriados: bool, criticas_ignoran_horario: bool, lastLoaded: Date }
+        this.configCache = null;
 
         // Inicializar métricas
         this.metrics = {
@@ -91,7 +76,6 @@ class BaseAlertService {
             const loaded = this.loadConfiguration();
             this.config = loaded;
             this.timeZone = loaded?.timeZone || "America/Santiago";
-            this.workingHours = loaded?.workingHours || this.workingHours;
 
             // Load dynamic configuration from database
             await this.loadConfigFromDatabase();
@@ -107,7 +91,7 @@ class BaseAlertService {
     /**
      * Carga la configuración de horarios desde la base de datos
      *
-     * Lee la configuración dinámica de alert_schedule_config y actualiza configCache.
+     * Lee la configuración dinámica de gen_horario_operacional y actualiza configCache.
      * Si falla la carga desde DB, mantiene los valores por defecto (graceful degradation).
      *
      * Feature: 002-configurable-alert-schedules
@@ -120,37 +104,25 @@ class BaseAlertService {
 
             const dbConfig = await alertScheduleConfigService.loadAllConfig();
 
-            // Update cache with database values
+            // Actualizar cache con la estructura nativa del nuevo modelo
             this.configCache = {
-                weekday_start: dbConfig.weekday_start,
-                weekday_end: dbConfig.weekday_end,
-                saturday_start: dbConfig.saturday_start,
-                saturday_end: dbConfig.saturday_end,
-                sunday_start: dbConfig.sunday_start || '00:00:00',
-                sunday_end: dbConfig.sunday_end || '00:00:00',
-                respect_holidays: dbConfig.respect_holidays,
-                lastLoaded: new Date(),
-                updated_at: dbConfig.updated_at,
-                updated_by: dbConfig.updated_by
+                horarios: dbConfig.horarios,
+                respetar_feriados: dbConfig.respetar_feriados,
+                criticas_ignoran_horario: dbConfig.criticas_ignoran_horario,
+                lastLoaded: new Date()
             };
 
             console.log(`[BaseAlertService] ✅ Configuration loaded from database successfully`);
-            console.log(`[BaseAlertService]   Weekday hours: ${this.configCache.weekday_start} - ${this.configCache.weekday_end}`);
-            console.log(`[BaseAlertService]   Saturday hours: ${this.configCache.saturday_start} - ${this.configCache.saturday_end}`);
-            console.log(`[BaseAlertService]   Sunday hours: ${this.configCache.sunday_start} - ${this.configCache.sunday_end}`);
-            console.log(`[BaseAlertService]   Respect holidays: ${this.configCache.respect_holidays}`);
-            console.log(`[BaseAlertService]   Last updated by: ${this.configCache.updated_by || 'system'}`);
+            console.log(`[BaseAlertService]   Horarios cargados: ${dbConfig.horarios.length} días`);
+            console.log(`[BaseAlertService]   Respetar feriados: ${dbConfig.respetar_feriados}`);
+            console.log(`[BaseAlertService]   Críticas ignoran horario: ${dbConfig.criticas_ignoran_horario}`);
 
             return this.configCache;
         } catch (error) {
             console.error('[BaseAlertService] ❌ Error loading configuration from database:', error.message);
-            console.warn('[BaseAlertService] ⚠️  Graceful degradation: Using hardcoded default configuration');
-            console.warn('[BaseAlertService] ⚠️  Default weekday hours: 08:30:00 - 18:30:00');
-            console.warn('[BaseAlertService] ⚠️  Default Saturday hours: 08:30:00 - 14:30:00');
-            console.warn('[BaseAlertService] ⚠️  Default respect_holidays: true');
+            console.warn('[BaseAlertService] ⚠️  Graceful degradation: alertScheduleConfigService usará valores por defecto');
 
-            // Keep existing defaults in configCache (already initialized in constructor)
-            // This ensures graceful degradation - service continues working with hardcoded values
+            // configCache queda null — alertScheduleConfigService manejará el fallback en isWithinOperationalHours()
             return this.configCache;
         }
     }
@@ -219,83 +191,41 @@ class BaseAlertService {
     }
 
     /**
-     * Verifica si estamos dentro del horario laboral
+     * Verifica si estamos dentro del horario operacional del sistema (Nivel 1 - global).
      *
-     * MODIFICADO: Feature 002-configurable-alert-schedules
-     * Ahora usa configuración dinámica desde base de datos
+     * Delega a alertScheduleConfigService.isWithinOperationalHours() que es la única
+     * fuente de verdad sobre el horario global. También evalúa feriados si respetar_feriados=true.
      *
-     * User Story 2 (T052-T054): Añadida lógica de feriados
-     * Si respect_holidays='true' y es feriado, se trata como domingo (enviar todo el día). (configCache)
-     * en lugar de valores hardcodeados.
+     * Nota: El Nivel 2 (DND por usuario) lo gestiona MySQL vía fun_should_send_notification().
      *
-     * @param {Date|string|null} [checkTime=null] - Tiempo específico a verificar
-     * @returns {Promise<boolean>} true si estamos en horario laboral
+     * @param {Date|string|moment.Moment|null} [checkTime=null] - Tiempo a verificar (null = ahora)
+     * @returns {Promise<boolean>} true si estamos en horario operacional (NO enviar alertas)
      */
     async isWithinWorkingHours(checkTime = null) {
         let timeToCheck;
         if (checkTime) {
-            timeToCheck = moment.isMoment(checkTime)
-                ? checkTime.clone()
-                : moment(checkTime);
+            timeToCheck = moment.isMoment(checkTime) ? checkTime.clone() : moment(checkTime);
         } else {
             timeToCheck = moment();
         }
 
         const localTime = timeToCheck.tz(this.timeZone);
-        const dayOfWeek = localTime.day();
-        const hourDecimal = localTime.hour() + localTime.minute() / 60;
 
-        // T052-T054: Check if today is a holiday and respect_holidays is enabled
-        // If true, treat as Sunday (send all day = outside working hours)
-        if (this.configCache.respect_holidays === 'true') {
+        // Verificar feriados si respetar_feriados está habilitado
+        if (this.configCache?.respetar_feriados) {
             const isHolidayToday = await this.isHoliday(timeToCheck);
             if (isHolidayToday) {
-                console.log(`[BaseAlertService] isWithinWorkingHours: Holiday detected (respect_holidays=true) - treating as Sunday (send all day) - OUTSIDE working hours`);
-                return false;  // false = fuera de horario laboral = sí enviar alertas
+                console.log(`[BaseAlertService] isWithinWorkingHours: Feriado detectado (respetar_feriados=true) - fuera de horario operacional`);
+                return false;  // false = fuera de horario = SÍ enviar alertas
             }
         }
 
-        // Use dynamic configuration from database
-        let isWithinHours;
+        // Delegar evaluación de horario operacional al servicio (Nivel 1)
+        const resultado = await alertScheduleConfigService.isWithinOperationalHours(localTime);
 
-        // Domingo tiene horario especial
-        // Por defecto sunday_start=23:59:59, sunday_end=00:00:00 significa: enviar todo el día
-        // (start >= end = nunca dentro de horario laboral = siempre enviar)
-        if (dayOfWeek === 0) {
-            const sundayStart = this._timeToDecimal(this.configCache.sunday_start);
-            const sundayEnd = this._timeToDecimal(this.configCache.sunday_end);
+        console.log(`[BaseAlertService] isWithinWorkingHours: ${resultado.motivo}`);
 
-            // Si start >= end, significa que NO HAY horario laboral el domingo (enviar todo el día)
-            if (sundayStart >= sundayEnd) {
-                console.log(`[BaseAlertService] isWithinWorkingHours: Sunday (always send) - OUTSIDE working hours`);
-                return false;  // false = fuera de horario laboral = sí enviar alertas
-            }
-
-            isWithinHours = (hourDecimal >= sundayStart && hourDecimal <= sundayEnd);
-
-            console.log(`[BaseAlertService] isWithinWorkingHours: Sunday ${localTime.format('HH:mm:ss')} - Range: ${this.configCache.sunday_start} to ${this.configCache.sunday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
-            return isWithinHours;
-        }
-
-        // Sábado tiene horario especial
-        if (dayOfWeek === 6) {
-            const saturdayStart = this._timeToDecimal(this.configCache.saturday_start);
-            const saturdayEnd = this._timeToDecimal(this.configCache.saturday_end);
-
-            isWithinHours = (hourDecimal >= saturdayStart && hourDecimal <= saturdayEnd);
-
-            console.log(`[BaseAlertService] isWithinWorkingHours: Saturday ${localTime.format('HH:mm:ss')} - Range: ${this.configCache.saturday_start} to ${this.configCache.saturday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
-        } else {
-            // Lunes a viernes (días 1-5)
-            const weekdayStart = this._timeToDecimal(this.configCache.weekday_start);
-            const weekdayEnd = this._timeToDecimal(this.configCache.weekday_end);
-
-            isWithinHours = (hourDecimal >= weekdayStart && hourDecimal <= weekdayEnd);
-
-            console.log(`[BaseAlertService] isWithinWorkingHours: Weekday ${localTime.format('HH:mm:ss')} - Range: ${this.configCache.weekday_start} to ${this.configCache.weekday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
-        }
-
-        return isWithinHours;
+        return resultado.enHorario;  // true = EN horario = NO enviar; false = FUERA = SÍ enviar
     }
 
     /**
@@ -461,7 +391,7 @@ class BaseAlertService {
             },
             config: {
                 timeZone: this.timeZone,
-                workingHours: this.workingHours
+                horariosCargados: this.configCache?.horarios?.length || 0
             }
         };
     }
