@@ -22077,7 +22077,6 @@ function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
 
 
 
-// import SideNav from "./SideNav_View"; // Oculto temporalmente
 
 // Import all routine images - preserving exact imports from original
 
@@ -25950,10 +25949,6 @@ var UserRegistrationV2 = function UserRegistrationV2() {
               permissions: modifiedPermissions.join(','),
               ai_analysis: modifiedAIAnalysis
             };
-            console.log('=== DEBUG UPDATE PERMISSIONS ===');
-            console.log('[Frontend] foundUser:', foundUser);
-            console.log('[Frontend] modifiedPermissions:', modifiedPermissions);
-            console.log('[Frontend] URL:', "/api/usuarios/".concat(foundUser.id));
             console.log('[Frontend] updateData:', updateData);
             console.log('[Frontend] config:', config);
             console.log('================================');
