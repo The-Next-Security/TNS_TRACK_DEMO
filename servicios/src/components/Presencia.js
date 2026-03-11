@@ -1,5 +1,3 @@
-/* components/Presencia.js */
-
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
