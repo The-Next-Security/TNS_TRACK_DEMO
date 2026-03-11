@@ -11,7 +11,7 @@
  * @requires react-chartjs-2
  * @requires chart.js
  * @requires react-datepicker
- * @requires moment
+ * @requires luxon
  *
  * @author Sistema de Monitoreo TNS
  * @version 2.0.0
@@ -30,11 +30,11 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import "chartjs-adapter-date-fns";
-import { es } from "date-fns/locale";
+import "chartjs-adapter-luxon";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import moment from "moment";
+import { es } from "date-fns/locale";
+import { DateTime } from "luxon";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calendar, Activity, Download, BarChart3, Thermometer } from "lucide-react";
 
@@ -177,8 +177,8 @@ const IntelligenciaDatosTemperaturaV2 = () => {
 
     try {
       setLoading(true);
-      const startFormatted = moment(startDate).format("YYYY-MM-DD");
-      const endFormatted = moment(endDate).format("YYYY-MM-DD");
+      const startFormatted = DateTime.fromJSDate(startDate).toFormat("yyyy-MM-dd");
+      const endFormatted = DateTime.fromJSDate(endDate).toFormat("yyyy-MM-dd");
       console.log(
         "Fetching data for dates:",
         startFormatted,
@@ -337,7 +337,7 @@ const IntelligenciaDatosTemperaturaV2 = () => {
         },
         adapters: {
           date: {
-            locale: es,
+            locale: 'es',
           },
         },
         title: {
@@ -371,9 +371,9 @@ const IntelligenciaDatosTemperaturaV2 = () => {
         intersect: false,
         callbacks: {
           title: function (tooltipItems) {
-            return moment(tooltipItems[0].parsed.x).format(
-              "DD/MM/YYYY HH:mm:ss"
-            );
+            const x = tooltipItems[0].parsed.x;
+            const dt = typeof x === 'number' ? DateTime.fromMillis(x) : DateTime.fromJSDate(x);
+            return dt.setZone('America/Santiago').toFormat("dd/MM/yyyy HH:mm:ss");
           },
           label: function (context) {
             let label = context.dataset.label || "";
