@@ -1,7 +1,7 @@
 // Dependencias requeridas
 const mysql = require("mysql2/promise");
 const configLoader = require("../config/js_files/configLoader_Config");
-const moment = require('moment');
+const { DateTime } = require('luxon');
 const axios = require('axios');
 
 // Configuración global
@@ -230,7 +230,7 @@ async function procesarPosibleIncidencia(device_name, ble_beacons, timestamp, ev
             await enviarSMSIncidencia(device_name, beacon.id);
             
             // Establecer el cooldown
-            beaconCooldowns.set(cooldownKey, moment());
+            beaconCooldowns.set(cooldownKey, DateTime.now());
             
             // Establecer el timeout para eliminar el cooldown
             setTimeout(() => {
@@ -292,7 +292,7 @@ async function procesarPosibleIncidencia(device_name, ble_beacons, timestamp, ev
 //               await enviarSMSIncidencia(device_name, 'SENSOR_DIN2');
 //               console.log('[DEBUG] SMS enviado correctamente');
 //               
-//               beaconCooldowns.set(cooldownKey, moment());
+//               beaconCooldowns.set(cooldownKey, DateTime.now());
 //               console.log('[DEBUG] Cooldown establecido');
 //               
 //               setTimeout(() => {
@@ -341,8 +341,8 @@ async function procesarBeacon(device_name, beacon) {
     await insertarIncidencia(device_name, beacon.id);
     await enviarSMSIncidencia(device_name, beacon.id);
     
-    beaconCooldowns.set(cooldownKey, moment());
-    
+    beaconCooldowns.set(cooldownKey, DateTime.now());
+
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Error en procesarBeacon:`, error);
   }
@@ -461,7 +461,7 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
       // Enviar correo electrónico
       await enviarCorreoIncidencia(
         "Incidencia Intrusión detectada",
-        `${mensajePersonalizado}\n\nFecha y hora: ${moment().format('YYYY-MM-DD HH:mm:ss')}`
+        `${mensajePersonalizado}\n\nFecha y hora: ${DateTime.now().toFormat('yyyy-MM-dd HH:mm:ss')}`
       );
       console.log("Correo electrónico enviado exitosamente");
 
@@ -514,9 +514,9 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
       const [results] = await connection.query(query, [dispositivo, beacon_id]);
       if (results.length === 0) return true;
       
-      const ultimoSMS = moment(results[0].ultimo_sms);
-      const ahora = moment();
-      const diferencia = ahora.diff(ultimoSMS, 'seconds');
+      const ultimoSMS = DateTime.fromISO(String(results[0].ultimo_sms));
+      const ahora = DateTime.now();
+      const diferencia = ahora.diff(ultimoSMS, 'seconds').seconds;
       console.log(`Tiempo transcurrido desde último SMS: ${diferencia} segundos`);
       return diferencia >= INTERVALO_ENTRE_SMS;
     } finally {
