@@ -2,8 +2,8 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-26
-> **Versión**: 2.0.0
+> **Última actualización**: 2026-03-11
+> **Versión**: 2.1.0
 > **Propósito**: Documentar todas las decisiones arquitectónicas y técnicas del proyecto
 
 ---
@@ -155,10 +155,12 @@ El sistema puede usarse desde distintas zonas horarias, pero los servidores y da
 // Backend - timezone configurado en config
 timezone: 'America/Santiago'
 
-// Uso con moment-timezone
+// Uso con moment-timezone (legacy) o Luxon (estándar)
 const moment = require('moment-timezone');
 moment.tz('America/Santiago');
 ```
+
+> **Nota**: El proyecto está estandarizando en **Luxon** (Issue #5); moment se mantiene temporalmente en partes del código hasta completar la migración.
 
 ### Estado Actual
 ✅ **Implementado** - Timezone base configurado en `America/Santiago`
@@ -235,6 +237,7 @@ Usar **MySQL** (NO MariaDB) como base de datos principal.
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-03-10 | Luxon como librería estándar de fechas (Issue #5) | andresTNS |
 | 2026-01-26 | Documentación actualizada según feedback Issue #2 | andresTNS, Bufigol |
 | 2026-01-22 | Documentación completa de decisiones técnicas | andresTNS, Bufigol |
 | 2026-01-15 | Eliminación de SMS/Twilio | andresTNS |
@@ -251,4 +254,4 @@ Usar **MySQL** (NO MariaDB) como base de datos principal.
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-26
+**Última revisión**: 2026-03-11
