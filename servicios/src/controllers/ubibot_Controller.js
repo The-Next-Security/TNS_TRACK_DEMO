@@ -284,7 +284,7 @@ class UbibotController {
       // Validar respuesta
       if (response.data?.result === "success" && Array.isArray(response.data.channels)) {
         const ubibotConfig = config.getConfig().ubibot; // Obtener config de nuevo por si cambió
-        const excludedChannels = ubibotConfig?.excludedChannels || [];
+        const excludedChannels = ubibotConfig?.excluded_channels || [];
         const filteredChannels = response.data.channels.filter(
           (channel) => !excludedChannels.includes(channel.channel_id?.toString()) // Comparar como strings por si acaso
         );
