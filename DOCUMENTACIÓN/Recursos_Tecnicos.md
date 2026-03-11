@@ -2,8 +2,8 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-26
-> **Versión**: 2.0.0
+> **Última actualización**: 2026-03-11
+> **Versión**: 2.1.0
 > **Propósito**: Enlaces y recursos técnicos del proyecto
 
 ---
@@ -128,30 +128,26 @@
 
 ### Gestión de Fechas
 
-#### Moment.js
-- **Documentación**: https://momentjs.com/docs/
-- **Versión Utilizada**: 2.30.1
-- **⚠️ Nota**: Proyecto en mantenimiento, considerar migración a date-fns o Luxon
+**Librería estándar del proyecto**: [Luxon](https://moment.github.io/luxon/) (decisión documentada en [Issue #5](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/5)). Todo el código nuevo debe usar Luxon; el resto de librerías se mantienen solo hasta completar la migración.
 
-#### Moment Timezone
-- **Documentación**: https://momentjs.com/timezone/
-- **Versión Utilizada**: 0.5.46
-- **Timezone Data**: https://momentjs.com/timezone/docs/#/data-loading/
-
-#### Luxon
+#### Luxon (estándar)
 - **Documentación**: https://moment.github.io/luxon/
 - **Versión Utilizada**: 3.5.0
 - **API Docs**: https://moment.github.io/luxon/api-docs/
+- **Zona horaria**: America/Santiago (soporte nativo)
 
-#### date-fns
-- **Documentación**: https://date-fns.org/
-- **Versión Utilizada**: 4.1.0
-- **Cheat Sheet**: https://devhints.io/date-fns
+#### Moment.js / Moment Timezone (legacy — en proceso de migración)
+- **Moment.js**: https://momentjs.com/docs/ — 2.30.1
+- **Moment Timezone**: https://momentjs.com/timezone/ — 0.5.46
+- **Estado**: En proceso de reemplazo por Luxon (Issue #5). No usar en código nuevo.
 
-#### Day.js
-- **Documentación**: https://day.js.org/
-- **Versión Utilizada**: 1.11.13
-- **Plugins**: https://day.js.org/docs/en/plugin/plugin
+#### date-fns (legacy — en proceso de migración)
+- **Documentación**: https://date-fns.org/ — 4.1.0
+- **Estado**: Usado como adaptador de Chart.js en algunos componentes; en proceso de migración a chartjs-adapter-luxon. No usar en código nuevo.
+
+#### Day.js (legacy — en proceso de migración)
+- **Documentación**: https://day.js.org/ — 1.11.13
+- **Estado**: En proceso de reemplazo por Luxon (Issue #5). No usar en código nuevo.
 
 ---
 
