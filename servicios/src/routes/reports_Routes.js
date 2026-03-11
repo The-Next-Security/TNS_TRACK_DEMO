@@ -11,8 +11,6 @@ const express = require('express');
 const router = express.Router();
 
 // Middleware
-// TODO: Update path to actual auth middleware location
-// const { authenticateUser } = require('../middleware/auth');
 const reportPermissions = require('../middlewares/reportPermissions_Middleware');
 const devAuthBypass = require('../middlewares/devAuthBypass_Middleware');
 
@@ -31,7 +29,6 @@ router.use(devAuthBypass);
  * @returns {reportId, fileUrl, generatedAt}
  */
 router.post('/generate',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportPermissions.checkGenerateReports,
   reportController.generateReport
 );
@@ -43,7 +40,6 @@ router.post('/generate',
  * @returns Array of {id, name, description, estimatedTime, maxDevices}
  */
 router.get('/templates',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportController.getTemplates
 );
 
@@ -55,7 +51,6 @@ router.get('/templates',
  * @returns {reports: [...], totalCount, totalPages}
  */
 router.get('/history',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportController.getHistory
 );
 
@@ -67,7 +62,6 @@ router.get('/history',
  * @returns PDF file stream
  */
 router.get('/download/:id',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportController.downloadReport
 );
 
@@ -79,7 +73,6 @@ router.get('/download/:id',
  * @returns {scheduleId, nextExecution}
  */
 router.post('/scheduled',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportPermissions.checkScheduleReports,
   reportSchedulerController.createSchedule
 );
@@ -91,7 +84,6 @@ router.post('/scheduled',
  * @returns {count: number}
  */
 router.get('/scheduled/count',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportSchedulerController.getActiveCount
 );
 
@@ -102,7 +94,6 @@ router.get('/scheduled/count',
  * @returns Array of schedule configurations
  */
 router.get('/scheduled',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportSchedulerController.listSchedules
 );
 
@@ -115,7 +106,6 @@ router.get('/scheduled',
  * @returns {scheduleId, nextExecution}
  */
 router.put('/scheduled/:id',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportPermissions.checkScheduleReports,
   reportSchedulerController.updateSchedule
 );
@@ -128,7 +118,6 @@ router.put('/scheduled/:id',
  * @returns {success: true}
  */
 router.delete('/scheduled/:id',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportPermissions.checkScheduleReports,
   reportSchedulerController.deleteSchedule
 );
@@ -142,7 +131,6 @@ router.delete('/scheduled/:id',
  * @returns {success, active}
  */
 router.patch('/scheduled/:id/toggle',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportPermissions.checkScheduleReports,
   reportSchedulerController.toggleSchedule
 );
@@ -155,7 +143,6 @@ router.patch('/scheduled/:id/toggle',
  * @returns {success, sentCount}
  */
 router.post('/send-email',
-  // authenticateUser, // TODO: Uncomment when auth middleware is available
   reportPermissions.checkSendReports,
   reportController.sendEmail
 );

@@ -8,7 +8,6 @@ import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 import Header from "./Header_View";
 import analyticsService from "../services/analytics_Service";
-// import SideNav from "./SideNav_View"; // Oculto temporalmente
 
 // Import all routine images - preserving exact imports from original
 import dashboardImage from "../assets/images/dashboard.png";

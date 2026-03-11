@@ -1,4 +1,3 @@
-/* controllers/gpsController.js */
 const { DateTime } = require("luxon");
 const databaseService = require("../services/database_Service.js");
 

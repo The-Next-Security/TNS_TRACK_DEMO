@@ -250,22 +250,6 @@ function calculateComparativeAnalysis(currentKPIs, previousKPIs, options = {}) {
     });
   }
 
-  // Tiempo Fuera de Rango - REMOVED per user request (not relevant for comparative table)
-  // const outOfRangeChange = calculateChange(currentKPIs.outOfRangeTime, previousKPIs.outOfRangeTime);
-  // const outOfRangeTrend = getTrend(currentKPIs.outOfRangeTime, previousKPIs.outOfRangeTime, true);
-  // comparisons.push({
-  //   metric: 'Tiempo Fuera de Rango',
-  //   current: currentKPIs.outOfRangeTime,
-  //   previous: previousKPIs.outOfRangeTime,
-  //   absoluteChange: outOfRangeChange.absolute,
-  //   percentChange: outOfRangeChange.percent,
-  //   trend: outOfRangeTrend.direction,
-  //   trendColor: outOfRangeTrend.color,
-  //   trendIcon: outOfRangeTrend.icon,
-  //   trendEmoji: outOfRangeTrend.emoji,
-  //   unit: '%'
-  // });
-
   console.log(`[ReportAnalytics] Calculated ${comparisons.length} comparative metrics`);
 
   return comparisons;

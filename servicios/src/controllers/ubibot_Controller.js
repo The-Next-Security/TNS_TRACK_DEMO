@@ -634,10 +634,6 @@ class UbibotController {
     }
   }
 
-  // MÉTODOS OBSOLETOS ELIMINADOS:
-  // - getChannelStatus: Reemplazado por getAllChannelsThresholds que ya incluye esOperativa
-  // - handleUpdateChannelStatus: Reemplazado por updateChannelOperativa (PUT /channel/:channelId/operativa)
-
   // --- Métodos de Reportes ---
   // (Se mantienen sin cambios funcionales relevantes para el error del token,
   //  pero se podrían mejorar validaciones o logs si fuera necesario)
