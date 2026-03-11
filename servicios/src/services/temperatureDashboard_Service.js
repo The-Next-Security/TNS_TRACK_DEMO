@@ -1,6 +1,6 @@
 // src/services/temperatureDashboardService.js
 const databaseService = require("./database_Service");
-const moment = require("moment");
+const { DateTime } = require("luxon");
 
 /**
  * Servicio optimizado para el Dashboard de Temperatura
@@ -305,7 +305,7 @@ class TemperatureDashboardService {
    */
   processDeviceData(device) {
     const temperature = parseFloat(device.external_temperature) || 0;
-    const timestamp = moment(device.external_temperature_timestamp);
+    const timestamp = DateTime.fromISO(String(device.external_temperature_timestamp));
     const isOutOfRange = parseInt(device.is_currently_out_of_range) === 1;
 
     return {
@@ -320,11 +320,11 @@ class TemperatureDashboardService {
       category: device.category || 0,
       connectivity: {
         status: this.getConnectivityStatus(timestamp),
-        lastSeen: timestamp.toISOString(),
+        lastSeen: timestamp.toISO(),
       },
       display: {
-        lastUpdate: timestamp.format("DD/MM/YYYY HH:mm"),
-        lastUpdateMobile: timestamp.format("DD/MM HH:mm"),
+        lastUpdate: timestamp.toFormat("dd/MM/yyyy HH:mm"),
+        lastUpdateMobile: timestamp.toFormat("dd/MM HH:mm"),
         temperatureColor: isOutOfRange ? "#ff0000" : "#00ff00",
       },
       metadata: {
@@ -353,11 +353,11 @@ class TemperatureDashboardService {
 
   /**
    * Determina el estado de conectividad basado en la última actualización
-   * @param {moment} lastUpdate - Momento de la última actualización
+   * @param {DateTime} lastUpdate - DateTime de la última actualización
    * @returns {string} Estado de conectividad
    */
   getConnectivityStatus(lastUpdate) {
-    const minutesAgo = moment().diff(lastUpdate, "minutes");
+    const minutesAgo = DateTime.now().diff(lastUpdate, "minutes").minutes;
 
     if (minutesAgo <= 5) return "connected";
     if (minutesAgo <= 15) return "warning";

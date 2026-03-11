@@ -15,7 +15,7 @@
  */
 
 const QuickChart = require('quickchart-js');
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
 const {
   generateBaseStyles,
   generateCoverPage,
@@ -53,9 +53,9 @@ function generateHTML(data) {
   const { startDate, endDate, deviceIds = [] } = config;
 
   // Format dates
-  const formattedStartDate = moment(startDate).format('DD/MM/YYYY');
-  const formattedEndDate = moment(endDate).format('DD/MM/YYYY');
-  const generatedAt = moment().tz('America/Santiago').format('DD/MM/YYYY HH:mm:ss');
+  const formattedStartDate = DateTime.fromISO(String(startDate)).toFormat('dd/MM/yyyy');
+  const formattedEndDate = DateTime.fromISO(String(endDate)).toFormat('dd/MM/yyyy');
+  const generatedAt = DateTime.now().setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm:ss');
 
   // Generate charts using QuickChart
   const dailyTrendChartUrl = generateDailyTrendChart(dailyTrend, startDate, endDate);
@@ -339,7 +339,7 @@ function generateDailyTrendChart(dailyTrend, startDate, endDate) {
   const chart = new QuickChart();
 
   // Prepare data
-  const labels = dailyTrend.map(d => moment(d.date).format('DD/MM'));
+  const labels = dailyTrend.map(d => DateTime.fromISO(String(d.date)).toFormat('dd/MM'));
   const totalData = dailyTrend.map(d => d.totalAlerts);
   const criticalData = dailyTrend.map(d => d.criticalAlerts);
 

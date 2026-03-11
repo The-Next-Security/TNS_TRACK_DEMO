@@ -4,7 +4,7 @@
 const webpush = require('web-push');
 const mysql = require("mysql2/promise");
 const configLoader = require("../../config/js_files/configLoader_Config");
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 const alertScheduleConfigService = require("../db/alertScheduleConfig_Service");
 
 /**
@@ -563,8 +563,8 @@ class PushNotificationService {
     _isInDNDWindow(currentTime, preferences) {
         if (!preferences.dndEnabled) return false;
 
-        const now = moment(currentTime).tz(this.timeZone);
-        const dayName = now.format('dddd'); // "Monday", "Tuesday", etc.
+        const now = DateTime.fromJSDate(currentTime instanceof Date ? currentTime : new Date(currentTime)).setZone(this.timeZone);
+        const dayName = now.toFormat('EEEE'); // "Monday", "Tuesday", etc.
 
         // Validar día de la semana
         if (preferences.dndDays && preferences.dndDays.length > 0) {
@@ -574,7 +574,7 @@ class PushNotificationService {
         }
 
         // Validar horario
-        const currentMinutes = now.hours() * 60 + now.minutes();
+        const currentMinutes = now.hour * 60 + now.minute;
         const startMinutes = this._timeToMinutes(preferences.dndStartTime);
         const endMinutes = this._timeToMinutes(preferences.dndEndTime);
 
@@ -739,7 +739,7 @@ class PushNotificationService {
 
         const count = channelsInAlert.length;
         const firstChannel = channelsInAlert[0];
-        const time = moment().tz(this.timeZone).format("DD/MM HH:mm");
+        const time = DateTime.now().setZone(this.timeZone).toFormat('dd/MM HH:mm');
 
         // Evaluar criticidad: Si algún canal está fuera de rango según configuración
         let isCritical = false;
@@ -835,8 +835,8 @@ class PushNotificationService {
 
         const count = disconnectedChannels.length;
         const firstChannel = disconnectedChannels[0];
-        const time = moment().tz(this.timeZone).format("DD/MM HH:mm");
-        const now = moment().tz(this.timeZone);
+        const time = DateTime.now().setZone(this.timeZone).toFormat('dd/MM HH:mm');
+        const now = DateTime.now().setZone(this.timeZone);
 
         // Evaluar criticidad: Si algún canal está desconectado según configuración
         let isCritical = false;
@@ -848,8 +848,8 @@ class PushNotificationService {
             if (channel.finalStatus === 'disconnected' || channel.finalStatus === 'Desconectado') {
                 if (channel.horaDesconexion) {
                     // Calcular duración de desconexión
-                    const disconnectTime = moment(channel.horaDesconexion).tz(this.timeZone);
-                    const hoursDisconnected = now.diff(disconnectTime, 'hours', true);
+                    const disconnectTime = DateTime.fromJSDate(channel.horaDesconexion instanceof Date ? channel.horaDesconexion : new Date(channel.horaDesconexion)).setZone(this.timeZone);
+                    const hoursDisconnected = now.diff(disconnectTime, 'hours').hours;
 
                     if (hoursDisconnected > criticalThresholdHours) {
                         isCritical = true;

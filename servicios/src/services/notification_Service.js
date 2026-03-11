@@ -3,7 +3,7 @@
 
 const mysql = require("mysql2/promise");
 const configLoader = require("../config/js_files/configLoader_Config");
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 
 // Pool interno del servicio
 let pool = null;
@@ -152,7 +152,7 @@ class NotificationService {
         // Formatear fechas a SQL DATETIME string 'YYYY-MM-DD HH:MM:SS'
         const formatToSqlDatetime = (date) => {
             if (!date || !(date instanceof Date)) return null;
-            return moment(date).format('YYYY-MM-DD HH:mm:ss');
+            return DateTime.fromJSDate(date).toFormat('yyyy-MM-dd HH:mm:ss');
         };
 
         const logEntry = {
@@ -255,8 +255,8 @@ class NotificationService {
         
         // Marcas de tiempo para logging (usar Date objects)
         const analysisExecutionTime = new Date(); // Hora real de ejecución
-        const windowStartTime = moment(startTimeStr, 'YYYY-MM-DD HH:mm:ss').toDate();
-        const windowEndTime = moment(endTimeStr, 'YYYY-MM-DD HH:mm:ss').toDate();
+        const windowStartTime = DateTime.fromFormat(startTimeStr, 'yyyy-MM-dd HH:mm:ss').toJSDate();
+        const windowEndTime = DateTime.fromFormat(endTimeStr, 'yyyy-MM-dd HH:mm:ss').toJSDate();
 
         // Log a consola (más inmediato)
         console.log(`[NotificationService] Iniciando análisis horario: ${startTimeStr} -> ${endTimeStr}`);
@@ -368,19 +368,19 @@ class NotificationService {
                             const isInside = temp >= numMinThreshold && temp <= numMaxThreshold;
 
                             // Log detallado de cada lectura (controlado por nivel DEBUG)
-                            this._logAnalysisEvent('DEBUG', channel_id, `Lectura #${index + 1}: Temp=${temp.toFixed(2)}, TS=${moment(tempTs).toISOString()}, DentroRango=${isInside}`,
-                                { index: index + 1, temp: temp.toFixed(2), ts: moment(tempTs).toISOString(), inRange: isInside }, connection, analysisExecutionTime, windowStartTime, windowEndTime);
+                            this._logAnalysisEvent('DEBUG', channel_id, `Lectura #${index + 1}: Temp=${temp.toFixed(2)}, TS=${DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO()}, DentroRango=${isInside}`,
+                                { index: index + 1, temp: temp.toFixed(2), ts: DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO(), inRange: isInside }, connection, analysisExecutionTime, windowStartTime, windowEndTime);
 
 
                             if (isInside) {
                                 allOutOfRange = false; // Marcar si *alguna* está dentro
-                                if (!firstInRangeReading) firstInRangeReading = { temp: temp.toFixed(2), ts: moment(tempTs).toISOString() };
+                                if (!firstInRangeReading) firstInRangeReading = { temp: temp.toFixed(2), ts: DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO() };
                             } else {
-                                if (!firstOutOfRangeReading) firstOutOfRangeReading = { temp: temp.toFixed(2), ts: moment(tempTs).toISOString() };
+                                if (!firstOutOfRangeReading) firstOutOfRangeReading = { temp: temp.toFixed(2), ts: DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO() };
                             }
                         } else {
                             // Log WARN para lecturas inválidas
-                            const invalidData = { index: index + 1, value: temp, type: typeof temp, ts: tempTs ? moment(tempTs).toISOString() : null };
+                            const invalidData = { index: index + 1, value: temp, type: typeof temp, ts: tempTs ? DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO() : null };
                             invalidReadingsFound.push(invalidData);
                             this._logAnalysisEvent('WARN', channel_id, `Lectura #${index + 1} inválida/no numérica omitida.`,
                                 invalidData, connection, analysisExecutionTime, windowStartTime, windowEndTime);

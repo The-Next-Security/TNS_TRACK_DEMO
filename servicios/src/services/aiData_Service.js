@@ -1,5 +1,5 @@
 const databaseService = require('./database_Service');
-const moment = require('moment');
+const { DateTime } = require('luxon');
 
 class AIDataService {
   /**
@@ -15,11 +15,11 @@ class AIDataService {
       throw new Error('At least one chamber ID is required');
     }
 
-    const startDateTime = moment(startDate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
-    const endDateTime = moment(endDate).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+    const startDateTime = DateTime.fromISO(String(startDate)).startOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
+    const endDateTime = DateTime.fromISO(String(endDate)).endOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
 
     // Calculate days difference to decide if aggregation is needed
-    const daysDiff = moment(endDate).diff(moment(startDate), 'days');
+    const daysDiff = DateTime.fromISO(String(endDate)).diff(DateTime.fromISO(String(startDate)), 'days').days;
     const shouldAggregate = useDailyAggregation || daysDiff > 30;
 
     if (shouldAggregate) {
@@ -122,29 +122,29 @@ class AIDataService {
    * @returns {Promise<Object>} { year1: [...], year2: [...] }
    */
   async fetchInterannualComparison(chamberId, month, year1, year2) {
-    const start1 = moment(`${year1}-${month.toString().padStart(2, '0')}-01`).startOf('month');
-    const end1 = start1.clone().endOf('month');
-    const start2 = moment(`${year2}-${month.toString().padStart(2, '0')}-01`).startOf('month');
-    const end2 = start2.clone().endOf('month');
+    const start1 = DateTime.fromISO(`${year1}-${month.toString().padStart(2, '0')}-01`).startOf('month');
+    const end1 = start1.endOf('month');
+    const start2 = DateTime.fromISO(`${year2}-${month.toString().padStart(2, '0')}-01`).startOf('month');
+    const end2 = start2.endOf('month');
 
     const [year1Data, year2Data] = await Promise.all([
       this.fetchChamberDataAggregated(
         [chamberId],
-        start1.format('YYYY-MM-DD HH:mm:ss'),
-        end1.format('YYYY-MM-DD HH:mm:ss')
+        start1.toFormat('yyyy-MM-dd HH:mm:ss'),
+        end1.toFormat('yyyy-MM-dd HH:mm:ss')
       ),
       this.fetchChamberDataAggregated(
         [chamberId],
-        start2.format('YYYY-MM-DD HH:mm:ss'),
-        end2.format('YYYY-MM-DD HH:mm:ss')
+        start2.toFormat('yyyy-MM-dd HH:mm:ss'),
+        end2.toFormat('yyyy-MM-dd HH:mm:ss')
       )
     ]);
 
     return {
       year1: year1Data,
       year2: year2Data,
-      period1: { start: start1.format('YYYY-MM-DD'), end: end1.format('YYYY-MM-DD') },
-      period2: { start: start2.format('YYYY-MM-DD'), end: end2.format('YYYY-MM-DD') }
+      period1: { start: start1.toFormat('yyyy-MM-dd'), end: end1.toFormat('yyyy-MM-dd') },
+      period2: { start: start2.toFormat('yyyy-MM-dd'), end: end2.toFormat('yyyy-MM-dd') }
     };
   }
 
@@ -156,8 +156,8 @@ class AIDataService {
    * @returns {Promise<Array>} Array of gap objects { start, end, duration_minutes }
    */
   async detectDataGaps(chamberId, startDate, endDate) {
-    const startDateTime = moment(startDate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
-    const endDateTime = moment(endDate).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+    const startDateTime = DateTime.fromISO(String(startDate)).startOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
+    const endDateTime = DateTime.fromISO(String(endDate)).endOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
 
     // This is a simplified gap detection - for production, might need more sophisticated logic
     const query = `
@@ -174,14 +174,14 @@ class AIDataService {
     
     const gaps = [];
     for (let i = 1; i < rows.length; i++) {
-      const current = moment(rows[i].timestamp);
-      const previous = moment(rows[i - 1].timestamp);
-      const diffMinutes = current.diff(previous, 'minutes');
-      
+      const current = DateTime.fromISO(String(rows[i].timestamp));
+      const previous = DateTime.fromISO(String(rows[i - 1].timestamp));
+      const diffMinutes = current.diff(previous, 'minutes').minutes;
+
       if (diffMinutes > 15) {
         gaps.push({
-          start: previous.format('YYYY-MM-DD HH:mm:ss'),
-          end: current.format('YYYY-MM-DD HH:mm:ss'),
+          start: previous.toFormat('yyyy-MM-dd HH:mm:ss'),
+          end: current.toFormat('yyyy-MM-dd HH:mm:ss'),
           duration_minutes: diffMinutes
         });
       }

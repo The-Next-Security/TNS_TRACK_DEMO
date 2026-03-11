@@ -12,7 +12,7 @@
  * - Comparative analysis (if enabled)
  */
 
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
 const fs = require('fs');
 const path = require('path');
 
@@ -74,9 +74,9 @@ function generateHTML(data) {
   const { startDate, endDate, deviceIds = [] } = config;
 
   // Format dates
-  const formattedStartDate = moment(startDate).format('DD/MM/YYYY');
-  const formattedEndDate = moment(endDate).format('DD/MM/YYYY');
-  const generatedAt = moment().tz('America/Santiago').format('DD/MM/YYYY HH:mm:ss');
+  const formattedStartDate = DateTime.fromISO(String(startDate)).toFormat('dd/MM/yyyy');
+  const formattedEndDate = DateTime.fromISO(String(endDate)).toFormat('dd/MM/yyyy');
+  const generatedAt = DateTime.now().setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm:ss');
 
   // Generate charts using QuickChart API
   const lineChartUrl = generateDailyTrendChart(dailyData);
@@ -807,7 +807,7 @@ function generateFooter(generatedBy, generatedAt) {
 function generateDailyTrendChart(dailyData) {
   if (!dailyData || dailyData.length === 0) return null;
 
-  const labels = dailyData.map(d => moment(d.date).format('DD/MM'));
+  const labels = dailyData.map(d => DateTime.fromISO(String(d.date)).toFormat('dd/MM'));
   const data = dailyData.map(d => d.totalKWh);
 
   const chartConfig = {

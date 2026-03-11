@@ -12,7 +12,7 @@
  */
 
 const QuickChart = require('quickchart-js');
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
 const fs = require('fs');
 const path = require('path');
 
@@ -62,9 +62,9 @@ function generateHTML(data) {
   const { startDate, endDate, deviceIds = [] } = config;
 
   // Format dates
-  const formattedStartDate = moment(startDate).format('DD/MM/YYYY');
-  const formattedEndDate = moment(endDate).format('DD/MM/YYYY');
-  const generatedAt = moment().tz('America/Santiago').format('DD/MM/YYYY HH:mm:ss');
+  const formattedStartDate = DateTime.fromISO(String(startDate)).toFormat('dd/MM/yyyy');
+  const formattedEndDate = DateTime.fromISO(String(endDate)).toFormat('dd/MM/yyyy');
+  const generatedAt = DateTime.now().setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm:ss');
 
   // Generate charts using QuickChart
   const lineChartUrl = generateLineChart(deviceStats, startDate, endDate);
@@ -1180,7 +1180,7 @@ function generateCoverPage(options) {
  * @returns {string} Footer HTML
  */
 function generateFooter(generatedAt, generatedBy) {
-  const currentYear = moment().tz('America/Santiago').format('YYYY');
+  const currentYear = DateTime.now().setZone('America/Santiago').toFormat('yyyy');
   return `
     <!-- Simple BTG-style Footer -->
     <div class="simple-footer">
