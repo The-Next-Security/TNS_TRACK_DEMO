@@ -6,7 +6,7 @@
  */
 
 import React from "react";
-import moment from "moment";
+import { DateTime } from "luxon";
 import { motion, AnimatePresence } from "framer-motion";
 
 // UI Components
@@ -464,7 +464,7 @@ const AlertHistoryTable = ({ onSelectAlert }) => {
                                           </div>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p>{moment(alert.alertTimestamp).format('LLLL')}</p>
+                                          <p>{DateTime.fromISO(alert.alertTimestamp).setZone('America/Santiago').toFormat('cccc, d LLLL yyyy HH:mm')}</p>
                                         </TooltipContent>
                                       </Tooltip>
                                     </TableCell>
