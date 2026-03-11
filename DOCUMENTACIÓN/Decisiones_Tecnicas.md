@@ -156,9 +156,9 @@ El sistema puede usarse desde distintas zonas horarias, pero los servidores y da
 // Backend - timezone configurado en config
 timezone: 'America/Santiago'
 
-// Uso con moment-timezone
-const moment = require('moment-timezone');
-moment.tz('America/Santiago');
+// Uso con Luxon (única librería de fechas del proyecto)
+const { DateTime } = require('luxon');
+DateTime.now().setZone('America/Santiago');
 ```
 
 ### Estado Actual
@@ -261,7 +261,7 @@ DateTime.fromISO(date).toFormat('yyyy-MM-dd HH:mm:ss');
 ```
 
 ### Estado Actual
-🔄 **En progreso** — Refactor en curso (Issue #5, branch `refactor/estandarizar-fechas`). Al finalizar, se actualizará a ✅ Implementado.
+✅ **Implementado** — Luxon como única librería de fechas (Issue #5). Chart.js con chartjs-adapter-luxon; zona America/Santiago en backend y frontend.
 
 ### Referencias
 - **Issue**: [#5 — REFACTOR Estandarizar Librería de Fechas](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/5)
