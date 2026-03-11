@@ -149,7 +149,7 @@ async function enviarCorreoIncidencia(asunto, mensaje) {
   const emailConfig = configLoader.getConfig().email || {};
   const FROM_EMAIL = emailConfig.email_contacto?.from_verificado;
   const TO_EMAILS = Array.isArray(emailConfig.email_contacto?.destinatarios) ? emailConfig.email_contacto.destinatarios : [];
-  const apiKey = emailConfig.SENDGRID_API_KEY;
+  const apiKey = emailConfig.sendgrid_api_key;
 
   if (!apiKey || !FROM_EMAIL || TO_EMAILS.length === 0) {
     console.warn('control_incidencias: email no configurado, omitiendo envío');

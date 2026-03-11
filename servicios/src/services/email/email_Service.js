@@ -42,13 +42,13 @@ class EmailService extends BaseAlertService {
       // 1. Cargar Configuración específica de Email
       const appConfig = configLoader.getConfig(); // Obtener configuración general
 
-      if (!appConfig.email || !appConfig.email.SENDGRID_API_KEY) {
-        throw new Error("Configuración de email o SENDGRID_API_KEY no encontrada.");
+      if (!appConfig.email || !appConfig.email.sendgrid_api_key) {
+        throw new Error("Configuración de email o sendgrid_api_key no encontrada.");
       }
       this.config = appConfig.email; // Guardar solo la sección de email
 
       // Validar formato de API Key
-      if (!this.config.SENDGRID_API_KEY.startsWith("SG.")) {
+      if (!this.config.sendgrid_api_key.startsWith("SG.")) {
         console.warn("⚠️ La API Key de SendGrid no parece tener el formato correcto (debe empezar con 'SG.').");
       }
 
@@ -90,7 +90,7 @@ class EmailService extends BaseAlertService {
 
 
       // 2. Configurar SendGrid API Key
-      this.sgMail.setApiKey(this.config.SENDGRID_API_KEY);
+      this.sgMail.setApiKey(this.config.sendgrid_api_key);
       console.log("EmailService: SendGrid API Key configurada.");
 
       // 3. Inicializar Timers (llamando al método de BaseAlertService)
@@ -112,14 +112,14 @@ class EmailService extends BaseAlertService {
     // ... (sin cambios)
     const configured = this.initialized &&
       this.config &&
-      this.config.SENDGRID_API_KEY &&
-      this.config.SENDGRID_API_KEY.startsWith("SG.") && // Verificar formato básico
+      this.config.sendgrid_api_key &&
+      this.config.sendgrid_api_key.startsWith("SG.") && // Verificar formato básico
       this.fromEmail; // Asegurar que el remitente está definido
 
     if (!configured && this.initialized) {
       // Loguear detalles si está inicializado pero no configurado
       console.warn("EmailService está inicializado pero no completamente configurado.");
-      if (!this.config?.SENDGRID_API_KEY?.startsWith("SG.")) console.warn("- API Key inválida o faltante.");
+      if (!this.config?.sendgrid_api_key?.startsWith("SG.")) console.warn("- API Key inválida o faltante.");
       if (!this.fromEmail) console.warn("- Email remitente (from_verificado) faltante.");
     }
     return configured;
