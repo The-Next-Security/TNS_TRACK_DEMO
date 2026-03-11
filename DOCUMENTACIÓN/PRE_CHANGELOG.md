@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-11 — @Bufigol ([#16](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/16))
+- **chore** `back-end` | [REFACTOR] Eliminar aliases de compatibilidad del config-loader
+
+
 ### 2026-03-11 — @andresTNS ([#14](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/14))
 - **chore** `documentation, SQL - BBDD, back-end, analytics, front-end` | [REFACTOR] Migración a Luxon como única librería de fechas (Issue #5)
 
