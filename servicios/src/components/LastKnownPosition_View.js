@@ -3,7 +3,7 @@
  * @module LastKnownPositionV2
  * @requires mapbox-gl - Biblioteca para renderizado de mapas
  * @requires axios - Cliente HTTP para peticiones API
- * @requires moment - Manejo de fechas y timestamps
+ * @requires luxon - Manejo de fechas y timestamps (Decisiones_Tecnicas §10)
  * @requires framer-motion - Animaciones premium
  * @requires react - React hooks y componentes
  *
@@ -33,7 +33,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 import React, { useState, useEffect, useRef } from "react";
 import MapboxGL from "mapbox-gl";
 import axios from "axios";
-import moment from "moment";
+import { DateTime } from "luxon";
 import { motion } from "framer-motion";
 import HeaderV2 from "./Header_View";
 import { cn } from "@/lib/utils";
@@ -127,8 +127,8 @@ function LastKnownPositionV2({ showHeader = true }) {
         console.log("Response data:", response.data);
 
         // Lógica preservada: determinar si la posición es reciente (< 10 minutos)
-        const currentTime = moment().valueOf();
-        const tenMinutesAgo = moment().subtract(10, "minutes").valueOf();
+        const currentTime = DateTime.now().toMillis();
+        const tenMinutesAgo = DateTime.now().minus({ minutes: 10 }).toMillis();
         const isRecent =
           response.data.unixTimestamp > tenMinutesAgo &&
           response.data.unixTimestamp <= currentTime;
@@ -219,9 +219,10 @@ function LastKnownPositionV2({ showHeader = true }) {
         const marker = markersRef.current[position.ident];
         marker.setLngLat([lng, lat]).addTo(mapRef.current);
 
-        const formattedTime = moment(position.timestamp).format(
-          "DD-MM-YYYY, HH:mm:ss"
-        );
+        const ts = position.timestamp;
+        const formattedTime = typeof ts === "number"
+          ? DateTime.fromMillis(ts).setZone("America/Santiago").toFormat("dd-MM-yyyy, HH:mm:ss")
+          : DateTime.fromISO(ts).setZone("America/Santiago").toFormat("dd-MM-yyyy, HH:mm:ss");
 
         // Popup con información de posición
         const popup = new MapboxGL.Popup({ offset: 25 }).setHTML(
