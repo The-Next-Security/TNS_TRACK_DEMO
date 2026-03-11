@@ -2,7 +2,7 @@
 const mysql = require('mysql2/promise');
 const config = require('../../config/js_files/configLoader_Config');
 const { convertToMySQLDateTime } = require('../../utils/transform_Utils');
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
 const notificationController = require('../../controllers/notification_Controller');
 
 /**
@@ -128,10 +128,10 @@ class UbibotServiceAdapter {
     /**
      * Convierte una fecha/hora UTC a una fecha/hora en la zona horaria configurada
      * @param {string|Date} utcTime - Fecha/hora en UTC
-     * @returns {moment.Moment} - Fecha/hora en la zona horaria configurada
+     * @returns {DateTime} - Fecha/hora en la zona horaria configurada
      */
     getLocalTime(utcTime) {
-        return moment.utc(utcTime).tz(this.timeZone);
+        return DateTime.fromISO(String(utcTime), { zone: 'utc' }).setZone(this.timeZone);
     }
 
     /**
@@ -316,18 +316,18 @@ class UbibotServiceAdapter {
         const connection = await this.pool.getConnection();
         try {
             // Convertir timestamp a hora local
-            const utcTimestamp = moment.utc(lastValues.field1.created_at);
-            const localTime = this.getLocalTime(utcTimestamp);
+            const utcTimestamp = DateTime.fromISO(String(lastValues.field1.created_at), { zone: 'utc' });
+            const localTime = this.getLocalTime(lastValues.field1.created_at);
 
-            console.log("UTC Timestamp:", utcTimestamp.format());
-            console.log("Local Time:", localTime.format());
+            console.log("UTC Timestamp:", utcTimestamp.toISO());
+            console.log("Local Time:", localTime.toISO());
 
             // Insertar lecturas en la base de datos
             await connection.query(
                 "INSERT INTO sensor_readings_ubibot (channel_id, timestamp, temperature, humidity, light, voltage, wifi_rssi, external_temperature, external_temperature_timestamp, insercion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 [
                     channelId,
-                    utcTimestamp.toDate(),
+                    utcTimestamp.toJSDate(),
                     lastValues.field1.value,
                     lastValues.field2.value,
                     lastValues.field3.value,
@@ -335,7 +335,7 @@ class UbibotServiceAdapter {
                     lastValues.field5.value,
                     lastValues.field8 ? lastValues.field8.value : null,
                     lastValues.field8 ? convertToMySQLDateTime(lastValues.field8.created_at) : null,
-                    localTime.format("YYYY-MM-DD HH:mm:ss"),
+                    localTime.toFormat('yyyy-MM-dd HH:mm:ss'),
                 ]
             );
 
@@ -418,7 +418,7 @@ class UbibotServiceAdapter {
 
             // Procesar la lectura con el controlador de notificaciones
             if (notificationController && typeof notificationController.processTemperatureReading === 'function') {
-                const timestamp = moment(lastValues.field8.created_at).format("YYYY-MM-DD HH:mm:ss");
+                const timestamp = DateTime.fromISO(String(lastValues.field8.created_at)).toFormat('yyyy-MM-dd HH:mm:ss');
 
                 await notificationController.processTemperatureReading(
                     channelId,

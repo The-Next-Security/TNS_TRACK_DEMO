@@ -6,7 +6,7 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { toast } from "react-toastify";
-import moment from "moment-timezone";
+import { DateTime } from "luxon";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -52,13 +52,11 @@ import { cn } from "../lib/utils";
 import "react-toastify/dist/ReactToastify.css";
 
 // Configuraciones iniciales
-moment.tz.setDefault("America/Santiago");
-moment.locale("es");
-
+const TZ = "America/Santiago";
 const MONTHS_TEMPLATE = Array.from({ length: 12 }, (_, i) => ({
   number: (i + 1).toString().padStart(2, "0"),
-  name: moment().month(i).format("MMM"),
-  fullName: moment().month(i).format("MMMM"),
+  name: DateTime.local().set({ month: i + 1 }).setZone(TZ).setLocale("es").toFormat("MMM"),
+  fullName: DateTime.local().set({ month: i + 1 }).setZone(TZ).setLocale("es").toFormat("MMMM"),
 }));
 
 /**
@@ -71,13 +69,13 @@ const ConsumoTotalAnualV2 = () => {
   const [rawData, setRawData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(moment().year());
+  const [selectedYear, setSelectedYear] = useState(DateTime.now().year);
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [showContent, setShowContent] = useState(false);
   const [yearComparison, setYearComparison] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
 
-  const currentMaxYear = useRef(moment().year());
+  const currentMaxYear = useRef(DateTime.now().year);
   const initialDeviceLoadDone = useRef(false);
   const currentFetchId = useRef(0);
 

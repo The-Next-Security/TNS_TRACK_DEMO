@@ -6,7 +6,7 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import "../assets/css/Presencia.css";
 import Header from "./Header";
-import dayjs from "dayjs";
+import { DateTime } from "luxon";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
@@ -36,16 +36,12 @@ const Presencia = () => {
   }, [selectedDate]);
 
   const fetchDataForSelectedDate = (date) => {
-    const startDate = dayjs(date)
-      .set("hour", 8)
-      .set("minute", 0)
-      .set("second", 0)
-      .format("YYYY-MM-DD HH:mm:ss");
-    const endDate = dayjs(date)
-      .set("hour", 23)
-      .set("minute", 30)
-      .set("second", 0)
-      .format("YYYY-MM-DD HH:mm:ss");
+    const startDate = DateTime.fromJSDate(date)
+      .set({ hour: 8, minute: 0, second: 0 })
+      .toFormat("yyyy-MM-dd HH:mm:ss");
+    const endDate = DateTime.fromJSDate(date)
+      .set({ hour: 23, minute: 30, second: 0 })
+      .toFormat("yyyy-MM-dd HH:mm:ss");
 
     console.log(`Fetching data for date range: ${startDate} - ${endDate}`);
 

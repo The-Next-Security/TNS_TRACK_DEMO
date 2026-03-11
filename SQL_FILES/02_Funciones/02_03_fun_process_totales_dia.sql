@@ -67,7 +67,8 @@ BEGIN
         potencia_minima,
         precio_kwh_promedio,
         costo_total,
-        horas_con_datos
+        horas_con_datos,
+        calidad_datos
     )
     SELECT
         m.shelly_id,
@@ -81,7 +82,9 @@ BEGIN
         v_precio_kwh as precio_kwh_promedio,
         -- Cálculo del costo basado en la energía activa
         (SUM(m.potencia_activa * v_intervalo_segundos) / (3600 * 1000)) * v_precio_kwh as costo_total,
-        COUNT(DISTINCT HOUR(m.timestamp_local)) as horas_con_datos
+        COUNT(DISTINCT HOUR(m.timestamp_local)) as horas_con_datos,
+        -- Calidad: (lecturas reales / lecturas esperadas en el día) * 100, esperadas = 86400 / intervalo
+        (COUNT(*) * 100.0 / (86400 / v_intervalo_segundos)) as calidad_datos
     FROM sem_mediciones m
     WHERE m.timestamp_local >= p_fecha_local
     AND m.timestamp_local < v_siguiente_dia
@@ -96,6 +99,7 @@ BEGIN
         precio_kwh_promedio = VALUES(precio_kwh_promedio),
         costo_total = VALUES(costo_total),
         horas_con_datos = VALUES(horas_con_datos),
+        calidad_datos = VALUES(calidad_datos),
         fecha_actualizacion = CURRENT_TIMESTAMP;
 
     -- Registrar en log si hubo cambios

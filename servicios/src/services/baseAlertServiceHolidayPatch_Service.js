@@ -18,25 +18,24 @@
      * En caso de error, retorna false (graceful degradation).
      *
      * Feature: 002-configurable-alert-schedules (T051 - User Story 2)
+     * Usa Luxon (Decisiones_Tecnicas §10).
      *
-     * @param {Date|string|moment.Moment|null} [checkTime=null] - Fecha a verificar (null = hoy)
+     * @param {Date|string|import('luxon').DateTime|null} [checkTime=null] - Fecha a verificar (null = hoy)
      * @returns {Promise<boolean>} true si la fecha es un feriado
      */
     async isHoliday(checkTime = null) {
         try {
-            // Verificar si tenemos acceso a la base de datos
             if (!this.pool && !alertScheduleConfigService.databaseService) {
                 console.warn('[BaseAlertService] isHoliday: No database connection available');
-                return false; // Graceful degradation
+                return false;
             }
 
-            // Normalizar fecha a objeto moment en zona horaria correcta
+            const { DateTime } = require('luxon');
             const dateToCheck = checkTime
-                ? (moment.isMoment(checkTime) ? checkTime.clone() : moment(checkTime))
-                : moment();
-
-            const localDate = dateToCheck.tz(this.timeZone);
-            const formattedDate = localDate.format('YYYY-MM-DD');
+                ? (checkTime instanceof DateTime ? checkTime : DateTime.fromJSDate(checkTime instanceof Date ? checkTime : new Date(checkTime)))
+                : DateTime.now();
+            const localDate = dateToCheck.setZone(this.timeZone);
+            const formattedDate = localDate.toFormat('yyyy-MM-dd');
 
             // Consultar tabla de feriados usando el databaseService
             const connection = await alertScheduleConfigService.databaseService.getConnection();
@@ -81,67 +80,47 @@
      * @returns {Promise<boolean>} true si estamos en horario laboral
      */
     async isWithinWorkingHours(checkTime = null) {
-        let timeToCheck;
-        if (checkTime) {
-            timeToCheck = moment.isMoment(checkTime)
-                ? checkTime.clone()
-                : moment(checkTime);
-        } else {
-            timeToCheck = moment();
-        }
+        const { DateTime } = require('luxon');
+        const timeToCheck = checkTime
+            ? (checkTime instanceof DateTime ? checkTime : DateTime.fromJSDate(checkTime instanceof Date ? checkTime : new Date(checkTime))).setZone(this.timeZone)
+            : DateTime.now().setZone(this.timeZone);
 
-        const localTime = timeToCheck.tz(this.timeZone);
-        const dayOfWeek = localTime.day();
-        const hourDecimal = localTime.hour() + localTime.minute() / 60;
+        const localTime = timeToCheck;
+        const dayOfWeek = localTime.weekday === 7 ? 0 : localTime.weekday;
+        const hourDecimal = localTime.hour + localTime.minute / 60;
 
-        // T052-T053: Check if today is a holiday and respect_holidays is enabled
-        // If true, treat as Sunday (send all day = outside working hours)
         if (this.configCache.respect_holidays === 'true') {
-            const isHolidayToday = await this.isHoliday(timeToCheck);
+            const isHolidayToday = await this.isHoliday(localTime);
             if (isHolidayToday) {
-                console.log(`[BaseAlertService] isWithinWorkingHours: Holiday detected (respect_holidays=true) - treating as Sunday (send all day) - OUTSIDE working hours`);
-                return false;  // false = fuera de horario laboral = sí enviar alertas
+                console.log(`[BaseAlertService] isWithinWorkingHours: Holiday detected (respect_holidays=true) - OUTSIDE working hours`);
+                return false;
             }
         }
 
-        // Use dynamic configuration from database
         let isWithinHours;
 
-        // Domingo tiene horario especial
-        // Por defecto sunday_start=23:59:59, sunday_end=00:00:00 significa: enviar todo el día
-        // (start >= end = nunca dentro de horario laboral = siempre enviar)
         if (dayOfWeek === 0) {
             const sundayStart = this._timeToDecimal(this.configCache.sunday_start);
             const sundayEnd = this._timeToDecimal(this.configCache.sunday_end);
-
-            // Si start >= end, significa que NO HAY horario laboral el domingo (enviar todo el día)
             if (sundayStart >= sundayEnd) {
                 console.log(`[BaseAlertService] isWithinWorkingHours: Sunday (always send) - OUTSIDE working hours`);
-                return false;  // false = fuera de horario laboral = sí enviar alertas
+                return false;
             }
-
             isWithinHours = (hourDecimal >= sundayStart && hourDecimal <= sundayEnd);
-
-            console.log(`[BaseAlertService] isWithinWorkingHours: Sunday ${localTime.format('HH:mm:ss')} - Range: ${this.configCache.sunday_start} to ${this.configCache.sunday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
+            console.log(`[BaseAlertService] isWithinWorkingHours: Sunday ${localTime.toFormat('HH:mm:ss')} - Range: ${this.configCache.sunday_start} to ${this.configCache.sunday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
             return isWithinHours;
         }
 
-        // Sábado tiene horario especial
         if (dayOfWeek === 6) {
             const saturdayStart = this._timeToDecimal(this.configCache.saturday_start);
             const saturdayEnd = this._timeToDecimal(this.configCache.saturday_end);
-
             isWithinHours = (hourDecimal >= saturdayStart && hourDecimal <= saturdayEnd);
-
-            console.log(`[BaseAlertService] isWithinWorkingHours: Saturday ${localTime.format('HH:mm:ss')} - Range: ${this.configCache.saturday_start} to ${this.configCache.saturday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
+            console.log(`[BaseAlertService] isWithinWorkingHours: Saturday ${localTime.toFormat('HH:mm:ss')} - Range: ${this.configCache.saturday_start} to ${this.configCache.saturday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
         } else {
-            // Lunes a viernes (días 1-5)
             const weekdayStart = this._timeToDecimal(this.configCache.weekday_start);
             const weekdayEnd = this._timeToDecimal(this.configCache.weekday_end);
-
             isWithinHours = (hourDecimal >= weekdayStart && hourDecimal <= weekdayEnd);
-
-            console.log(`[BaseAlertService] isWithinWorkingHours: Weekday ${localTime.format('HH:mm:ss')} - Range: ${this.configCache.weekday_start} to ${this.configCache.weekday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
+            console.log(`[BaseAlertService] isWithinWorkingHours: Weekday ${localTime.toFormat('HH:mm:ss')} - Range: ${this.configCache.weekday_start} to ${this.configCache.weekday_end} - ${isWithinHours ? 'WITHIN' : 'OUTSIDE'} working hours`);
         }
 
         return isWithinHours;

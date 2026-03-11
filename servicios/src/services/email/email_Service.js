@@ -3,7 +3,7 @@
 const sgMail = require("@sendgrid/mail");
 const BaseAlertService = require("../baseAlert_Service"); // Hereda de BaseAlertService
 const configLoader = require("../../config/js_files/configLoader_Config");
-const moment = require("moment-timezone");
+const { DateTime } = require("luxon");
 
 /**
  * Servicio centralizado para el envío de correos electrónicos utilizando SendGrid.
@@ -445,7 +445,7 @@ class EmailService extends BaseAlertService {
       console.warn(`[EmailService/TempAlert] Usando destinatarios TO de fallback (${toRecipients.join(', ')})`);
     }
 
-    const formattedDateTime = moment().tz(this.timeZone).format("DD-MM HH:mm");
+    const formattedDateTime = DateTime.now().setZone(this.timeZone).toFormat("dd-MM HH:mm");
     const subject = `Alerta Horaria de Temperatura - ${formattedDateTime}`;
     const { html, text } = this._formatTemperatureAlertContent(channelsInAlert); // Formato sin cambios
 
@@ -533,7 +533,7 @@ class EmailService extends BaseAlertService {
       console.warn(`[EmailService/DisconnAlert] Usando destinatarios TO de fallback (${toRecipients.join(', ')})`);
     }
 
-    const formattedDateTime = moment().tz(this.timeZone).format("DD-MM HH:mm");
+    const formattedDateTime = DateTime.now().setZone(this.timeZone).toFormat("dd-MM HH:mm");
     const subject = `Alerta de Conexión / Desconexión - ${formattedDateTime}`;
     const { html, text } = this._formatDisconnectionAlertContent(disconnectedChannels);
 
@@ -583,7 +583,7 @@ class EmailService extends BaseAlertService {
 
   // --- (_formatTemperatureAlertContent, _formatDisconnectionAlertContent, _stripHtml sin cambios) ---
   _formatTemperatureAlertContent(channelsInAlert) { /* ... (sin cambios) ... */
-    const formattedTime = moment().tz(this.timeZone).format("DD/MM/YYYY HH:mm:ss");
+    const formattedTime = DateTime.now().setZone(this.timeZone).toFormat("dd/MM/yyyy HH:mm:ss");
     let htmlRows = "";
     let textContent = `Alerta Horaria: ${channelsInAlert.length} canales con temperaturas fuera de límites persistentes.\nFecha: ${formattedTime}\n\nDetalles:\n`;
     channelsInAlert.forEach((channel) => {
@@ -600,7 +600,7 @@ class EmailService extends BaseAlertService {
     return { html, text: textContent };
   }
   _formatDisconnectionAlertContent(disconnectedChannels) { /* ... (sin cambios) ... */
-    const formattedTime = moment().tz(this.timeZone).format("DD/MM/YYYY HH:mm:ss");
+    const formattedTime = DateTime.now().setZone(this.timeZone).toFormat("dd/MM/yyyy HH:mm:ss");
     let htmlRows = "";
     let textContent = `Alerta Conexión/Desconexión: ${disconnectedChannels.length} canales con cambios de estado reportados.\nFecha: ${formattedTime}\n\nDetalles:\n`;
     disconnectedChannels.forEach(channel => {

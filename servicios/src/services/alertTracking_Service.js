@@ -3,7 +3,7 @@
 
 const mysql = require("mysql2/promise");
 const configLoader = require("../config/js_files/configLoader_Config");
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 
 // Pool interno del servicio
 let pool = null;
@@ -145,7 +145,8 @@ class AlertTrackingService {
      */
     _formatToSqlDatetime(date) {
         if (!date) return null;
-        return moment(date).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss');
+        const dt = date instanceof DateTime ? date : DateTime.fromJSDate(date instanceof Date ? date : new Date(date));
+        return dt.setZone(this.timeZone).toFormat('yyyy-MM-dd HH:mm:ss');
     }
 
     /**
@@ -480,7 +481,7 @@ class AlertTrackingService {
             }
 
             const currentObservations = alerts[0].observations || '';
-            const timestamp = moment().tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss');
+            const timestamp = DateTime.now().setZone(this.timeZone).toFormat('yyyy-MM-dd HH:mm:ss');
 
             // Construir nueva observación
             const newObservation = `[${timestamp}] ${userId}: ${observation}`;
@@ -954,7 +955,7 @@ class AlertTrackingService {
         const connection = await this._getConnection();
 
         try {
-            const startDateSql = this._formatToSqlDatetime(startDate || moment().subtract(30, 'days').toDate());
+            const startDateSql = this._formatToSqlDatetime(startDate || DateTime.now().minus({ days: 30 }).toJSDate());
             const endDateSql = this._formatToSqlDatetime(endDate || new Date());
 
             console.log(`[AlertTrackingService] Obteniendo métricas: ${startDateSql} a ${endDateSql}${alertType ? `, tipo: ${alertType}` : ''}`);
@@ -1088,7 +1089,7 @@ class AlertTrackingService {
         const connection = await this._getConnection();
 
         try {
-            const startDateSql = this._formatToSqlDatetime(startDate || moment().subtract(7, 'days').toDate());
+            const startDateSql = this._formatToSqlDatetime(startDate || DateTime.now().minus({ days: 7 }).toJSDate());
             const endDateSql = this._formatToSqlDatetime(endDate || new Date());
 
             console.log(`[AlertTrackingService] Obteniendo datos de gráfico tipo '${type}'${alertType ? `, alertType: ${alertType}` : ''}`);
@@ -1123,7 +1124,7 @@ class AlertTrackingService {
                     const [hourlyData] = await connection.query(query, params);
 
                     data = hourlyData.map(row => ({
-                        time: moment(row.hour).format('HH:00'),
+                        time: DateTime.fromJSDate(row.hour instanceof Date ? row.hour : new Date(row.hour)).toFormat('HH:00'),
                         total: row.total,
                         temperature: row.temperature,
                         disconnection: row.disconnection
@@ -1160,7 +1161,7 @@ class AlertTrackingService {
                     const dataByDate = {};
 
                     dailyData.forEach(row => {
-                        const dateKey = moment(row.day).format('DD/MM');
+                        const dateKey = DateTime.fromJSDate(row.day instanceof Date ? row.day : new Date(row.day)).toFormat('dd/MM');
                         if (!dataByDate[dateKey]) {
                             dataByDate[dateKey] = { fecha: dateKey };
                         }

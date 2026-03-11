@@ -107,21 +107,20 @@ class AlertScheduleConfigService {
    * Nota: Este método solo evalúa el Nivel 1 (global). El Nivel 2 (DND por usuario)
    * lo gestiona MySQL a través de fun_should_send_notification().
    *
-   * Mapeo de días:
-   *   moment().day() → 0=Dom, 1=Lun, 2=Mar, 3=Mié, 4=Jue, 5=Vie, 6=Sáb
+   * Mapeo de días (Luxon DateTime.weekday):
+   *   DateTime.weekday → 1=Lu, 2=Ma, ..., 6=Sá, 7=Do
    *   gen_horario_operacional → 1=Lun, 2=Mar, ..., 6=Sáb, 7=Dom
    *
-   * @param {Object} momentTime - Objeto moment con la fecha/hora a evaluar
+   * @param {import('luxon').DateTime} dateTime - Objeto DateTime de Luxon con la fecha/hora a evaluar (zona America/Santiago)
    * @returns {Promise<Object>} { enHorario: boolean, motivo: string }
    */
-  async isWithinOperationalHours(momentTime) {
+  async isWithinOperationalHours(dateTime) {
     try {
       // Cargar config desde cache o BD
       const config = this.configCache || await this.loadAllConfig();
 
-      // Convertir día de moment (0=Dom..6=Sáb) a formato de BD (1=Lun..7=Dom)
-      const diaMoment = momentTime.day(); // 0=Dom, 1=Lun, ..., 6=Sáb
-      const diaDB = diaMoment === 0 ? 7 : diaMoment; // Dom→7, el resto igual
+      // Luxon weekday: 1=Lu..7=Do, mismo formato que BD (1=Lun..7=Dom)
+      const diaDB = dateTime.weekday;
 
       // Buscar el horario para el día actual
       const horarioDia = config.horarios.find(h => h.dia_semana === diaDB);
@@ -135,8 +134,8 @@ class AlertScheduleConfigService {
         return { enHorario: false, motivo: `${horarioDia.nombre_dia} no está en horario operacional (activo=false)` };
       }
 
-      // Comparar hora actual con el rango del día
-      const horaActual = momentTime.format('HH:mm:ss');
+      // Comparar hora actual con el rango del día (formato HH:mm:ss según Decisiones_Tecnicas §10)
+      const horaActual = dateTime.toFormat('HH:mm:ss');
       const enRango = horaActual >= horarioDia.hora_inicio && horaActual <= horarioDia.hora_fin;
 
       if (enRango) {

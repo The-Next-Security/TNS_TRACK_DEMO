@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import moment from "moment-timezone";
+import { DateTime } from "luxon";
 import DatePicker from "react-datepicker";
 import { motion } from "framer-motion";
 import "react-datepicker/dist/react-datepicker.css";
@@ -146,7 +146,7 @@ const DefrostAnalysisV2 = () => {
     }
 
     // Validar que la fecha seleccionada sea domingo
-    if (moment(selectedDate).isoWeekday() !== 7) {
+    if (DateTime.fromJSDate(selectedDate).weekday !== 7) {
       alert("La fecha seleccionada debe ser un domingo.");
       console.error("Fecha seleccionada no es domingo:", selectedDate);
       return;
@@ -155,7 +155,7 @@ const DefrostAnalysisV2 = () => {
     setLoading(true);
     try {
       // Log the date sent to the API
-      const formattedDate = moment(selectedDate).format("YYYY-MM-DD");
+      const formattedDate = DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd");
       console.log(
         "Fecha enviada a la API para analisis diario:",
         formattedDate
@@ -286,7 +286,7 @@ const DefrostAnalysisV2 = () => {
       setLoading(true);
       const selectedCameraName =
         cameras.find((c) => c.channel_id === selectedCamera)?.name || "Unknown";
-      const formattedDate = moment(selectedDate).format("DDMMYYYY");
+      const formattedDate = DateTime.fromJSDate(selectedDate).toFormat("ddMMyyyy");
       const defaultFileName = `Temperature_Analysis_${selectedCameraName.replace(
         /\s+/g,
         "_"
@@ -296,7 +296,7 @@ const DefrostAnalysisV2 = () => {
         "/api/ubibot/generate-defrost-report",
         {
           channelId: selectedCamera,
-          date: moment(selectedDate).format("YYYY-MM-DD"),
+          date: DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd"),
         },
         {
           responseType: "blob",
@@ -332,7 +332,7 @@ const DefrostAnalysisV2 = () => {
     if (
       !selectedCamera ||
       !selectedDate ||
-      moment(selectedDate).isoWeekday() !== 7
+      DateTime.fromJSDate(selectedDate).weekday !== 7
     ) {
       alert("Por favor seleccione una cámara y un domingo");
       return;
@@ -341,7 +341,7 @@ const DefrostAnalysisV2 = () => {
     setLoading(true);
     try {
       // Log the date sent to the API
-      const formattedDate = moment(selectedDate).format("YYYY-MM-DD");
+      const formattedDate = DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd");
       console.log(
         "Fecha enviada a la API para analisis semanal:",
         formattedDate
@@ -405,12 +405,12 @@ const DefrostAnalysisV2 = () => {
       setLoading(true);
       const selectedCameraName =
         cameras.find((c) => c.channel_id === selectedCamera)?.name || "Unknown";
-      const formattedDate = moment(selectedDate).format("DDMMYYYY");
+      const formattedDate = DateTime.fromJSDate(selectedDate).toFormat("ddMMyyyy");
       console.log(
         "DefrostAnalysis.js - Sending data to generate weekly report:"
       );
       console.log("  Channel ID:", selectedCamera);
-      console.log("  Date:", moment(selectedDate).format("YYYY-MM-DD"));
+      console.log("  Date:", DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd"));
       const defaultFileName = `Weekly_Temperature_Analysis_${selectedCameraName.replace(
         /\s+/g,
         "_"
@@ -419,7 +419,7 @@ const DefrostAnalysisV2 = () => {
         "/api/ubibot/generate-weekly-defrost-report",
         {
           channelId: selectedCamera,
-          date: moment(selectedDate).format("YYYY-MM-DD"),
+          date: DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd"),
         },
         {
           responseType: "blob",
@@ -551,7 +551,7 @@ const DefrostAnalysisV2 = () => {
                     <DatePicker
                       selected={selectedDate}
                       onChange={setSelectedDate}
-                      filterDate={(date) => moment(date).day() === 0}
+                      filterDate={(date) => DateTime.fromJSDate(date).weekday === 7}
                       dateFormat="dd/MM/yyyy"
                       placeholderText="Seleccionar Domingo"
                       className={cn(
@@ -641,7 +641,7 @@ const DefrostAnalysisV2 = () => {
                     )}>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-blue-900 dark:text-blue-100">
-                          Domingo {moment(selectedDate).format("DD/MM/YYYY")}
+                          Domingo {DateTime.fromJSDate(selectedDate).toFormat("dd/MM/yyyy")}
                         </CardTitle>
                         <Badge className={cn(
                           "w-fit bg-blue-600",
@@ -691,7 +691,7 @@ const DefrostAnalysisV2 = () => {
                     )}>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-gray-700 dark:text-gray-300">
-                          Domingo {moment(selectedDate).subtract(7, "days").format("DD/MM/YYYY")}
+                          Domingo {DateTime.fromJSDate(selectedDate).minus({ days: 7 }).toFormat("dd/MM/yyyy")}
                         </CardTitle>
                         <Badge variant="secondary" className="w-fit">
                           Semana Anterior
@@ -801,8 +801,8 @@ const DefrostAnalysisV2 = () => {
                     )}>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-indigo-900 dark:text-indigo-100">
-                          Semana del {moment(selectedDate).subtract(6, "days").format("DD/MM/YYYY")}
-                          {" al "}{moment(selectedDate).format("DD/MM/YYYY")}
+                          Semana del {DateTime.fromJSDate(selectedDate).minus({ days: 6 }).toFormat("dd/MM/yyyy")}
+                          {" al "}{DateTime.fromJSDate(selectedDate).toFormat("dd/MM/yyyy")}
                         </CardTitle>
                         <Badge className={cn(
                           "w-fit bg-indigo-600",
@@ -852,8 +852,8 @@ const DefrostAnalysisV2 = () => {
                     )}>
                       <CardHeader className="pb-3">
                         <CardTitle className="text-lg text-gray-700 dark:text-gray-300">
-                          Semana del {moment(selectedDate).subtract(13, "days").format("DD/MM/YYYY")}
-                          {" al "}{moment(selectedDate).subtract(7, "days").format("DD/MM/YYYY")}
+                          Semana del {DateTime.fromJSDate(selectedDate).minus({ days: 13 }).toFormat("dd/MM/yyyy")}
+                          {" al "}{DateTime.fromJSDate(selectedDate).minus({ days: 7 }).toFormat("dd/MM/yyyy")}
                         </CardTitle>
                         <Badge variant="secondary" className="w-fit">
                           Semana Anterior

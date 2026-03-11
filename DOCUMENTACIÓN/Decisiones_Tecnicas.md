@@ -2,7 +2,7 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-26
+> **Última actualización**: 2026-03-11
 > **Versión**: 2.0.0
 > **Propósito**: Documentar todas las decisiones arquitectónicas y técnicas del proyecto
 
@@ -19,6 +19,7 @@
 7. [DeepSeek como Provider de IA](#7-deepseek-como-provider-de-ia)
 8. [Notificaciones: Email + Push (NO SMS)](#8-notificaciones-email--push-no-sms)
 9. [MySQL como Base de Datos Principal](#9-mysql-como-base-de-datos-principal)
+10. [Estandarización de Librería de Fechas con Luxon](#10-estandarización-de-librería-de-fechas-con-luxon)
 
 ---
 
@@ -155,9 +156,9 @@ El sistema puede usarse desde distintas zonas horarias, pero los servidores y da
 // Backend - timezone configurado en config
 timezone: 'America/Santiago'
 
-// Uso con moment-timezone
-const moment = require('moment-timezone');
-moment.tz('America/Santiago');
+// Uso con Luxon (única librería de fechas del proyecto)
+const { DateTime } = require('luxon');
+DateTime.now().setZone('America/Santiago');
 ```
 
 ### Estado Actual
@@ -229,12 +230,52 @@ Usar **MySQL** (NO MariaDB) como base de datos principal.
 
 ---
 
+## 10. Estandarización de Librería de Fechas con Luxon
+
+### Contexto
+El proyecto utilizaba simultáneamente cuatro librerías de manejo de fechas (**moment**, **moment-timezone**, **date-fns**, **dayjs**), lo que generaba redundancia, bundle inflado, inconsistencia en formatos y mayor superficie de mantenimiento. El análisis del Issue #5 identificó ~54 archivos afectados en backend y frontend.
+
+### Decisión
+Usar **Luxon** como **única** librería de fechas en todo el proyecto (backend y frontend).
+
+### Rationale
+- El wrapper central `date_Utils.js` y varios controllers ya utilizaban Luxon; parte del trabajo estaba hecho.
+- Soporte **nativo** de zonas horarias (sin paquete adicional), alineado con la decisión de zona base **America/Santiago** (sección 6).
+- API inmutable y moderna; reemplazo directo de patrones como `moment().tz('America/Santiago')` y `moment.utc().tz()`.
+- Existe **chartjs-adapter-luxon** para reemplazar `chartjs-adapter-date-fns` en los componentes que usan Chart.js.
+
+### Alcance
+- Migrar todos los usos de **moment**, **moment-timezone**, **dayjs** y **date-fns** a Luxon.
+- Sustituir **chartjs-adapter-date-fns** por **chartjs-adapter-luxon**.
+- Crear o ampliar utilidades centralizadas de fechas (`date_Utils.js` y las que se definan) para apoyo al resto del proyecto.
+- Eliminar dependencias redundantes de `package.json` una vez completada la migración.
+
+### Implementación
+```javascript
+// Zona base (alineado con sección 6)
+const { DateTime } = require('luxon');
+DateTime.now().setZone('America/Santiago');
+
+// Formato estándar
+DateTime.fromISO(date).toFormat('yyyy-MM-dd HH:mm:ss');
+```
+
+### Estado Actual
+✅ **Implementado** — Luxon como única librería de fechas (Issue #5). Chart.js con chartjs-adapter-luxon; zona America/Santiago en backend y frontend.
+
+### Referencias
+- **Issue**: [#5 — REFACTOR Estandarizar Librería de Fechas](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/5)
+- Parte de **#9** (FASE 0 - Planificación y Fundamentos)
+
+---
+
 ## 📝 Historial de Cambios
 
 > **Nota**: Para historial detallado de cambios del proyecto, ver [CHANGELOG.md](./CHANGELOG.md)
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-03-11 | Estandarización de fechas: Luxon como única librería (Issue #5) | andresTNS, Bufigol |
 | 2026-01-26 | Documentación actualizada según feedback Issue #2 | andresTNS, Bufigol |
 | 2026-01-22 | Documentación completa de decisiones técnicas | andresTNS, Bufigol |
 | 2026-01-15 | Eliminación de SMS/Twilio | andresTNS |
@@ -251,4 +292,4 @@ Usar **MySQL** (NO MariaDB) como base de datos principal.
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-26
+**Última revisión**: 2026-03-11

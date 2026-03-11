@@ -521,6 +521,7 @@ CREATE TABLE `sem_totales_dia` (
   `precio_kwh_promedio` DECIMAL(10,2) NOT NULL,
   `costo_total` DECIMAL(15,2) NOT NULL,
   `horas_con_datos` INT NOT NULL,
+  `calidad_datos` DECIMAL(5,2) DEFAULT NULL,
   `lecturas_limite_apagado` INT NOT NULL DEFAULT 0,
   `lecturas_consumo_bajo` INT NOT NULL DEFAULT 0,
   `lecturas_consumo_medio` INT NOT NULL DEFAULT 0,
@@ -532,6 +533,7 @@ CREATE TABLE `sem_totales_dia` (
   UNIQUE KEY `uk_sem_totales_dia_shelly_id-fecha_local` (`shelly_id`, `fecha_local`),
   INDEX `idx_sem_totales_dia_shelly_id` (`shelly_id`),
   INDEX `idx_sem_totales_dia_fecha_local` (`fecha_local`),
+  INDEX `idx_sem_totales_dia_calidad_datos` (`calidad_datos`),
   CONSTRAINT `fk_sem_totales_dia_shelly_id_sem_dispositivos_shelly_id`
     FOREIGN KEY (`shelly_id`)
     REFERENCES `sem_dispositivos`(`shelly_id`)
@@ -553,6 +555,7 @@ CREATE TABLE `sem_totales_mes` (
   `costo_total` DECIMAL(15,2) NOT NULL,
   `dias_con_datos` INT NOT NULL,
   `horas_con_datos` INT NOT NULL,
+  `calidad_datos` DECIMAL(5,2) DEFAULT NULL,
   `lecturas_limite_apagado` INT NOT NULL DEFAULT 0,
   `lecturas_consumo_bajo` INT NOT NULL DEFAULT 0,
   `lecturas_consumo_medio` INT NOT NULL DEFAULT 0,
@@ -564,6 +567,7 @@ CREATE TABLE `sem_totales_mes` (
   UNIQUE KEY `uk_sem_totales_mes_shelly_id-año-mes` (`shelly_id`, `año`, `mes`),
   INDEX `idx_sem_totales_mes_shelly_id` (`shelly_id`),
   INDEX `idx_sem_totales_mes_año-mes` (`año`, `mes`),
+  INDEX `idx_sem_totales_mes_calidad_datos` (`calidad_datos`),
   CONSTRAINT `fk_sem_totales_mes_shelly_id_sem_dispositivos_shelly_id`
     FOREIGN KEY (`shelly_id`)
     REFERENCES `sem_dispositivos`(`shelly_id`)

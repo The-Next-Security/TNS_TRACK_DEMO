@@ -12,7 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import "chartjs-adapter-date-fns";
+import "chartjs-adapter-luxon";
 import { es } from "date-fns/locale";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -117,7 +117,7 @@ const Temperatura = () => {
         },
         adapters: {
           date: {
-            locale: es,
+            locale: 'es',
           },
         },
         title: {

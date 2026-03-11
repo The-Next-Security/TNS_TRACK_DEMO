@@ -5,7 +5,7 @@
  *
  * @component
  * @requires axios
- * @requires moment
+ * @requires luxon (DateTime)
  * @requires framer-motion
  * @requires Shadcn/UI components
  * @version 2.1.0 - Premium UI Enhancement
@@ -13,7 +13,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
-import moment from 'moment';
+import { DateTime } from 'luxon';
 import { motion } from 'framer-motion';
 import { cn } from '../lib/utils';
 
@@ -43,7 +43,7 @@ const UbicacionTiempoRealInteriorV2 = () => {
   const [devices, setDevices] = useState([]);
   const [latestSectors, setLatestSectors] = useState({});
   const [umbrales, setUmbrales] = useState(null);
-  const [currentTime, setCurrentTime] = useState(moment());
+  const [currentTime, setCurrentTime] = useState(DateTime.now());
   const [activeBeacons, setActiveBeacons] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -80,7 +80,7 @@ const UbicacionTiempoRealInteriorV2 = () => {
         return acc;
       }, {});
       setLatestSectors(sectorMap);
-      setCurrentTime(moment(sectorInfo.data.serverTime));
+      setCurrentTime(DateTime.fromISO(sectorInfo.data.serverTime));
     } catch (error) {
       console.error('Error fetching data:', error);
       setError('Error al cargar los datos. Por favor, intente nuevamente.');
@@ -147,8 +147,8 @@ const UbicacionTiempoRealInteriorV2 = () => {
    */
   const getSemaphoreClass = useCallback((beacon_id, timestamp) => {
     if (!timestamp || !umbrales) return '';
-    const start = moment(timestamp, 'YYYY-MM-DD HH:mm:ss');
-    const duration = moment.duration(currentTime.diff(start)).asMinutes();
+    const start = DateTime.fromFormat(timestamp, 'yyyy-MM-dd HH:mm:ss');
+    const duration = (currentTime instanceof DateTime ? currentTime : DateTime.fromISO(currentTime)).diff(start).as('minutes');
     const { umbral_verde, umbral_amarillo } = umbrales;
     if (duration <= umbral_verde) {
       return 'green';
@@ -372,7 +372,7 @@ const UbicacionTiempoRealInteriorV2 = () => {
                         personal.map((persona, index) => {
                           const sectorInfo = latestSectors[persona.id_dispositivo_asignado] || {};
                           const horaEntrada = sectorInfo.timestamp
-                            ? moment(sectorInfo.timestamp, 'YYYY-MM-DD HH:mm:ss').format('HH:mm')
+                            ? DateTime.fromFormat(sectorInfo.timestamp, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm')
                             : '-';
                           const permanencia = calculatePermanencia(sectorInfo.timestamp);
                           const semaphoreClass = getSemaphoreClass(sectorInfo.beacon_id, sectorInfo.timestamp);

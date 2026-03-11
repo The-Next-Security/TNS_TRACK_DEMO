@@ -4,7 +4,7 @@ const mysql = require("mysql2/promise");
 const configLoader = require("../../config/js_files/configLoader_Config");
 const notificationController = require("../../controllers/notification_Controller");
 const { convertToMySQLDateTime } = require("../../utils/transform_Utils");
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 
 // Variable para el pool, se inicializará después de cargar la config
 let pool = null;
@@ -74,10 +74,10 @@ class UbibotService {
     /**
      * Convierte una fecha/hora UTC a la zona horaria configurada.
      * @param {string|Date} utcTime
-     * @returns {moment.Moment}
+     * @returns {DateTime}
      */
     getLocalTime(utcTime) {
-        return moment.utc(utcTime).tz(this.timeZone);
+        return DateTime.fromISO(String(utcTime), { zone: 'utc' }).setZone(this.timeZone);
     }
 
     /**
@@ -320,8 +320,8 @@ class UbibotService {
             }
 
             // Timestamp principal: field1 (temperatura ambiente)
-            const utcTimestamp = moment.utc(lastValues.field1.created_at);
-            if (!utcTimestamp.isValid()) {
+            const utcTimestamp = DateTime.fromISO(String(lastValues.field1.created_at), { zone: 'utc' });
+            if (!utcTimestamp.isValid) {
                 console.error(`[UbibotService] processSensorReadings: Timestamp inválido en field1 para canal ${canalId}: ${lastValues.field1.created_at}`);
                 return false;
             }
@@ -341,7 +341,7 @@ class UbibotService {
                 fecha_lectura_externa: field8CreatedAt,
                 wifi_rssi:            lastValues.field5?.value !== undefined ? parseInt(lastValues.field5.value, 10) : null,
                 en_linea_lectura:     channelNet !== null ? (channelNet === '1' || channelNet === 1 ? 1 : 0) : null,
-                fecha_lectura:        utcTimestamp.toDate(),
+                fecha_lectura:        utcTimestamp.toJSDate(),
             };
 
             // Limpiar NaN por si algún parseFloat/parseInt falló
@@ -350,7 +350,7 @@ class UbibotService {
             }
 
             await connection.query("INSERT INTO ubi_lecturas_sensor SET ?", dataToInsert);
-            console.log(`[UbibotService] processSensorReadings: Lectura insertada para canal ${canalId} (id_canal=${id_canal}, fecha_lectura=${utcTimestamp.format()})`);
+            console.log(`[UbibotService] processSensorReadings: Lectura insertada para canal ${canalId} (id_canal=${id_canal}, fecha_lectura=${utcTimestamp.toISO()})`);
 
             return true;
 

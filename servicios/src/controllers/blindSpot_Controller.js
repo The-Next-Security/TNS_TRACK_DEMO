@@ -1,6 +1,10 @@
 //controllers/blindSpotController.js
 const databaseService = require("../services/database_Service");
 const { ValidationError } = require("../utils/errors_Utils");
+const date_Utils = require("../utils/date_Utils");
+const { DateTime } = require("luxon");
+
+const TIMEZONE = "America/Santiago";
 
 class blindSpotController {
   /**
@@ -21,11 +25,9 @@ class blindSpotController {
     try {
       const { date } = req.query;
 
-      // Convertir la fecha a la zona horaria de Chile
-      const startOfDay = moment
-        .tz(date, "YYYY-MM-DD", "America/Santiago")
-        .startOf("day");
-      const endOfDay = moment(startOfDay).endOf("day");
+      // Fecha en zona America/Santiago (Decisiones_Tecnicas §6)
+      const startDt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TIMEZONE }).startOf("day");
+      const endDt = startDt.endOf("day");
 
       const query = `
           SELECT hc.dispositivo, hc.mac_address, hc.timestamp,
@@ -37,17 +39,15 @@ class blindSpotController {
           ORDER BY hc.timestamp ASC
         `;
 
-      const [rows] = await pool.query(query, [
-        startOfDay.toDate(),
-        endOfDay.toDate(),
+      const [rows] = await databaseService.pool.query(query, [
+        startDt.toJSDate(),
+        endDt.toJSDate(),
       ]);
 
-      // Convertir los timestamps a la zona horaria de Chile
+      // Formato estándar yyyy-MM-dd HH:mm:ss en America/Santiago (§10)
       const formattedRows = rows.map((row) => ({
         ...row,
-        timestamp: moment(row.timestamp)
-          .tz("America/Santiago")
-          .format("YYYY-MM-DD HH:mm:ss"),
+        timestamp: date_Utils.utcToLocalFormatted(row.timestamp, "yyyy-MM-dd HH:mm:ss", TIMEZONE),
       }));
 
       res.json(formattedRows);

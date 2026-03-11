@@ -1,7 +1,7 @@
 // src/controllers/notificationController.js
 
 const mysql = require("mysql2/promise");
-const moment = require("moment-timezone");
+const { DateTime } = require("luxon");
 const configLoader = require("../config/js_files/configLoader_Config");
 const emailService = require("../services/email/email_Service");
 const notificationService = require("../services/notification_Service");
@@ -140,18 +140,18 @@ class NotificationController {
      */
     setupHourlyAlertProcessing() {
         try {
-            const now = moment().tz(this.timeZone);
-            const nextHour = now.clone().endOf('hour').add(1, 'millisecond');
-            const timeToNextHour = nextHour.diff(now);
+            const now = DateTime.now().setZone(this.timeZone);
+            const nextHour = now.endOf("hour").plus({ milliseconds: 1 });
+            const timeToNextHour = nextHour.diff(now).toMillis();
 
-            console.log(`[NotificationCtrl] Configurando timer para procesar alertas en la próxima hora (${nextHour.format()})`);
-            console.log(`  -> Tiempo restante: ${moment.duration(timeToNextHour).humanize()}`);
+            console.log(`[NotificationCtrl] Configurando timer para procesar alertas en la próxima hora (${nextHour.toISO()})`);
+            console.log(`  -> Tiempo restante: ${Math.round(timeToNextHour / 60000)} minutos`);
 
             // Limpiar timer anterior si existe (importante en caso de re-inicialización)
             if (this.hourlyProcessingTimer) clearTimeout(this.hourlyProcessingTimer);
 
             this.hourlyProcessingTimer = setTimeout(() => {
-                console.log(`[NotificationCtrl] Ejecutando procesamiento de alertas programado para: ${moment().tz(this.timeZone).format()}`);
+                console.log(`[NotificationCtrl] Ejecutando procesamiento de alertas programado para: ${DateTime.now().setZone(this.timeZone).toISO()}`);
                 // Envolver llamada en try-catch
                 this.processHourlyAlerts()
                     .catch(err => console.error("❌ [NotificationCtrl] Error durante el procesamiento HORARIO INICIAL de alertas:", err));
@@ -161,8 +161,8 @@ class NotificationController {
 
                 // Configurar timer recurrente CADA HORA
                 this.recurringHourlyTimer = setInterval(async () => {
-                    const currentTime = moment().tz(this.timeZone);
-                    console.log(`[NotificationCtrl] Ejecutando procesamiento recurrente de alertas: ${currentTime.format()}`);
+                    const currentTime = DateTime.now().setZone(this.timeZone);
+                    console.log(`[NotificationCtrl] Ejecutando procesamiento recurrente de alertas: ${currentTime.toISO()}`);
                     try {
                         await this.processHourlyAlerts();
                     } catch (err) {
@@ -207,19 +207,23 @@ class NotificationController {
 
     // --- Métodos de Ayuda (Sin Cambios Funcionales) ---
     getHourKey(date = null) {
-        const d = date ? moment(date).tz(this.timeZone) : moment().tz(this.timeZone);
-        return d.format("YYYY-MM-DD-HH");
+        const d = date
+            ? (date instanceof DateTime ? date : DateTime.fromJSDate(date instanceof Date ? date : new Date(date))).setZone(this.timeZone)
+            : DateTime.now().setZone(this.timeZone);
+        return d.toFormat("yyyy-MM-dd-HH");
     }
 
     async isWithinWorkingHours(checkTime = null) {
-        const now = checkTime ? moment(checkTime).tz(this.timeZone) : moment().tz(this.timeZone);
+        const now = checkTime
+            ? (checkTime instanceof DateTime ? checkTime : DateTime.fromJSDate(checkTime instanceof Date ? checkTime : new Date(checkTime))).setZone(this.timeZone)
+            : DateTime.now().setZone(this.timeZone);
 
         // Verificar feriados si respetar_feriados está habilitado (Nivel 1 - config global)
         const configCache = alertScheduleConfigService.configCache;
         if (configCache?.respetar_feriados) {
             const isHolidayToday = await this.isHoliday(now);
             if (isHolidayToday) {
-                console.log(`[NotificationCtrl] isWithinWorkingHours: Feriado ${now.format('YYYY-MM-DD')} — fuera de horario operacional`);
+                console.log(`[NotificationCtrl] isWithinWorkingHours: Feriado ${now.toFormat('yyyy-MM-dd')} — fuera de horario operacional`);
                 return false;
             }
         }
@@ -245,8 +249,8 @@ class NotificationController {
             return; // No continuar si no está listo
         }
 
-        const now = moment().tz(this.timeZone);
-        const prevHour = now.clone().subtract(1, 'hour');
+        const now = DateTime.now().setZone(this.timeZone);
+        const prevHour = now.minus({ hours: 1 });
         const prevHourKey = this.getHourKey(prevHour);
 
         console.log(`[NotificationCtrl][${executionId}] processHourlyAlerts: Iniciando procesamiento para la hora ${prevHourKey}`);
@@ -332,10 +336,10 @@ class NotificationController {
             await this.logToDatabase(`INFO: Iniciando análisis horario de temperatura (Fuera Horario Laboral o Feriado).`);
 
             // Calcular ventana de 110 minutos ANTES de la hora actual en punto
-            const endTime = now.clone().startOf('hour');
-            const startTime = endTime.clone().subtract(110, 'minutes');
-            const startTimeStr = startTime.format('YYYY-MM-DD HH:mm:ss');
-            const endTimeStr = endTime.format('YYYY-MM-DD HH:mm:ss');
+            const endTime = now.startOf("hour");
+            const startTime = endTime.minus({ minutes: 110 });
+            const startTimeStr = startTime.toFormat("yyyy-MM-dd HH:mm:ss");
+            const endTimeStr = endTime.toFormat("yyyy-MM-dd HH:mm:ss");
 
             try {
                 await this.logToDatabase(`INFO: Analizando ventana temperatura [${startTimeStr} - ${endTimeStr}]`);
@@ -367,7 +371,7 @@ class NotificationController {
                         await emailService.sendTemperatureRangeAlertsEmail(channelsInAlert, null, true); // Forzar envío
                         console.log(`[${executionId}] ✅  emailService.sendTemperatureRangeAlertsEmail() completado.`);
                     } catch (emailTempError) {
-                        console.error(`❌ [${executionId}] Error enviando Email de temperatura para hora ${endTime.format('HH:mm')}:`, emailTempError);
+                        console.error(`❌ [${executionId}] Error enviando Email de temperatura para hora ${endTime.toFormat('HH:mm')}:`, emailTempError);
                         await this.logError(`Fallo envío email temperatura: ${emailTempError.message}`);
                     }
 
@@ -383,11 +387,11 @@ class NotificationController {
                             console.log(`[${executionId}]    Notificaciones vinculadas a alertas: [${alertIds.join(', ')}]`);
                         }
                     } catch (pushTempError) {
-                        console.error(`❌ [${executionId}] Error enviando Push Notification de temperatura para hora ${endTime.format('HH:mm')}:`, pushTempError);
+                        console.error(`❌ [${executionId}] Error enviando Push Notification de temperatura para hora ${endTime.toFormat('HH:mm')}:`, pushTempError);
                         await this.logError(`Fallo envío Push temperatura: ${pushTempError.message}`);
                     }
                 } else {
-                    console.log(`[NotificationCtrl] processHourlyAlerts: No hay alertas de temperatura que enviar para la ventana finalizada a las ${endTime.format('HH:mm')}.`);
+                    console.log(`[NotificationCtrl] processHourlyAlerts: No hay alertas de temperatura que enviar para la ventana finalizada a las ${endTime.toFormat('HH:mm')}.`);
                 }
 
             } catch (analysisError) {
@@ -397,7 +401,7 @@ class NotificationController {
 
         } else {
             console.log(`[NotificationCtrl] processHourlyAlerts: Dentro de horario laboral. Omitiendo análisis y envío de alertas de temperatura.`);
-            await this.logToDatabase(`INFO: Análisis temp omitido para hora ${now.format('HH:mm')} (Dentro Horario Laboral).`);
+            await this.logToDatabase(`INFO: Análisis temp omitido para hora ${now.toFormat('HH:mm')} (Dentro Horario Laboral).`);
         }
         // --- FIN Procesamiento Temperaturas ---
 
@@ -420,7 +424,7 @@ class NotificationController {
         let connection;
         try {
             connection = await this.pool.getConnection(); // Usar pool de instancia
-            const nowTimestamp = moment().utc().format('YYYY-MM-DD HH:mm:ss');
+            const nowTimestamp = DateTime.utc().toFormat("yyyy-MM-dd HH:mm:ss");
 
             // Actualizar last_alert_sent
             if (disconnectionResults.channelsToUpdateLastSent.length > 0) {
@@ -487,8 +491,8 @@ class NotificationController {
                 const channelName = lastEvent.channelName;
                 const firstDisconnectEvent = events.find(e => e.event === 'disconnected');
                 const lastConnectEvent = events.slice().reverse().find(e => e.event === 'connected');
-                const firstDisconnectTs = firstDisconnectEvent ? moment(firstDisconnectEvent.timestamp).tz(this.timeZone) : null;
-                const lastReconnectTs = lastConnectEvent ? moment(lastConnectEvent.timestamp).tz(this.timeZone) : null;
+                const firstDisconnectTs = firstDisconnectEvent ? DateTime.fromISO(firstDisconnectEvent.timestamp).setZone(this.timeZone) : null;
+                const lastReconnectTs = lastConnectEvent ? DateTime.fromISO(lastConnectEvent.timestamp).setZone(this.timeZone) : null;
 
                 const [channelDbStateRows] = await connection.query(
                     "SELECT is_currently_out_of_range, out_of_range_since, last_alert_sent FROM channels_ubibot WHERE channel_id = ?",
@@ -499,21 +503,21 @@ class NotificationController {
                     continue;
                 }
                 const dbState = channelDbStateRows[0];
-                const dbOutOfRangeSince = dbState.out_of_range_since ? moment(dbState.out_of_range_since).tz(this.timeZone) : null;
-                const dbLastAlertSent = dbState.last_alert_sent ? moment(dbState.last_alert_sent).tz(this.timeZone) : null;
+                const dbOutOfRangeSince = dbState.out_of_range_since ? DateTime.fromJSDate(dbState.out_of_range_since).setZone(this.timeZone) : null;
+                const dbLastAlertSent = dbState.last_alert_sent ? DateTime.fromJSDate(dbState.last_alert_sent).setZone(this.timeZone) : null;
 
                 if (finalStatus === 'disconnected') {
-                    if (dbOutOfRangeSince && (!dbLastAlertSent || dbLastAlertSent.isBefore(dbOutOfRangeSince))) {
+                    if (dbOutOfRangeSince && (!dbLastAlertSent || dbLastAlertSent < dbOutOfRangeSince)) {
                         results.formattedAlerts.push({
                             name: channelName, channelId: channelId, finalStatus: 'DESCONECTADO',
-                            horaDesconexion: dbOutOfRangeSince ? dbOutOfRangeSince.format("DD/MM HH:mm:ss") : 'N/A',
+                            horaDesconexion: dbOutOfRangeSince ? dbOutOfRangeSince.toFormat("dd/MM HH:mm:ss") : 'N/A',
                             horaReconexion: 'N/A en periodo',
                         });
                         results.channelsToUpdateLastSent.push(channelId);
                     }
                 } else { // finalStatus === 'connected'
-                    const horaDesconexionParaCorreo = firstDisconnectTs ? firstDisconnectTs.format("DD/MM HH:mm:ss") : (dbOutOfRangeSince ? dbOutOfRangeSince.format("DD/MM HH:mm:ss") : 'N/A');
-                    const horaReconexionParaCorreo = lastReconnectTs ? lastReconnectTs.format("DD/MM HH:mm:ss") : 'N/A';
+                    const horaDesconexionParaCorreo = firstDisconnectTs ? firstDisconnectTs.toFormat("dd/MM HH:mm:ss") : (dbOutOfRangeSince ? dbOutOfRangeSince.toFormat("dd/MM HH:mm:ss") : 'N/A');
+                    const horaReconexionParaCorreo = lastReconnectTs ? lastReconnectTs.toFormat("dd/MM HH:mm:ss") : 'N/A';
                     results.formattedAlerts.push({
                         name: channelName, channelId: channelId, finalStatus: 'CONECTADO',
                         horaDesconexion: horaDesconexionParaCorreo, horaReconexion: horaReconexionParaCorreo,
@@ -563,7 +567,7 @@ class NotificationController {
                 for (const channel of currentlyDisconnected) {
                     // Agregar a results.formattedAlerts para que se envíe la notificación
                     const horaDesconexion = channel.last_reading
-                        ? moment(channel.last_reading).tz(this.timeZone).format("DD/MM HH:mm:ss")
+                        ? DateTime.fromJSDate(channel.last_reading).setZone(this.timeZone).toFormat("dd/MM HH:mm:ss")
                         : 'Sin lecturas';
 
                     results.formattedAlerts.push({
@@ -626,7 +630,7 @@ class NotificationController {
 
                     for (const alert of reconnectedAlerts) {
                         const channel = currentlyConnected.find(ch => ch.channel_id === alert.channel_id);
-                        const horaReconexion = moment(channel.last_reading).tz(this.timeZone).format("DD/MM HH:mm:ss");
+                        const horaReconexion = DateTime.fromJSDate(channel.last_reading).setZone(this.timeZone).toFormat("dd/MM HH:mm:ss");
 
                         // Agregar a results como CONECTADO
                         results.formattedAlerts.push({
@@ -634,7 +638,7 @@ class NotificationController {
                             channelId: alert.channel_id,
                             finalStatus: 'CONECTADO',
                             horaDesconexion: alert.alert_timestamp
-                                ? moment(alert.alert_timestamp).tz(this.timeZone).format("DD/MM HH:mm:ss")
+                                ? DateTime.fromJSDate(alert.alert_timestamp).setZone(this.timeZone).toFormat("dd/MM HH:mm:ss")
                                 : 'N/A',
                             horaReconexion: horaReconexion,
                             alertId: alert.alert_id
@@ -684,7 +688,7 @@ class NotificationController {
 
     /**
      * Verifica si una fecha específica es un feriado en Chile.
-     * @param {Date|string|moment.Moment|null} checkTime - Fecha a verificar, si es null se usa la fecha actual
+     * @param {Date|string|import('luxon').DateTime|null} checkTime - Fecha a verificar, si es null se usa la fecha actual
      * @returns {Promise<boolean>} - true si la fecha es un feriado, false en caso contrario
      */
     async isHoliday(checkTime = null) {
@@ -694,13 +698,13 @@ class NotificationController {
             return false; // Por defecto asumimos que no es feriado si no podemos verificar
         }
 
-        // Normalizar fecha a objeto moment en zona horaria correcta
+        // Normalizar fecha a DateTime en zona horaria correcta (America/Santiago)
         const dateToCheck = checkTime
-            ? moment(checkTime).tz(this.timeZone)
-            : moment().tz(this.timeZone);
+            ? (checkTime instanceof DateTime ? checkTime : DateTime.fromJSDate(checkTime instanceof Date ? checkTime : new Date(checkTime))).setZone(this.timeZone)
+            : DateTime.now().setZone(this.timeZone);
 
-        // Formatear la fecha en formato YYYY-MM-DD para consulta SQL
-        const formattedDate = dateToCheck.format('YYYY-MM-DD');
+        // Formatear la fecha en formato yyyy-MM-dd para consulta SQL
+        const formattedDate = dateToCheck.toFormat('yyyy-MM-dd');
 
         let connection;
         try {
@@ -746,19 +750,19 @@ class NotificationController {
     }
 
     cleanupOldHourlyAlerts() {
-        const now = moment().tz(this.timeZone);
+        const now = DateTime.now().setZone(this.timeZone);
         const cutoffHours = 48; // Mantener buffers de las últimas 48 horas (ajustable)
-        const cutoffTime = now.clone().subtract(cutoffHours, 'hours');
+        const cutoffTime = now.minus({ hours: cutoffHours });
         let cleanedKeys = 0;
 
-        console.log(`[NotificationCtrl] cleanupOldHourlyAlerts: Limpiando buffers de DESCONEXIÓN anteriores a ${cutoffTime.format()}`);
+        console.log(`[NotificationCtrl] cleanupOldHourlyAlerts: Limpiando buffers de DESCONEXIÓN anteriores a ${cutoffTime.toISO()}`);
 
         // ELIMINADO: Limpieza de temperatureAlertsByHour
 
         // Limpiar alertas de desconexión
         for (const hourKey in this.disconnectionAlertsByHour) {
-            const hourMoment = moment(hourKey, "YYYY-MM-DD-HH").tz(this.timeZone, true);
-            if (!hourMoment.isValid() || hourMoment.isBefore(cutoffTime)) {
+            const hourDt = DateTime.fromFormat(hourKey, "yyyy-MM-dd-HH", { zone: this.timeZone });
+            if (!hourDt.isValid || hourDt < cutoffTime) {
                 delete this.disconnectionAlertsByHour[hourKey];
                 cleanedKeys++;
             }
