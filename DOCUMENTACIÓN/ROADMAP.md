@@ -2,8 +2,8 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-26
-> **Versión**: 2.1.0
+> **Última actualización**: 2026-03-11
+> **Versión**: 2.2.0
 > **Propósito**: Planificación realista basada en GitHub Issues
 
 ---
@@ -81,9 +81,10 @@ Ver [CHANGELOG.md](./CHANGELOG.md) para detalles de estado de releases.
 ## FASE 0: Planificación y Fundamentos
 
 **Estado**: 🟡 EN PROGRESO
-**Completitud**: 0/7 sub-issues completados (0%)
+**Completitud**: 5/7 sub-issues completados (71%)
 **Milestone**: [FASE 0 - Planificación y Fundamentos](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/9)
 **Issue Principal**: #9
+**Pendientes**: #5 (Librería de fechas), #6 (Cleanup legacy)
 
 ### Objetivo de FASE 0
 
@@ -96,54 +97,30 @@ Establecer fundamentos sólidos ANTES del primer release (v0.1.0):
 
 ### Sub-Issues de FASE 0
 
-| # | Issue | Estado | Prioridad | Blocker |
-|---|-------|--------|-----------|---------|
-| #1 | Creación de base de datos desde cero | 🔴 OPEN | S (Máxima) | **BLOCKER** para #3 |
-| #2 | Documentación inicial | 🟡 EN PROGRESO | S (Máxima) | - |
-| #3 | Tabla de configuración centralizada | 🔴 OPEN | S (Máxima) | Depende de #1 |
-| #4 | Análisis y definición de alcance completo | 🔴 OPEN | M (Alta) | - |
-| #5 | Configuración de entorno de desarrollo | 🔴 OPEN | M (Alta) | - |
-| #6 | Revisión de arquitectura actual | 🔴 OPEN | L (Media) | - |
-| #8 | Establecer roadmap y prioridades | 🔴 OPEN | M (Alta) | - |
+| # | Issue | Estado | Prioridad |
+|---|-------|--------|-----------|
+| #1 | [SQL] Creación de la base de datos desde cero | ✅ CLOSED | S (Máxima) |
+| #2 | Documentación inicial | ✅ CLOSED | S (Máxima) |
+| #3 | [SQL] Creación de tabla de configuración | ✅ CLOSED | S (Máxima) |
+| #4 | [REFACTOR] Estandarización de Nomenclatura del Proyecto Completo | ✅ CLOSED | M (Alta) |
+| #5 | [REFACTOR] Estandarizar Librería de Fechas en Todo el Proyecto | 🟡 OPEN | M (Alta) |
+| #6 | [REFACTOR] Cleanup de Código Legacy y Archivos Obsoletos | 🟡 OPEN | L (Media) |
+| #8 | [SQL][REFACTOR] Gestión de Secretos y Migración a Base de Datos | ✅ CLOSED | M (Alta) — obsoleto, absorbido por #3 |
 
-### Orden de Implementación Recomendado
+### Orden de Implementación (realizado y pendiente)
 
-**Secuencia óptima basada en dependencias**:
+**Completados** (5/7):
 
-1. **Issue #1** (BLOCKER) - Creación de BD desde cero
-   - **Por qué primero**: Issue #3 depende de esto
-   - **Impacto**: Formaliza estructura y convenciones de BD
-   - **Owner**: andresTNS
+1. **Issue #1** — Creación de BD desde cero (convenciones, tablas, índices, SPs, eventos). Blocker histórico de #3.
+2. **Issue #2** — Documentación inicial (README, Base_de_Datos, Apis_externas, Info_Github, Decisiones_Tecnicas, Endpoints_API, Recursos_Tecnicos, Troubleshooting, CHANGELOG, ROADMAP).
+3. **Issue #3** — Tabla de configuración centralizada (`gen_cofiguracion_*`). Estructura en BD lista; migración del config-loader en curso según contexto del issue.
+4. **Issue #4** — Estandarización de nomenclatura (camelCase + sufijos en backend/frontend). Documentación en `Estandares_Nomenclatura.md` y `Estandares_Nomenclatura_SQL.md`.
+5. **Issue #8** — Gestión de secretos en BD. Cerrado como obsoleto; alcance absorbido por la arquitectura de configuración del Issue #3.
 
-2. **Issue #2** (EN PROGRESO) - Documentación inicial
-   - **Estado actual**: 90% completado (8/9 archivos)
-   - **Pendiente**: ROADMAP.md reformateo (este archivo)
-   - **Owner**: Claude Code + andresTNS
+**Pendientes** (2/7):
 
-3. **Issue #3** - Tabla de configuración
-   - **Depende de**: #1 (estructura BD formalizada)
-   - **Impacto**: Elimina JSONs legacy, centraliza config
-   - **Owner**: andresTNS
-
-4. **Issue #4** - Análisis y definición de alcance
-   - **Por qué después de doc**: Requiere contexto completo
-   - **Impacto**: Define límites claros del demo
-   - **Owner**: TNSTRACK + felipecleverox (POs)
-
-5. **Issue #5** - Configuración de entorno dev
-   - **Por qué después de #1 y #3**: Requiere BD y config finales
-   - **Impacto**: Onboarding de nuevos developers
-   - **Owner**: andresTNS
-
-6. **Issue #6** - Revisión de arquitectura
-   - **Por qué después de todo**: Requiere contexto completo
-   - **Impacto**: Valida decisiones técnicas actuales
-   - **Owner**: andresTNS
-
-7. **Issue #8** - Roadmap y prioridades
-   - **Por qué al final**: Requiere alcance definido (#4)
-   - **Impacto**: Define trabajo post-FASE 0
-   - **Owner**: andresTNS + POs
+6. **Issue #5** — Estandarizar librería de fechas en todo el proyecto (Luxon como estándar; eliminar moment, dayjs, date-fns donde aplique).
+7. **Issue #6** — Cleanup de código legacy (carpeta `/specs` y archivos obsoletos ya eliminados; pendiente limpieza de comentarios y código comentado en el código).
 
 ### Criterios de Aceptación para Completar FASE 0
 
@@ -151,11 +128,11 @@ Establecer fundamentos sólidos ANTES del primer release (v0.1.0):
 
 - ✅ Base de datos creada con convenciones formalizadas (Issue #1)
 - ✅ Documentación completa actualizada y aprobada (Issue #2)
-- ✅ Configuración 100% migrada a BD, JSONs eliminados (Issue #3)
-- ✅ Alcance del demo claramente definido y documentado (Issue #4)
-- ✅ Entorno de desarrollo documentado y reproducible (Issue #5)
-- ✅ Arquitectura revisada y decisiones validadas (Issue #6)
-- ✅ Roadmap post-FASE 0 definido con prioridades (Issue #8)
+- ✅ Configuración migrada a BD; estructura y tablas en uso (Issue #3)
+- ✅ Nomenclatura estandarizada en el proyecto (Issue #4)
+- ⏳ Una sola librería de fechas en todo el proyecto — Luxon (Issue #5)
+- ⏳ Código legacy y comentarios obsoletos eliminados (Issue #6)
+- ✅ Gestión de secretos/credenciales alineada con BD (Issue #8, absorbido por #3)
 
 ### Métricas de Éxito FASE 0
 
@@ -167,20 +144,13 @@ Establecer fundamentos sólidos ANTES del primer release (v0.1.0):
 
 ### Progreso Actual FASE 0
 
-**Completitud Global**: 0/7 issues cerrados
+**Completitud Global**: 5/7 issues cerrados (71%)
 
-**Issue #2 (Documentación) - 90% completado**:
-- ✅ Decisiones_Tecnicas.md
-- ✅ Recursos_Tecnicos.md
-- ✅ Troubleshooting.md
-- ✅ Base_de_Datos.md
-- ✅ Apis_externas.md
-- ✅ Endpoints_API.md
-- ✅ README.md
-- ✅ CHANGELOG.md
-- 🔄 ROADMAP.md (este archivo - en progreso)
+**Issues cerrados**: #1 (BD desde cero), #2 (Documentación inicial), #3 (Tabla de configuración), #4 (Estandarización de nomenclatura), #8 (Gestión de secretos — absorbido por #3).
 
-**Issues restantes**: 6 de 7 (86% del trabajo de FASE 0)
+**Issues abiertos**: #5 (Librería de fechas — Luxon), #6 (Cleanup código legacy).
+
+La documentación en `DOCUMENTACIÓN/` se mantiene al día con el estado de los issues; este ROADMAP refleja el estado actual en GitHub (2026-03-11).
 
 ---
 
@@ -209,10 +179,10 @@ Establecer fundamentos sólidos ANTES del primer release (v0.1.0):
 **Único milestone activo**:
 - **FASE 0 - Planificación y Fundamentos** (Issue #9)
   - Estado: 🟡 EN PROGRESO
-  - Completitud: 0/7 sub-issues (0%)
-  - Blocker: Issue #1
+  - Completitud: 5/7 sub-issues (71%)
+  - Pendientes: #5 (fechas), #6 (cleanup legacy)
 
-**Milestones futuros**: Se definirán en Issue #8 al completar FASE 0
+**Milestones futuros**: Se definirán al cerrar FASE 0 (Issue #9).
 
 ---
 
@@ -268,9 +238,9 @@ Para proponer cambios al roadmap:
 2. Discutir con andresTNS (Jefe de Desarrolladores)
 3. Validar con Product Owners (TNSTRACK, felipecleverox) si aplica
 
-**Nota**: Durante FASE 0, el foco está en completar fundamentos. Features nuevos se evaluarán después de Issue #8.
+**Nota**: Durante FASE 0, el foco está en completar los dos issues pendientes (#5, #6). Los features nuevos se evaluarán al cerrar FASE 0.
 
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-26
+**Última revisión**: 2026-03-11
