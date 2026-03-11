@@ -1,20 +1,16 @@
 /* controllers/gpsController.js */
-const moment = require('moment');
-const { pool } = require("../services/database_Service.js");
+const { DateTime } = require("luxon");
+const databaseService = require("../services/database_Service.js");
 
 class gpsController {
   async getHistoricalGpsData(req, res) {
     const { device_id, date, startHour, endHour } = req.query;
 
-    // Construct the datetime range
-    const startDateTime = moment(
-      `${date} ${startHour}:00`,
-      "YYYY-MM-DD HH:mm:ss"
-    ).unix();
-    const endDateTime = moment(
-      `${date} ${endHour}:59`,
-      "YYYY-MM-DD HH:mm:ss"
-    ).unix();
+    // Construct the datetime range (America/Santiago per Decisiones_Tecnicas §6)
+    const startDt = DateTime.fromFormat(`${date} ${startHour}:00`, "yyyy-MM-dd HH:mm:ss", { zone: "America/Santiago" });
+    const endDt = DateTime.fromFormat(`${date} ${endHour}:59`, "yyyy-MM-dd HH:mm:ss", { zone: "America/Santiago" });
+    const startDateTime = startDt.toUnixInteger();
+    const endDateTime = endDt.toUnixInteger();
 
     console.log(
       `Received request with device_id: ${device_id}, date: ${date}, startHour: ${startHour}, endHour: ${endHour}`
@@ -30,7 +26,7 @@ class gpsController {
       WHERE device_name = ? AND timestamp BETWEEN ? AND ?
       ORDER BY timestamp ASC
     `;
-      const [results] = await pool.query(query, [
+      const [results] = await databaseService.pool.query(query, [
         device_id,
         startDateTime,
         endDateTime,
@@ -65,7 +61,7 @@ class gpsController {
       console.log("Received ident:", ident);
 
       // Query to get the last known position of the device
-      const [lastKnownPosition] = await pool.query(
+      const [lastKnownPosition] = await databaseService.pool.query(
         `
       SELECT ident, latitude, longitude, timestamp * 1000 AS unixTimestamp
       FROM gps_data
@@ -86,7 +82,7 @@ class gpsController {
       console.log("Last known position:", lastKnownPosition);
 
       /* Query to get the last coordinate change of the device
-    const [lastCoordinateChange] = await pool.query(`
+    const [lastCoordinateChange] = await databaseService.pool.query(`
       SELECT timestamp * 1000 AS changeTimestamp
       FROM gps_data
       WHERE (latitude != ? OR longitude != ?) AND ident = ?
@@ -142,7 +138,7 @@ class gpsController {
       ORDER BY timestamp DESC
       LIMIT 1
     `;
-      const [results] = await pool.query(query, [
+      const [results] = await databaseService.pool.query(query, [
         device_name,
         startTime,
         endTime,
@@ -174,7 +170,7 @@ class gpsController {
     const params = [parseInt(startDate), parseInt(endDate), device_name];
 
     try {
-      const [results] = await pool.query(query, params);
+      const [results] = await databaseService.pool.query(query, params);
 
       // Agregar logs para verificar los resultados de la consulta
       if (results.length === 0) {
@@ -198,7 +194,7 @@ class gpsController {
 
     try {
       // Query to get the previous valid position
-      const [previousValidPosition] = await pool.query(
+      const [previousValidPosition] = await databaseService.pool.query(
         `
       SELECT ident, latitude, longitude, timestamp * 1000 AS unixTimestamp
       FROM gps_data

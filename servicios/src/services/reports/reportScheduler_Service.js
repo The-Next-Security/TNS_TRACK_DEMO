@@ -17,7 +17,7 @@ const mysql = require('mysql2/promise');
 const configLoader = require('../../config/js_files/configLoader_Config');
 const reportGenerationService = require('./reportGeneration_Service');
 const emailService = require('../email/email_Service');
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
 
 // Pool creado en init() tras configLoader.initialize()
 let pool = null;
@@ -299,7 +299,7 @@ async function executeScheduledReport(id, options) {
     // Actualizar estado en BD
     await updateEjecucion(id, { ultima_ejecucion: ahora, estado: 'exitoso', proxima_ejecucion });
 
-    console.log(`[Scheduler] Reporte #${id} generado exitosamente. Próxima ejecución: ${proxima_ejecucion ? moment(proxima_ejecucion).format('YYYY-MM-DD HH:mm') : 'N/A'}`);
+    console.log(`[Scheduler] Reporte #${id} generado exitosamente. Próxima ejecución: ${proxima_ejecucion ? DateTime.fromJSDate(proxima_ejecucion).setZone(TIMEZONE).toFormat('yyyy-MM-dd HH:mm') : 'N/A'}`);
 
     return result;
   } catch (error) {

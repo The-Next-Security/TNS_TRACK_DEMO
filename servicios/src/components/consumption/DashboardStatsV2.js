@@ -1,7 +1,6 @@
 // src/components/consumption/DashboardStatsV2.js - Migrated to Tailwind CSS + Shadcn Card
 import React from "react";
-import moment from "moment-timezone";
-import "moment/locale/es";
+import { DateTime } from "luxon";
 import {
   formatCurrency,
   formatEnergy,
@@ -10,9 +9,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { cn } from "../../lib/utils";
 
-// Configuración inicial de moment
-moment.tz.setDefault("America/Santiago");
-moment.locale("es");
+const TZ = "America/Santiago";
 
 const DashboardStatsV2 = ({
   data,
@@ -176,27 +173,23 @@ const DashboardStatsV2 = ({
   const isHistoricalData = () => {
     if (!data || data.length === 0) return false;
 
-    const today = moment();
+    const today = DateTime.now().setZone(TZ);
     const firstRecord = data[0];
 
-    // Determinar fecha de referencia según el tipo de período
     let dataDate;
     if (period === "daily") {
-      dataDate = moment(firstRecord.periodo).startOf("day");
-      return dataDate.isBefore(today.startOf("day"));
+      dataDate = DateTime.fromISO(firstRecord.periodo).setZone(TZ).startOf("day");
+      return dataDate < today.startOf("day");
     } else if (period === "monthly") {
-      dataDate = moment(firstRecord.periodo).startOf("month");
-      return (
-        dataDate.month() !== today.month() || dataDate.year() !== today.year()
-      );
+      dataDate = DateTime.fromISO(firstRecord.periodo).setZone(TZ).startOf("month");
+      return dataDate.month !== today.month || dataDate.year !== today.year;
     } else if (period === "yearly") {
-      // Para yearly, usar el campo año/anio si está disponible
       if (firstRecord.anio || firstRecord.año) {
         const dataYear = firstRecord.anio || firstRecord.año;
-        return dataYear !== today.year();
+        return dataYear !== today.year;
       }
-      dataDate = moment(firstRecord.periodo).startOf("year");
-      return dataDate.year() !== today.year();
+      dataDate = DateTime.fromISO(firstRecord.periodo).setZone(TZ).startOf("year");
+      return dataDate.year !== today.year;
     }
 
     return false;
@@ -215,42 +208,38 @@ const DashboardStatsV2 = ({
       const latestRecord = [...data].sort((a, b) => {
         const dateA = a.metadata?.fecha_actualizacion || a.fecha_actualizacion;
         const dateB = b.metadata?.fecha_actualizacion || b.fecha_actualizacion;
-        return moment(dateB).valueOf() - moment(dateA).valueOf();
+        return DateTime.fromISO(dateB).toMillis() - DateTime.fromISO(dateA).toMillis();
       })[0];
 
       if (isHistorical) {
-        // Para datos históricos, mostrar el período
+        const dt0 = DateTime.fromISO(data[0].periodo).setZone(TZ).setLocale("es");
         switch (period) {
           case "daily":
-            displayDate = moment(data[0].periodo).format(
-              "DD [de] MMMM [de] YYYY"
-            );
+            displayDate = dt0.toFormat("dd 'de' MMMM 'de' yyyy");
             break;
           case "monthly":
-            displayDate = moment(data[0].periodo).format("MMMM [de] YYYY");
+            displayDate = dt0.toFormat("MMMM 'de' yyyy");
             break;
           case "yearly":
             if (data[0].anio || data[0].año) {
-              const year = data[0].anio || data[0].año;
-              displayDate = `Año ${year}`;
+              displayDate = `Año ${data[0].anio || data[0].año}`;
             } else {
-              displayDate = moment(data[0].periodo).format("YYYY");
+              displayDate = dt0.toFormat("yyyy");
             }
             break;
           default:
             displayDate = "Período cerrado";
         }
       } else {
-        // Para datos actuales, mostrar la última actualización
         const updateDate =
           latestRecord?.metadata?.fecha_actualizacion ||
           latestRecord?.fecha_actualizacion;
         displayDate = updateDate
-          ? moment(updateDate).format("DD/MM/YYYY HH:mm")
-          : moment().format("DD/MM/YYYY HH:mm");
+          ? DateTime.fromISO(updateDate).setZone(TZ).toFormat("dd/MM/yyyy HH:mm")
+          : DateTime.now().setZone(TZ).toFormat("dd/MM/yyyy HH:mm");
       }
     } else {
-      displayDate = moment().format("DD/MM/YYYY HH:mm");
+      displayDate = DateTime.now().setZone(TZ).toFormat("dd/MM/yyyy HH:mm");
     }
 
     return { dateTitle, displayDate };

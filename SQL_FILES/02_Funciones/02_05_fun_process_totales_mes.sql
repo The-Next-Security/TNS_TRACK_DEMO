@@ -102,9 +102,10 @@ BEGIN
         precio_kwh_promedio,
         costo_total,
         dias_con_datos,
-        horas_con_datos
+        horas_con_datos,
+        calidad_datos
     )
-    SELECT 
+    SELECT
         m.shelly_id,
         p_año,
         p_mes,
@@ -115,7 +116,10 @@ BEGIN
         IFNULL(v_total_costo / v_total_energia_activa, 0) as precio_kwh_promedio,
         v_total_costo as costo_total,
         COUNT(DISTINCT DATE(m.timestamp_local)) as dias_con_datos,
-        COUNT(DISTINCT HOUR(m.timestamp_local)) as horas_con_datos
+        COUNT(DISTINCT HOUR(m.timestamp_local)) as horas_con_datos,
+        -- Calidad: (lecturas reales / lecturas esperadas en el mes) * 100
+        -- Esperadas = días_del_mes * (86400 / intervalo_segundos)
+        (COUNT(*) * 100.0 / ((DATEDIFF(v_ultimo_dia_mes, v_primer_dia_mes) + 1) * (86400 / v_intervalo_segundos))) as calidad_datos
     FROM sem_mediciones m
     WHERE m.timestamp_local >= v_primer_dia_mes
     AND m.timestamp_local <= v_ultimo_dia_mes
@@ -131,6 +135,7 @@ BEGIN
         costo_total = VALUES(costo_total),
         dias_con_datos = VALUES(dias_con_datos),
         horas_con_datos = VALUES(horas_con_datos),
+        calidad_datos = VALUES(calidad_datos),
         fecha_actualizacion = CURRENT_TIMESTAMP;
 
     -- Registrar en log si hubo cambios

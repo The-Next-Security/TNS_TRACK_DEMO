@@ -33,11 +33,11 @@ ChartJS.register(
   Filler,
   annotationPlugin
 );
-import "chartjs-adapter-date-fns";
-import { es } from "date-fns/locale";
+import "chartjs-adapter-luxon";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import moment from "moment-timezone";
+import { es } from "date-fns/locale";
+import { DateTime } from "luxon";
 import { motion } from "framer-motion";
 import {
   Calendar,
@@ -62,8 +62,6 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import HeaderV2 from "./Header_View";
 import { cn } from "@/lib/utils";
 
-// Configurar moment para usar la zona horaria de Santiago
-moment.tz.setDefault("America/Santiago");
 registerLocale("es", es);
 
 const LINE_COLOR = "rgba(75,192,192,1)";
@@ -79,7 +77,7 @@ const TemperaturaCamarasV2 = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [error, setError] = useState(null);
-  const today = useRef(moment().tz("America/Santiago").endOf("day").toDate());
+  const today = useRef(DateTime.now().setZone("America/Santiago").endOf("day").toJSDate());
 
   useEffect(() => {
     fetchTemperatureData(selectedDate);
@@ -93,7 +91,7 @@ const TemperaturaCamarasV2 = () => {
    */
   const fetchTemperatureData = async (date) => {
     try {
-      const formattedDate = moment(date).format("YYYY-MM-DD");
+      const formattedDate = DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
       console.log("Fetching data for date:", formattedDate);
       const response = await axios.get("/api/ubibot/temperature-camaras-data", {
         params: { date: formattedDate },
@@ -105,7 +103,7 @@ const TemperaturaCamarasV2 = () => {
         ...device,
         data: device.data.map((item) => ({
           ...item,
-          timestamp: moment(item.timestamp).toDate(),
+          timestamp: (typeof item.timestamp === 'number' ? DateTime.fromMillis(item.timestamp) : DateTime.fromISO(item.timestamp)).toJSDate(),
         })),
       }));
 
@@ -125,7 +123,7 @@ const TemperaturaCamarasV2 = () => {
    * @param {Date} date - Nueva fecha seleccionada
    */
   const handleDateChange = (date) => {
-    if (moment(date).isSameOrBefore(moment(), "day")) {
+    if (DateTime.fromJSDate(date).startOf("day") <= DateTime.now().startOf("day")) {
       setSelectedDate(date);
       setLoading(true);
     } else {
@@ -143,8 +141,9 @@ const TemperaturaCamarasV2 = () => {
     const headers = "Device Name,Fecha,Hora,External Temperature\n";
     const rows = deviceData.data
       .map((item) => {
-        const fecha = moment(item.timestamp).format("DD-MM-YY");
-        const hora = moment(item.timestamp).format("HH:mm");
+        const dt = typeof item.timestamp === 'number' ? DateTime.fromMillis(item.timestamp) : DateTime.fromISO(item.timestamp);
+        const fecha = dt.setZone("America/Santiago").toFormat("dd-MM-yy");
+        const hora = dt.setZone("America/Santiago").toFormat("HH:mm");
         const temperature = item.external_temperature
           .toString()
           .replace(".", ",");
@@ -210,7 +209,7 @@ const TemperaturaCamarasV2 = () => {
           },
           adapters: {
             date: {
-              locale: es,
+              locale: 'es',
             },
           },
           title: {
@@ -295,9 +294,9 @@ const TemperaturaCamarasV2 = () => {
           displayColors: false,
           callbacks: {
             title: function (tooltipItems) {
-              return moment(tooltipItems[0].parsed.x).format(
-                "DD/MM/YYYY HH:mm:ss"
-              );
+              const x = tooltipItems[0].parsed.x;
+              const dt = typeof x === 'number' ? DateTime.fromMillis(x) : DateTime.fromJSDate(x);
+              return dt.setZone("America/Santiago").toFormat("dd/MM/yyyy HH:mm:ss");
             },
             label: function (context) {
               let label = context.dataset.label || "";
@@ -395,15 +394,15 @@ const TemperaturaCamarasV2 = () => {
 
         if (i < temperatureData.length - 1) {
           const nextPoint = temperatureData[i + 1];
-          const currentTime = moment(currentPoint.timestamp);
-          const nextTime = moment(nextPoint.timestamp);
-          durationMinutes = nextTime.diff(currentTime, "minutes", true);
+          const currentTime = typeof currentPoint.timestamp === 'number' ? DateTime.fromMillis(currentPoint.timestamp) : DateTime.fromISO(currentPoint.timestamp);
+          const nextTime = typeof nextPoint.timestamp === 'number' ? DateTime.fromMillis(nextPoint.timestamp) : DateTime.fromISO(nextPoint.timestamp);
+          durationMinutes = nextTime.diff(currentTime, "minutes").minutes;
         } else {
-          const currentTime = moment(currentPoint.timestamp);
+          const currentTime = typeof currentPoint.timestamp === 'number' ? DateTime.fromMillis(currentPoint.timestamp) : DateTime.fromISO(currentPoint.timestamp);
           const endTime = isCurrentDay()
-            ? moment()
-            : moment(selectedDate).endOf("day");
-          durationMinutes = endTime.diff(currentTime, "minutes", true);
+            ? DateTime.now()
+            : DateTime.fromJSDate(selectedDate).endOf("day");
+          durationMinutes = endTime.diff(currentTime, "minutes").minutes;
         }
 
         totalMinutesAboveZero += Math.max(0, durationMinutes);
@@ -425,7 +424,7 @@ const TemperaturaCamarasV2 = () => {
    * @returns {boolean} True si es el día actual
    */
   const isCurrentDay = () => {
-    return moment(selectedDate).isSame(moment(), "day");
+    return DateTime.fromJSDate(selectedDate).hasSame(DateTime.now(), "day");
   };
 
   /**
@@ -872,7 +871,7 @@ const TemperaturaCamarasV2 = () => {
                             </Tooltip>
                           <div className="flex items-center gap-1 text-xs text-gray-500">
                             <Clock className="h-3 w-3" />
-                            {moment(deviceData.data[deviceData.data.length - 1].timestamp).format("HH:mm")}
+                            {(() => { const t = deviceData.data[deviceData.data.length - 1]?.timestamp; return t ? (typeof t === 'number' ? DateTime.fromMillis(t) : DateTime.fromISO(t)).setZone("America/Santiago").toFormat("HH:mm") : '--'; })()}
                           </div>
                         </div>
                       </div>
