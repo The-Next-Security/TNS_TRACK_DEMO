@@ -2,8 +2,8 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-26
-> **Versión**: 2.0.0
+> **Última actualización**: 2026-03-11
+> **Versión**: 2.1.0
 
 ---
 
@@ -244,9 +244,7 @@ _(Detalles de endpoints de consumo a completar según consumoCategoriaRoutes.js)
 
 ### Base Path: `/TNS_Cool_Track/api/alerts`
 
-Sistema de gestión de alertas v4.0.0 (temperatura, humedad, conectividad).
-
-**Documentación Completa**: Ver `/servicios/src/components/alerts/README.md`
+Sistema de gestión de alertas (temperatura, humedad, conectividad). Canales: email (SendGrid) y push (Web Push). Ver [Decisiones_Tecnicas.md](Decisiones_Tecnicas.md) (sección Notificaciones) y rutas/controladores en `alertTrackingRoutes.js`, `alertScheduleRoutes.js`.
 
 _(Detalles de endpoints de alertas a completar según alertTrackingRoutes.js y alertScheduleRoutes.js)_
 
@@ -267,8 +265,6 @@ _(Detalles de endpoints de presets a completar según presetsRoutes.js)_
 Sistema de generación de reportes PDF con templates ejecutivos.
 
 **Feature**: 004 - Generación de Reportes
-
-**Documentación UX**: Ver `/servicios/src/components/reports/UX_TESTING_GUIDE.md`
 
 _(Detalles de endpoints de reportes a completar según reportsRoutes.js)_
 
@@ -448,6 +444,6 @@ El sistema está **migrando de archivos JSON a base de datos**:
 ## 📖 Referencias
 
 - **Autenticación**: Ver `authRoutes.js` para detalles de implementación
-- **Alertas**: Ver `/servicios/src/components/alerts/README.md`
-- **Reportes**: Ver `/servicios/src/components/reports/UX_TESTING_GUIDE.md`
+- **Alertas**: Ver [Decisiones_Tecnicas.md](Decisiones_Tecnicas.md) (Notificaciones) y `alertTrackingRoutes.js`, `alertScheduleRoutes.js`
+- **Reportes**: Ver rutas y controladores de reportes en `servicios/src`
 - **Base de Datos**: Ver [Base_de_Datos.md](./Base_de_Datos.md)
