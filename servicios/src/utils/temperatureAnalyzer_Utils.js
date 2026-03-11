@@ -1,5 +1,5 @@
 const PDFDocument = require("pdfkit");
-const moment = require("moment");
+const { DateTime } = require("luxon");
 const QuickChart = require("quickchart-js");
 const fetch = require("node-fetch");
 
@@ -41,11 +41,11 @@ class TemperatureAnalyzer {
 
     // Convertir los datos y almacenarlos en la instancia
     this.records.current = currentData.map((record) => ({
-      datetime: moment(record.timestamp),
+      datetime: DateTime.fromISO(String(record.timestamp)),
       temperature: parseFloat(record.temperature),
     }));
     this.records.previous = previousData.map((record) => ({
-      datetime: moment(record.timestamp),
+      datetime: DateTime.fromISO(String(record.timestamp)),
       temperature: parseFloat(record.temperature),
     }));
     // Calculate the stats for each period
@@ -72,7 +72,7 @@ class TemperatureAnalyzer {
   calculateHourlyPatterns(period) {
     this.hourlyAverages[period].clear();
     this.records[period].forEach((record) => {
-      const hour = record.datetime.hour();
+      const hour = record.datetime.hour;
       if (!this.hourlyAverages[period].has(hour)) {
         this.hourlyAverages[period].set(hour, {
           sum: 0,
@@ -181,9 +181,9 @@ class TemperatureAnalyzer {
         doc
           .fontSize(16)
           .text(
-            `Valores Detallados por Hora Período Actual- ${moment(
-              dataDate
-            ).format("DD-MM-YYYY")}`,
+            `Valores Detallados por Hora Período Actual- ${DateTime.fromISO(
+              String(dataDate)
+            ).toFormat("dd-MM-yyyy")}`,
             {
               underline: true,
               align: "center",
@@ -209,9 +209,9 @@ class TemperatureAnalyzer {
         doc
           .fontSize(16)
           .text(
-            `Valores Detallados por Hora Período Anterior- ${moment(dataDate)
-              .subtract(7, "days")
-              .format("DD-MM-YYYY")}`,
+            `Valores Detallados por Hora Período Anterior- ${DateTime.fromISO(String(dataDate))
+              .minus({ days: 7 })
+              .toFormat("dd-MM-yyyy")}`,
             {
               underline: true,
               align: "left",
@@ -222,7 +222,7 @@ class TemperatureAnalyzer {
 
         const chartBufferPrevious = await this.generateTemperatureChart(
           "previous",
-          moment(dataDate).subtract(7, "days")
+          DateTime.fromISO(String(dataDate)).minus({ days: 7 })
         );
         if (chartBufferPrevious) {
           doc.image(chartBufferPrevious, 50, doc.y, {
@@ -235,7 +235,7 @@ class TemperatureAnalyzer {
         await this.addDetailedValuesTable(
           doc,
           "previous",
-          moment(dataDate).subtract(7, "days")
+          DateTime.fromISO(String(dataDate)).minus({ days: 7 })
         );
 
         doc.end();
@@ -268,14 +268,14 @@ class TemperatureAnalyzer {
       .text(`Cámara: ${cameraName}`, { align: "center" })
       .fontSize(12)
       .text(
-        `Fecha de los Datos Analizados: ${moment(dataDate).format(
-          "DD-MM-YYYY"
+        `Fecha de los Datos Analizados: ${DateTime.fromISO(String(dataDate)).toFormat(
+          "dd-MM-yyyy"
         )}`,
         { align: "center" }
       )
       .moveDown(0.5)
       .text("Analiza Domingos - Puertas Cerradas*", { align: "center" })
-      .text(`Fecha de Análisis: ${moment().format("DD-MM-YYYY HH:mm")}`, {
+      .text(`Fecha de Análisis: ${DateTime.now().toFormat("dd-MM-yyyy HH:mm")}`, {
         align: "center",
       })
       .moveDown(2);
@@ -314,13 +314,13 @@ class TemperatureAnalyzer {
       columns: [
         { header: "Descripción Indicadores", width: 200 },
         {
-          header: `${moment(dataDate).format("DD-MM-YYYY")}\nPeriodo Actual`,
+          header: `${DateTime.fromISO(String(dataDate)).toFormat("dd-MM-yyyy")}\nPeriodo Actual`,
           width: 120,
         }, // Agregamos "Periodo Actual"
         {
-          header: `${moment(dataDate)
-            .subtract(7, "days")
-            .format("DD-MM-YYYY")}\nPeriodo Anterior`,
+          header: `${DateTime.fromISO(String(dataDate))
+            .minus({ days: 7 })
+            .toFormat("dd-MM-yyyy")}\nPeriodo Anterior`,
           width: 120,
         },
       ],
