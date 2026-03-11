@@ -2,7 +2,7 @@ const openaiService = require('../services/openai_Service');
 const aiDataService = require('../services/aiData_Service');
 const costTracker = require('../services/aiCostTracker_Service');
 const databaseService = require('../services/database_Service');
-const moment = require('moment');
+const { DateTime } = require('../utils/date_Utils');
 
 class AIAnalysisController {
   /**
@@ -28,8 +28,8 @@ class AIAnalysisController {
       let finalDateRange = dateRange;
       if (!finalDateRange) {
         finalDateRange = {
-          start: moment().subtract(7, 'days').format('YYYY-MM-DD'),
-          end: moment().format('YYYY-MM-DD')
+          start: DateTime.now().minus({ days: 7 }).toFormat('yyyy-MM-dd'),
+          end: DateTime.now().toFormat('yyyy-MM-dd')
         };
       }
 
@@ -270,24 +270,24 @@ class AIAnalysisController {
           text: "¿Qué cámaras tuvieron brechas de temperatura en los últimos 7 días?",
           chambers: defaultChambers,
           dateRange: {
-            start: moment().subtract(7, 'days').format('YYYY-MM-DD'),
-            end: moment().format('YYYY-MM-DD')
+            start: DateTime.now().minus({ days: 7 }).toFormat('yyyy-MM-dd'),
+            end: DateTime.now().toFormat('yyyy-MM-dd')
           }
         },
         {
           text: "Compara la estabilidad de temperatura entre cámaras este mes",
           chambers: defaultChambers,
           dateRange: {
-            start: moment().startOf('month').format('YYYY-MM-DD'),
-            end: moment().format('YYYY-MM-DD')
+            start: DateTime.now().startOf('month').toFormat('yyyy-MM-dd'),
+            end: DateTime.now().toFormat('yyyy-MM-dd')
           }
         },
         {
           text: "Muestra el patrón de temperatura de las cámaras durante el último evento de frío",
           chambers: defaultChambers.slice(0, 1), // Solo primera cámara para análisis de patrón
           dateRange: {
-            start: moment().subtract(7, 'days').format('YYYY-MM-DD'),
-            end: moment().format('YYYY-MM-DD')
+            start: DateTime.now().minus({ days: 7 }).toFormat('yyyy-MM-dd'),
+            end: DateTime.now().toFormat('yyyy-MM-dd')
           }
         }
       ];
