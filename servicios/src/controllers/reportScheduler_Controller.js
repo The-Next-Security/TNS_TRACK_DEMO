@@ -7,7 +7,7 @@
  */
 
 const reportSchedulerService = require('../services/reports/reportScheduler_Service');
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
 
 /**
  * POST /api/reports/scheduled - Crear un nuevo schedule
@@ -161,11 +161,11 @@ async function listSchedules(req, res) {
       active: schedule.active,
       nextExecution: schedule.nextExecution,
       nextExecutionFormatted: schedule.nextExecution
-        ? moment(schedule.nextExecution).tz('America/Santiago').format('DD/MM/YYYY HH:mm')
+        ? DateTime.fromJSDate(schedule.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
         : null,
       lastExecution: schedule.lastExecution,
       lastExecutionFormatted: schedule.lastExecution
-        ? moment(schedule.lastExecution).tz('America/Santiago').format('DD/MM/YYYY HH:mm')
+        ? DateTime.fromJSDate(schedule.lastExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
         : null,
       executionCount: schedule.executionCount,
       isRunning: schedule.isRunning,
@@ -249,7 +249,7 @@ async function updateSchedule(req, res) {
         frequency: result.frequency,
         active: result.active,
         nextExecution: result.nextExecution,
-        nextExecutionFormatted: moment(result.nextExecution).tz('America/Santiago').format('DD/MM/YYYY HH:mm')
+        nextExecutionFormatted: DateTime.fromJSDate(result.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
       }
     });
   } catch (error) {
