@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-11 — @Bufigol ([#17](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/17))
+- **chore** `back-end, analytics, front-end` | [REFACTOR] Cleanup de código legacy y archivos obsoletos
+
+
 ### 2026-03-11 — @Bufigol ([#16](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/16))
 - **chore** `back-end` | [REFACTOR] Eliminar aliases de compatibilidad del config-loader
 
