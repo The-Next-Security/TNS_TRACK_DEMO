@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-11 — @andresTNS ([#14](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/14))
+- **chore** `documentation, SQL - BBDD, back-end, analytics, front-end` | [REFACTOR] Migración a Luxon como única librería de fechas (Issue #5)
+
+
 > ⚠️ _Entradas retroactivas — registradas manualmente al implementar el flujo de PRE_CHANGELOG. Los issues anteriores no pasaron por el flujo automático de PR → dev._
 
 ---
