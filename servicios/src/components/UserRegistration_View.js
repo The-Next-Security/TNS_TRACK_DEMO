@@ -295,10 +295,6 @@ const UserRegistrationV2 = () => {
         ai_analysis: modifiedAIAnalysis
       };
 
-      console.log('=== DEBUG UPDATE PERMISSIONS ===');
-      console.log('[Frontend] foundUser:', foundUser);
-      console.log('[Frontend] modifiedPermissions:', modifiedPermissions);
-      console.log('[Frontend] URL:', `/api/usuarios/${foundUser.id}`);
       console.log('[Frontend] updateData:', updateData);
       console.log('[Frontend] config:', config);
       console.log('================================');
