@@ -182,10 +182,11 @@ export NODE_OPTIONS="--max-old-space-size=4096"
 
 **Solución**:
 
-**Si estás en migración a BD**:
+La configuración operativa del proyecto está en **base de datos** (ver [Configuracion.md](Configuracion.md)). Si el sistema usa BD:
+
 1. Verificar que `configLoader_Config.js` esté leyendo de BD
 2. Verificar conexión a BD funcionando
-3. Verificar tabla de configuración existe
+3. Verificar tablas `gen_cofiguracion_*` existen y tienen datos
 
 **Si usas unified-config.json (LEGACY)**:
 ```bash
