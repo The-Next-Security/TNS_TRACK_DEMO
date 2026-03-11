@@ -1,6 +1,6 @@
 // src/controllers/powerAnalysisController.js
 const databaseService = require("../services/database_Service");
-const moment = require("moment-timezone");
+const { DateTime } = require("luxon");
 
 class PowerAnalysisController {
   async handleTemperaturePowerLocations(req, res) {
