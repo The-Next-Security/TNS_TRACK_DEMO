@@ -269,6 +269,32 @@ DateTime.fromISO(date).toFormat('yyyy-MM-dd HH:mm:ss');
 
 ---
 
+## 11. Refactor de rutas API (Issue #11)
+
+### Contexto
+La API del backend heredó múltiples endpoints de un proyecto anterior, incluyendo módulos legacy y rutas parcialmente integradas (dashboards, contador de ciclos, ingesta GPS antigua, sectores/beacons, etc.). Esto generaba ruido, complejidad y endpoints que ya no formaban parte del producto real.
+
+### Decisión
+
+- Eliminar los módulos y endpoints obsoletos:
+  - Capa de `/api/dashboard` (archivo `dashboard_Routes.js` y controladores de dashboard eléctrico/temperatura).
+  - Módulo de contador de ciclos de descongelamiento (`contadorCiclos_Routes.js`, `contadorCiclos_Controller.js`, `contadorCiclos_Utils.js` y el componente `ContadorCiclosDescongelamiento`).
+  - Endpoint legacy `POST /gps-data` (`gpsData_Routes.js` y su montaje en `server.js`).
+  - Rutas actuales de `/api/sectores` y `/api/beacons`, junto con su uso directo en la SPA. Los dominios quedan reservados para un rediseño futuro del apartado de sectores y beacons.
+
+- Reagrupar análisis bajo el dominio que analizan:
+  - Eliminar el dominio genérico `/api/analysis` y mantener `/api/powerAnalysis` como punto único para el análisis de temperatura y potencia (alineado con `TemperaturePowerAnalysis_View`).
+  - Regla general: cualquier análisis futuro debe exponerse bajo el dominio que analiza (ej: `/api/temperatura/analisis/...`, `/api/alertas/analisis/...`).
+
+- Ajustar dominios de Temperatura e IA:
+  - Mantener a corto plazo el dominio `/api/ubibot` por compatibilidad, documentando que el dominio de negocio es **temperatura** y que Ubibot es un detalle de implementación. En refactors futuros, los endpoints se reexpondrán bajo `/api/temperatura/...`.
+  - Sustituir el dominio `/api/v1/ai-analysis` por `/api/ia/analisis`, eliminando el versionado explícito en la URL y actualizando servidor y frontend.
+
+### Estado Actual
+✅ Implementado — Limpieza de endpoints legacy y ajuste de dominios según Issue #11.
+
+---
+
 ## 📝 Historial de Cambios
 
 > **Nota**: Para historial detallado de cambios del proyecto, ver [CHANGELOG.md](./CHANGELOG.md)
