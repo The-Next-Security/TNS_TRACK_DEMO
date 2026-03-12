@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-12 — @dependabot[bot] ([#23](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/23))
+- **chore** `back-end, dependencies, npm, security` | bump core-js from 3.47.0 to 3.48.0 in /servicios
+
+
 ### 2026-03-12 — @dependabot[bot] ([#22](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/22))
 - **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 10 updates
 
