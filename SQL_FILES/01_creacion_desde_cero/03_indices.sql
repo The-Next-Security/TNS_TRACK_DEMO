@@ -574,6 +574,24 @@ CREATE INDEX `idx_ale_seguimiento_id_canal-valor_temperatura-fecha_alerta`
 
 
 -- ----------------------------------------------------------
+-- ale_suscripciones_email
+-- Suscripciones de email por usuario/tipo/origen.
+-- Patrones:
+--   1) SELECT id_usuario WHERE id_tipo_alerta = ? AND id_origen_tipo = ? AND activo = 1
+--   2) Gestión por usuario: WHERE id_usuario = ? AND activo = 1
+-- ----------------------------------------------------------
+
+CREATE UNIQUE INDEX `uk_ale_suscripciones_email_regla`
+    ON `ale_suscripciones_email` (`id_usuario`, `id_tipo_alerta`, `id_origen_tipo`);
+
+CREATE INDEX `idx_ale_suscripciones_email_id_usuario`
+    ON `ale_suscripciones_email` (`id_usuario`);
+
+CREATE INDEX `idx_ale_suscripciones_email_activo`
+    ON `ale_suscripciones_email` (`activo`);
+
+
+-- ----------------------------------------------------------
 -- ale_metricas_resumen
 -- Métricas agregadas de alertas por día y hora.
 -- Patrones: WHERE fecha BETWEEN + GROUP BY fecha

@@ -756,6 +756,34 @@ CREATE TABLE `ale_datos_desconexion` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Datos específicos de alertas de desconexión de sensores — extiende ale_seguimiento';
 
+-- Suscripciones de usuarios a alertas por email
+CREATE TABLE `ale_suscripciones_email` (
+  `id_suscripcion_email` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'FK a gen_usuario',
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL COMMENT 'FK a ale_tipo_alerta',
+  `id_origen_tipo` TINYINT UNSIGNED NOT NULL COMMENT 'FK a gen_tipos_origen',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = regla de suscripción activa',
+  `ultima_notificacion_enviada` DATETIME NULL COMMENT 'Último envío de correo para esta combinación usuario/tipo/origen',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_suscripcion_email`),
+  CONSTRAINT `fk_ale_suscripciones_email_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `gen_usuario`(`id_usuario`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_suscripciones_email_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+    FOREIGN KEY (`id_tipo_alerta`)
+    REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_suscripciones_email_id_origen_tipo_gen_tipos_origen_id_tipo_origen`
+    FOREIGN KEY (`id_origen_tipo`)
+    REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Suscripciones de usuarios a alertas por email según tipo de alerta y origen';
+
 -- Métricas resumen de alertas por día y hora
 CREATE TABLE `ale_metricas_resumen` (
   `id_metrica` INT UNSIGNED NOT NULL AUTO_INCREMENT,
