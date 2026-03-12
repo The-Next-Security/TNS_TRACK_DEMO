@@ -82,7 +82,11 @@ SOURCE 03_Triggers/03_17_trig_ubi_canal.sql
 //
 SOURCE 03_Triggers/03_18_trig_ubi_presets_temperatura.sql
 //
-SOURCE 03_Triggers/03_19_trig_ale_suscripciones_email.sql
+SOURCE 03_Triggers/03_20_trig_ale_suscripciones_notificacion_after_insert.sql
+//
+SOURCE 03_Triggers/03_21_trig_ale_suscripciones_notificacion_after_update.sql
+//
+SOURCE 03_Triggers/03_22_trig_ale_suscripciones_notificacion_after_delete.sql
 //
 
 DELIMITER ;
