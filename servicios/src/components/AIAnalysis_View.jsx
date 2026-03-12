@@ -54,7 +54,7 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
   const fetchChambers = async () => {
     try {
       setLoadingChambers(true);
-      const response = await fetch('/api/v1/ai-analysis/chambers', {
+      const response = await fetch('/api/ia/analisis/chambers', {
         credentials: 'include'
       });
 
@@ -112,7 +112,7 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
 
       console.log('[AIAnalysis] Enviando query:', requestBody);
 
-      const response = await fetch('/api/v1/ai-analysis/query', {
+      const response = await fetch('/api/ia/analisis/query', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
