@@ -327,81 +327,52 @@ class NotificationController {
         // --- FIN Procesamiento Desconexiones ---
 
 
-        // --- 2. Procesar Temperaturas (SOLO FUERA DE HORARIO LABORAL) ---
-        console.log(`[NotificationCtrl] processHourlyAlerts: Verificando horario laboral para alertas de temperatura...`);
-        const isWorkingTimeNow = await this.isWithinWorkingHours(now); // Usar await aquí
+        // --- 2. Procesar Temperaturas (ventana y envío decididos por notificationSchedule_Service en Email/Push) ---
+        console.log(`[NotificationCtrl] processHourlyAlerts: Iniciando análisis de temperatura...`);
+        await this.logToDatabase(`INFO: Iniciando análisis horario de temperatura.`);
 
-        if (!isWorkingTimeNow) {
-            console.log(`[NotificationCtrl] processHourlyAlerts: Fuera de horario laboral o en feriado. Iniciando análisis de temperatura...`);
-            await this.logToDatabase(`INFO: Iniciando análisis horario de temperatura (Fuera Horario Laboral o Feriado).`);
+        const endTime = now.startOf("hour");
+        const startTime = endTime.minus({ minutes: 110 });
+        const startTimeStr = startTime.toFormat("yyyy-MM-dd HH:mm:ss");
+        const endTimeStr = endTime.toFormat("yyyy-MM-dd HH:mm:ss");
 
-            // Calcular ventana de 110 minutos ANTES de la hora actual en punto
-            const endTime = now.startOf("hour");
-            const startTime = endTime.minus({ minutes: 110 });
-            const startTimeStr = startTime.toFormat("yyyy-MM-dd HH:mm:ss");
-            const endTimeStr = endTime.toFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            await this.logToDatabase(`INFO: Analizando ventana temperatura [${startTimeStr} - ${endTimeStr}]`);
+            const channelsInAlert = await notificationService.analyzeHourlyTemperatureData(startTimeStr, endTimeStr);
+            await this.logToDatabase(`INFO: Análisis temperatura completado. ${channelsInAlert.length} canales en alerta.`);
 
-            try {
-                await this.logToDatabase(`INFO: Analizando ventana temperatura [${startTimeStr} - ${endTimeStr}]`);
-                // Llamar al servicio de notificación que contiene la lógica robusta
-                const channelsInAlert = await notificationService.analyzeHourlyTemperatureData(startTimeStr, endTimeStr);
+            if (channelsInAlert.length > 0) {
+                console.log(`[NotificationCtrl] processHourlyAlerts: ${channelsInAlert.length} canales con alertas de temperatura. Registro y notificación (ventana/DND en servicios)...`);
 
-                await this.logToDatabase(`INFO: Análisis temperatura completado. ${channelsInAlert.length} canales en alerta.`);
-
-                if (channelsInAlert.length > 0) {
-                    console.log(`[NotificationCtrl] processHourlyAlerts: ${channelsInAlert.length} canales con alertas de temperatura detectadas. Iniciando registro y notificación...`);
-
-                    // **NUEVO: Registrar alertas en BD ANTES de enviar notificaciones**
-                    let alertIds = [];
-                    try {
-                        console.log("  -> Registrando alertas de temperatura en BD...");
-                        const result = await alertTrackingService.createBulkAlerts(channelsInAlert, 'temperature');
-                        alertIds = result.alertIds || [];
-                        console.log(`  -> ${alertIds.length} alertas de temperatura registradas en BD. IDs: [${alertIds.join(', ')}]`);
-                    } catch (trackingError) {
-                        console.error(`❌ Error registrando alertas de temperatura en BD:`, trackingError);
-                        await this.logError(`Fallo registro alertas temperatura en BD: ${trackingError.message}`);
-                        // Continuar con el envío aunque falle el tracking (no bloquear notificaciones)
-                    }
-
-                    // Enviar Email de Temperatura (código existente)
-                    try {
-                        console.log(`[${executionId}] ➡️  LLAMANDO emailService.sendTemperatureRangeAlertsEmail()...`);
-                        console.log(`[${executionId}]    Canales: ${channelsInAlert.length}`);
-                        await emailService.sendTemperatureRangeAlertsEmail(channelsInAlert, null, true); // Forzar envío
-                        console.log(`[${executionId}] ✅  emailService.sendTemperatureRangeAlertsEmail() completado.`);
-                    } catch (emailTempError) {
-                        console.error(`❌ [${executionId}] Error enviando Email de temperatura para hora ${endTime.toFormat('HH:mm')}:`, emailTempError);
-                        await this.logError(`Fallo envío email temperatura: ${emailTempError.message}`);
-                    }
-
-
-                    // **MODIFICADO: Enviar Push Notifications CON alertIds**
-                    try {
-                        console.log(`[${executionId}] ➡️  LLAMANDO pushNotificationService.sendTemperatureAlert()...`);
-                        console.log(`[${executionId}]    Canales: ${channelsInAlert.length}, AlertIds: ${alertIds.length}`);
-                        const pushResult = await pushNotificationService.sendTemperatureAlert(channelsInAlert, alertIds);
-                        console.log(`[${executionId}] ✅  pushNotificationService.sendTemperatureAlert() completado.`);
-                        console.log(`[${executionId}]    Push enviadas: ${pushResult.sent}/${pushResult.total} exitosas`);
-                        if (alertIds.length > 0) {
-                            console.log(`[${executionId}]    Notificaciones vinculadas a alertas: [${alertIds.join(', ')}]`);
-                        }
-                    } catch (pushTempError) {
-                        console.error(`❌ [${executionId}] Error enviando Push Notification de temperatura para hora ${endTime.toFormat('HH:mm')}:`, pushTempError);
-                        await this.logError(`Fallo envío Push temperatura: ${pushTempError.message}`);
-                    }
-                } else {
-                    console.log(`[NotificationCtrl] processHourlyAlerts: No hay alertas de temperatura que enviar para la ventana finalizada a las ${endTime.toFormat('HH:mm')}.`);
+                let alertIds = [];
+                try {
+                    const result = await alertTrackingService.createBulkAlerts(channelsInAlert, 'temperature');
+                    alertIds = result.alertIds || [];
+                } catch (trackingError) {
+                    console.error(`❌ Error registrando alertas de temperatura en BD:`, trackingError);
+                    await this.logError(`Fallo registro alertas temperatura en BD: ${trackingError.message}`);
                 }
 
-            } catch (analysisError) {
-                console.error(`❌ Error CRÍTICO durante analyzeHourlyTemperatureData: ${analysisError.message}`);
-                await this.logError(`Fallo análisis horario temperatura [${startTimeStr}-${endTimeStr}]: ${analysisError.message}`);
-            }
+                try {
+                    await emailService.sendTemperatureRangeAlertsEmail(channelsInAlert, null, true);
+                } catch (emailTempError) {
+                    console.error(`❌ [${executionId}] Error enviando Email de temperatura:`, emailTempError);
+                    await this.logError(`Fallo envío email temperatura: ${emailTempError.message}`);
+                }
 
-        } else {
-            console.log(`[NotificationCtrl] processHourlyAlerts: Dentro de horario laboral. Omitiendo análisis y envío de alertas de temperatura.`);
-            await this.logToDatabase(`INFO: Análisis temp omitido para hora ${now.toFormat('HH:mm')} (Dentro Horario Laboral).`);
+                try {
+                    const pushResult = await pushNotificationService.sendTemperatureAlert(channelsInAlert, alertIds);
+                    console.log(`[${executionId}] Push temperatura: ${pushResult.sent}/${pushResult.total} exitosas`);
+                } catch (pushTempError) {
+                    console.error(`❌ [${executionId}] Error enviando Push temperatura:`, pushTempError);
+                    await this.logError(`Fallo envío Push temperatura: ${pushTempError.message}`);
+                }
+            } else {
+                console.log(`[NotificationCtrl] processHourlyAlerts: No hay alertas de temperatura para la ventana a las ${endTime.toFormat('HH:mm')}.`);
+            }
+        } catch (analysisError) {
+            console.error(`❌ Error CRÍTICO durante analyzeHourlyTemperatureData: ${analysisError.message}`);
+            await this.logError(`Fallo análisis horario temperatura [${startTimeStr}-${endTimeStr}]: ${analysisError.message}`);
         }
         // --- FIN Procesamiento Temperaturas ---
 
