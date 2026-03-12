@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-12 — @dependabot[bot] ([#25](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/25))
+- **chore** `back-end, dependencies, npm, security` | bump styled-components from 6.1.19 to 6.3.11 in /servicios
+
+
 ### 2026-03-12 — @dependabot[bot] ([#24](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/24))
 - **chore** `back-end, dependencies, npm, security` | bump dotenv from 17.2.3 to 17.3.1 in /servicios
 
