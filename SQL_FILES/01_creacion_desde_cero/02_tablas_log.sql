@@ -145,19 +145,20 @@ CREATE TABLE `log_ai_consultas` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de consultas a IA para auditoría y observabilidad';
 
--- Log de cambios en ale_suscripciones_email (alta/baja/cambios de reglas de suscripción de email)
-CREATE TABLE `log_ale_suscripciones_email` (
-  `id_log_ale_suscripciones_email` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `id_suscripcion_email` INT UNSIGNED NULL COMMENT 'ID de la suscripción afectada en ale_suscripciones_email',
-  `id_usuario` INT UNSIGNED NULL COMMENT 'Usuario asociado a la suscripción (copia por conveniencia)',
+-- Log de cambios en ale_suscripciones_notificacion (alta/baja/cambios de suscripciones unificadas)
+CREATE TABLE `log_ale_suscripciones_notificacion` (
+  `id_log_ale_suscripciones_notificacion` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_suscripcion_notificacion` INT UNSIGNED NULL COMMENT 'ID de la suscripción afectada en ale_suscripciones_notificacion',
+  `id_usuario` INT UNSIGNED NULL COMMENT 'Usuario asociado (copia por conveniencia)',
   `id_tipo_alerta` TINYINT UNSIGNED NULL COMMENT 'Tipo de alerta asociado (copia por conveniencia)',
   `id_origen_tipo` TINYINT UNSIGNED NULL COMMENT 'Origen asociado (copia por conveniencia)',
-  `operacion` ENUM('INSERT','UPDATE','DELETE') NOT NULL COMMENT 'Tipo de operación realizada sobre la suscripción',
-  `datos_anteriores` JSON NULL COMMENT 'Estado anterior de la suscripción (para UPDATE/DELETE)',
-  `datos_nuevos` JSON NULL COMMENT 'Estado nuevo de la suscripción (para INSERT/UPDATE)',
+  `canal` VARCHAR(10) NULL COMMENT 'Canal (email/push) (copia por conveniencia)',
+  `operacion` ENUM('INSERT','UPDATE','DELETE') NOT NULL COMMENT 'Tipo de operación realizada',
+  `datos_anteriores` JSON NULL COMMENT 'Estado anterior (para UPDATE/DELETE)',
+  `datos_nuevos` JSON NULL COMMENT 'Estado nuevo (para INSERT/UPDATE)',
   `fecha_creacion` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  PRIMARY KEY (`id_log_ale_suscripciones_email`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de cambios en suscripciones de alertas por email';
+  PRIMARY KEY (`id_log_ale_suscripciones_notificacion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de cambios en suscripciones unificadas de notificaciones';
 
 -- ============================================
 -- LOG DE DATOS BASE (log_[tabla])
