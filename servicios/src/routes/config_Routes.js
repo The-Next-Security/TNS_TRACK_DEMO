@@ -4,6 +4,7 @@ const router = express.Router();
 const sem_configController = require("../controllers/semConfig_Controller");
 const tel_configController = require("../controllers/telConfig_Controller");
 const alertScheduleController = require("../controllers/alertSchedule_Controller");
+const notificationHorariosController = require("../controllers/notificationHorarios_Controller");
 const tariffConfigController = require("../controllers/tariffConfig_Controller");
 const { authMiddleware } = require("../middlewares");
 
@@ -104,6 +105,52 @@ router.post(
   authMiddleware.authenticate.bind(authMiddleware),
   authMiddleware.requireAdmin.bind(authMiddleware),
   alertScheduleController.resetAlertSchedules
+);
+
+// ============================================================================
+// Notification schedule base (ale_horarios_alerta_canal) - Admin
+// ============================================================================
+router.get(
+  "/notification-schedule-base",
+  authMiddleware.authenticate.bind(authMiddleware),
+  notificationHorariosController.getHorariosBase
+);
+router.post(
+  "/notification-schedule-base",
+  authMiddleware.authenticate.bind(authMiddleware),
+  authMiddleware.requireAdmin.bind(authMiddleware),
+  notificationHorariosController.postHorariosBase
+);
+router.put(
+  "/notification-schedule-base/:id",
+  authMiddleware.authenticate.bind(authMiddleware),
+  authMiddleware.requireAdmin.bind(authMiddleware),
+  notificationHorariosController.putHorariosBase
+);
+router.delete(
+  "/notification-schedule-base/:id",
+  authMiddleware.authenticate.bind(authMiddleware),
+  authMiddleware.requireAdmin.bind(authMiddleware),
+  notificationHorariosController.deleteHorariosBase
+);
+
+// ============================================================================
+// My notification schedules (ale_horarios_usuario) - Usuario autenticado
+// ============================================================================
+router.get(
+  "/my-notification-schedules",
+  authMiddleware.authenticate.bind(authMiddleware),
+  notificationHorariosController.getMisHorarios
+);
+router.post(
+  "/my-notification-schedules",
+  authMiddleware.authenticate.bind(authMiddleware),
+  notificationHorariosController.postMisHorarios
+);
+router.delete(
+  "/my-notification-schedules/:id",
+  authMiddleware.authenticate.bind(authMiddleware),
+  notificationHorariosController.deleteMisHorarios
 );
 
 // ============================================================================
