@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-12 — @dependabot[bot] ([#22](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/22))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 10 updates
+
+
 ### 2026-03-12 — @dependabot[bot] ([#21](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/21))
 - **chore** `back-end, dependencies, npm, security` | bump the development-dependencies group in /servicios with 5 updates
 
