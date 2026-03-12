@@ -17,6 +17,26 @@
 
 ## Unreleased
 
+### 2026-03-12 — @dependabot[bot] ([#25](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/25))
+- **chore** `back-end, dependencies, npm, security` | bump styled-components from 6.1.19 to 6.3.11 in /servicios
+
+
+### 2026-03-12 — @dependabot[bot] ([#24](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/24))
+- **chore** `back-end, dependencies, npm, security` | bump dotenv from 17.2.3 to 17.3.1 in /servicios
+
+
+### 2026-03-12 — @dependabot[bot] ([#23](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/23))
+- **chore** `back-end, dependencies, npm, security` | bump core-js from 3.47.0 to 3.48.0 in /servicios
+
+
+### 2026-03-12 — @dependabot[bot] ([#22](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/22))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 10 updates
+
+
+### 2026-03-12 — @dependabot[bot] ([#21](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/21))
+- **chore** `back-end, dependencies, npm, security` | bump the development-dependencies group in /servicios with 5 updates
+
+
 ### 2026-03-11 — @Bufigol ([#17](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/17))
 - **chore** `back-end, analytics, front-end` | [REFACTOR] Cleanup de código legacy y archivos obsoletos
 
