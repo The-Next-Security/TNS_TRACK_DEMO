@@ -88,7 +88,7 @@
     "stream-browserify": "^3.0.0",
     "styled-components": "^6.3.11",
     "tiktoken": "^1.0.22",
-    "twilio": "^5.4.2",
+    "twilio": "^5.13.0",
     "util": "^0.12.5",
     "vm-browserify": "^1.1.2",
     "web-push": "^3.6.7"
