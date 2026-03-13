@@ -7,7 +7,7 @@ const { DateTime } = require('../utils/date_Utils');
 class AIAnalysisController {
   /**
    * Execute AI analysis query
-   * POST /api/v1/ai-analysis/query
+   * POST /api/ia/analisis/query
    */
   async query(req, res) {
     const startTime = Date.now();
@@ -124,7 +124,7 @@ class AIAnalysisController {
 
   /**
    * Get user's session history
-   * GET /api/v1/ai-analysis/sessions
+   * GET /api/ia/analisis/sessions
    */
   async getSessions(req, res) {
     try {
@@ -198,7 +198,7 @@ class AIAnalysisController {
 
   /**
    * Get available chambers
-   * GET /api/v1/ai-analysis/chambers
+   * GET /api/ia/analisis/chambers
    */
   async getChambers(req, res) {
     try {
@@ -246,7 +246,7 @@ class AIAnalysisController {
 
   /**
    * Get suggested questions
-   * GET /api/v1/ai-analysis/suggested-questions
+   * GET /api/ia/analisis/suggested-questions
    */
   async getSuggestedQuestions(req, res) {
     try {

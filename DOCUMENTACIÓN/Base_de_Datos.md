@@ -410,9 +410,7 @@ fk_[tabla origen]_[columna origen]_[tabla destino]_[columna destino]
 | `latitud` / `longitud` | DECIMAL | NO | Coordenadas del sensor |
 | `firmware` / `mac_address` | VARCHAR | NO | Datos de hardware |
 | `en_linea` | TINYINT(1) | NO | DEFAULT 1 |
-| `temperatura_minima_umbral` / `temperatura_maxima_umbral` | DECIMAL(10,2) | NO | Umbrales de alerta |
-| `fecha_actualizacion_umbral` | DATETIME | SÍ | Última actualización de umbrales |
-| `usuario_actualizacion_umbral` | VARCHAR(100) | NO | Usuario que actualizó los umbrales |
+| `id_preset` | INT UNSIGNED | SÍ | FK → `ubi_presets_temperatura` — umbrales via preset (Opción A) |
 | `ultima_alerta_enviada` | DATETIME | SÍ | |
 | `fuera_linea_desde` | DATETIME | SÍ | NULL = actualmente en línea |
 | `serial` | VARCHAR(20) | SÍ | `full_serial` de Ubibot |

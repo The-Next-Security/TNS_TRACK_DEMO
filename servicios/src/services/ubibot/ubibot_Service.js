@@ -139,17 +139,15 @@ class UbibotService {
             };
 
             if (!existingChannel) {
-                // Canal nuevo: insertar con valores por defecto para campos de negocio
+                // Canal nuevo: insertar con id_preset=1 (Opción A: umbrales vía preset)
                 console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} es nuevo. Insertando en ubi_canal...`);
                 const newChannel = {
                     ...basicInfo,
-                    canal_id:                    channelData.channel_id,
-                    id_ubicacion_real:            1,      // Sin asignar — el operador deberá configurarlo
-                    temperatura_minima_umbral:    -25.00, // Umbral por defecto para refrigeración
-                    temperatura_maxima_umbral:    -10.00,
-                    usuario_actualizacion_umbral: 'sistema',
-                    fuera_linea_desde:            isOnline ? null : currentTime,
-                    activo:                       1,
+                    canal_id:          channelData.channel_id,
+                    id_ubicacion_real: 1,   // Sin asignar — el operador deberá configurarlo
+                    id_preset:         1,   // Preset por defecto (ej. Grupo 1 - Ultra Congelado)
+                    fuera_linea_desde: isOnline ? null : currentTime,
+                    activo:            1,
                 };
                 await connection.query("INSERT INTO ubi_canal SET ?", newChannel);
                 console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} insertado en ubi_canal.`);

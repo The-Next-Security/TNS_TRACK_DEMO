@@ -5120,7 +5120,7 @@ var AIAnalysisV2 = function AIAnalysisV2(_ref) {
             _context.p = 0;
             setLoadingChambers(true);
             _context.n = 1;
-            return fetch('/api/v1/ai-analysis/chambers', {
+            return fetch('/api/ia/analisis/chambers', {
               credentials: 'include'
             });
           case 1:
@@ -5216,7 +5216,7 @@ var AIAnalysisV2 = function AIAnalysisV2(_ref) {
             };
             console.log('[AIAnalysis] Enviando query:', requestBody);
             _context2.n = 4;
-            return fetch('/api/v1/ai-analysis/query', {
+            return fetch('/api/ia/analisis/query', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json'
@@ -9390,41 +9390,37 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _ConsumoTotalAnual_View__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./ConsumoTotalAnual_View */ "./src/components/ConsumoTotalAnual_View.js");
 /* harmony import */ var _DashboardTemperatura_View__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./DashboardTemperatura_View */ "./src/components/DashboardTemperatura_View.js");
 /* harmony import */ var _LastKnownPosition_View__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./LastKnownPosition_View */ "./src/components/LastKnownPosition_View.js");
-/* harmony import */ var _UbicacionTiempoRealInterior_View__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./UbicacionTiempoRealInterior_View */ "./src/components/UbicacionTiempoRealInterior_View.js");
-/* harmony import */ var _PersonSearch_View__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./PersonSearch_View */ "./src/components/PersonSearch_View.js");
-/* harmony import */ var _LandingPage_View__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./LandingPage_View */ "./src/components/LandingPage_View.js");
-/* harmony import */ var _SelectRoutine_View__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./SelectRoutine_View */ "./src/components/SelectRoutine_View.js");
-/* harmony import */ var _HistoricalMovementsSearch_View__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./HistoricalMovementsSearch_View */ "./src/components/HistoricalMovementsSearch_View.js");
-/* harmony import */ var _Configuration_View__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./Configuration_View */ "./src/components/Configuration_View.js");
-/* harmony import */ var _DoorStatusMatrix_View__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./DoorStatusMatrix_View */ "./src/components/DoorStatusMatrix_View.js");
-/* harmony import */ var _UserRegistration_View__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./UserRegistration_View */ "./src/components/UserRegistration_View.js");
-/* harmony import */ var _ForgotPassword_View__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./ForgotPassword_View */ "./src/components/ForgotPassword_View.js");
-/* harmony import */ var _ResetPassword_View__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./ResetPassword_View */ "./src/components/ResetPassword_View.js");
-/* harmony import */ var _TemperaturaCamaras_View__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./TemperaturaCamaras_View */ "./src/components/TemperaturaCamaras_View.js");
-/* harmony import */ var _DefrostAnalysis_View__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./DefrostAnalysis_View */ "./src/components/DefrostAnalysis_View.js");
-/* harmony import */ var _IntelligenciaDatosTemperatura_View__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./IntelligenciaDatosTemperatura_View */ "./src/components/IntelligenciaDatosTemperatura_View.js");
-/* harmony import */ var _ParametroTempCamaras_View__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./ParametroTempCamaras_View */ "./src/components/ParametroTempCamaras_View.js");
-/* harmony import */ var _TemperaturePowerAnalysis_View__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./TemperaturePowerAnalysis_View */ "./src/components/TemperaturePowerAnalysis_View.js");
-/* harmony import */ var _AlertManagement_View__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./AlertManagement_View */ "./src/components/AlertManagement_View.js");
-/* harmony import */ var _AlertNotificationConfig_View__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./AlertNotificationConfig_View */ "./src/components/AlertNotificationConfig_View.js");
-/* harmony import */ var _AlertMetricsDashboard_View__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./AlertMetricsDashboard_View */ "./src/components/AlertMetricsDashboard_View.js");
-/* harmony import */ var _reports_ReportDashboard_View__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./reports/ReportDashboard_View */ "./src/components/reports/ReportDashboard_View.jsx");
-/* harmony import */ var _AIAnalysis_View__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./AIAnalysis_View */ "./src/components/AIAnalysis_View.jsx");
-/* harmony import */ var _reports_ReportGenerator_View__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./reports/ReportGenerator_View */ "./src/components/reports/ReportGenerator_View.jsx");
-/* harmony import */ var _reports_ReportScheduler_View__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ./reports/ReportScheduler_View */ "./src/components/reports/ReportScheduler_View.jsx");
-/* harmony import */ var _reports_ReportHistoryPage_View__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ./reports/ReportHistoryPage_View */ "./src/components/reports/ReportHistoryPage_View.jsx");
-/* harmony import */ var core_js_stable__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/stable */ "./node_modules/core-js/stable/index.js");
-/* harmony import */ var core_js_stable__WEBPACK_IMPORTED_MODULE_33___default = /*#__PURE__*/__webpack_require__.n(core_js_stable__WEBPACK_IMPORTED_MODULE_33__);
-/* harmony import */ var regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! regenerator-runtime/runtime */ "./node_modules/regenerator-runtime/runtime.js");
-/* harmony import */ var regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_34___default = /*#__PURE__*/__webpack_require__.n(regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_34__);
+/* harmony import */ var _PersonSearch_View__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./PersonSearch_View */ "./src/components/PersonSearch_View.js");
+/* harmony import */ var _LandingPage_View__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./LandingPage_View */ "./src/components/LandingPage_View.js");
+/* harmony import */ var _SelectRoutine_View__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./SelectRoutine_View */ "./src/components/SelectRoutine_View.js");
+/* harmony import */ var _HistoricalMovementsSearch_View__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./HistoricalMovementsSearch_View */ "./src/components/HistoricalMovementsSearch_View.js");
+/* harmony import */ var _Configuration_View__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./Configuration_View */ "./src/components/Configuration_View.js");
+/* harmony import */ var _UserRegistration_View__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./UserRegistration_View */ "./src/components/UserRegistration_View.js");
+/* harmony import */ var _ForgotPassword_View__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./ForgotPassword_View */ "./src/components/ForgotPassword_View.js");
+/* harmony import */ var _ResetPassword_View__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./ResetPassword_View */ "./src/components/ResetPassword_View.js");
+/* harmony import */ var _TemperaturaCamaras_View__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./TemperaturaCamaras_View */ "./src/components/TemperaturaCamaras_View.js");
+/* harmony import */ var _DefrostAnalysis_View__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./DefrostAnalysis_View */ "./src/components/DefrostAnalysis_View.js");
+/* harmony import */ var _IntelligenciaDatosTemperatura_View__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./IntelligenciaDatosTemperatura_View */ "./src/components/IntelligenciaDatosTemperatura_View.js");
+/* harmony import */ var _ParametroTempCamaras_View__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./ParametroTempCamaras_View */ "./src/components/ParametroTempCamaras_View.js");
+/* harmony import */ var _TemperaturePowerAnalysis_View__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./TemperaturePowerAnalysis_View */ "./src/components/TemperaturePowerAnalysis_View.js");
+/* harmony import */ var _AlertManagement_View__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./AlertManagement_View */ "./src/components/AlertManagement_View.js");
+/* harmony import */ var _AlertNotificationConfig_View__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./AlertNotificationConfig_View */ "./src/components/AlertNotificationConfig_View.js");
+/* harmony import */ var _AlertMetricsDashboard_View__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./AlertMetricsDashboard_View */ "./src/components/AlertMetricsDashboard_View.js");
+/* harmony import */ var _reports_ReportDashboard_View__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./reports/ReportDashboard_View */ "./src/components/reports/ReportDashboard_View.jsx");
+/* harmony import */ var _AIAnalysis_View__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./AIAnalysis_View */ "./src/components/AIAnalysis_View.jsx");
+/* harmony import */ var _reports_ReportGenerator_View__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./reports/ReportGenerator_View */ "./src/components/reports/ReportGenerator_View.jsx");
+/* harmony import */ var _reports_ReportScheduler_View__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./reports/ReportScheduler_View */ "./src/components/reports/ReportScheduler_View.jsx");
+/* harmony import */ var _reports_ReportHistoryPage_View__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./reports/ReportHistoryPage_View */ "./src/components/reports/ReportHistoryPage_View.jsx");
+/* harmony import */ var core_js_stable__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/stable */ "./node_modules/core-js/stable/index.js");
+/* harmony import */ var core_js_stable__WEBPACK_IMPORTED_MODULE_31___default = /*#__PURE__*/__webpack_require__.n(core_js_stable__WEBPACK_IMPORTED_MODULE_31__);
+/* harmony import */ var regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! regenerator-runtime/runtime */ "./node_modules/regenerator-runtime/runtime.js");
+/* harmony import */ var regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_32___default = /*#__PURE__*/__webpack_require__.n(regenerator_runtime_runtime__WEBPACK_IMPORTED_MODULE_32__);
 function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
 function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
 function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
 function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
 function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
 function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-
-
 
 
 
@@ -9565,13 +9561,13 @@ function AppContent() {
     className: "w-full flex-1"
   }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Routes, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/",
-    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_LandingPage_View__WEBPACK_IMPORTED_MODULE_12__["default"], null)
+    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_LandingPage_View__WEBPACK_IMPORTED_MODULE_11__["default"], null)
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/forgot-password",
-    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ForgotPassword_View__WEBPACK_IMPORTED_MODULE_18__["default"], null)
+    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ForgotPassword_View__WEBPACK_IMPORTED_MODULE_16__["default"], null)
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/reset-password/:token",
-    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ResetPassword_View__WEBPACK_IMPORTED_MODULE_19__["default"], null)
+    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ResetPassword_View__WEBPACK_IMPORTED_MODULE_17__["default"], null)
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/dashboard-electrico",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_DashboardElectrico_View__WEBPACK_IMPORTED_MODULE_3__["default"], null)
@@ -9591,22 +9587,22 @@ function AppContent() {
     path: "/select-routine",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SelectRoutine_View__WEBPACK_IMPORTED_MODULE_13__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_SelectRoutine_View__WEBPACK_IMPORTED_MODULE_12__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/register-user",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_UserRegistration_View__WEBPACK_IMPORTED_MODULE_17__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_UserRegistration_View__WEBPACK_IMPORTED_MODULE_15__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/temperatura-camaras",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_TemperaturaCamaras_View__WEBPACK_IMPORTED_MODULE_20__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_TemperaturaCamaras_View__WEBPACK_IMPORTED_MODULE_18__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/parametro-temp-camaras",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ParametroTempCamaras_View__WEBPACK_IMPORTED_MODULE_23__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ParametroTempCamaras_View__WEBPACK_IMPORTED_MODULE_21__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/dashboard-temperatura",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
@@ -9616,84 +9612,74 @@ function AppContent() {
     path: "/analisis-deshielo",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_DefrostAnalysis_View__WEBPACK_IMPORTED_MODULE_21__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_DefrostAnalysis_View__WEBPACK_IMPORTED_MODULE_19__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/inteligencia-datos-temperatura",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_IntelligenciaDatosTemperatura_View__WEBPACK_IMPORTED_MODULE_22__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_IntelligenciaDatosTemperatura_View__WEBPACK_IMPORTED_MODULE_20__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/busqueda-entradas-persona",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PersonSearch_View__WEBPACK_IMPORTED_MODULE_11__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_PersonSearch_View__WEBPACK_IMPORTED_MODULE_10__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/consulta-historica-movimientos",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_HistoricalMovementsSearch_View__WEBPACK_IMPORTED_MODULE_14__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_HistoricalMovementsSearch_View__WEBPACK_IMPORTED_MODULE_13__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/last-known-position",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
     }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_LastKnownPosition_View__WEBPACK_IMPORTED_MODULE_9__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
-    path: "/ubicaciones-interior",
-    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
-      userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_UbicacionTiempoRealInterior_View__WEBPACK_IMPORTED_MODULE_10__["default"], null))
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
-    path: "/door-status-matrix",
-    element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
-      userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_DoorStatusMatrix_View__WEBPACK_IMPORTED_MODULE_16__["default"], null))
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/analisis-temperatura-potencia",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_TemperaturePowerAnalysis_View__WEBPACK_IMPORTED_MODULE_24__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_TemperaturePowerAnalysis_View__WEBPACK_IMPORTED_MODULE_22__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/gestion-alertas",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AlertManagement_View__WEBPACK_IMPORTED_MODULE_25__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AlertManagement_View__WEBPACK_IMPORTED_MODULE_23__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/configuracion-notificaciones",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AlertNotificationConfig_View__WEBPACK_IMPORTED_MODULE_26__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AlertNotificationConfig_View__WEBPACK_IMPORTED_MODULE_24__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/metricas-alertas",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AlertMetricsDashboard_View__WEBPACK_IMPORTED_MODULE_27__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AlertMetricsDashboard_View__WEBPACK_IMPORTED_MODULE_25__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/reports",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_reports_ReportDashboard_View__WEBPACK_IMPORTED_MODULE_28__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_reports_ReportDashboard_View__WEBPACK_IMPORTED_MODULE_26__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/reports/generate",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_reports_ReportGenerator_View__WEBPACK_IMPORTED_MODULE_30__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_reports_ReportGenerator_View__WEBPACK_IMPORTED_MODULE_28__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/reports/scheduled",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_reports_ReportScheduler_View__WEBPACK_IMPORTED_MODULE_31__["default"], null))
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_reports_ReportScheduler_View__WEBPACK_IMPORTED_MODULE_29__["default"], null))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/reports/history",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_reports_ReportHistoryPage_View__WEBPACK_IMPORTED_MODULE_32__["default"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_reports_ReportHistoryPage_View__WEBPACK_IMPORTED_MODULE_30__["default"], {
       userPermissions: userPermissions
     }))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
     path: "/ai-analysis",
     element: /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(PrivateRoute, {
       userPermissions: userPermissions
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AIAnalysis_View__WEBPACK_IMPORTED_MODULE_29__["default"], {
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_AIAnalysis_View__WEBPACK_IMPORTED_MODULE_27__["default"], {
       userPermissions: userPermissions
     }))
   }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_router_dom__WEBPACK_IMPORTED_MODULE_1__.Route, {
@@ -9848,30 +9834,18 @@ var ConfigurationV2 = function ConfigurationV2() {
   (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
     var fetchSectors = /*#__PURE__*/function () {
       var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-        var response, _t;
         return _regenerator().w(function (_context) {
-          while (1) switch (_context.p = _context.n) {
+          while (1) switch (_context.n) {
             case 0:
-              _context.p = 0;
-              _context.n = 1;
-              return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get('/api/sectores/listar-sectores');
+              try {
+                setSectors([]);
+              } catch (error) {
+                console.error('Error initializing sectors:', error);
+              }
             case 1:
-              response = _context.v;
-              setSectors(response.data);
-              _context.n = 3;
-              break;
-            case 2:
-              _context.p = 2;
-              _t = _context.v;
-              console.error('Error fetching sectors:', _t);
-              setFeedback({
-                type: 'error',
-                message: 'Error al cargar los sectores. Por favor, recargue la página.'
-              });
-            case 3:
               return _context.a(2);
           }
-        }, _callee, null, [[0, 2]]);
+        }, _callee);
       }));
       return function fetchSectors() {
         return _ref.apply(this, arguments);
@@ -9879,7 +9853,7 @@ var ConfigurationV2 = function ConfigurationV2() {
     }();
     var fetchConfiguration = /*#__PURE__*/function () {
       var _ref2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
-        var _yield$Promise$all, _yield$Promise$all2, configResponse, tempResponse, configData, tempData, _t2;
+        var _yield$Promise$all, _yield$Promise$all2, configResponse, tempResponse, configData, tempData, _t;
         return _regenerator().w(function (_context2) {
           while (1) switch (_context2.p = _context2.n) {
             case 0:
@@ -9907,8 +9881,8 @@ var ConfigurationV2 = function ConfigurationV2() {
               break;
             case 2:
               _context2.p = 2;
-              _t2 = _context2.v;
-              console.error('Error fetching configuration:', _t2);
+              _t = _context2.v;
+              console.error('Error fetching configuration:', _t);
               setFeedback({
                 type: 'error',
                 message: 'Error al cargar la configuración. Por favor, recargue la página.'
@@ -9953,7 +9927,7 @@ var ConfigurationV2 = function ConfigurationV2() {
    */
   var handleSubmit = /*#__PURE__*/function () {
     var _ref3 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3(e) {
-      var configuraciones, temperaturaUmbrales, _t3;
+      var configuraciones, temperaturaUmbrales, _t2;
       return _regenerator().w(function (_context3) {
         while (1) switch (_context3.p = _context3.n) {
           case 0:
@@ -9989,8 +9963,8 @@ var ConfigurationV2 = function ConfigurationV2() {
             break;
           case 3:
             _context3.p = 3;
-            _t3 = _context3.v;
-            console.error('Error saving configuration:', _t3);
+            _t2 = _context3.v;
+            console.error('Error saving configuration:', _t2);
             setFeedback({
               type: 'error',
               message: 'Error guardando la configuración. Por favor, intente nuevamente.'
@@ -15195,919 +15169,6 @@ var DefrostAnalysisV2 = function DefrostAnalysisV2() {
   }, "Seleccione una c\xE1mara y un domingo para comenzar el an\xE1lisis de temperatura. El sistema analizar\xE1 los datos del d\xEDa seleccionado y generar\xE1 comparativas con el domingo anterior.")))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DefrostAnalysisV2);
-
-/***/ },
-
-/***/ "./src/components/DoorStatusMatrix_View.js"
-/*!*************************************************!*\
-  !*** ./src/components/DoorStatusMatrix_View.js ***!
-  \*************************************************/
-(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
-/* harmony import */ var react_datepicker__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! react-datepicker */ "./node_modules/react-datepicker/dist/react-datepicker.min.js");
-/* harmony import */ var react_datepicker__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(react_datepicker__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var framer_motion__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! framer-motion */ "./node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/component/Legend.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/component/Tooltip.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/component/ResponsiveContainer.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/component/Cell.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/polar/Pie.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/cartesian/CartesianGrid.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/cartesian/Line.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/cartesian/Area.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/cartesian/XAxis.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/cartesian/YAxis.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/chart/LineChart.js");
-/* harmony import */ var recharts__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! recharts */ "./node_modules/recharts/es6/chart/PieChart.js");
-/* harmony import */ var react_datepicker_dist_react_datepicker_css__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! react-datepicker/dist/react-datepicker.css */ "./node_modules/react-datepicker/dist/react-datepicker.css");
-/* harmony import */ var luxon__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! luxon */ "./node_modules/luxon/build/es6/luxon.mjs");
-/* harmony import */ var _components_ui_card__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! @/components/ui/card */ "./src/components/ui/card.jsx");
-/* harmony import */ var _components_ui_button__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! @/components/ui/button */ "./src/components/ui/button.jsx");
-/* harmony import */ var _components_ui_badge__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! @/components/ui/badge */ "./src/components/ui/badge.jsx");
-/* harmony import */ var _components_ui_alert__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! @/components/ui/alert */ "./src/components/ui/alert.jsx");
-/* harmony import */ var _components_ui_select__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! @/components/ui/select */ "./src/components/ui/select.jsx");
-/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! @/lib/utils */ "./src/lib/utils.js");
-/* harmony import */ var _Header_View__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./Header_View */ "./src/components/Header_View.js");
-function _toConsumableArray(r) { return _arrayWithoutHoles(r) || _iterableToArray(r) || _unsupportedIterableToArray(r) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _iterableToArray(r) { if ("undefined" != typeof Symbol && null != r[Symbol.iterator] || null != r["@@iterator"]) return Array.from(r); }
-function _arrayWithoutHoles(r) { if (Array.isArray(r)) return _arrayLikeToArray(r); }
-function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
-function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
-function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
-function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-/**
- * DoorStatusMatrixV2.js - Migrado a Shadcn/UI v2.1 - Premium UI
- *
- * Componente de matriz de estado de puertas por Reefer con visualización
- * en tiempo real, gráficos interactivos y gestión de temperatura.
- *
- * @module DoorStatusMatrixV2
- * @version 2.1.0 - Premium UI Enhancement
- */
-
-
-
-
-
-
-
-
-
-// Componentes Shadcn/UI
-
-
-
-
-
-
-
-
-/**
- * Componente principal de matriz de estado de puertas
- *
- * @component
- * @returns {JSX.Element} Interfaz de visualización de estado de puertas
- */
-var DoorStatusMatrixV2 = function DoorStatusMatrixV2() {
-  // ============================================
-  // Estado del Componente
-  // ============================================
-
-  /** @type {[Array, Function]} Datos de estado de puertas */
-  var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState2 = _slicedToArray(_useState, 2),
-    data = _useState2[0],
-    setData = _useState2[1];
-
-  /** @type {[Array, Function]} Lista de sectores disponibles */
-  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState4 = _slicedToArray(_useState3, 2),
-    sectors = _useState4[0],
-    setSectors = _useState4[1];
-
-  /** @type {[Date, Function]} Fecha seleccionada para visualización */
-  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(new Date()),
-    _useState6 = _slicedToArray(_useState5, 2),
-    selectedDate = _useState6[0],
-    setSelectedDate = _useState6[1];
-
-  /** @type {[Array, Function]} Datos para el gráfico de torta */
-  var _useState7 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState8 = _slicedToArray(_useState7, 2),
-    pieChartData = _useState8[0],
-    setPieChartData = _useState8[1];
-
-  /** @type {[Array, Function]} Datos para el gráfico de línea */
-  var _useState9 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState0 = _slicedToArray(_useState9, 2),
-    lineChartData = _useState0[0],
-    setLineChartData = _useState0[1];
-
-  /** @type {[string|null, Function]} Sector actualmente seleccionado */
-  var _useState1 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null),
-    _useState10 = _slicedToArray(_useState1, 2),
-    selectedSector = _useState10[0],
-    setSelectedSector = _useState10[1];
-
-  /** @type {[Array, Function]} Lista de sectores disponibles */
-  var _useState11 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState12 = _slicedToArray(_useState11, 2),
-    availableSectors = _useState12[0],
-    setAvailableSectors = _useState12[1];
-
-  /** @type {[Object, Function]} Intervalo de tiempo seleccionado */
-  var _useState13 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({
-      start: luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.now().set({
-        hour: 8,
-        minute: 0
-      }),
-      end: luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.now().set({
-        hour: 9,
-        minute: 0
-      })
-    }),
-    _useState14 = _slicedToArray(_useState13, 2),
-    selectedInterval = _useState14[0],
-    setSelectedInterval = _useState14[1];
-
-  /** @type {[Object, Function]} Datos de temperatura por sector */
-  var _useState15 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({}),
-    _useState16 = _slicedToArray(_useState15, 2),
-    temperatureData = _useState16[0],
-    setTemperatureData = _useState16[1];
-
-  // ============================================
-  // Constantes de Colores
-  // ============================================
-
-  var LINE_COLOR = "#8A2BE2"; // Violeta para la línea del gráfico
-  var DOOR_OPEN_COLOR = "#af4c4f"; // Rojo para puerta abierta
-  var DOOR_CLOSED_COLOR = "#26b43bcf"; // Verde para puerta cerrada
-  var COLORS = [DOOR_OPEN_COLOR, DOOR_CLOSED_COLOR];
-
-  // ============================================
-  // Effects - Ciclo de Vida
-  // ============================================
-
-  /**
-   * Effect: Cargar sectores disponibles al montar el componente
-   */
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
-    fetchAvailableSectors();
-  }, []);
-
-  /**
-   * Effect: Actualizar datos cuando cambia la fecha o el sector seleccionado
-   */
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
-    fetchDataForSelectedDate(selectedDate);
-    fetchTemperatureData(selectedDate);
-  }, [selectedDate, selectedSector]);
-
-  /**
-   * Effect: Actualizar gráfico de línea cuando cambian los parámetros
-   */
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
-    if (data.length > 0 && selectedSector) {
-      var startDate = luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(selectedDate).set({
-        hour: selectedInterval.start.hour,
-        minute: selectedInterval.start.minute
-      });
-      var endDate = luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(selectedDate).set({
-        hour: selectedInterval.end.hour,
-        minute: selectedInterval.end.minute
-      });
-      processLineChartData(data, startDate, endDate);
-    }
-  }, [selectedInterval, data, selectedDate, selectedSector]);
-
-  // ============================================
-  // Funciones de Obtención de Datos
-  // ============================================
-
-  /**
-   * Obtiene datos de temperatura para el rango de fecha seleccionado
-   *
-   * @async
-   * @param {Date} date - Fecha para obtener datos
-   * @returns {Promise<void>}
-   */
-  /**
-   * Obtener lista de sectores disponibles
-   */
-  var fetchAvailableSectors = /*#__PURE__*/function () {
-    var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-      var response, _t;
-      return _regenerator().w(function (_context) {
-        while (1) switch (_context.p = _context.n) {
-          case 0:
-            _context.p = 0;
-            _context.n = 1;
-            return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("/api/sectores/listar-sectores");
-          case 1:
-            response = _context.v;
-            console.log("[DoorStatusMatrix] Sectores cargados:", response.data.length);
-            setAvailableSectors(response.data);
-            _context.n = 3;
-            break;
-          case 2:
-            _context.p = 2;
-            _t = _context.v;
-            console.error("[DoorStatusMatrix] Error cargando sectores:", _t);
-            setAvailableSectors([]);
-          case 3:
-            return _context.a(2);
-        }
-      }, _callee, null, [[0, 2]]);
-    }));
-    return function fetchAvailableSectors() {
-      return _ref.apply(this, arguments);
-    };
-  }();
-  var fetchTemperatureData = /*#__PURE__*/function () {
-    var _ref2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2(date) {
-      var startDate, endDate, params, response, tempsByTime, _error$response, _error$response2, _t2;
-      return _regenerator().w(function (_context2) {
-        while (1) switch (_context2.p = _context2.n) {
-          case 0:
-            startDate = luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(date).startOf("day").toFormat("yyyy-MM-dd");
-            endDate = luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(date).endOf("day").toFormat("yyyy-MM-dd");
-            _context2.p = 1;
-            // Incluir sector en los parámetros si está seleccionado (no null, no vacío, no __all__)
-            params = {
-              startDate: startDate,
-              endDate: endDate
-            };
-            if (selectedSector && selectedSector !== "" && selectedSector !== "__all__") {
-              params.sector = selectedSector;
-            }
-            console.log("[DoorStatusMatrix] Fetching temperature data:", params);
-            _context2.n = 2;
-            return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("/api/ubibot/temperature-range-data", {
-              params: params
-            });
-          case 2:
-            response = _context2.v;
-            // Organizar los datos por sector y timestamp
-            tempsByTime = {};
-            response.data.forEach(function (device) {
-              if (!tempsByTime[device.name]) {
-                tempsByTime[device.name] = [];
-              }
-              device.data.forEach(function (reading) {
-                tempsByTime[device.name].push({
-                  timestamp: typeof reading.timestamp === 'number' ? luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromMillis(reading.timestamp) : luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromISO(reading.timestamp),
-                  temperature: reading.external_temperature
-                });
-              });
-              // Ordenar las lecturas por timestamp
-              tempsByTime[device.name].sort(function (a, b) {
-                return a.timestamp.toMillis() - b.timestamp.toMillis();
-              });
-            });
-            setTemperatureData(tempsByTime);
-            _context2.n = 4;
-            break;
-          case 3:
-            _context2.p = 3;
-            _t2 = _context2.v;
-            // Silenciar errores 400 (Bad Request) - probablemente no hay datos para esa fecha
-            if (((_error$response = _t2.response) === null || _error$response === void 0 ? void 0 : _error$response.status) === 400) {
-              console.log("[DoorStatusMatrix] Sin datos de temperatura para: ".concat(startDate));
-              setTemperatureData({}); // Limpiar datos anteriores
-            } else {
-              // Solo mostrar otros errores
-              console.error("[DoorStatusMatrix] Error fetching temperature data:", {
-                status: (_error$response2 = _t2.response) === null || _error$response2 === void 0 ? void 0 : _error$response2.status,
-                message: _t2.message,
-                date: startDate
-              });
-            }
-          case 4:
-            return _context2.a(2);
-        }
-      }, _callee2, null, [[1, 3]]);
-    }));
-    return function fetchTemperatureData(_x) {
-      return _ref2.apply(this, arguments);
-    };
-  }();
-
-  /**
-   * Encuentra la temperatura más cercana para un sector y tiempo específicos
-   *
-   * @param {string} sector - Nombre del sector
-   * @param {number} hour - Hora del día
-   * @param {number} endMinute - Minuto final del intervalo
-   * @returns {number|null} Temperatura encontrada o null
-   */
-  var findClosestTemperature = function findClosestTemperature(sector, hour, endMinute) {
-    if (!temperatureData[sector] || temperatureData[sector].length === 0) {
-      return null;
-    }
-    var targetTime = luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(selectedDate).set({
-      hour: hour,
-      minute: endMinute
-    });
-
-    // Encontrar la lectura más cercana al final del intervalo de 10 minutos
-    var closestReading = temperatureData[sector].reduce(function (closest, current) {
-      var currentDiff = Math.abs(current.timestamp.toMillis() - targetTime.toMillis());
-      var closestDiff = Math.abs(closest.timestamp.toMillis() - targetTime.toMillis());
-      return currentDiff < closestDiff ? current : closest;
-    });
-
-    // Si la diferencia es mayor a 30 minutos, retornar null
-    var diffInMinutes = Math.abs(closestReading.timestamp.diff(targetTime, "minutes").minutes);
-    if (diffInMinutes > 30) {
-      return null;
-    }
-    return closestReading.temperature;
-  };
-
-  /**
-   * Obtiene datos de estado de puertas para la fecha seleccionada
-   *
-   * @async
-   * @param {Date} date - Fecha para obtener datos
-   * @returns {Promise<void>}
-   */
-  var fetchDataForSelectedDate = /*#__PURE__*/function () {
-    var _ref3 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee3(date) {
-      var startDate, endDate, response, fetchedData, uniqueSectors, _t3;
-      return _regenerator().w(function (_context3) {
-        while (1) switch (_context3.p = _context3.n) {
-          case 0:
-            startDate = luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(date).startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
-            endDate = luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(date).endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
-            _context3.p = 1;
-            _context3.n = 2;
-            return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get("/api/beacons/door-status", {
-              params: {
-                startDate: startDate,
-                endDate: endDate
-              }
-            });
-          case 2:
-            response = _context3.v;
-            fetchedData = response.data;
-            console.log("Fetched data:", fetchedData);
-            uniqueSectors = _toConsumableArray(new Set(fetchedData.map(function (item) {
-              return item.sector;
-            })));
-            setSectors(uniqueSectors);
-            if (!selectedSector && uniqueSectors.length > 0) {
-              setSelectedSector(uniqueSectors[0]);
-            }
-            setData(fetchedData);
-            processChartData(fetchedData);
-            setSelectedInterval({
-              start: luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(date).set({
-                hour: 8,
-                minute: 0
-              }),
-              end: luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(date).set({
-                hour: 8,
-                minute: 30
-              })
-            });
-            _context3.n = 4;
-            break;
-          case 3:
-            _context3.p = 3;
-            _t3 = _context3.v;
-            console.error("Error fetching door status:", _t3);
-          case 4:
-            return _context3.a(2);
-        }
-      }, _callee3, null, [[1, 3]]);
-    }));
-    return function fetchDataForSelectedDate(_x2) {
-      return _ref3.apply(this, arguments);
-    };
-  }();
-
-  // ============================================
-  // Procesamiento de Datos para Gráficos
-  // ============================================
-
-  /**
-   * Procesa datos para el gráfico de torta
-   *
-   * @param {Array} fetchedData - Datos obtenidos del servidor
-   */
-  var processChartData = function processChartData(fetchedData) {
-    var openCount = fetchedData.filter(function (d) {
-      return d.magnet_status === 0;
-    }).length;
-    var closedCount = fetchedData.filter(function (d) {
-      return d.magnet_status === 1;
-    }).length;
-    var total = openCount + closedCount;
-    setPieChartData([{
-      name: "Abierto",
-      value: openCount,
-      percentage: (openCount / total * 100).toFixed(2)
-    }, {
-      name: "Cerrado",
-      value: closedCount,
-      percentage: (closedCount / total * 100).toFixed(2)
-    }]);
-  };
-
-  /**
-   * Procesa datos para el gráfico de línea temporal
-   *
-   * @param {Array} fetchedData - Datos obtenidos
-   * @param {DateTime} startDate - Fecha de inicio (Luxon)
-   * @param {DateTime} endDate - Fecha de fin (Luxon)
-   */
-  var processLineChartData = function processLineChartData(fetchedData, startDate, endDate) {
-    var chartData = [];
-    var currentTime = startDate;
-    var endTime = endDate;
-    var toDt = function toDt(t) {
-      return typeof t === 'number' ? luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromMillis(t) : luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromISO(t);
-    };
-    var relevantData = fetchedData.filter(function (d) {
-      return d.sector === selectedSector && toDt(d.timestamp).toMillis() > startDate.toMillis() && toDt(d.timestamp).toMillis() < endTime.toMillis();
-    }).sort(function (a, b) {
-      return toDt(a.timestamp).toMillis() - toDt(b.timestamp).toMillis();
-    });
-    if (relevantData.length === 0) {
-      setLineChartData([]);
-      return;
-    }
-    var lastValidStatus = relevantData[0].magnet_status;
-    var potentialChangeStart = null;
-    var currentStatus = lastValidStatus;
-    var _loop = function _loop() {
-      var currentTimeStr = currentTime.toFormat("HH:mm");
-      var entriesAtThisTime = relevantData.filter(function (d) {
-        return toDt(d.timestamp).toFormat("HH:mm") === currentTimeStr;
-      });
-      if (entriesAtThisTime.length > 0) {
-        var newStatus = entriesAtThisTime[entriesAtThisTime.length - 1].magnet_status;
-        if (newStatus !== currentStatus) {
-          if (!potentialChangeStart) {
-            potentialChangeStart = currentTime;
-          } else if (currentTime.diff(potentialChangeStart, "minutes").minutes >= 2) {
-            lastValidStatus = newStatus;
-            currentStatus = newStatus;
-            potentialChangeStart = null;
-          }
-        } else {
-          potentialChangeStart = null;
-        }
-      }
-      chartData.push({
-        time: currentTimeStr,
-        status: currentStatus === 0 ? 2 : 1
-      });
-      currentTime = currentTime.plus({
-        minutes: 1
-      });
-    };
-    while (currentTime.toMillis() <= endTime.toMillis()) {
-      _loop();
-    }
-    setLineChartData(chartData);
-  };
-
-  // ============================================
-  // Manejadores de Eventos
-  // ============================================
-
-  /**
-   * Maneja el cambio de fecha en el DatePicker
-   *
-   * @param {Date} date - Nueva fecha seleccionada
-   */
-  var handleDateChange = function handleDateChange(date) {
-    setSelectedDate(date);
-  };
-
-  /**
-   * Maneja el click en una celda de la matriz
-   *
-   * @param {number} hour - Hora seleccionada
-   * @param {number} minute - Minuto de inicio
-   * @param {string} sector - Sector seleccionado
-   */
-  var handleCellClick = function handleCellClick(hour, minute, sector) {
-    var start = luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromJSDate(selectedDate).set({
-      hour: hour,
-      minute: minute
-    });
-    var end = start.plus({
-      minutes: 10
-    });
-    setSelectedInterval({
-      start: start,
-      end: end
-    });
-    setSelectedSector(sector);
-  };
-
-  /**
-   * Obtiene la clase CSS según el estado de la puerta
-   *
-   * @param {number} status - Estado de la puerta (0: abierto, 1: cerrado)
-   * @returns {string} Clases de Tailwind correspondientes
-   */
-  var getColorClass = function getColorClass(status) {
-    return status === 1 ? "bg-green-500/80 text-white" : "bg-red-600/80 text-white";
-  };
-
-  // ============================================
-  // Renderizado de la Matriz
-  // ============================================
-
-  /**
-   * Crea la matriz de visualización de estados por sector y tiempo
-   *
-   * @returns {JSX.Element[]} Array de filas de la tabla
-   */
-  var createMatrix = function createMatrix() {
-    var hours = Array.from({
-      length: 24
-    }, function (_, i) {
-      return i;
-    });
-    var minuteRanges = ["10:00", "00:20", "00:30", "00:40", "00:50", "00:59"];
-    return sectors.map(function (sector) {
-      var sectorData = data.filter(function (d) {
-        return d.sector === sector;
-      });
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", {
-        key: sector,
-        className: "border-b"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-        className: "border-r bg-blue-50 font-medium px-4 py-2 text-center"
-      }, sector), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-        className: "border-r p-0"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
-        className: "w-full h-full border-collapse"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tbody", null, minuteRanges.map(function (range, index) {
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", {
-          key: index
-        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-          className: "text-xs text-gray-600 px-2 h-10 text-center border-b last:border-b-0 align-middle"
-        }, range));
-      })))), hours.map(function (hour) {
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-          key: hour,
-          className: "border-r p-0"
-        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
-          className: "w-full h-full border-collapse"
-        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tbody", null, minuteRanges.map(function (_, minuteIndex) {
-          var startMinute = minuteIndex * 10;
-          var endMinute = startMinute + 10;
-          var entryToDt = function entryToDt(t) {
-            return typeof t === 'number' ? luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromMillis(t) : luxon__WEBPACK_IMPORTED_MODULE_17__.DateTime.fromISO(t);
-          };
-          var trameData = sectorData.filter(function (d) {
-            var entryTime = entryToDt(d.timestamp);
-            return entryTime.hour === hour && entryTime.minute >= startMinute && entryTime.minute < endMinute;
-          });
-          var lastEntry = trameData.length > 0 ? trameData.reduce(function (prev, current) {
-            return entryToDt(current.timestamp).toMillis() > entryToDt(prev.timestamp).toMillis() ? current : prev;
-          }) : null;
-
-          // Obtener la temperatura más cercana al final del intervalo
-          var temperature = findClosestTemperature(sector, hour, endMinute);
-          return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", {
-            key: minuteIndex
-          }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-            className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("h-10 w-full cursor-pointer text-center", "border-b last:border-b-0", "transition-all duration-200", "hover:opacity-80 hover:scale-105", lastEntry && getColorClass(lastEntry.magnet_status)),
-            onClick: function onClick() {
-              return handleCellClick(hour, startMinute, sector);
-            }
-          }, lastEntry && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-            className: "text-sm font-medium"
-          }, temperature !== null ? Math.round(temperature) : "--", "\xB0C")));
-        }))));
-      }));
-    });
-  };
-  var matrix = createMatrix();
-
-  // ============================================
-  // Renderizado Principal
-  // ============================================
-
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      y: -10
-    },
-    animate: {
-      opacity: 1,
-      y: 0
-    },
-    transition: {
-      duration: 0.3
-    },
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("min-h-screen w-full relative", "bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100", "dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]"
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "relative z-10"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Header_View__WEBPACK_IMPORTED_MODULE_24__["default"], {
-    title: "Estado de Puertas por Reefer"
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "container mx-auto px-4 py-6 max-w-full"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      y: -10
-    },
-    animate: {
-      opacity: 1,
-      y: 0
-    },
-    transition: {
-      duration: 0.3,
-      delay: 0.1
-    },
-    className: "text-center mb-4"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
-    className: "text-sm text-gray-600 dark:text-gray-400"
-  }, "al t\xE9rmino de cada tramo de tiempo")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      y: 20
-    },
-    animate: {
-      opacity: 1,
-      y: 0
-    },
-    transition: {
-      duration: 0.4,
-      delay: 0.2
-    },
-    className: "relative z-50"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.Card, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("mb-6", "bg-white/80 dark:bg-gray-800/80", "backdrop-blur-md", "border border-white/20 dark:border-gray-700/30", "shadow-xl hover:shadow-2xl", "transition-all duration-300")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.CardContent, {
-    className: "p-6"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "flex flex-col md:flex-row items-center justify-center gap-6"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "flex items-center gap-2 relative z-50"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
-    className: "text-sm font-medium text-gray-700 dark:text-gray-300"
-  }, "Fecha:"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement((react_datepicker__WEBPACK_IMPORTED_MODULE_2___default()), {
-    selected: selectedDate,
-    onChange: handleDateChange,
-    dateFormat: "yyyy-MM-dd",
-    maxDate: new Date(),
-    popperClassName: "z-[9999]",
-    portalId: "root",
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("px-3 py-2 border rounded-md", "focus:outline-none focus:ring-2 focus:ring-[#6B9FD4]/50", "transition-all duration-200")
-  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "flex items-center gap-2 relative z-50"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("label", {
-    className: "text-sm font-medium text-gray-700 dark:text-gray-300"
-  }, "Sector:"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_select__WEBPACK_IMPORTED_MODULE_22__.Select, {
-    value: selectedSector || "__all__",
-    onValueChange: function onValueChange(value) {
-      return setSelectedSector(value === "__all__" ? null : value);
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_select__WEBPACK_IMPORTED_MODULE_22__.SelectTrigger, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("w-[200px]", "focus:ring-2 focus:ring-[#6B9FD4]/50", "transition-all duration-200")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_select__WEBPACK_IMPORTED_MODULE_22__.SelectValue, {
-    placeholder: "Todos los sectores"
-  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_select__WEBPACK_IMPORTED_MODULE_22__.SelectContent, {
-    className: "z-[9999]"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_select__WEBPACK_IMPORTED_MODULE_22__.SelectItem, {
-    value: "__all__"
-  }, "Todos los sectores"), availableSectors.map(function (sector) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_select__WEBPACK_IMPORTED_MODULE_22__.SelectItem, {
-      key: sector.id,
-      value: sector.nombre
-    }, sector.nombre);
-  })))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "flex items-center gap-6"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "flex items-center gap-2"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "w-5 h-5 bg-red-600/80 rounded drop-shadow-[0_0_4px_rgba(220,38,38,0.6)]"
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-    className: "text-sm text-gray-700 dark:text-gray-300"
-  }, "Puerta Abierta")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "flex items-center gap-2"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "w-5 h-5 bg-green-500/80 rounded drop-shadow-[0_0_4px_rgba(34,197,94,0.6)]"
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-    className: "text-sm text-gray-700 dark:text-gray-300"
-  }, "Puerta Cerrada"))))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      y: 20
-    },
-    animate: {
-      opacity: 1,
-      y: 0
-    },
-    transition: {
-      duration: 0.4,
-      delay: 0.3
-    },
-    className: "w-full"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.Card, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("mb-8", "bg-white/80 dark:bg-gray-800/80", "backdrop-blur-md", "border border-white/20 dark:border-gray-700/30", "shadow-xl", "transition-all duration-300")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.CardContent, {
-    className: "p-0"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "overflow-x-auto overflow-y-visible"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
-    className: "w-full border-collapse min-w-[1200px]"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]", "text-white")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-    className: "border border-white/20 px-4 py-3 text-sm font-semibold w-32"
-  }, "Sector"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-    className: "border border-white/20 px-4 py-3 text-sm font-semibold w-24"
-  }, "Minutos hasta"), Array.from({
-    length: 24
-  }, function (_, i) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-      key: i,
-      className: "border border-white/20 px-2 py-3 text-sm font-semibold w-12"
-    }, "".concat(i.toString().padStart(2, "0"), ":00"));
-  }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tbody", null, matrix)))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "grid grid-cols-1 lg:grid-cols-2 gap-6"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      x: -20
-    },
-    animate: {
-      opacity: 1,
-      x: 0
-    },
-    transition: {
-      duration: 0.4,
-      delay: 0.4
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.Card, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("bg-white/80 dark:bg-gray-800/80", "backdrop-blur-md", "border border-white/20 dark:border-gray-700/30", "shadow-xl hover:shadow-2xl", "transition-all duration-300")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.CardHeader, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.CardTitle, {
-    className: "text-center"
-  }, "Resumen de Estados")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.CardContent, {
-    className: "flex justify-center"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_15__.PieChart, {
-    width: 400,
-    height: 300
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_8__.Pie, {
-    data: pieChartData,
-    cx: 200,
-    cy: 150,
-    labelLine: false,
-    outerRadius: 80,
-    fill: "#8884d8",
-    dataKey: "value",
-    label: function label(_ref4) {
-      var name = _ref4.name,
-        percentage = _ref4.percentage;
-      return "".concat(name, ": ").concat(percentage, "%");
-    }
-  }, pieChartData.map(function (entry, index) {
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_7__.Cell, {
-      key: "cell-".concat(index),
-      fill: COLORS[index % COLORS.length]
-    });
-  })), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_5__.Tooltip, null), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_4__.Legend, null))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      x: 20
-    },
-    animate: {
-      opacity: 1,
-      x: 0
-    },
-    transition: {
-      duration: 0.4,
-      delay: 0.5
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.Card, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("bg-white/80 dark:bg-gray-800/80", "backdrop-blur-md", "border border-white/20 dark:border-gray-700/30", "shadow-xl hover:shadow-2xl", "transition-all duration-300")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.CardHeader, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.CardTitle, {
-    className: "text-center"
-  }, "Estado de la Puerta del Tramo de Tiempo"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
-    className: "text-center text-sm text-gray-600 dark:text-gray-400 mt-2"
-  }, "Escoja tramo en la matriz")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_components_ui_card__WEBPACK_IMPORTED_MODULE_18__.CardContent, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_6__.ResponsiveContainer, {
-    width: "100%",
-    height: 350
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_14__.LineChart, {
-    data: lineChartData,
-    margin: {
-      top: 20,
-      right: 30,
-      left: 20,
-      bottom: 10
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_9__.CartesianGrid, {
-    strokeDasharray: "3 3",
-    stroke: "#eee"
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_12__.XAxis, {
-    dataKey: "time",
-    interval: "preserveStartEnd",
-    tick: {
-      fill: "#666",
-      fontSize: 12
-    },
-    axisLine: {
-      stroke: "#666"
-    },
-    tickLine: {
-      stroke: "#666"
-    }
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_13__.YAxis, {
-    tickFormatter: function tickFormatter(value) {
-      return value === 2 ? "Abierto" : value === 1 ? "Cerrado" : "";
-    },
-    domain: [0.5, 2.5],
-    ticks: [1, 2],
-    tick: {
-      fill: "#666",
-      fontSize: 12
-    },
-    axisLine: {
-      stroke: "#666"
-    },
-    tickLine: {
-      stroke: "#666"
-    }
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_5__.Tooltip, {
-    content: function content(_ref5) {
-      var active = _ref5.active,
-        payload = _ref5.payload;
-      if (active && payload && payload.length) {
-        var _data = payload[0].payload;
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-          className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("bg-white p-3 rounded shadow-lg", "border border-gray-200")
-        }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
-          className: "text-sm font-medium"
-        }, "Tiempo: ".concat(_data.time)), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("p", {
-          className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_23__.cn)("text-sm font-semibold", _data.status === 2 ? "text-red-600" : "text-green-600")
-        }, "Estado: ".concat(_data.status === 2 ? "Abierto" : "Cerrado")));
-      }
-      return null;
-    }
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_4__.Legend, {
-    content: function content() {
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-        className: "flex justify-center mt-4 gap-6"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-        className: "flex items-center gap-2"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-        className: "text-red-600"
-      }, "\u25CF"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-        className: "text-sm"
-      }, "Abierto")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-        className: "flex items-center gap-2"
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-        className: "text-green-600"
-      }, "\u25CF"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-        className: "text-sm"
-      }, "Cerrado")));
-    }
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_10__.Line, {
-    type: "stepAfter",
-    dataKey: "status",
-    stroke: LINE_COLOR,
-    strokeWidth: 2,
-    dot: false,
-    activeDot: {
-      r: 6,
-      fill: LINE_COLOR
-    }
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(recharts__WEBPACK_IMPORTED_MODULE_11__.Area, {
-    type: "stepAfter",
-    dataKey: "status",
-    stroke: LINE_COLOR,
-    fill: LINE_COLOR,
-    fillOpacity: 0.3
-  }))))))))));
-};
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (DoorStatusMatrixV2);
 
 /***/ },
 
@@ -24841,596 +23902,6 @@ var TemperaturePowerAnalysisV2 = function TemperaturePowerAnalysisV2() {
   }, "No se encontraron datos para la fecha y ubicaci\xF3n seleccionadas."))))))));
 };
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (TemperaturePowerAnalysisV2);
-
-/***/ },
-
-/***/ "./src/components/UbicacionTiempoRealInterior_View.js"
-/*!************************************************************!*\
-  !*** ./src/components/UbicacionTiempoRealInterior_View.js ***!
-  \************************************************************/
-(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! axios */ "./node_modules/axios/lib/axios.js");
-/* harmony import */ var luxon__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! luxon */ "./node_modules/luxon/build/es6/luxon.mjs");
-/* harmony import */ var framer_motion__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! framer-motion */ "./node_modules/framer-motion/dist/es/render/components/motion/proxy.mjs");
-/* harmony import */ var _lib_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../lib/utils */ "./src/lib/utils.js");
-/* harmony import */ var _ui_card__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./ui/card */ "./src/components/ui/card.jsx");
-/* harmony import */ var _ui_button__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./ui/button */ "./src/components/ui/button.jsx");
-/* harmony import */ var _ui_badge__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./ui/badge */ "./src/components/ui/badge.jsx");
-/* harmony import */ var _ui_alert__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./ui/alert */ "./src/components/ui/alert.jsx");
-/* harmony import */ var _ui_skeleton__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./ui/skeleton */ "./src/components/ui/skeleton.jsx");
-/* harmony import */ var _Header_View__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./Header_View */ "./src/components/Header_View.js");
-/* harmony import */ var _assets_images_PLANO_STORAGE_jpg__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../assets/images/PLANO_STORAGE.jpg */ "./src/assets/images/PLANO_STORAGE.jpg");
-/* harmony import */ var _assets_images_forklift_orange_1_png__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../assets/images/forklift_orange_1.png */ "./src/assets/images/forklift_orange_1.png");
-/* harmony import */ var _assets_images_forklift_Blue_2_png__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../assets/images/forklift_Blue_2.png */ "./src/assets/images/forklift_Blue_2.png");
-/* harmony import */ var _assets_images_forklift_red_3_png__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../assets/images/forklift_red_3.png */ "./src/assets/images/forklift_red_3.png");
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _defineProperty(e, r, t) { return (r = _toPropertyKey(r)) in e ? Object.defineProperty(e, r, { value: t, enumerable: !0, configurable: !0, writable: !0 }) : e[r] = t, e; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
-function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-function _regenerator() { /*! regenerator-runtime -- Copyright (c) 2014-present, Facebook, Inc. -- license (MIT): https://github.com/babel/babel/blob/main/packages/babel-helpers/LICENSE */ var e, t, r = "function" == typeof Symbol ? Symbol : {}, n = r.iterator || "@@iterator", o = r.toStringTag || "@@toStringTag"; function i(r, n, o, i) { var c = n && n.prototype instanceof Generator ? n : Generator, u = Object.create(c.prototype); return _regeneratorDefine2(u, "_invoke", function (r, n, o) { var i, c, u, f = 0, p = o || [], y = !1, G = { p: 0, n: 0, v: e, a: d, f: d.bind(e, 4), d: function d(t, r) { return i = t, c = 0, u = e, G.n = r, a; } }; function d(r, n) { for (c = r, u = n, t = 0; !y && f && !o && t < p.length; t++) { var o, i = p[t], d = G.p, l = i[2]; r > 3 ? (o = l === n) && (u = i[(c = i[4]) ? 5 : (c = 3, 3)], i[4] = i[5] = e) : i[0] <= d && ((o = r < 2 && d < i[1]) ? (c = 0, G.v = n, G.n = i[1]) : d < l && (o = r < 3 || i[0] > n || n > l) && (i[4] = r, i[5] = n, G.n = l, c = 0)); } if (o || r > 1) return a; throw y = !0, n; } return function (o, p, l) { if (f > 1) throw TypeError("Generator is already running"); for (y && 1 === p && d(p, l), c = p, u = l; (t = c < 2 ? e : u) || !y;) { i || (c ? c < 3 ? (c > 1 && (G.n = -1), d(c, u)) : G.n = u : G.v = u); try { if (f = 2, i) { if (c || (o = "next"), t = i[o]) { if (!(t = t.call(i, u))) throw TypeError("iterator result is not an object"); if (!t.done) return t; u = t.value, c < 2 && (c = 0); } else 1 === c && (t = i["return"]) && t.call(i), c < 2 && (u = TypeError("The iterator does not provide a '" + o + "' method"), c = 1); i = e; } else if ((t = (y = G.n < 0) ? u : r.call(n, G)) !== a) break; } catch (t) { i = e, c = 1, u = t; } finally { f = 1; } } return { value: t, done: y }; }; }(r, o, i), !0), u; } var a = {}; function Generator() {} function GeneratorFunction() {} function GeneratorFunctionPrototype() {} t = Object.getPrototypeOf; var c = [][n] ? t(t([][n]())) : (_regeneratorDefine2(t = {}, n, function () { return this; }), t), u = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(c); function f(e) { return Object.setPrototypeOf ? Object.setPrototypeOf(e, GeneratorFunctionPrototype) : (e.__proto__ = GeneratorFunctionPrototype, _regeneratorDefine2(e, o, "GeneratorFunction")), e.prototype = Object.create(u), e; } return GeneratorFunction.prototype = GeneratorFunctionPrototype, _regeneratorDefine2(u, "constructor", GeneratorFunctionPrototype), _regeneratorDefine2(GeneratorFunctionPrototype, "constructor", GeneratorFunction), GeneratorFunction.displayName = "GeneratorFunction", _regeneratorDefine2(GeneratorFunctionPrototype, o, "GeneratorFunction"), _regeneratorDefine2(u), _regeneratorDefine2(u, o, "Generator"), _regeneratorDefine2(u, n, function () { return this; }), _regeneratorDefine2(u, "toString", function () { return "[object Generator]"; }), (_regenerator = function _regenerator() { return { w: i, m: f }; })(); }
-function _regeneratorDefine2(e, r, n, t) { var i = Object.defineProperty; try { i({}, "", {}); } catch (e) { i = 0; } _regeneratorDefine2 = function _regeneratorDefine(e, r, n, t) { function o(r, n) { _regeneratorDefine2(e, r, function (e) { return this._invoke(r, n, e); }); } r ? i ? i(e, r, { value: n, enumerable: !t, configurable: !t, writable: !t }) : e[r] = n : (o("next", 0), o("throw", 1), o("return", 2)); }, _regeneratorDefine2(e, r, n, t); }
-function asyncGeneratorStep(n, t, e, r, o, a, c) { try { var i = n[a](c), u = i.value; } catch (n) { return void e(n); } i.done ? t(u) : Promise.resolve(u).then(r, o); }
-function _asyncToGenerator(n) { return function () { var t = this, e = arguments; return new Promise(function (r, o) { var a = n.apply(t, e); function _next(n) { asyncGeneratorStep(a, r, o, _next, _throw, "next", n); } function _throw(n) { asyncGeneratorStep(a, r, o, _next, _throw, "throw", n); } _next(void 0); }); }; }
-function _slicedToArray(r, e) { return _arrayWithHoles(r) || _iterableToArrayLimit(r, e) || _unsupportedIterableToArray(r, e) || _nonIterableRest(); }
-function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
-function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
-function _iterableToArrayLimit(r, l) { var t = null == r ? null : "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (null != t) { var e, n, i, u, a = [], f = !0, o = !1; try { if (i = (t = t.call(r)).next, 0 === l) { if (Object(t) !== t) return; f = !1; } else for (; !(f = (e = i.call(t)).done) && (a.push(e.value), a.length !== l); f = !0); } catch (r) { o = !0, n = r; } finally { try { if (!f && null != t["return"] && (u = t["return"](), Object(u) !== u)) return; } finally { if (o) throw n; } } return a; } }
-function _arrayWithHoles(r) { if (Array.isArray(r)) return r; }
-/**
- * @fileoverview Componente de ubicación en tiempo real para interiores - Premium UI
- * Muestra la ubicación del personal dentro del almacén usando beacons BLE
- * Versión migrada a Shadcn/UI v2.1 con efectos premium
- *
- * @component
- * @requires axios
- * @requires luxon (DateTime)
- * @requires framer-motion
- * @requires Shadcn/UI components
- * @version 2.1.0 - Premium UI Enhancement
- */
-
-
-
-
-
-
-
-// Componentes Shadcn/UI
-
-
-
-
-
-
-// Componentes custom y assets
-
-
-
-
-
-
-/**
- * Componente principal para el seguimiento de ubicación en tiempo real en interiores
- *
- * @returns {JSX.Element} Componente renderizado
- */
-var UbicacionTiempoRealInteriorV2 = function UbicacionTiempoRealInteriorV2() {
-  // Estados del componente - preservados exactamente como el original
-  var _useState = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState2 = _slicedToArray(_useState, 2),
-    personal = _useState2[0],
-    setPersonal = _useState2[1];
-  var _useState3 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState4 = _slicedToArray(_useState3, 2),
-    sectors = _useState4[0],
-    setSectors = _useState4[1];
-  var _useState5 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState6 = _slicedToArray(_useState5, 2),
-    devices = _useState6[0],
-    setDevices = _useState6[1];
-  var _useState7 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)({}),
-    _useState8 = _slicedToArray(_useState7, 2),
-    latestSectors = _useState8[0],
-    setLatestSectors = _useState8[1];
-  var _useState9 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null),
-    _useState0 = _slicedToArray(_useState9, 2),
-    umbrales = _useState0[0],
-    setUmbrales = _useState0[1];
-  var _useState1 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(luxon__WEBPACK_IMPORTED_MODULE_2__.DateTime.now()),
-    _useState10 = _slicedToArray(_useState1, 2),
-    currentTime = _useState10[0],
-    setCurrentTime = _useState10[1];
-  var _useState11 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)([]),
-    _useState12 = _slicedToArray(_useState11, 2),
-    activeBeacons = _useState12[0],
-    setActiveBeacons = _useState12[1];
-  var _useState13 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(true),
-    _useState14 = _slicedToArray(_useState13, 2),
-    isLoading = _useState14[0],
-    setIsLoading = _useState14[1];
-  var _useState15 = (0,react__WEBPACK_IMPORTED_MODULE_0__.useState)(null),
-    _useState16 = _slicedToArray(_useState15, 2),
-    error = _useState16[0],
-    setError = _useState16[1];
-
-  /**
-   * Hook useEffect para cargar datos iniciales
-   */
-  (0,react__WEBPACK_IMPORTED_MODULE_0__.useEffect)(function () {
-    fetchData();
-    fetchActiveBeacons();
-  }, []);
-
-  /**
-   * Obtiene todos los datos necesarios del servidor
-   * Incluye información del mapa, sectores y umbrales
-   */
-  var fetchData = /*#__PURE__*/function () {
-    var _ref = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee() {
-      var _yield$Promise$all, _yield$Promise$all2, mapInfo, sectorInfo, umbralesInfo, sectorMap, _t;
-      return _regenerator().w(function (_context) {
-        while (1) switch (_context.p = _context.n) {
-          case 0:
-            setIsLoading(true);
-            setError(null);
-            _context.p = 1;
-            _context.n = 2;
-            return Promise.all([axios__WEBPACK_IMPORTED_MODULE_1__["default"].get('/api/sectores/retrive_MapWithQuadrants_information'), axios__WEBPACK_IMPORTED_MODULE_1__["default"].get('/api/beacons/latest-sectors'), axios__WEBPACK_IMPORTED_MODULE_1__["default"].get('/api/config/teltonica/umbrales')]);
-          case 2:
-            _yield$Promise$all = _context.v;
-            _yield$Promise$all2 = _slicedToArray(_yield$Promise$all, 3);
-            mapInfo = _yield$Promise$all2[0];
-            sectorInfo = _yield$Promise$all2[1];
-            umbralesInfo = _yield$Promise$all2[2];
-            setPersonal(mapInfo.data.personal);
-            setSectors(mapInfo.data.sectors);
-            setDevices(mapInfo.data.devices);
-            setUmbrales(umbralesInfo.data);
-            sectorMap = sectorInfo.data.sectors.reduce(function (acc, item) {
-              acc[item.device_id] = item;
-              return acc;
-            }, {});
-            setLatestSectors(sectorMap);
-            setCurrentTime(luxon__WEBPACK_IMPORTED_MODULE_2__.DateTime.fromISO(sectorInfo.data.serverTime));
-            _context.n = 4;
-            break;
-          case 3:
-            _context.p = 3;
-            _t = _context.v;
-            console.error('Error fetching data:', _t);
-            setError('Error al cargar los datos. Por favor, intente nuevamente.');
-          case 4:
-            _context.p = 4;
-            setIsLoading(false);
-            return _context.f(4);
-          case 5:
-            return _context.a(2);
-        }
-      }, _callee, null, [[1, 3, 4, 5]]);
-    }));
-    return function fetchData() {
-      return _ref.apply(this, arguments);
-    };
-  }();
-
-  /**
-   * Obtiene la lista de beacons activos
-   */
-  var fetchActiveBeacons = /*#__PURE__*/function () {
-    var _ref2 = _asyncToGenerator(/*#__PURE__*/_regenerator().m(function _callee2() {
-      var response, activeBeaconIds, _t2;
-      return _regenerator().w(function (_context2) {
-        while (1) switch (_context2.p = _context2.n) {
-          case 0:
-            _context2.p = 0;
-            _context2.n = 1;
-            return axios__WEBPACK_IMPORTED_MODULE_1__["default"].get('/api/beacons/active-beacons');
-          case 1:
-            response = _context2.v;
-            activeBeaconIds = response.data.activeBeaconIds || [];
-            console.log('Active Beacons:', activeBeaconIds);
-            setActiveBeacons(activeBeaconIds);
-            _context2.n = 3;
-            break;
-          case 2:
-            _context2.p = 2;
-            _t2 = _context2.v;
-            console.error('Failed to fetch active beacons:', _t2);
-          case 3:
-            return _context2.a(2);
-        }
-      }, _callee2, null, [[0, 2]]);
-    }));
-    return function fetchActiveBeacons() {
-      return _ref2.apply(this, arguments);
-    };
-  }();
-
-  /**
-   * Maneja la actualización manual de datos
-   */
-  var handleRefresh = function handleRefresh() {
-    fetchData();
-    fetchActiveBeacons();
-  };
-
-  /**
-   * Obtiene el ícono correspondiente para cada personal
-   * @param {string} imageName - Nombre del archivo de imagen
-   * @returns {string|null} Ruta del ícono o null
-   */
-  var getPersonalIcon = function getPersonalIcon(imageName) {
-    switch (imageName) {
-      case 'Personal 1.png':
-        return _assets_images_forklift_orange_1_png__WEBPACK_IMPORTED_MODULE_12__;
-      case 'Personal 2.png':
-        return _assets_images_forklift_Blue_2_png__WEBPACK_IMPORTED_MODULE_13__;
-      case 'Personal 3.png':
-        return _assets_images_forklift_red_3_png__WEBPACK_IMPORTED_MODULE_14__;
-      default:
-        return null;
-    }
-  };
-
-  /**
-   * Calcula el tiempo de permanencia en el sector actual
-   * @param {string} timeSinceDetection - Tiempo desde la última detección
-   * @returns {string} Tiempo formateado en HH:mm
-   */
-  var calculatePermanencia = function calculatePermanencia(timeSinceDetection) {
-    if (!timeSinceDetection) return '00:00';
-    return timeSinceDetection;
-  };
-
-  /**
-   * Determina el color del semáforo según el tiempo transcurrido
-   * @param {string} beacon_id - ID del beacon
-   * @param {string} timestamp - Marca de tiempo de entrada
-   * @returns {string} Clase CSS del semáforo (green, yellow, red o vacío)
-   */
-  var getSemaphoreClass = (0,react__WEBPACK_IMPORTED_MODULE_0__.useCallback)(function (beacon_id, timestamp) {
-    if (!timestamp || !umbrales) return '';
-    var start = luxon__WEBPACK_IMPORTED_MODULE_2__.DateTime.fromFormat(timestamp, 'yyyy-MM-dd HH:mm:ss');
-    var duration = (currentTime instanceof luxon__WEBPACK_IMPORTED_MODULE_2__.DateTime ? currentTime : luxon__WEBPACK_IMPORTED_MODULE_2__.DateTime.fromISO(currentTime)).diff(start).as('minutes');
-    var umbral_verde = umbrales.umbral_verde,
-      umbral_amarillo = umbrales.umbral_amarillo;
-    if (duration <= umbral_verde) {
-      return 'green';
-    } else if (duration > umbral_verde && duration <= umbral_amarillo) {
-      return 'yellow';
-    } else if (duration > umbral_amarillo) {
-      return 'red';
-    }
-    return '';
-  }, [umbrales, currentTime]);
-
-  /**
-   * Obtiene el texto descriptivo del estado del semáforo
-   * @param {string} semaphoreClass - Clase del semáforo
-   * @returns {string} Texto descriptivo del estado
-   */
-  var getSemaphoreText = function getSemaphoreText(semaphoreClass) {
-    var texts = {
-      green: 'On Time',
-      yellow: 'Over Time',
-      red: 'Past Deadline',
-      '': 'N/A'
-    };
-    return texts[semaphoreClass];
-  };
-
-  /**
-   * Define las posiciones de los sectores en el plano
-   */
-  var sectorPositions = {
-    'Zona L3': {
-      bottom: '80%',
-      right: '55%',
-      width: '2%'
-    },
-    'Farmacia': {
-      bottom: '25%',
-      right: '55%',
-      width: '2%'
-    },
-    'Entrada': {
-      bottom: '10%',
-      right: '64%',
-      width: '2%'
-    },
-    'CalleCentralNorte': {
-      bottom: '73%',
-      right: '45%',
-      width: '2%'
-    },
-    'Frío 1234': {
-      bottom: '58%',
-      right: '30%',
-      width: '4%'
-    },
-    'Entrada Poeta': {
-      bottom: '38%',
-      right: '64%',
-      width: '2%'
-    },
-    'CalleCentralCentro': {
-      bottom: '50%',
-      right: '46%',
-      width: '2%'
-    }
-  };
-
-  /**
-   * Calcula la posición ajustada para múltiples personas en el mismo sector
-   * @param {string} sectorName - Nombre del sector
-   * @param {number} index - Índice del personal en el sector
-   * @returns {Object} Posición con estilos CSS
-   */
-  var getSectorPosition = function getSectorPosition(sectorName, index) {
-    var basePosition = sectorPositions[sectorName] || {
-      bottom: '0%',
-      right: '0%',
-      width: '2%'
-    };
-    var offset = 5 * index;
-    return _objectSpread(_objectSpread({}, basePosition), {}, {
-      bottom: "calc(".concat(basePosition.bottom, " - ").concat(offset, "px)"),
-      right: "calc(".concat(basePosition.right, " - ").concat(offset, "px)")
-    });
-  };
-
-  /**
-   * Renderiza los íconos del personal en el plano
-   * @returns {JSX.Element[]} Array de elementos img posicionados
-   */
-  var renderPersonnelIcons = function renderPersonnelIcons() {
-    var sectorCounts = {};
-    return personal.map(function (persona, index) {
-      var sectorInfo = latestSectors[persona.id_dispositivo_asignado] || {};
-      var sectorName = sectorInfo.sector;
-      if (!sectorCounts[sectorName]) {
-        sectorCounts[sectorName] = 0;
-      }
-      var sectorPosition = getSectorPosition(sectorName, sectorCounts[sectorName]);
-      sectorCounts[sectorName] += 1;
-      console.log('Rendering persona:', persona.Nombre_Personal, 'Sector:', sectorName, 'Position:', sectorPosition);
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-        key: persona.id_personal,
-        src: getPersonalIcon(persona.imagen_asignado),
-        alt: persona.Nombre_Personal,
-        className: "absolute",
-        style: _objectSpread(_objectSpread({}, sectorPosition), {}, {
-          width: sectorPosition.width
-        })
-      });
-    });
-  };
-
-  /**
-   * Obtiene la variante del Badge según el estado del semáforo
-   * @param {string} semaphoreClass - Clase del semáforo
-   * @returns {string} Variante del Badge de Shadcn
-   */
-  var getBadgeVariant = function getBadgeVariant(semaphoreClass) {
-    switch (semaphoreClass) {
-      case 'green':
-        return 'default';
-      case 'yellow':
-        return 'secondary';
-      case 'red':
-        return 'destructive';
-      default:
-        return 'outline';
-    }
-  };
-  return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      y: -10
-    },
-    animate: {
-      opacity: 1,
-      y: 0
-    },
-    transition: {
-      duration: 0.3
-    },
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("min-h-screen w-full relative p-5", "bg-gradient-to-br from-gray-50 via-blue-50/30 to-gray-100", "dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-800/50 dark:to-gray-900")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:24px_24px]"
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "relative z-10"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_Header_View__WEBPACK_IMPORTED_MODULE_10__["default"], {
-    title: "Ubicaci\xF3n Tiempo Real Interiores"
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "container mx-auto px-4 py-6"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      scale: 0.95
-    },
-    animate: {
-      opacity: 1,
-      scale: 1
-    },
-    transition: {
-      duration: 0.3,
-      delay: 0.1
-    },
-    className: "flex justify-center mb-6"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_button__WEBPACK_IMPORTED_MODULE_6__.Button, {
-    onClick: handleRefresh,
-    disabled: isLoading,
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("bg-[#6B9FD4] hover:bg-[#5A8DC4]", "text-white font-medium", "shadow-md shadow-[#6B9FD4]/30", "hover:shadow-lg hover:shadow-[#6B9FD4]/40", "hover:scale-105", "transition-all duration-200")
-  }, isLoading ? 'Actualizando...' : 'Actualizar Datos')), error && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      y: -10
-    },
-    animate: {
-      opacity: 1,
-      y: 0
-    },
-    transition: {
-      duration: 0.3
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_alert__WEBPACK_IMPORTED_MODULE_8__.Alert, {
-    className: "mb-6 max-w-4xl mx-auto",
-    variant: "destructive"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_alert__WEBPACK_IMPORTED_MODULE_8__.AlertDescription, null, error))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      y: 20
-    },
-    animate: {
-      opacity: 1,
-      y: 0
-    },
-    transition: {
-      duration: 0.4,
-      delay: 0.2
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_card__WEBPACK_IMPORTED_MODULE_5__.Card, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("mb-8 max-w-6xl mx-auto", "bg-white/80 dark:bg-gray-800/80", "backdrop-blur-md", "border border-white/20 dark:border-gray-700/30", "shadow-xl hover:shadow-2xl", "transition-all duration-300")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_card__WEBPACK_IMPORTED_MODULE_5__.CardHeader, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_card__WEBPACK_IMPORTED_MODULE_5__.CardTitle, {
-    className: "text-xl font-semibold"
-  }, "Estado del Personal")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_card__WEBPACK_IMPORTED_MODULE_5__.CardContent, {
-    className: "p-0"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "overflow-x-auto"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("table", {
-    className: "w-full"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("thead", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("border-b", "bg-gradient-to-r from-[#6B9FD4] to-[#5A8DC4]", "text-white")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-    className: "px-4 py-3 text-center font-medium"
-  }, "Personal"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-    className: "px-4 py-3 text-center font-medium"
-  }, "Nombre"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-    className: "px-4 py-3 text-center font-medium"
-  }, "Sector"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-    className: "px-4 py-3 text-center font-medium"
-  }, "Hora Entrada"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-    className: "px-4 py-3 text-center font-medium"
-  }, "Permanencia (hh:mm)"), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("th", {
-    className: "px-4 py-3 text-center font-medium"
-  }, "Estado"))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tbody", null, isLoading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-    colSpan: "6",
-    className: "px-4 py-8"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "flex flex-col items-center gap-3"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_skeleton__WEBPACK_IMPORTED_MODULE_9__.Skeleton, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("h-8 w-32", "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200", "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700")
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_skeleton__WEBPACK_IMPORTED_MODULE_9__.Skeleton, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("h-8 w-48", "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200", "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700")
-  }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_skeleton__WEBPACK_IMPORTED_MODULE_9__.Skeleton, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("h-8 w-24", "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200", "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700")
-  })))) : personal.length === 0 ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("tr", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-    colSpan: "6",
-    className: "px-4 py-8 text-center text-muted-foreground"
-  }, "No hay personal registrado")) : personal.map(function (persona, index) {
-    var sectorInfo = latestSectors[persona.id_dispositivo_asignado] || {};
-    var horaEntrada = sectorInfo.timestamp ? luxon__WEBPACK_IMPORTED_MODULE_2__.DateTime.fromFormat(sectorInfo.timestamp, 'yyyy-MM-dd HH:mm:ss').toFormat('HH:mm') : '-';
-    var permanencia = calculatePermanencia(sectorInfo.timestamp);
-    var semaphoreClass = getSemaphoreClass(sectorInfo.beacon_id, sectorInfo.timestamp);
-    var semaphoreText = getSemaphoreText(semaphoreClass);
-    return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.tr, {
-      key: persona.id_personal,
-      initial: {
-        opacity: 0,
-        x: -20
-      },
-      animate: {
-        opacity: 1,
-        x: 0
-      },
-      transition: {
-        duration: 0.3,
-        delay: index * 0.05,
-        ease: "easeOut"
-      },
-      className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("border-b transition-all duration-200", "hover:bg-muted/50 hover:scale-[1.01]", "even:bg-gray-50/50 dark:even:bg-gray-800/30")
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-      className: "px-4 py-3 text-center"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-      className: "flex justify-center"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-      src: getPersonalIcon(persona.imagen_asignado),
-      alt: persona.Nombre_Personal,
-      className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("h-9 w-auto rounded-full", "ring-2 ring-[#6B9FD4]/30", "hover:ring-[#6B9FD4]/60", "transition-all duration-200")
-    }))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-      className: "px-4 py-3 text-center font-medium"
-    }, persona.Nombre_Personal), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-      className: "px-4 py-3 text-center"
-    }, sectorInfo.sector || /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("span", {
-      className: "text-muted-foreground"
-    }, "Cargando...")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-      className: "px-4 py-3 text-center"
-    }, horaEntrada), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-      className: "px-4 py-3 text-center"
-    }, sectorInfo.timeSinceDetection || '00:00'), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("td", {
-      className: "px-4 py-3 text-center"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_badge__WEBPACK_IMPORTED_MODULE_7__.Badge, {
-      variant: getBadgeVariant(semaphoreClass),
-      className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("font-bold transition-all duration-200", semaphoreClass === 'green' && ["bg-green-500 hover:bg-green-600 text-white", "drop-shadow-[0_0_8px_rgba(34,197,94,0.7)]", "hover:drop-shadow-[0_0_12px_rgba(34,197,94,0.9)]"], semaphoreClass === 'yellow' && ["bg-yellow-500 hover:bg-yellow-600 text-black", "drop-shadow-[0_0_8px_rgba(234,179,8,0.7)]", "hover:drop-shadow-[0_0_12px_rgba(234,179,8,0.9)]"], semaphoreClass === 'red' && ["bg-red-500 hover:bg-red-600 text-white", "drop-shadow-[0_0_8px_rgba(239,68,68,0.7)]", "hover:drop-shadow-[0_0_12px_rgba(239,68,68,0.9)]"])
-    }, semaphoreText)));
-  }))))))), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      y: 20
-    },
-    animate: {
-      opacity: 1,
-      y: 0
-    },
-    transition: {
-      duration: 0.4,
-      delay: 0.3
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_card__WEBPACK_IMPORTED_MODULE_5__.Card, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("max-w-6xl mx-auto", "bg-white/80 dark:bg-gray-800/80", "backdrop-blur-md", "border border-white/20 dark:border-gray-700/30", "shadow-xl hover:shadow-2xl", "transition-all duration-300")
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_card__WEBPACK_IMPORTED_MODULE_5__.CardHeader, null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_card__WEBPACK_IMPORTED_MODULE_5__.CardTitle, {
-    className: "text-xl font-semibold"
-  }, "Mapa de Ubicaci\xF3n")), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_card__WEBPACK_IMPORTED_MODULE_5__.CardContent, null, isLoading ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "flex justify-center items-center h-96"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_ui_skeleton__WEBPACK_IMPORTED_MODULE_9__.Skeleton, {
-    className: (0,_lib_utils__WEBPACK_IMPORTED_MODULE_4__.cn)("h-full w-full", "bg-gradient-to-r from-gray-200 via-gray-300 to-gray-200", "dark:from-gray-700 dark:via-gray-600 dark:to-gray-700")
-  })) : /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(framer_motion__WEBPACK_IMPORTED_MODULE_3__.motion.div, {
-    initial: {
-      opacity: 0,
-      scale: 0.98
-    },
-    animate: {
-      opacity: 1,
-      scale: 1
-    },
-    transition: {
-      duration: 0.4
-    },
-    className: "relative w-full flex justify-center"
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("div", {
-    className: "relative inline-block",
-    style: {
-      width: '60%'
-    }
-  }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("img", {
-    src: _assets_images_PLANO_STORAGE_jpg__WEBPACK_IMPORTED_MODULE_11__,
-    alt: "Plano de la Oficina",
-    className: "w-full h-auto rounded-lg"
-  }), renderPersonnelIcons()))))))));
-};
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (UbicacionTiempoRealInteriorV2);
 
 /***/ },
 
@@ -43643,36 +42114,6 @@ video {
   }
 }
 /* Botones */
-.btn-primary {
-  border-radius: 4px;
-  --tw-bg-opacity: 1;
-  background-color: rgb(107 159 212 / var(--tw-bg-opacity, 1));
-  padding-left: 1.25rem;
-  padding-right: 1.25rem;
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-  font-weight: 500;
-  --tw-text-opacity: 1;
-  color: rgb(255 255 255 / var(--tw-text-opacity, 1));
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 200ms;
-  animation-duration: 200ms;
-}
-.btn-primary:hover {
-  --tw-bg-opacity: 1;
-  background-color: rgb(90 142 195 / var(--tw-bg-opacity, 1));
-}
-.btn-primary:focus {
-  outline: 2px solid transparent;
-  outline-offset: 2px;
-  --tw-ring-offset-shadow: var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);
-  --tw-ring-shadow: var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);
-  box-shadow: var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000);
-  --tw-ring-opacity: 1;
-  --tw-ring-color: rgb(107 159 212 / var(--tw-ring-opacity, 1));
-  --tw-ring-offset-width: 2px;
-}
 /* Tarjetas */
 .card {
   border-radius: 10px;
@@ -43759,24 +42200,6 @@ video {
   border-collapse: collapse;
 }
 /* Loading States */
-.loading-spinner {
-  height: 2.5rem;
-  width: 2.5rem;
-}
-@keyframes spin {
-
-  to {
-    transform: rotate(360deg);
-  }
-}
-.loading-spinner {
-  animation: spin 1s linear infinite;
-  border-radius: 9999px;
-  border-width: 4px;
-  border-color: rgb(229 231 235 / var(--tw-border-opacity, 1));
-  --tw-border-opacity: 1;
-  border-top-color: rgb(107 159 212 / var(--tw-border-opacity, 1));
-}
 /* Mensajes de Estado */
 /* Layout Components */
 .app-container {
@@ -49305,7 +47728,7 @@ video {
 .\\[\\&_tr\\]\\:border-b tr {
   border-bottom-width: 1px;
 }
-`, "",{"version":3,"sources":["webpack://./src/styles/globals.css"],"names":[],"mappings":"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AA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,gBAAmB;EAAnB,oBAAmB;EAAnB,4BAAmB;EAAnB;AAAmB;AAAnB;EAAA,gBAAmB;EAAnB,oBAAmB;EAAnB,4BAAmB;EAAnB;AAAmB;AAAnB;EAAA,gBAAmB;EAAnB,oBAAmB;EAAnB,4BAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,uBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;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,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EA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AAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAA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AieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,2BAieA;EAjeA;AAieA;AAjeA;EAAA,0BAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,oEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,oEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,oEAieA;EAjeA;AAieA;AAjeA;EAAA,2EAieA;EAjeA,qEAieA;EAjeA;AAieA;AAjeA;EAAA,2EAieA;EAjeA,qEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,2EAieA;EAjeA,qEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,oEAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,gDAieA;EAjeA,6DAieA;EAjeA;AAieA;AAjeA;EAAA,yFAieA;EAjeA,oGAieA;EAjeA;AAieA;AAjeA;EAAA,gHAieA;EAjeA,6IAieA;EAjeA;AAieA;AAjeA;EAAA,+EAieA;EAjeA,mGAieA;EAjeA;AAieA;AAjeA;EAAA,6EAieA;EAjeA,iGAieA;EAjeA;AAieA;AAjeA;EAAA,0CAieA;EAjeA,uDAieA;EAjeA;AAieA;AAjeA;EAAA,gFAieA;EAjeA,oGAieA;EAjeA;AAieA;AAjeA;EAAA,0CAieA;EAjeA;AAieA;AAjeA;EAAA,yCAieA;EAjeA;AAieA;AAjeA;EAAA,wCAieA;EAjeA;AAieA;AAjeA;EAAA,uCAieA;EAjeA;AAieA;AAjeA;EAAA,yCAieA;EAjeA;AAieA;AAjeA;EAAA,yCAieA;EAjeA;AAieA;AAjeA;EAAA,uCAieA;EAjeA;AAieA;AAjeA;EAAA,uCAieA;EAjeA;AAieA;AAjeA;EAAA,wCAieA;EAjeA;AAieA;AAjeA;EAAA,uCAieA;EAjeA;AAieA;AAjeA;EAAA,uCAieA;EAjeA;AAieA;AAjeA;EAAA,uCAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,2DAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA;AAieA;AAjeA;EAAA,2DAieA;EAjeA;AAieA;AAjeA;EAAA,2DAieA;EAjeA;AAieA;AAjeA;EAAA,2DAieA;EAjeA;AAieA;AAjeA;EAAA,2DAieA;EAjeA;AAieA;AAjeA;EAAA,gBAieA;EAjeA,WAieA;EAjeA,YAieA;EAjeA,UAieA;EAjeA,SAieA;EAjeA,iBAieA;EAjeA,UAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,8BAieA;EAjeA;AAieA;AAjeA;EAAA,2GAieA;EAjeA,yGAieA;EAjeA;AAieA;AAjeA;EAAA,2GAieA;EAjeA,yGAieA;EAjeA;AAieA;AAjeA;EAAA,2GAieA;EAjeA,yGAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,8BAieA;EAjeA;AAieA;AAjeA;EAAA,2GAieA;EAjeA,yGAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,iBAieA;EAjeA,iBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,qEAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,eAieA;EAjeA,eAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,0BAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,iBAieA;EAjeA,iBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,2GAieA;EAjeA,yGAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,yBAieA;EAjeA;AAieA;AAjeA;EAAA,0BAieA;EAjeA;AAieA;AAjeA;EAAA,yBAieA;EAjeA;AAieA;AAjeA;EAAA,0BAieA;EAjeA;AAieA;AAjeA;EAAA,yBAieA;EAjeA;AAieA;AAjeA;EAAA,qBAieA;EAjeA;AAieA;AAjeA;EAAA,qBAieA;EAjeA;AAieA;AAjeA;EAAA,gDAieA;EAjeA;AAieA;AAjeA;EAAA,iDAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA,kBAieA;EAjeA;AAieA;AAjeA;;EAAA;IAAA;EAieA;;EAjeA;IAAA;EAieA;AAAA;AAjeA;EAAA;AAieA;AAjeA;;EAAA;IAAA;EAieA;;EAjeA;IAAA;EAieA;AAAA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,oEAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,gDAieA;EAjeA,6DAieA;EAjeA;AAieA;AAjeA;EAAA,0CAieA;EAjeA,uDAieA;EAjeA;AAieA;AAjeA;EAAA,wCAieA;EAjeA;AAieA;AAjeA;EAAA,wCAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,qBAieA;EAjeA,yBAieA;EAjeA,2BAieA;EAjeA,yBAieA;EAjeA,0BAieA;EAjeA,+BAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA,yBAieA;EAjeA,0BAieA;EAjeA,wBAieA;EAjeA,yBAieA;EAjeA,8BAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA,yBAieA;EAjeA,0BAieA;EAjeA,wBAieA;EAjeA,yBAieA;EAjeA,8BAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,yEAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,uEAieA;EAjeA,iEAieA;EAjeA;AAieA;AAjeA;EAAA,yEAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,wEAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,uEAieA;EAjeA,iEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,wEAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,wEAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,iEAieA;EAjeA;AAieA;AAjeA;EAAA,uEAieA;EAjeA,iEAieA;EAjeA;AAieA;AAjeA;EAAA,uEAieA;EAjeA,iEAieA;EAjeA;AAieA;AAjeA;EAAA,yEAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,uEAieA;EAjeA,iEAieA;EAjeA;AAieA;AAjeA;EAAA,yEAieA;EAjeA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,wEAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,wEAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,wEAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,gEAieA;EAjeA;AAieA;AAjeA;EAAA,sEAieA;EAjeA,gEAieA;EAjeA;AAieA;AAjeA;EAAA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,kEAieA;EAjeA;AAieA;AAjeA;EAAA,mEAieA;EAjeA;AAieA;AAjeA;EAAA,mEAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,wEAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;;EAAA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,uBAieA;IAjeA,sDAieA;IAjeA;EAieA;;EAjeA;IAAA,uBAieA;IAjeA,8DAieA;IAjeA;EAieA;;EAjeA;IAAA,uBAieA;IAjeA,4DAieA;IAjeA;EAieA;;EAjeA;IAAA,uBAieA;IAjeA,8DAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,oBAieA;IAjeA;EAieA;;EAjeA;IAAA,qBAieA;IAjeA;EAieA;;EAjeA;IAAA,kBAieA;IAjeA;EAieA;;EAjeA;IAAA,qBAieA;IAjeA;EAieA;;EAjeA;IAAA,oBAieA;IAjeA;EAieA;;EAjeA;IAAA,oBAieA;IAjeA;EAieA;;EAjeA;IAAA,qBAieA;IAjeA;EAieA;;EAjeA;IAAA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,mBAieA;IAjeA;EAieA;;EAjeA;IAAA,oBAieA;IAjeA;EAieA;;EAjeA;IAAA,mBAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;AAAA;AAjeA;;EAAA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,uBAieA;IAjeA,2DAieA;IAjeA;EAieA;;EAjeA;IAAA,uBAieA;IAjeA,8DAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,kBAieA;IAjeA;EAieA;;EAjeA;IAAA,oBAieA;IAjeA;EAieA;;EAjeA;IAAA,qBAieA;IAjeA;EAieA;;EAjeA;IAAA,mBAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;AAAA;AAjeA;;EAAA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,kBAieA;IAjeA;EAieA;;EAjeA;IAAA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;;EAjeA;IAAA,eAieA;IAjeA,iBAieA;IAjeA;EAieA;AAAA;AAjeA;;EAAA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;;EAjeA;IAAA;EAieA;AAAA;AAjeA;EAAA,wBAieA;UAjeA;AAieA;AAjeA;EAAA,wBAieA;UAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,gBAieA;EAjeA,oBAieA;EAjeA,4BAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,mBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,WAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA","sourcesContent":["@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n/* ============================================ */\n/* VARIABLES CSS PARA SHADCN UI */\n/* ============================================ */\n\n@layer base {\n  :root {\n    /* Colors */\n    --background: 0 0% 100%;\n    --foreground: 222.2 84% 4.9%;\n    --card: 0 0% 100%;\n    --card-foreground: 222.2 84% 4.9%;\n    --popover: 0 0% 100%;\n    --popover-foreground: 222.2 84% 4.9%;\n    --primary: 205 65% 63%;\n    --primary-foreground: 0 0% 100%;\n    --secondary: 210 40% 96.1%;\n    --secondary-foreground: 222.2 47.4% 11.2%;\n    --muted: 210 40% 96.1%;\n    --muted-foreground: 215.4 16.3% 46.9%;\n    --accent: 210 40% 96.1%;\n    --accent-foreground: 222.2 47.4% 11.2%;\n    --destructive: 0 84.2% 60.2%;\n    --destructive-foreground: 210 40% 98%;\n    --border: 214.3 31.8% 91.4%;\n    --input: 214.3 31.8% 91.4%;\n    --ring: 205 65% 63%;\n    --radius: 0.5rem;\n\n    /* Custom App Variables */\n    --primary-color: #6b9fd4;\n    --hover-color: #5a8ec3;\n    --background-color: #F5F6F8;\n    --card-background: #FFFFFF;\n    --text-color: #333333;\n    --shadow-color: rgba(0, 0, 0, 0.1);\n\n    /* iOS Safe Area Insets */\n    --sat: env(safe-area-inset-top);\n    --sar: env(safe-area-inset-right);\n    --sab: env(safe-area-inset-bottom);\n    --sal: env(safe-area-inset-left);\n  }\n\n  .dark {\n    --background: 222.2 84% 4.9%;\n    --foreground: 210 40% 98%;\n    --card: 222.2 84% 4.9%;\n    --card-foreground: 210 40% 98%;\n    --popover: 222.2 84% 4.9%;\n    --popover-foreground: 210 40% 98%;\n    --primary: 205 65% 63%;\n    --primary-foreground: 0 0% 100%;\n    --secondary: 217.2 32.6% 17.5%;\n    --secondary-foreground: 210 40% 98%;\n    --muted: 217.2 32.6% 17.5%;\n    --muted-foreground: 215 20.2% 65.1%;\n    --accent: 217.2 32.6% 17.5%;\n    --accent-foreground: 210 40% 98%;\n    --destructive: 0 62.8% 30.6%;\n    --destructive-foreground: 210 40% 98%;\n    --border: 217.2 32.6% 17.5%;\n    --input: 217.2 32.6% 17.5%;\n    --ring: 205 65% 63%;\n  }\n}\n\n/* ============================================ */\n/* COMPONENTES CUSTOM */\n/* ============================================ */\n\n@layer components {\n  /* Botones */\n  .btn-primary {\n    @apply bg-primary hover:bg-primary-600 text-white font-medium px-5 py-2.5 rounded-button transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;\n  }\n\n  .btn-secondary {\n    @apply bg-white hover:bg-gray-50 text-primary border border-primary px-5 py-2.5 rounded-button transition-all duration-200;\n  }\n\n  .btn-logout {\n    @apply bg-logout hover:bg-logout-hover text-white px-4 py-2 rounded-button transition-colors duration-200;\n  }\n\n  .btn-disabled {\n    @apply bg-gray-300 text-gray-500 px-5 py-2.5 rounded-button cursor-not-allowed;\n  }\n\n  /* Tarjetas */\n  .card {\n    @apply bg-white rounded-card shadow-card p-6 border border-gray-200 transition-shadow duration-200 hover:shadow-card-hover;\n  }\n\n  .card-home {\n    @apply bg-white rounded-lg shadow-card p-6 flex flex-col items-center gap-4 transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1 border border-gray-200 min-w-[250px];\n  }\n\n  /* Inputs */\n  .input {\n    @apply w-full px-3 py-2 border border-border rounded-input focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base transition-all duration-200;\n  }\n\n  .input-error {\n    @apply border-error focus:ring-error;\n  }\n\n  /* Form Groups */\n  .form-group {\n    @apply mb-4;\n  }\n\n  .form-label {\n    @apply block text-sm font-medium text-text-primary mb-2;\n  }\n\n  /* Tablas */\n  .table {\n    @apply w-full border-collapse;\n  }\n\n  .table-header {\n    @apply bg-table-header text-white px-4 py-2 text-left border border-table-border;\n  }\n\n  .table-cell {\n    @apply px-4 py-2 border border-table-border;\n  }\n\n  .table-row {\n    @apply odd:bg-table-odd even:bg-table-even hover:bg-gray-100;\n  }\n\n  /* Loading States */\n  .loading-spinner {\n    @apply w-10 h-10 border-4 border-gray-200 border-t-primary rounded-full animate-spin;\n  }\n\n  .loading-overlay {\n    @apply opacity-70 pointer-events-none relative;\n  }\n\n  /* Mensajes de Estado */\n  .message-error {\n    @apply bg-error-50 border border-error-200 text-error-600 rounded-md px-4 py-3 my-4;\n  }\n\n  .message-success {\n    @apply bg-success-50 border border-success-200 text-success-600 rounded-md px-4 py-3 my-4;\n  }\n\n  .message-warning {\n    @apply bg-warning-50 border border-warning-200 text-warning-600 rounded-md px-4 py-3 my-4;\n  }\n\n  .message-info {\n    @apply bg-info-50 border border-info-200 text-info-600 rounded-md px-4 py-3 my-4;\n  }\n\n  /* Layout Components */\n  .app-container {\n    @apply flex min-h-screen w-full;\n  }\n\n  .main-content {\n    @apply flex-1 bg-white/80 m-5 rounded-lg shadow-md overflow-hidden transition-all duration-300;\n  }\n\n  .main-content-with-sidenav {\n    @apply ml-[70px];\n  }\n\n  .main-content-with-expanded-nav {\n    @apply ml-[220px];\n  }\n\n  /* Dashboard Components */\n  .dashboard-container {\n    @apply px-8;\n  }\n\n  .cards-grid {\n    @apply flex flex-wrap gap-8 p-4 justify-center;\n  }\n\n  /* Header Components */\n  .header {\n    @apply bg-header text-white px-5 py-2.5 flex items-center justify-between min-h-[70px];\n  }\n\n  .header-title {\n    @apply text-header-title text-center whitespace-nowrap overflow-hidden text-ellipsis;\n  }\n\n  .header-icon {\n    @apply h-10 cursor-pointer transition-opacity hover:opacity-80;\n  }\n\n  /* SideNav Components */\n  .sidenav {\n    @apply fixed left-0 top-0 h-screen bg-sidenav overflow-y-auto transition-all duration-300 z-sidenav;\n  }\n\n  .sidenav-collapsed {\n    @apply w-sidenav-collapsed;\n  }\n\n  .sidenav-expanded {\n    @apply w-sidenav-expanded;\n  }\n\n  .sidenav-item {\n    @apply flex items-center p-2.5 text-text-primary no-underline hover:bg-sidenav-hover transition-colors;\n  }\n\n  .sidenav-item-active {\n    @apply bg-sidenav-hover;\n  }\n\n  /* Chart Containers */\n  .chart-container {\n    @apply bg-white rounded-lg shadow-md p-4 mb-5;\n  }\n\n  .chart-title {\n    @apply text-text-primary mb-2.5 text-center;\n  }\n}\n\n/* ============================================ */\n/* UTILIDADES CUSTOM */\n/* ============================================ */\n\n@layer utilities {\n  /* Truncate multiline text */\n  .line-clamp-2 {\n    display: -webkit-box;\n    -webkit-line-clamp: 2;\n    -webkit-box-orient: vertical;\n    overflow: hidden;\n  }\n\n  .line-clamp-3 {\n    display: -webkit-box;\n    -webkit-line-clamp: 3;\n    -webkit-box-orient: vertical;\n    overflow: hidden;\n  }\n\n  /* Scroll personalizado */\n  .scrollbar-thin {\n    scrollbar-width: thin;\n  }\n\n  .scrollbar-none {\n    scrollbar-width: none;\n  }\n\n  .scrollbar-thin::-webkit-scrollbar {\n    width: 8px;\n    height: 8px;\n  }\n\n  .scrollbar-thin::-webkit-scrollbar-track {\n    background: #f1f1f1;\n    border-radius: 4px;\n  }\n\n  .scrollbar-thin::-webkit-scrollbar-thumb {\n    background: #888;\n    border-radius: 4px;\n  }\n\n  .scrollbar-thin::-webkit-scrollbar-thumb:hover {\n    background: #555;\n  }\n\n  /* Glass effect */\n  .glass {\n    background: rgba(255, 255, 255, 0.8);\n    backdrop-filter: blur(10px);\n    -webkit-backdrop-filter: blur(10px);\n  }\n\n  /* Glassmorphism utilities */\n  .glass-card {\n    background: rgba(255, 255, 255, 0.1);\n    backdrop-filter: blur(16px) saturate(180%);\n    -webkit-backdrop-filter: blur(16px) saturate(180%);\n    border: 1px solid rgba(255, 255, 255, 0.18);\n  }\n\n  .glass-card-light {\n    background: rgba(255, 255, 255, 0.15);\n    backdrop-filter: blur(20px) saturate(180%);\n    -webkit-backdrop-filter: blur(20px) saturate(180%);\n    border: 1px solid rgba(255, 255, 255, 0.25);\n  }\n\n  .glass-power-display {\n    background: rgba(255, 255, 255, 0.08);\n    backdrop-filter: blur(12px);\n    -webkit-backdrop-filter: blur(12px);\n    border: 1px solid rgba(255, 255, 255, 0.15);\n  }\n\n  /* Animated gradient background */\n  .gradient-bg-animated {\n    background: linear-gradient(\n      135deg,\n      #667eea 0%,\n      #764ba2 25%,\n      #f093fb 50%,\n      #4facfe 75%,\n      #667eea 100%\n    );\n    background-size: 400% 400%;\n    animation: gradient-shift 15s ease infinite;\n  }\n\n  .gradient-bg-electric {\n    background: linear-gradient(\n      135deg,\n      #6366f1 0%,\n      #8b5cf6 25%,\n      #a855f7 50%,\n      #ec4899 75%,\n      #6366f1 100%\n    );\n    background-size: 400% 400%;\n    animation: gradient-shift 12s ease infinite;\n  }\n\n  /* Category border gradients */\n  .border-gradient-green {\n    border-image: linear-gradient(135deg, #4ade80, #22c55e) 1;\n  }\n\n  .border-gradient-yellow {\n    border-image: linear-gradient(135deg, #fbbf24, #f59e0b) 1;\n  }\n\n  .border-gradient-red {\n    border-image: linear-gradient(135deg, #f87171, #ef4444) 1;\n  }\n\n  .border-gradient-gray {\n    border-image: linear-gradient(135deg, #9ca3af, #6b7280) 1;\n  }\n\n  /* Text gradients */\n  .text-gradient-primary {\n    background: linear-gradient(135deg, #6366f1, #a855f7);\n    -webkit-background-clip: text;\n    -webkit-text-fill-color: transparent;\n    background-clip: text;\n  }\n\n  .text-gradient-electric {\n    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);\n    -webkit-background-clip: text;\n    -webkit-text-fill-color: transparent;\n    background-clip: text;\n  }\n\n  /* Stagger animation for grid items */\n  .stagger-fade-in > *:nth-child(1) { animation-delay: 0.05s; }\n  .stagger-fade-in > *:nth-child(2) { animation-delay: 0.1s; }\n  .stagger-fade-in > *:nth-child(3) { animation-delay: 0.15s; }\n  .stagger-fade-in > *:nth-child(4) { animation-delay: 0.2s; }\n  .stagger-fade-in > *:nth-child(5) { animation-delay: 0.25s; }\n  .stagger-fade-in > *:nth-child(6) { animation-delay: 0.3s; }\n  .stagger-fade-in > *:nth-child(7) { animation-delay: 0.35s; }\n  .stagger-fade-in > *:nth-child(8) { animation-delay: 0.4s; }\n  .stagger-fade-in > *:nth-child(9) { animation-delay: 0.45s; }\n  .stagger-fade-in > *:nth-child(10) { animation-delay: 0.5s; }\n  .stagger-fade-in > *:nth-child(11) { animation-delay: 0.55s; }\n  .stagger-fade-in > *:nth-child(12) { animation-delay: 0.6s; }\n\n  /* Transitions */\n  .transition-width {\n    transition-property: width;\n    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    transition-duration: 300ms;\n  }\n\n  .transition-margin {\n    transition-property: margin-left;\n    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    transition-duration: 300ms;\n  }\n\n  .transition-glass {\n    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n  }\n}\n\n/* ============================================ */\n/* ESTILOS BASE */\n/* ============================================ */\n\n@layer base {\n  * {\n    @apply border-border;\n  }\n\n  body {\n    @apply bg-background text-text-primary font-sans;\n  }\n\n  h1, h2, h3, h4, h5, h6 {\n    @apply font-semibold;\n  }\n\n  h1 {\n    @apply text-3xl;\n  }\n\n  h2 {\n    @apply text-2xl;\n  }\n\n  h3 {\n    @apply text-xl;\n  }\n\n  /* Links */\n  a {\n    @apply text-primary hover:text-primary-600 transition-colors;\n  }\n\n  /* Focus visible */\n  *:focus-visible {\n    @apply outline-none ring-2 ring-primary ring-offset-2;\n  }\n\n  /* iOS-specific optimizations */\n  @supports (-webkit-touch-callout: none) {\n    /* iOS Safari specific styles */\n    body {\n      /* Prevent text size adjustment */\n      -webkit-text-size-adjust: 100%;\n      /* Smooth scrolling */\n      -webkit-overflow-scrolling: touch;\n    }\n\n    /* Safe area support for notch/dynamic island */\n    .gradient-bg-electric {\n      padding-top: max(0px, var(--sat));\n      padding-bottom: max(0px, var(--sab));\n      padding-left: max(0px, var(--sal));\n      padding-right: max(0px, var(--sar));\n    }\n\n    /* Improve tap performance */\n    button, a, [role=\"button\"] {\n      -webkit-tap-highlight-color: transparent;\n      touch-action: manipulation;\n    }\n\n    /* Touch target size (iOS 18+ accessibility) */\n    button, a, [role=\"button\"] {\n      min-width: 44px;\n      min-height: 44px;\n    }\n  }\n\n  /* Reduce motion for accessibility */\n  @media (prefers-reduced-motion: reduce) {\n    *,\n    *::before,\n    *::after {\n      animation-duration: 0.01ms !important;\n      animation-iteration-count: 1 !important;\n      transition-duration: 0.01ms !important;\n    }\n  }\n}\n"],"sourceRoot":""}]);
+`, "",{"version":3,"sources":["webpack://./src/styles/globals.css"],"names":[],"mappings":"AAAA;EAAA,wBAAc;EAAd,wBAAc;EAAd,mBAAc;EAAd,mBAAc;EAAd,cAAc;EAAd,cAAc;EAAd,cAAc;EAAd,eAAc;EAAd,eAAc;EAAd,aAAc;EAAd,aAAc;EAAd,kBAAc;EAAd,sCAAc;EAAd,8BAAc;EAAd,6BAAc;EAAd,4BAAc;EAAd,eAAc;EAAd,oBAAc;EAAd,sBAAc;EAAd,uBAAc;EAAd,wBAAc;EAAd,kBAAc;EAAd,2BAAc;EAAd,4BAAc;EAAd,sCAAc;EAAd,kCAAc;EAAd,2BAAc;EAAd,sBAAc;EAAd,8BAAc;EAAd,YAAc;EAAd,kBAAc;EAAd,gBAAc;EAAd,iBAAc;EAAd,kBAAc;EAAd,cAAc;EAAd,gBAAc;EAAd,aAAc;EAAd,mBAAc;EAAd,qBAAc;EAAd,2BAAc;EAAd,yBAAc;EAAd,0BAAc;EAAd,2BAAc;EAAd,uBAAc;EAAd,wBAAc;EAAd,yBAAc;EAAd,sBAAc;EAAd,oBAAc;EAAd,sBAAc;EAAd,qBAAc;EAAd;AAAc;;AAAd;EAAA,wBAAc;EAAd,wBAAc;EAAd,mBAAc;EAAd,mBAAc;EAAd,cAAc;EAAd,cAAc;EAAd,cAAc;EAAd,eAAc;EAAd,eAAc;EAAd,aAAc;EAAd,aAAc;EAAd,kBAAc;EAAd,sCAAc;EAAd,8BAAc;EAAd,6BAAc;EAAd,4BAAc;EAAd,eAAc;EAAd,oBAAc;EAAd,sBAAc;EAAd,uBAAc;EAAd,wBAAc;EAAd,kBAAc;EAAd,2BAAc;EAAd,4BAAc;EAAd,sCAAc;EAAd,kCAAc;EAAd,2BAAc;EAAd,sBAAc;EAAd,8BAAc;EAAd,YAAc;EAAd,kBAAc;EAAd,gBAAc;EAAd,iBAAc;EAAd,kBAAc;EAAd,cAAc;EAAd,gBAAc;EAAd,aAAc;EAAd,mBAAc;EAAd,qBAAc;EAAd,2BAAc;EAAd,yBAAc;EAAd,0BAAc;EAAd,2BAAc;EAAd,uBAAc;EAAd,wBAAc;EAAd,yBAAc;EAAd,sBAAc;EAAd,oBAAc;EAAd,sBAAc;EAAd,qBAAc;EAAd;AAAc,CAAd;;CAAc,CAAd;;;CAAc;;AAAd;;;EAAA,sBAAc,EAAd,MAAc;EAAd,eAAc,EAAd,MAAc;EAAd,mBAAc,EAAd,MAAc;EAAd,qBAAc,EAAd,MAAc;AAAA;;AAAd;;EAAA,gBAAc;AAAA;;AAAd;;;;;;;;CAAc;;AAAd;;EAAA,gBAAc,EAAd,MAAc;EAAd,8BAAc,EAAd,MAAc;EAAd,gBAAc,EAAd,MAAc;EAAd,cAAc;KAAd,WAAc,EAAd,MAAc;EAAd,kHAAc,EAAd,MAAc;EAAd,6BAAc,EAAd,MAAc;EAAd,+BAAc,EAAd,MAAc;EAAd,wCAAc,EAAd,MAAc;AAAA;;AAAd;;;CAAc;;AAAd;EAAA,SAAc,EAAd,MAAc;EAAd,oBAAc,EAAd,MAAc;AAAA;;AAAd;;;;CAAc;;AAAd;EAAA,SAAc,EAAd,MAAc;EAAd,cAAc,EAAd,MAAc;EAAd,qBAAc,EAAd,MAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,yCAAc;UAAd,iCAAc;AAAA;;AAAd;;CAAc;;AAAd;;;;;;EAAA,kBAAc;EAAd,oBAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,cAAc;EAAd,wBAAc;AAAA;;AAAd;;CAAc;;AAAd;;EAAA,mBAAc;AAAA;;AAAd;;;;;CAAc;;AAAd;;;;EAAA,+GAAc,EAAd,MAAc;EAAd,6BAAc,EAAd,MAAc;EAAd,+BAAc,EAAd,MAAc;EAAd,cAAc,EAAd,MAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,cAAc;AAAA;;AAAd;;CAAc;;AAAd;;EAAA,cAAc;EAAd,cAAc;EAAd,kBAAc;EAAd,wBAAc;AAAA;;AAAd;EAAA,eAAc;AAAA;;AAAd;EAAA,WAAc;AAAA;;AAAd;;;;CAAc;;AAAd;EAAA,cAAc,EAAd,MAAc;EAAd,qBAAc,EAAd,MAAc;EAAd,yBAAc,EAAd,MAAc;AAAA;;AAAd;;;;CAAc;;AAAd;;;;;EAAA,oBAAc,EAAd,MAAc;EAAd,8BAAc,EAAd,MAAc;EAAd,gCAAc,EAAd,MAAc;EAAd,eAAc,EAAd,MAAc;EAAd,oBAAc,EAAd,MAAc;EAAd,oBAAc,EAAd,MAAc;EAAd,uBAAc,EAAd,MAAc;EAAd,cAAc,EAAd,MAAc;EAAd,SAAc,EAAd,MAAc;EAAd,UAAc,EAAd,MAAc;AAAA;;AAAd;;CAAc;;AAAd;;EAAA,oBAAc;AAAA;;AAAd;;;CAAc;;AAAd;;;;EAAA,0BAAc,EAAd,MAAc;EAAd,6BAAc,EAAd,MAAc;EAAd,sBAAc,EAAd,MAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,aAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,gBAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,wBAAc;AAAA;;AAAd;;CAAc;;AAAd;;EAAA,YAAc;AAAA;;AAAd;;;CAAc;;AAAd;EAAA,6BAAc,EAAd,MAAc;EAAd,oBAAc,EAAd,MAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,wBAAc;AAAA;;AAAd;;;CAAc;;AAAd;EAAA,0BAAc,EAAd,MAAc;EAAd,aAAc,EAAd,MAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,kBAAc;AAAA;;AAAd;;CAAc;;AAAd;;;;;;;;;;;;;EAAA,SAAc;AAAA;;AAAd;EAAA,SAAc;EAAd,UAAc;AAAA;;AAAd;EAAA,UAAc;AAAA;;AAAd;;;EAAA,gBAAc;EAAd,SAAc;EAAd,UAAc;AAAA;;AAAd;;CAAc;AAAd;EAAA,UAAc;AAAA;;AAAd;;CAAc;;AAAd;EAAA,gBAAc;AAAA;;AAAd;;;CAAc;;AAAd;EAAA,UAAc,EAAd,MAAc;EAAd,cAAc,EAAd,MAAc;AAAA;;AAAd;;EAAA,UAAc,EAAd,MAAc;EAAd,cAAc,EAAd,MAAc;AAAA;;AAAd;;CAAc;;AAAd;;EAAA,eAAc;AAAA;;AAAd;;CAAc;AAAd;EAAA,eAAc;AAAA;;AAAd;;;;CAAc;;AAAd;;;;;;;;EAAA,cAAc,EAAd,MAAc;EAAd,sBAAc,EAAd,MAAc;AAAA;;AAAd;;CAAc;;AAAd;;EAAA,eAAc;EAAd,YAAc;AAAA;;AAAd,wEAAc;AAAd;EAAA,aAAc;AAAA;EAAd;IAAA,WAAc;IAAd,uBAAc;IAAd,4BAAc;IAAd,iBAAc;IAAd,iCAAc;IAAd,oBAAc;IAAd,oCAAc;IAAd,sBAAc;IAAd,+BAAc;IAAd,0BAAc;IAAd,yCAAc;IAAd,sBAAc;IAAd,qCAAc;IAAd,uBAAc;IAAd,sCAAc;IAAd,4BAAc;IAAd,qCAAc;IAAd,2BAAc;IAAd,0BAAc;IAAd,mBAAc;IAAd,gBAAc;;IAAd,yBAAc;IAAd,wBAAc;IAAd,sBAAc;IAAd,2BAAc;IAAd,0BAAc;IAAd,qBAAc;IAAd,kCAAc;;IAAd,yBAAc;IAAd,+BAAc;IAAd,iCAAc;IAAd,kCAAc;IAAd,gCAAc;EAAA;;EAAd;IAAA,4BAAc;IAAd,yBAAc;IAAd,sBAAc;IAAd,8BAAc;IAAd,yBAAc;IAAd,iCAAc;IAAd,sBAAc;IAAd,+BAAc;IAAd,8BAAc;IAAd,mCAAc;IAAd,0BAAc;IAAd,mCAAc;IAAd,2BAAc;IAAd,gCAAc;IAAd,4BAAc;IAAd,qCAAc;IAAd,2BAAc;IAAd,0BAAc;IAAd,mBAAc;EAAA;EAAd;EAAA;AAAc;;EAAd;EAAA,wCAAc;EAAd,kHAAc;EAAd,oBAAc;EAAd;AAAc;;EAAd;EAAA;AAAc;;EAAd;EAAA,eAAc;EAAd,iBAAc;EAAd;AAAc;;EAAd;EAAA,eAAc;EAAd,iBAAc;EAAd;AAAc;;EAAd;EAAA,eAAc;EAAd,iBAAc;EAAd;AAAc;;EAAd,UAAc;EAAd;EAAA,oBAAc;EAAd,mDAAc;EAAd,+FAAc;EAAd,wDAAc;EAAd;AAAc;EAAd;EAAA,oBAAc;EAAd;AAAc;;EAAd,kBAAc;EAAd;EAAA,8BAAc;EAAd,mBAAc;EAAd,2GAAc;EAAd,yGAAc;EAAd,4FAAc;EAAd,oBAAc;EAAd,6DAAc;EAAd;AAAc;;EAAd,+BAAc;EAAd;IAAA,+BAAc;IAAd;MAAA,iCAAc;MAAd,8BAAc;MAAd,qBAAc;MAAd,iCAAc;IAAA;;IAAd,+CAAc;IAAd;MAAA,iCAAc;MAAd,oCAAc;MAAd,kCAAc;MAAd,mCAAc;IAAA;;IAAd,4BAAc;IAAd;MAAA,wCAAc;MAAd,0BAAc;IAAA;;IAAd,8CAAc;IAAd;MAAA,eAAc;MAAd,gBAAc;IAAA;EAAA;;EAAd,oCAAc;EAAd;IAAA;;;MAAA,qCAAc;MAAd,uCAAc;MAAd,sCAAc;IAAA;EAAA;AACd;EAAA,WAAoB;EAApB,kBAAoB;EAApB,iBAAoB;EAApB,mBAAoB;EAApB;AAAoB;AAApB;;EAAA;IAAA;EAAoB;AAAA;AA0ElB,YAAY;AAiBZ,aAAa;AAEX;EAAA,mBAA0H;EAA1H,iBAA0H;EAA1H,sBAA0H;EAA1H,4DAA0H;EAA1H,kBAA0H;EAA1H,4DAA0H;EAA1H,eAA0H;EAA1H,yCAA0H;EAA1H,qDAA0H;EAA1H,uGAA0H;EAA1H,mCAA0H;EAA1H,qCAA0H;EAA1H,+BAA0H;EAA1H,wDAA0H;EAA1H,0BAA0H;EAA1H;AAA0H;AAA1H;EAAA,0CAA0H;EAA1H,sDAA0H;EAA1H;AAA0H;AAO5H,WAAW;AAET;EAAA,WAA4K;EAA5K,kBAA4K;EAA5K,iBAA4K;EAA5K,gCAA4K;EAA5K,qBAA4K;EAA5K,sBAA4K;EAA5K,mBAA4K;EAA5K,sBAA4K;EAA5K,eAA4K;EAA5K,iBAA4K;EAA5K,iBAA4K;EAA5K,wBAA4K;EAA5K,wDAA4K;EAA5K,0BAA4K;EAA5K;AAA4K;AAA5K;EAAA,yBAA4K;EAA5K,8BAA4K;EAA5K,mBAA4K;EAA5K,2GAA4K;EAA5K,yGAA4K;EAA5K,4FAA4K;EAA5K,oBAA4K;EAA5K;AAA4K;AAA5K;EAAA,WAA4K;EAA5K,kBAA4K;EAA5K,iBAA4K;EAA5K,gCAA4K;EAA5K,qBAA4K;EAA5K,sBAA4K;EAA5K,mBAA4K;EAA5K,sBAA4K;EAA5K,eAA4K;EAA5K,iBAA4K;EAA5K,iBAA4K;EAA5K,wBAA4K;EAA5K,wDAA4K;EAA5K,0BAA4K;EAA5K;AAA4K;AAA5K;EAAA,yBAA4K;EAA5K,8BAA4K;EAA5K,mBAA4K;EAA5K,2GAA4K;EAA5K,yGAA4K;EAA5K,4FAA4K;EAA5K,oBAA4K;EAA5K;AAA4K;AAO9K,gBAAgB;AAShB,WAAW;AAET;EAAA,WAA6B;EAA7B;AAA6B;AAe/B,mBAAmB;AASnB,uBAAuB;AAiBvB,sBAAsB;AAEpB;EAAA,aAA+B;EAA/B,iBAA+B;EAA/B;AAA+B;AAI/B;EAAA,eAA8F;EAA9F,YAA8F;EAA9F,gBAA8F;EAA9F,4BAA8F;EAA9F,wCAA8F;EAA9F,6EAA8F;EAA9F,iGAA8F;EAA9F,uGAA8F;EAA9F,wBAA8F;EAA9F,wDAA8F;EAA9F,0BAA8F;EAA9F;AAA8F;AAWhG,yBAAyB;AASzB,sBAAsB;AAEpB;EAAA,aAAsF;EAAtF,gBAAsF;EAAtF,mBAAsF;EAAtF,8BAAsF;EAAtF,kBAAsF;EAAtF,4DAAsF;EAAtF,qBAAsF;EAAtF,sBAAsF;EAAtF,qBAAsF;EAAtF,wBAAsF;EAAtF,oBAAsF;EAAtF;AAAsF;AAWxF,uBAAuB;AAqBvB,qBAAqB;AAEnB;EAAA,sBAA6C;EAA7C,4BAA6C;EAA7C,kBAA6C;EAA7C,4DAA6C;EAA7C,aAA6C;EAA7C,6EAA6C;EAA7C,iGAA6C;EAA7C;AAA6C;AAI7C;EAAA,uBAA2C;EAA3C,kBAA2C;EAA3C,oBAA2C;EAA3C;AAA2C;AAlO/C;EAAA,kBAAmB;EAAnB,UAAmB;EAAnB,WAAmB;EAAnB,UAAmB;EAAnB,YAAmB;EAAnB,gBAAmB;EAAnB,sBAAmB;EAAnB,mBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,qBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,mBAAmB;EAAnB;AAAmB;AAAnB;EAAA,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,mBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,gBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,gBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,gBAAmB;EAAnB,oBAAmB;EAAnB,4BAAmB;EAAnB;AAAmB;AAAnB;EAAA,gBAAmB;EAAnB,oBAAmB;EAAnB,4BAAmB;EAAnB;AAAmB;AAAnB;EAAA,gBAAmB;EAAnB,oBAAmB;EAAnB,4BAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;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AnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,4DAAmB;EAA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;EAAA,mEAAmB;EAAnB;AAAmB;AAAnB;EAAA,sEAAmB;EAAnB;AAAmB;AAAnB;EAAA,qEAAmB;EAAnB;AAAmB;AAAnB;EAAA,sEAAmB;EAAnB;AAAmB;AAAnB;EAAA,mEAAmB;EAAnB;AAAmB;AAAnB;EAAA,sEAAmB;EAAnB;AAAmB;AAAnB;EAAA,oEAAmB;EAAnB;AAAmB;AAAnB;EAAA,sEAAmB;EAAnB;AAAmB;AAAnB;EAAA,oEAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,6BAAmB;UAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,sBAAmB;KAAnB;AAAmB;AAAnB;EAAA,oBAAmB;KAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,qBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB;AAAmB;AAAnB;EAAA,qBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kBAAmB;EAAnB;AAAmB;AAAnB;EAAA,qBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,qBAAmB;EAAnB;AAAmB;AAAnB;EAAA,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,mBAAmB;EAAnB;AAAmB;AAAnB;EAAA,qBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,mBAAmB;EAAnB;AAAmB;AAAnB;EAAA,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA,eAAmB;EAAnB,iBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,mCAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,0EAAmB;EAAnB,8FAAmB;EAAnB;AAAmB;AAAnB;EAAA,gDAAmB;EAAnB,6DAAmB;EAAnB;AAAmB;AAAnB;EAAA,8GAAmB;EAAnB,2IAAmB;EAAnB;AAAmB;AAAnB;EAAA,wFAAmB;EAAnB,mGAAmB;EAAnB;AAAmB;AAAnB;EAAA,+EAAmB;EAAnB,mGAAmB;EAAnB;AAAmB;AAAnB;EAAA,6EAAmB;EAAnB,iGAAmB;EAAnB;AAAmB;AAAnB;EAAA,sBAAmB;EAAnB,8BAAmB;EAAnB;AAAmB;AAAnB;EAAA,0CAAmB;EAAnB,uDAAmB;EAAnB;AAAmB;AAAnB;EAAA,gFAAmB;EAAnB,oGAAmB;EAAnB;AAAmB;AAAnB;EAAA,yCAAmB;EAAnB;AAAmB;AAAnB;EAAA,yCAAmB;EAAnB;AAAmB;AAAnB;EAAA,uCAAmB;EAAnB;AAAmB;AAAnB;EAAA,0CAAmB;EAAnB;AAAmB;AAAnB;EAAA,wCAAmB;EAAnB;AAAmB;AAAnB;EAAA,uCAAmB;EAAnB;AAAmB;AAAnB;EAAA,uCAAmB;EAAnB;AAAmB;AAAnB;EAAA,uCAAmB;EAAnB;AAAmB;AAAnB;EAAA,uCAAmB;EAAnB;AAAmB;AAAnB;EAAA,8BAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,2GAAmB;EAAnB,yGAAmB;EAAnB;AAAmB;AAAnB;EAAA,2GAAmB;EAAnB,yGAAmB;EAAnB;AAAmB;AAAnB;EAAA,2GAAmB;EAAnB,yGAAmB;EAAnB;AAAmB;AAAnB;EAAA,2GAAmB;EAAnB,yGAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,oBAAmB;EAAnB;AAAmB;AAAnB;EAAA,qBAAmB;EAAnB;AAAmB;AAAnB;EAAA,kGAAmB;EAAnB;AAAmB;AAAnB;EAAA,4DAAmB;EAAnB;AAAmB;AAAnB;EAAA,4DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,2DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,2DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,4DAAmB;EAAnB;AAAmB;AAAnB;EAAA,2DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,2DAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,mGAAmB;EAAnB;AAAmB;AAAnB;EAAA,0DAAmB;EAAnB;AAAmB;AAAnB;EAAA,+BAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,8BAAmB;EAAnB;AAAmB;AAAnB;EAAA,8BAAmB;EAAnB;AAAmB;AAAnB;EAAA,6BAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA,wJAAmB;EAAnB,wDAAmB;EAAnB;AAAmB;AAAnB;EAAA,wBAAmB;EAAnB,wDAAmB;EAAnB;AAAmB;AAAnB;EAAA,+FAAmB;EAAnB,wDAAmB;EAAnB;AAAmB;AAAnB;EAAA,4BAAmB;EAAnB,wDAAmB;EAAnB;AAAmB;AAAnB;EAAA,+BAAmB;EAAnB,wDAAmB;EAAnB;AAAmB;AAAnB;EAAA,8BAAmB;EAAnB,wDAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;;EAAA;IAAA,mCAAmB;IAAnB;EAAmB;AAAA;AAAnB;;EAAA;IAAA,kCAAmB;IAAnB;EAAmB;AAAA;AAAnB;EAAA,qBAAmB;EAAnB,yBAAmB;EAAnB,2BAAmB;EAAnB,yBAAmB;EAAnB,0BAAmB;EAAnB,+BAAmB;EAAnB;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AAAnB;EAAA;AAAmB;AA2OjB,4BAA4B;AAC5B;IACE,oBAAoB;IACpB,qBAAqB;IACrB,4BAA4B;IAC5B,gBAAgB;EAClB;AAEA;IACE,oBAAoB;IACpB,qBAAqB;IACrB,4BAA4B;IAC5B,gBAAgB;EAClB;AAEA,yBAAyB;AA4BzB,iBAAiB;AAOjB,4BAA4B;AAsB5B,iCAAiC;AA2BjC,8BAA8B;AAiB9B,mBAAmB;AAenB,qCAAqC;AAcrC,gBAAgB;AA5XlB;EAAA,6BAAmB;KAAnB,0BAAmB;UAAnB;AAAmB;;AAEnB,iDAAiD;AACjD,iCAAiC;AACjC,iDAAiD;;AAgEjD,iDAAiD;AACjD,uBAAuB;AACvB,iDAAiD;;AAgKjD,iDAAiD;AACjD,sBAAsB;AACtB,iDAAiD;;AAsKjD,iDAAiD;AACjD,iBAAiB;AACjB,iDAAiD;AAlZjD;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,eAieA;EAjeA,iBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,2BAieA;EAjeA;AAieA;AAjeA;EAAA,0BAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,oEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,oEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,oEAieA;EAjeA;AAieA;AAjeA;EAAA,2EAieA;EAjeA,qEAieA;EAjeA;AAieA;AAjeA;EAAA,2EAieA;EAjeA,qEAieA;EAjeA;AAieA;AAjeA;EAAA,4DAieA;EAjeA,mE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eA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,kBAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,wEAieA;EAjeA,kEAieA;EAjeA;AAieA;AAjeA;EAAA;AAieA;AAjeA;EAAA,sBAieA;EAjeA;AAieA;AAjeA;EAAA,oBAieA;EAjeA;AAieA;AAjeA;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","sourcesContent":["@tailwind base;\n@tailwind components;\n@tailwind utilities;\n\n/* ============================================ */\n/* VARIABLES CSS PARA SHADCN UI */\n/* ============================================ */\n\n@layer base {\n  :root {\n    /* Colors */\n    --background: 0 0% 100%;\n    --foreground: 222.2 84% 4.9%;\n    --card: 0 0% 100%;\n    --card-foreground: 222.2 84% 4.9%;\n    --popover: 0 0% 100%;\n    --popover-foreground: 222.2 84% 4.9%;\n    --primary: 205 65% 63%;\n    --primary-foreground: 0 0% 100%;\n    --secondary: 210 40% 96.1%;\n    --secondary-foreground: 222.2 47.4% 11.2%;\n    --muted: 210 40% 96.1%;\n    --muted-foreground: 215.4 16.3% 46.9%;\n    --accent: 210 40% 96.1%;\n    --accent-foreground: 222.2 47.4% 11.2%;\n    --destructive: 0 84.2% 60.2%;\n    --destructive-foreground: 210 40% 98%;\n    --border: 214.3 31.8% 91.4%;\n    --input: 214.3 31.8% 91.4%;\n    --ring: 205 65% 63%;\n    --radius: 0.5rem;\n\n    /* Custom App Variables */\n    --primary-color: #6b9fd4;\n    --hover-color: #5a8ec3;\n    --background-color: #F5F6F8;\n    --card-background: #FFFFFF;\n    --text-color: #333333;\n    --shadow-color: rgba(0, 0, 0, 0.1);\n\n    /* iOS Safe Area Insets */\n    --sat: env(safe-area-inset-top);\n    --sar: env(safe-area-inset-right);\n    --sab: env(safe-area-inset-bottom);\n    --sal: env(safe-area-inset-left);\n  }\n\n  .dark {\n    --background: 222.2 84% 4.9%;\n    --foreground: 210 40% 98%;\n    --card: 222.2 84% 4.9%;\n    --card-foreground: 210 40% 98%;\n    --popover: 222.2 84% 4.9%;\n    --popover-foreground: 210 40% 98%;\n    --primary: 205 65% 63%;\n    --primary-foreground: 0 0% 100%;\n    --secondary: 217.2 32.6% 17.5%;\n    --secondary-foreground: 210 40% 98%;\n    --muted: 217.2 32.6% 17.5%;\n    --muted-foreground: 215 20.2% 65.1%;\n    --accent: 217.2 32.6% 17.5%;\n    --accent-foreground: 210 40% 98%;\n    --destructive: 0 62.8% 30.6%;\n    --destructive-foreground: 210 40% 98%;\n    --border: 217.2 32.6% 17.5%;\n    --input: 217.2 32.6% 17.5%;\n    --ring: 205 65% 63%;\n  }\n}\n\n/* ============================================ */\n/* COMPONENTES CUSTOM */\n/* ============================================ */\n\n@layer components {\n  /* Botones */\n  .btn-primary {\n    @apply bg-primary hover:bg-primary-600 text-white font-medium px-5 py-2.5 rounded-button transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;\n  }\n\n  .btn-secondary {\n    @apply bg-white hover:bg-gray-50 text-primary border border-primary px-5 py-2.5 rounded-button transition-all duration-200;\n  }\n\n  .btn-logout {\n    @apply bg-logout hover:bg-logout-hover text-white px-4 py-2 rounded-button transition-colors duration-200;\n  }\n\n  .btn-disabled {\n    @apply bg-gray-300 text-gray-500 px-5 py-2.5 rounded-button cursor-not-allowed;\n  }\n\n  /* Tarjetas */\n  .card {\n    @apply bg-white rounded-card shadow-card p-6 border border-gray-200 transition-shadow duration-200 hover:shadow-card-hover;\n  }\n\n  .card-home {\n    @apply bg-white rounded-lg shadow-card p-6 flex flex-col items-center gap-4 transition-all duration-200 hover:shadow-card-hover hover:-translate-y-1 border border-gray-200 min-w-[250px];\n  }\n\n  /* Inputs */\n  .input {\n    @apply w-full px-3 py-2 border border-border rounded-input focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-base transition-all duration-200;\n  }\n\n  .input-error {\n    @apply border-error focus:ring-error;\n  }\n\n  /* Form Groups */\n  .form-group {\n    @apply mb-4;\n  }\n\n  .form-label {\n    @apply block text-sm font-medium text-text-primary mb-2;\n  }\n\n  /* Tablas */\n  .table {\n    @apply w-full border-collapse;\n  }\n\n  .table-header {\n    @apply bg-table-header text-white px-4 py-2 text-left border border-table-border;\n  }\n\n  .table-cell {\n    @apply px-4 py-2 border border-table-border;\n  }\n\n  .table-row {\n    @apply odd:bg-table-odd even:bg-table-even hover:bg-gray-100;\n  }\n\n  /* Loading States */\n  .loading-spinner {\n    @apply w-10 h-10 border-4 border-gray-200 border-t-primary rounded-full animate-spin;\n  }\n\n  .loading-overlay {\n    @apply opacity-70 pointer-events-none relative;\n  }\n\n  /* Mensajes de Estado */\n  .message-error {\n    @apply bg-error-50 border border-error-200 text-error-600 rounded-md px-4 py-3 my-4;\n  }\n\n  .message-success {\n    @apply bg-success-50 border border-success-200 text-success-600 rounded-md px-4 py-3 my-4;\n  }\n\n  .message-warning {\n    @apply bg-warning-50 border border-warning-200 text-warning-600 rounded-md px-4 py-3 my-4;\n  }\n\n  .message-info {\n    @apply bg-info-50 border border-info-200 text-info-600 rounded-md px-4 py-3 my-4;\n  }\n\n  /* Layout Components */\n  .app-container {\n    @apply flex min-h-screen w-full;\n  }\n\n  .main-content {\n    @apply flex-1 bg-white/80 m-5 rounded-lg shadow-md overflow-hidden transition-all duration-300;\n  }\n\n  .main-content-with-sidenav {\n    @apply ml-[70px];\n  }\n\n  .main-content-with-expanded-nav {\n    @apply ml-[220px];\n  }\n\n  /* Dashboard Components */\n  .dashboard-container {\n    @apply px-8;\n  }\n\n  .cards-grid {\n    @apply flex flex-wrap gap-8 p-4 justify-center;\n  }\n\n  /* Header Components */\n  .header {\n    @apply bg-header text-white px-5 py-2.5 flex items-center justify-between min-h-[70px];\n  }\n\n  .header-title {\n    @apply text-header-title text-center whitespace-nowrap overflow-hidden text-ellipsis;\n  }\n\n  .header-icon {\n    @apply h-10 cursor-pointer transition-opacity hover:opacity-80;\n  }\n\n  /* SideNav Components */\n  .sidenav {\n    @apply fixed left-0 top-0 h-screen bg-sidenav overflow-y-auto transition-all duration-300 z-sidenav;\n  }\n\n  .sidenav-collapsed {\n    @apply w-sidenav-collapsed;\n  }\n\n  .sidenav-expanded {\n    @apply w-sidenav-expanded;\n  }\n\n  .sidenav-item {\n    @apply flex items-center p-2.5 text-text-primary no-underline hover:bg-sidenav-hover transition-colors;\n  }\n\n  .sidenav-item-active {\n    @apply bg-sidenav-hover;\n  }\n\n  /* Chart Containers */\n  .chart-container {\n    @apply bg-white rounded-lg shadow-md p-4 mb-5;\n  }\n\n  .chart-title {\n    @apply text-text-primary mb-2.5 text-center;\n  }\n}\n\n/* ============================================ */\n/* UTILIDADES CUSTOM */\n/* ============================================ */\n\n@layer utilities {\n  /* Truncate multiline text */\n  .line-clamp-2 {\n    display: -webkit-box;\n    -webkit-line-clamp: 2;\n    -webkit-box-orient: vertical;\n    overflow: hidden;\n  }\n\n  .line-clamp-3 {\n    display: -webkit-box;\n    -webkit-line-clamp: 3;\n    -webkit-box-orient: vertical;\n    overflow: hidden;\n  }\n\n  /* Scroll personalizado */\n  .scrollbar-thin {\n    scrollbar-width: thin;\n  }\n\n  .scrollbar-none {\n    scrollbar-width: none;\n  }\n\n  .scrollbar-thin::-webkit-scrollbar {\n    width: 8px;\n    height: 8px;\n  }\n\n  .scrollbar-thin::-webkit-scrollbar-track {\n    background: #f1f1f1;\n    border-radius: 4px;\n  }\n\n  .scrollbar-thin::-webkit-scrollbar-thumb {\n    background: #888;\n    border-radius: 4px;\n  }\n\n  .scrollbar-thin::-webkit-scrollbar-thumb:hover {\n    background: #555;\n  }\n\n  /* Glass effect */\n  .glass {\n    background: rgba(255, 255, 255, 0.8);\n    backdrop-filter: blur(10px);\n    -webkit-backdrop-filter: blur(10px);\n  }\n\n  /* Glassmorphism utilities */\n  .glass-card {\n    background: rgba(255, 255, 255, 0.1);\n    backdrop-filter: blur(16px) saturate(180%);\n    -webkit-backdrop-filter: blur(16px) saturate(180%);\n    border: 1px solid rgba(255, 255, 255, 0.18);\n  }\n\n  .glass-card-light {\n    background: rgba(255, 255, 255, 0.15);\n    backdrop-filter: blur(20px) saturate(180%);\n    -webkit-backdrop-filter: blur(20px) saturate(180%);\n    border: 1px solid rgba(255, 255, 255, 0.25);\n  }\n\n  .glass-power-display {\n    background: rgba(255, 255, 255, 0.08);\n    backdrop-filter: blur(12px);\n    -webkit-backdrop-filter: blur(12px);\n    border: 1px solid rgba(255, 255, 255, 0.15);\n  }\n\n  /* Animated gradient background */\n  .gradient-bg-animated {\n    background: linear-gradient(\n      135deg,\n      #667eea 0%,\n      #764ba2 25%,\n      #f093fb 50%,\n      #4facfe 75%,\n      #667eea 100%\n    );\n    background-size: 400% 400%;\n    animation: gradient-shift 15s ease infinite;\n  }\n\n  .gradient-bg-electric {\n    background: linear-gradient(\n      135deg,\n      #6366f1 0%,\n      #8b5cf6 25%,\n      #a855f7 50%,\n      #ec4899 75%,\n      #6366f1 100%\n    );\n    background-size: 400% 400%;\n    animation: gradient-shift 12s ease infinite;\n  }\n\n  /* Category border gradients */\n  .border-gradient-green {\n    border-image: linear-gradient(135deg, #4ade80, #22c55e) 1;\n  }\n\n  .border-gradient-yellow {\n    border-image: linear-gradient(135deg, #fbbf24, #f59e0b) 1;\n  }\n\n  .border-gradient-red {\n    border-image: linear-gradient(135deg, #f87171, #ef4444) 1;\n  }\n\n  .border-gradient-gray {\n    border-image: linear-gradient(135deg, #9ca3af, #6b7280) 1;\n  }\n\n  /* Text gradients */\n  .text-gradient-primary {\n    background: linear-gradient(135deg, #6366f1, #a855f7);\n    -webkit-background-clip: text;\n    -webkit-text-fill-color: transparent;\n    background-clip: text;\n  }\n\n  .text-gradient-electric {\n    background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);\n    -webkit-background-clip: text;\n    -webkit-text-fill-color: transparent;\n    background-clip: text;\n  }\n\n  /* Stagger animation for grid items */\n  .stagger-fade-in > *:nth-child(1) { animation-delay: 0.05s; }\n  .stagger-fade-in > *:nth-child(2) { animation-delay: 0.1s; }\n  .stagger-fade-in > *:nth-child(3) { animation-delay: 0.15s; }\n  .stagger-fade-in > *:nth-child(4) { animation-delay: 0.2s; }\n  .stagger-fade-in > *:nth-child(5) { animation-delay: 0.25s; }\n  .stagger-fade-in > *:nth-child(6) { animation-delay: 0.3s; }\n  .stagger-fade-in > *:nth-child(7) { animation-delay: 0.35s; }\n  .stagger-fade-in > *:nth-child(8) { animation-delay: 0.4s; }\n  .stagger-fade-in > *:nth-child(9) { animation-delay: 0.45s; }\n  .stagger-fade-in > *:nth-child(10) { animation-delay: 0.5s; }\n  .stagger-fade-in > *:nth-child(11) { animation-delay: 0.55s; }\n  .stagger-fade-in > *:nth-child(12) { animation-delay: 0.6s; }\n\n  /* Transitions */\n  .transition-width {\n    transition-property: width;\n    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    transition-duration: 300ms;\n  }\n\n  .transition-margin {\n    transition-property: margin-left;\n    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n    transition-duration: 300ms;\n  }\n\n  .transition-glass {\n    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);\n  }\n}\n\n/* ============================================ */\n/* ESTILOS BASE */\n/* ============================================ */\n\n@layer base {\n  * {\n    @apply border-border;\n  }\n\n  body {\n    @apply bg-background text-text-primary font-sans;\n  }\n\n  h1, h2, h3, h4, h5, h6 {\n    @apply font-semibold;\n  }\n\n  h1 {\n    @apply text-3xl;\n  }\n\n  h2 {\n    @apply text-2xl;\n  }\n\n  h3 {\n    @apply text-xl;\n  }\n\n  /* Links */\n  a {\n    @apply text-primary hover:text-primary-600 transition-colors;\n  }\n\n  /* Focus visible */\n  *:focus-visible {\n    @apply outline-none ring-2 ring-primary ring-offset-2;\n  }\n\n  /* iOS-specific optimizations */\n  @supports (-webkit-touch-callout: none) {\n    /* iOS Safari specific styles */\n    body {\n      /* Prevent text size adjustment */\n      -webkit-text-size-adjust: 100%;\n      /* Smooth scrolling */\n      -webkit-overflow-scrolling: touch;\n    }\n\n    /* Safe area support for notch/dynamic island */\n    .gradient-bg-electric {\n      padding-top: max(0px, var(--sat));\n      padding-bottom: max(0px, var(--sab));\n      padding-left: max(0px, var(--sal));\n      padding-right: max(0px, var(--sar));\n    }\n\n    /* Improve tap performance */\n    button, a, [role=\"button\"] {\n      -webkit-tap-highlight-color: transparent;\n      touch-action: manipulation;\n    }\n\n    /* Touch target size (iOS 18+ accessibility) */\n    button, a, [role=\"button\"] {\n      min-width: 44px;\n      min-height: 44px;\n    }\n  }\n\n  /* Reduce motion for accessibility */\n  @media (prefers-reduced-motion: reduce) {\n    *,\n    *::before,\n    *::after {\n      animation-duration: 0.01ms !important;\n      animation-iteration-count: 1 !important;\n      transition-duration: 0.01ms !important;\n    }\n  }\n}\n"],"sourceRoot":""}]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -132887,550 +131310,6 @@ _defineProperty(ErrorBar, "displayName", 'ErrorBar');
 
 /***/ },
 
-/***/ "./node_modules/recharts/es6/cartesian/Line.js"
-/*!*****************************************************!*\
-  !*** ./node_modules/recharts/es6/cartesian/Line.js ***!
-  \*****************************************************/
-(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Line: () => (/* binding */ Line)
-/* harmony export */ });
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! react */ "./node_modules/react/index.js");
-/* harmony import */ var react__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(react__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var react_smooth__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react-smooth */ "./node_modules/react-smooth/es6/index.js");
-/* harmony import */ var lodash_isFunction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! lodash/isFunction */ "./node_modules/lodash/isFunction.js");
-/* harmony import */ var lodash_isFunction__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(lodash_isFunction__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var lodash_isNil__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! lodash/isNil */ "./node_modules/lodash/isNil.js");
-/* harmony import */ var lodash_isNil__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(lodash_isNil__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var lodash_isEqual__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! lodash/isEqual */ "./node_modules/lodash/isEqual.js");
-/* harmony import */ var lodash_isEqual__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(lodash_isEqual__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var clsx__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! clsx */ "./node_modules/clsx/dist/clsx.mjs");
-/* harmony import */ var _shape_Curve__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../shape/Curve */ "./node_modules/recharts/es6/shape/Curve.js");
-/* harmony import */ var _shape_Dot__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../shape/Dot */ "./node_modules/recharts/es6/shape/Dot.js");
-/* harmony import */ var _container_Layer__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../container/Layer */ "./node_modules/recharts/es6/container/Layer.js");
-/* harmony import */ var _component_LabelList__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../component/LabelList */ "./node_modules/recharts/es6/component/LabelList.js");
-/* harmony import */ var _ErrorBar__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./ErrorBar */ "./node_modules/recharts/es6/cartesian/ErrorBar.js");
-/* harmony import */ var _util_DataUtils__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../util/DataUtils */ "./node_modules/recharts/es6/util/DataUtils.js");
-/* harmony import */ var _util_ReactUtils__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../util/ReactUtils */ "./node_modules/recharts/es6/util/ReactUtils.js");
-/* harmony import */ var _util_Global__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../util/Global */ "./node_modules/recharts/es6/util/Global.js");
-/* harmony import */ var _util_ChartUtils__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../util/ChartUtils */ "./node_modules/recharts/es6/util/ChartUtils.js");
-var _excluded = ["type", "layout", "connectNulls", "ref"],
-  _excluded2 = ["key"];
-function _typeof(o) { "@babel/helpers - typeof"; return _typeof = "function" == typeof Symbol && "symbol" == typeof Symbol.iterator ? function (o) { return typeof o; } : function (o) { return o && "function" == typeof Symbol && o.constructor === Symbol && o !== Symbol.prototype ? "symbol" : typeof o; }, _typeof(o); }
-function _objectWithoutProperties(source, excluded) { if (source == null) return {}; var target = _objectWithoutPropertiesLoose(source, excluded); var key, i; if (Object.getOwnPropertySymbols) { var sourceSymbolKeys = Object.getOwnPropertySymbols(source); for (i = 0; i < sourceSymbolKeys.length; i++) { key = sourceSymbolKeys[i]; if (excluded.indexOf(key) >= 0) continue; if (!Object.prototype.propertyIsEnumerable.call(source, key)) continue; target[key] = source[key]; } } return target; }
-function _objectWithoutPropertiesLoose(source, excluded) { if (source == null) return {}; var target = {}; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { if (excluded.indexOf(key) >= 0) continue; target[key] = source[key]; } } return target; }
-function _extends() { _extends = Object.assign ? Object.assign.bind() : function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
-function ownKeys(e, r) { var t = Object.keys(e); if (Object.getOwnPropertySymbols) { var o = Object.getOwnPropertySymbols(e); r && (o = o.filter(function (r) { return Object.getOwnPropertyDescriptor(e, r).enumerable; })), t.push.apply(t, o); } return t; }
-function _objectSpread(e) { for (var r = 1; r < arguments.length; r++) { var t = null != arguments[r] ? arguments[r] : {}; r % 2 ? ownKeys(Object(t), !0).forEach(function (r) { _defineProperty(e, r, t[r]); }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(e, Object.getOwnPropertyDescriptors(t)) : ownKeys(Object(t)).forEach(function (r) { Object.defineProperty(e, r, Object.getOwnPropertyDescriptor(t, r)); }); } return e; }
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && iter[Symbol.iterator] != null || iter["@@iterator"] != null) return Array.from(iter); }
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i]; return arr2; }
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, _toPropertyKey(descriptor.key), descriptor); } }
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); Object.defineProperty(Constructor, "prototype", { writable: false }); return Constructor; }
-function _callSuper(t, o, e) { return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e)); }
-function _possibleConstructorReturn(self, call) { if (call && (_typeof(call) === "object" || typeof call === "function")) { return call; } else if (call !== void 0) { throw new TypeError("Derived constructors may only return object or undefined"); } return _assertThisInitialized(self); }
-function _assertThisInitialized(self) { if (self === void 0) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return self; }
-function _isNativeReflectConstruct() { try { var t = !Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {})); } catch (t) {} return (_isNativeReflectConstruct = function _isNativeReflectConstruct() { return !!t; })(); }
-function _getPrototypeOf(o) { _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf.bind() : function _getPrototypeOf(o) { return o.__proto__ || Object.getPrototypeOf(o); }; return _getPrototypeOf(o); }
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function"); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, writable: true, configurable: true } }); Object.defineProperty(subClass, "prototype", { writable: false }); if (superClass) _setPrototypeOf(subClass, superClass); }
-function _setPrototypeOf(o, p) { _setPrototypeOf = Object.setPrototypeOf ? Object.setPrototypeOf.bind() : function _setPrototypeOf(o, p) { o.__proto__ = p; return o; }; return _setPrototypeOf(o, p); }
-function _defineProperty(obj, key, value) { key = _toPropertyKey(key); if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
-function _toPropertyKey(t) { var i = _toPrimitive(t, "string"); return "symbol" == _typeof(i) ? i : i + ""; }
-function _toPrimitive(t, r) { if ("object" != _typeof(t) || !t) return t; var e = t[Symbol.toPrimitive]; if (void 0 !== e) { var i = e.call(t, r || "default"); if ("object" != _typeof(i)) return i; throw new TypeError("@@toPrimitive must return a primitive value."); } return ("string" === r ? String : Number)(t); }
-/**
- * @fileOverview Line
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var Line = /*#__PURE__*/function (_PureComponent) {
-  function Line() {
-    var _this;
-    _classCallCheck(this, Line);
-    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-    _this = _callSuper(this, Line, [].concat(args));
-    _defineProperty(_this, "state", {
-      isAnimationFinished: true,
-      totalLength: 0
-    });
-    _defineProperty(_this, "generateSimpleStrokeDasharray", function (totalLength, length) {
-      return "".concat(length, "px ").concat(totalLength - length, "px");
-    });
-    _defineProperty(_this, "getStrokeDasharray", function (length, totalLength, lines) {
-      var lineLength = lines.reduce(function (pre, next) {
-        return pre + next;
-      });
-
-      // if lineLength is 0 return the default when no strokeDasharray is provided
-      if (!lineLength) {
-        return _this.generateSimpleStrokeDasharray(totalLength, length);
-      }
-      var count = Math.floor(length / lineLength);
-      var remainLength = length % lineLength;
-      var restLength = totalLength - length;
-      var remainLines = [];
-      for (var i = 0, sum = 0; i < lines.length; sum += lines[i], ++i) {
-        if (sum + lines[i] > remainLength) {
-          remainLines = [].concat(_toConsumableArray(lines.slice(0, i)), [remainLength - sum]);
-          break;
-        }
-      }
-      var emptyLines = remainLines.length % 2 === 0 ? [0, restLength] : [restLength];
-      return [].concat(_toConsumableArray(Line.repeat(lines, count)), _toConsumableArray(remainLines), emptyLines).map(function (line) {
-        return "".concat(line, "px");
-      }).join(', ');
-    });
-    _defineProperty(_this, "id", (0,_util_DataUtils__WEBPACK_IMPORTED_MODULE_11__.uniqueId)('recharts-line-'));
-    _defineProperty(_this, "pathRef", function (node) {
-      _this.mainCurve = node;
-    });
-    _defineProperty(_this, "handleAnimationEnd", function () {
-      _this.setState({
-        isAnimationFinished: true
-      });
-      if (_this.props.onAnimationEnd) {
-        _this.props.onAnimationEnd();
-      }
-    });
-    _defineProperty(_this, "handleAnimationStart", function () {
-      _this.setState({
-        isAnimationFinished: false
-      });
-      if (_this.props.onAnimationStart) {
-        _this.props.onAnimationStart();
-      }
-    });
-    return _this;
-  }
-  _inherits(Line, _PureComponent);
-  return _createClass(Line, [{
-    key: "componentDidMount",
-    value: function componentDidMount() {
-      if (!this.props.isAnimationActive) {
-        return;
-      }
-      var totalLength = this.getTotalLength();
-      this.setState({
-        totalLength: totalLength
-      });
-    }
-  }, {
-    key: "componentDidUpdate",
-    value: function componentDidUpdate() {
-      if (!this.props.isAnimationActive) {
-        return;
-      }
-      var totalLength = this.getTotalLength();
-      if (totalLength !== this.state.totalLength) {
-        this.setState({
-          totalLength: totalLength
-        });
-      }
-    }
-  }, {
-    key: "getTotalLength",
-    value: function getTotalLength() {
-      var curveDom = this.mainCurve;
-      try {
-        return curveDom && curveDom.getTotalLength && curveDom.getTotalLength() || 0;
-      } catch (err) {
-        return 0;
-      }
-    }
-  }, {
-    key: "renderErrorBar",
-    value: function renderErrorBar(needClip, clipPathId) {
-      if (this.props.isAnimationActive && !this.state.isAnimationFinished) {
-        return null;
-      }
-      var _this$props = this.props,
-        points = _this$props.points,
-        xAxis = _this$props.xAxis,
-        yAxis = _this$props.yAxis,
-        layout = _this$props.layout,
-        children = _this$props.children;
-      var errorBarItems = (0,_util_ReactUtils__WEBPACK_IMPORTED_MODULE_12__.findAllByType)(children, _ErrorBar__WEBPACK_IMPORTED_MODULE_10__.ErrorBar);
-      if (!errorBarItems) {
-        return null;
-      }
-      var dataPointFormatter = function dataPointFormatter(dataPoint, dataKey) {
-        return {
-          x: dataPoint.x,
-          y: dataPoint.y,
-          value: dataPoint.value,
-          errorVal: (0,_util_ChartUtils__WEBPACK_IMPORTED_MODULE_14__.getValueByDataKey)(dataPoint.payload, dataKey)
-        };
-      };
-      var errorBarProps = {
-        clipPath: needClip ? "url(#clipPath-".concat(clipPathId, ")") : null
-      };
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_container_Layer__WEBPACK_IMPORTED_MODULE_8__.Layer, errorBarProps, errorBarItems.map(function (item) {
-        return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().cloneElement(item, {
-          key: "bar-".concat(item.props.dataKey),
-          data: points,
-          xAxis: xAxis,
-          yAxis: yAxis,
-          layout: layout,
-          dataPointFormatter: dataPointFormatter
-        });
-      }));
-    }
-  }, {
-    key: "renderDots",
-    value: function renderDots(needClip, clipDot, clipPathId) {
-      var isAnimationActive = this.props.isAnimationActive;
-      if (isAnimationActive && !this.state.isAnimationFinished) {
-        return null;
-      }
-      var _this$props2 = this.props,
-        dot = _this$props2.dot,
-        points = _this$props2.points,
-        dataKey = _this$props2.dataKey;
-      var lineProps = (0,_util_ReactUtils__WEBPACK_IMPORTED_MODULE_12__.filterProps)(this.props, false);
-      var customDotProps = (0,_util_ReactUtils__WEBPACK_IMPORTED_MODULE_12__.filterProps)(dot, true);
-      var dots = points.map(function (entry, i) {
-        var dotProps = _objectSpread(_objectSpread(_objectSpread({
-          key: "dot-".concat(i),
-          r: 3
-        }, lineProps), customDotProps), {}, {
-          index: i,
-          cx: entry.x,
-          cy: entry.y,
-          value: entry.value,
-          dataKey: dataKey,
-          payload: entry.payload,
-          points: points
-        });
-        return Line.renderDotItem(dot, dotProps);
-      });
-      var dotsProps = {
-        clipPath: needClip ? "url(#clipPath-".concat(clipDot ? '' : 'dots-').concat(clipPathId, ")") : null
-      };
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_container_Layer__WEBPACK_IMPORTED_MODULE_8__.Layer, _extends({
-        className: "recharts-line-dots",
-        key: "dots"
-      }, dotsProps), dots);
-    }
-  }, {
-    key: "renderCurveStatically",
-    value: function renderCurveStatically(points, needClip, clipPathId, props) {
-      var _this$props3 = this.props,
-        type = _this$props3.type,
-        layout = _this$props3.layout,
-        connectNulls = _this$props3.connectNulls,
-        ref = _this$props3.ref,
-        others = _objectWithoutProperties(_this$props3, _excluded);
-      var curveProps = _objectSpread(_objectSpread(_objectSpread({}, (0,_util_ReactUtils__WEBPACK_IMPORTED_MODULE_12__.filterProps)(others, true)), {}, {
-        fill: 'none',
-        className: 'recharts-line-curve',
-        clipPath: needClip ? "url(#clipPath-".concat(clipPathId, ")") : null,
-        points: points
-      }, props), {}, {
-        type: type,
-        layout: layout,
-        connectNulls: connectNulls
-      });
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_shape_Curve__WEBPACK_IMPORTED_MODULE_6__.Curve, _extends({}, curveProps, {
-        pathRef: this.pathRef
-      }));
-    }
-  }, {
-    key: "renderCurveWithAnimation",
-    value: function renderCurveWithAnimation(needClip, clipPathId) {
-      var _this2 = this;
-      var _this$props4 = this.props,
-        points = _this$props4.points,
-        strokeDasharray = _this$props4.strokeDasharray,
-        isAnimationActive = _this$props4.isAnimationActive,
-        animationBegin = _this$props4.animationBegin,
-        animationDuration = _this$props4.animationDuration,
-        animationEasing = _this$props4.animationEasing,
-        animationId = _this$props4.animationId,
-        animateNewValues = _this$props4.animateNewValues,
-        width = _this$props4.width,
-        height = _this$props4.height;
-      var _this$state = this.state,
-        prevPoints = _this$state.prevPoints,
-        totalLength = _this$state.totalLength;
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(react_smooth__WEBPACK_IMPORTED_MODULE_1__["default"], {
-        begin: animationBegin,
-        duration: animationDuration,
-        isActive: isAnimationActive,
-        easing: animationEasing,
-        from: {
-          t: 0
-        },
-        to: {
-          t: 1
-        },
-        key: "line-".concat(animationId),
-        onAnimationEnd: this.handleAnimationEnd,
-        onAnimationStart: this.handleAnimationStart
-      }, function (_ref) {
-        var t = _ref.t;
-        if (prevPoints) {
-          var prevPointsDiffFactor = prevPoints.length / points.length;
-          var stepData = points.map(function (entry, index) {
-            var prevPointIndex = Math.floor(index * prevPointsDiffFactor);
-            if (prevPoints[prevPointIndex]) {
-              var prev = prevPoints[prevPointIndex];
-              var interpolatorX = (0,_util_DataUtils__WEBPACK_IMPORTED_MODULE_11__.interpolateNumber)(prev.x, entry.x);
-              var interpolatorY = (0,_util_DataUtils__WEBPACK_IMPORTED_MODULE_11__.interpolateNumber)(prev.y, entry.y);
-              return _objectSpread(_objectSpread({}, entry), {}, {
-                x: interpolatorX(t),
-                y: interpolatorY(t)
-              });
-            }
-
-            // magic number of faking previous x and y location
-            if (animateNewValues) {
-              var _interpolatorX = (0,_util_DataUtils__WEBPACK_IMPORTED_MODULE_11__.interpolateNumber)(width * 2, entry.x);
-              var _interpolatorY = (0,_util_DataUtils__WEBPACK_IMPORTED_MODULE_11__.interpolateNumber)(height / 2, entry.y);
-              return _objectSpread(_objectSpread({}, entry), {}, {
-                x: _interpolatorX(t),
-                y: _interpolatorY(t)
-              });
-            }
-            return _objectSpread(_objectSpread({}, entry), {}, {
-              x: entry.x,
-              y: entry.y
-            });
-          });
-          return _this2.renderCurveStatically(stepData, needClip, clipPathId);
-        }
-        var interpolator = (0,_util_DataUtils__WEBPACK_IMPORTED_MODULE_11__.interpolateNumber)(0, totalLength);
-        var curLength = interpolator(t);
-        var currentStrokeDasharray;
-        if (strokeDasharray) {
-          var lines = "".concat(strokeDasharray).split(/[,\s]+/gim).map(function (num) {
-            return parseFloat(num);
-          });
-          currentStrokeDasharray = _this2.getStrokeDasharray(curLength, totalLength, lines);
-        } else {
-          currentStrokeDasharray = _this2.generateSimpleStrokeDasharray(totalLength, curLength);
-        }
-        return _this2.renderCurveStatically(points, needClip, clipPathId, {
-          strokeDasharray: currentStrokeDasharray
-        });
-      });
-    }
-  }, {
-    key: "renderCurve",
-    value: function renderCurve(needClip, clipPathId) {
-      var _this$props5 = this.props,
-        points = _this$props5.points,
-        isAnimationActive = _this$props5.isAnimationActive;
-      var _this$state2 = this.state,
-        prevPoints = _this$state2.prevPoints,
-        totalLength = _this$state2.totalLength;
-      if (isAnimationActive && points && points.length && (!prevPoints && totalLength > 0 || !lodash_isEqual__WEBPACK_IMPORTED_MODULE_4___default()(prevPoints, points))) {
-        return this.renderCurveWithAnimation(needClip, clipPathId);
-      }
-      return this.renderCurveStatically(points, needClip, clipPathId);
-    }
-  }, {
-    key: "render",
-    value: function render() {
-      var _filterProps;
-      var _this$props6 = this.props,
-        hide = _this$props6.hide,
-        dot = _this$props6.dot,
-        points = _this$props6.points,
-        className = _this$props6.className,
-        xAxis = _this$props6.xAxis,
-        yAxis = _this$props6.yAxis,
-        top = _this$props6.top,
-        left = _this$props6.left,
-        width = _this$props6.width,
-        height = _this$props6.height,
-        isAnimationActive = _this$props6.isAnimationActive,
-        id = _this$props6.id;
-      if (hide || !points || !points.length) {
-        return null;
-      }
-      var isAnimationFinished = this.state.isAnimationFinished;
-      var hasSinglePoint = points.length === 1;
-      var layerClass = (0,clsx__WEBPACK_IMPORTED_MODULE_5__["default"])('recharts-line', className);
-      var needClipX = xAxis && xAxis.allowDataOverflow;
-      var needClipY = yAxis && yAxis.allowDataOverflow;
-      var needClip = needClipX || needClipY;
-      var clipPathId = lodash_isNil__WEBPACK_IMPORTED_MODULE_3___default()(id) ? this.id : id;
-      var _ref2 = (_filterProps = (0,_util_ReactUtils__WEBPACK_IMPORTED_MODULE_12__.filterProps)(dot, false)) !== null && _filterProps !== void 0 ? _filterProps : {
-          r: 3,
-          strokeWidth: 2
-        },
-        _ref2$r = _ref2.r,
-        r = _ref2$r === void 0 ? 3 : _ref2$r,
-        _ref2$strokeWidth = _ref2.strokeWidth,
-        strokeWidth = _ref2$strokeWidth === void 0 ? 2 : _ref2$strokeWidth;
-      var _ref3 = (0,_util_ReactUtils__WEBPACK_IMPORTED_MODULE_12__.hasClipDot)(dot) ? dot : {},
-        _ref3$clipDot = _ref3.clipDot,
-        clipDot = _ref3$clipDot === void 0 ? true : _ref3$clipDot;
-      var dotSize = r * 2 + strokeWidth;
-      return /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_container_Layer__WEBPACK_IMPORTED_MODULE_8__.Layer, {
-        className: layerClass
-      }, needClipX || needClipY ? /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("defs", null, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("clipPath", {
-        id: "clipPath-".concat(clipPathId)
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("rect", {
-        x: needClipX ? left : left - width / 2,
-        y: needClipY ? top : top - height / 2,
-        width: needClipX ? width : width * 2,
-        height: needClipY ? height : height * 2
-      })), !clipDot && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("clipPath", {
-        id: "clipPath-dots-".concat(clipPathId)
-      }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement("rect", {
-        x: left - dotSize / 2,
-        y: top - dotSize / 2,
-        width: width + dotSize,
-        height: height + dotSize
-      }))) : null, !hasSinglePoint && this.renderCurve(needClip, clipPathId), this.renderErrorBar(needClip, clipPathId), (hasSinglePoint || dot) && this.renderDots(needClip, clipDot, clipPathId), (!isAnimationActive || isAnimationFinished) && _component_LabelList__WEBPACK_IMPORTED_MODULE_9__.LabelList.renderCallByParent(this.props, points));
-    }
-  }], [{
-    key: "getDerivedStateFromProps",
-    value: function getDerivedStateFromProps(nextProps, prevState) {
-      if (nextProps.animationId !== prevState.prevAnimationId) {
-        return {
-          prevAnimationId: nextProps.animationId,
-          curPoints: nextProps.points,
-          prevPoints: prevState.curPoints
-        };
-      }
-      if (nextProps.points !== prevState.curPoints) {
-        return {
-          curPoints: nextProps.points
-        };
-      }
-      return null;
-    }
-  }, {
-    key: "repeat",
-    value: function repeat(lines, count) {
-      var linesUnit = lines.length % 2 !== 0 ? [].concat(_toConsumableArray(lines), [0]) : lines;
-      var result = [];
-      for (var i = 0; i < count; ++i) {
-        result = [].concat(_toConsumableArray(result), _toConsumableArray(linesUnit));
-      }
-      return result;
-    }
-  }, {
-    key: "renderDotItem",
-    value: function renderDotItem(option, props) {
-      var dotItem;
-      if ( /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().isValidElement(option)) {
-        dotItem = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().cloneElement(option, props);
-      } else if (lodash_isFunction__WEBPACK_IMPORTED_MODULE_2___default()(option)) {
-        dotItem = option(props);
-      } else {
-        var key = props.key,
-          dotProps = _objectWithoutProperties(props, _excluded2);
-        var className = (0,clsx__WEBPACK_IMPORTED_MODULE_5__["default"])('recharts-line-dot', typeof option !== 'boolean' ? option.className : '');
-        dotItem = /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_0___default().createElement(_shape_Dot__WEBPACK_IMPORTED_MODULE_7__.Dot, _extends({
-          key: key
-        }, dotProps, {
-          className: className
-        }));
-      }
-      return dotItem;
-    }
-  }]);
-}(react__WEBPACK_IMPORTED_MODULE_0__.PureComponent);
-_defineProperty(Line, "displayName", 'Line');
-_defineProperty(Line, "defaultProps", {
-  xAxisId: 0,
-  yAxisId: 0,
-  connectNulls: false,
-  activeDot: true,
-  dot: true,
-  legendType: 'line',
-  stroke: '#3182bd',
-  strokeWidth: 1,
-  fill: '#fff',
-  points: [],
-  isAnimationActive: !_util_Global__WEBPACK_IMPORTED_MODULE_13__.Global.isSsr,
-  animateNewValues: true,
-  animationBegin: 0,
-  animationDuration: 1500,
-  animationEasing: 'ease',
-  hide: false,
-  label: false
-});
-/**
- * Compose the data of each group
- * @param {Object} props The props from the component
- * @param  {Object} xAxis   The configuration of x-axis
- * @param  {Object} yAxis   The configuration of y-axis
- * @param  {String} dataKey The unique key of a group
- * @return {Array}  Composed data
- */
-_defineProperty(Line, "getComposedData", function (_ref4) {
-  var props = _ref4.props,
-    xAxis = _ref4.xAxis,
-    yAxis = _ref4.yAxis,
-    xAxisTicks = _ref4.xAxisTicks,
-    yAxisTicks = _ref4.yAxisTicks,
-    dataKey = _ref4.dataKey,
-    bandSize = _ref4.bandSize,
-    displayedData = _ref4.displayedData,
-    offset = _ref4.offset;
-  var layout = props.layout;
-  var points = displayedData.map(function (entry, index) {
-    var value = (0,_util_ChartUtils__WEBPACK_IMPORTED_MODULE_14__.getValueByDataKey)(entry, dataKey);
-    if (layout === 'horizontal') {
-      return {
-        x: (0,_util_ChartUtils__WEBPACK_IMPORTED_MODULE_14__.getCateCoordinateOfLine)({
-          axis: xAxis,
-          ticks: xAxisTicks,
-          bandSize: bandSize,
-          entry: entry,
-          index: index
-        }),
-        y: lodash_isNil__WEBPACK_IMPORTED_MODULE_3___default()(value) ? null : yAxis.scale(value),
-        value: value,
-        payload: entry
-      };
-    }
-    return {
-      x: lodash_isNil__WEBPACK_IMPORTED_MODULE_3___default()(value) ? null : xAxis.scale(value),
-      y: (0,_util_ChartUtils__WEBPACK_IMPORTED_MODULE_14__.getCateCoordinateOfLine)({
-        axis: yAxis,
-        ticks: yAxisTicks,
-        bandSize: bandSize,
-        entry: entry,
-        index: index
-      }),
-      value: value,
-      payload: entry
-    };
-  });
-  return _objectSpread({
-    points: points,
-    layout: layout
-  }, offset);
-});
-
-/***/ },
-
 /***/ "./node_modules/recharts/es6/cartesian/ReferenceArea.js"
 /*!**************************************************************!*\
   !*** ./node_modules/recharts/es6/cartesian/ReferenceArea.js ***!
@@ -134616,45 +132495,6 @@ var BarChart = (0,_generateCategoricalChart__WEBPACK_IMPORTED_MODULE_0__.generat
   GraphicalChild: _cartesian_Bar__WEBPACK_IMPORTED_MODULE_1__.Bar,
   defaultTooltipEventType: 'axis',
   validateTooltipEventTypes: ['axis', 'item'],
-  axisComponents: [{
-    axisType: 'xAxis',
-    AxisComp: _cartesian_XAxis__WEBPACK_IMPORTED_MODULE_2__.XAxis
-  }, {
-    axisType: 'yAxis',
-    AxisComp: _cartesian_YAxis__WEBPACK_IMPORTED_MODULE_3__.YAxis
-  }],
-  formatAxisMap: _util_CartesianUtils__WEBPACK_IMPORTED_MODULE_4__.formatAxisMap
-});
-
-/***/ },
-
-/***/ "./node_modules/recharts/es6/chart/LineChart.js"
-/*!******************************************************!*\
-  !*** ./node_modules/recharts/es6/chart/LineChart.js ***!
-  \******************************************************/
-(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LineChart: () => (/* binding */ LineChart)
-/* harmony export */ });
-/* harmony import */ var _generateCategoricalChart__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generateCategoricalChart */ "./node_modules/recharts/es6/chart/generateCategoricalChart.js");
-/* harmony import */ var _cartesian_Line__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cartesian/Line */ "./node_modules/recharts/es6/cartesian/Line.js");
-/* harmony import */ var _cartesian_XAxis__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../cartesian/XAxis */ "./node_modules/recharts/es6/cartesian/XAxis.js");
-/* harmony import */ var _cartesian_YAxis__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../cartesian/YAxis */ "./node_modules/recharts/es6/cartesian/YAxis.js");
-/* harmony import */ var _util_CartesianUtils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../util/CartesianUtils */ "./node_modules/recharts/es6/util/CartesianUtils.js");
-/**
- * @fileOverview Line Chart
- */
-
-
-
-
-
-var LineChart = (0,_generateCategoricalChart__WEBPACK_IMPORTED_MODULE_0__.generateCategoricalChart)({
-  chartName: 'LineChart',
-  GraphicalChild: _cartesian_Line__WEBPACK_IMPORTED_MODULE_1__.Line,
   axisComponents: [{
     axisType: 'xAxis',
     AxisComp: _cartesian_XAxis__WEBPACK_IMPORTED_MODULE_2__.XAxis
@@ -153354,17 +151194,6 @@ module.exports = "data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%27http://www.w3
 
 "use strict";
 module.exports = __webpack_require__.p + "59c06494ae6c7271e95f.gif";
-
-/***/ },
-
-/***/ "./src/assets/images/PLANO_STORAGE.jpg"
-/*!*********************************************!*\
-  !*** ./src/assets/images/PLANO_STORAGE.jpg ***!
-  \*********************************************/
-(module, __unused_webpack_exports, __webpack_require__) {
-
-"use strict";
-module.exports = __webpack_require__.p + "5177132c8ceea6e7e8df.jpg";
 
 /***/ },
 
