@@ -269,12 +269,56 @@ DateTime.fromISO(date).toFormat('yyyy-MM-dd HH:mm:ss');
 
 ---
 
+## 11. Refactor de rutas API (Issue #11)
+
+### Contexto
+La API del backend heredó múltiples endpoints de un proyecto anterior, incluyendo módulos legacy y rutas parcialmente integradas (dashboards, contador de ciclos, ingesta GPS antigua, sectores/beacons, etc.). Esto generaba ruido, complejidad y endpoints que ya no formaban parte del producto real.
+
+### Decisión
+
+- Eliminar los módulos y endpoints obsoletos:
+  - Capa de `/api/dashboard` (archivo `dashboard_Routes.js` y controladores de dashboard eléctrico/temperatura).
+  - Módulo de contador de ciclos de descongelamiento (`contadorCiclos_Routes.js`, `contadorCiclos_Controller.js`, `contadorCiclos_Utils.js` y el componente `ContadorCiclosDescongelamiento`).
+  - Endpoint legacy `POST /gps-data` (`gpsData_Routes.js` y su montaje en `server.js`).
+  - Rutas actuales de `/api/sectores` y `/api/beacons`, junto con su uso directo en la SPA. Los dominios quedan reservados para un rediseño futuro del apartado de sectores y beacons.
+
+- Reagrupar análisis bajo el dominio que analizan:
+  - Eliminar el dominio genérico `/api/analysis` y mantener `/api/powerAnalysis` como punto único para el análisis de temperatura y potencia (alineado con `TemperaturePowerAnalysis_View`).
+  - Regla general: cualquier análisis futuro debe exponerse bajo el dominio que analiza (ej: `/api/temperatura/analisis/...`, `/api/alertas/analisis/...`).
+
+- Ajustar dominios de Temperatura e IA:
+  - Mantener a corto plazo el dominio `/api/ubibot` por compatibilidad, documentando que el dominio de negocio es **temperatura** y que Ubibot es un detalle de implementación. En refactors futuros, los endpoints se reexpondrán bajo `/api/temperatura/...`.
+  - Sustituir el dominio `/api/v1/ai-analysis` por `/api/ia/analisis`, eliminando el versionado explícito en la URL y actualizando servidor y frontend.
+
+### Estado Actual
+✅ Implementado — Limpieza de endpoints legacy y ajuste de dominios según Issue #11.
+
+---
+
+## 12. Alineación total endpoints con BD (ubi_canal + id_preset, reportería)
+
+### Contexto
+Plan de alineación de todos los endpoints con el esquema de BD definido en SQL_FILES y Base_de_Datos.md. Incluye migración de tablas legacy a rep_*, ubi_*, sem_*, etc.
+
+### Decisiones aplicadas
+
+- **ubi_canal ↔ ubi_presets_temperatura (Opción A):** Se añadió FK `id_preset` en ubi_canal; se eliminaron `temperatura_minima_umbral`, `temperatura_maxima_umbral`, `fecha_actualizacion_umbral`, `usuario_actualizacion_umbral`. Los umbrales se obtienen siempre por JOIN con ubi_presets_temperatura. Al cambiar un preset, todos los canales que lo usan se actualizan implícitamente.
+- **Reportería:** Se añadieron columnas a rep_plantillas (max_dispositivos, max_dias, admite_comparativo, tiempo_estimado_segundos) y rep_reportes_generados (id_usuario, fecha_inicio_periodo, fecha_fin_periodo, ids_dispositivos, config_reporte, tiempo_generacion_segundos, mensaje_error_generacion).
+- **Presets:** presets_Controller migrado de temperature_presets a ubi_presets_temperatura. SP stpr_apply_preset_to_cameras actualizado para usar UPDATE id_preset.
+- **GPS/blindspot/sectores/beacons:** Sin cambios en esquema; dominios reservados (Issue #26 para sectores/beacons).
+
+### Estado Actual
+✅ Parcialmente implementado — Esquema SQL, SP, triggers, ubibot_Service, presets_Controller, Base_de_Datos.md, inventario en APIs_internas.md.
+
+---
+
 ## 📝 Historial de Cambios
 
 > **Nota**: Para historial detallado de cambios del proyecto, ver [CHANGELOG.md](./CHANGELOG.md)
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-03-12 | Alineación endpoints con BD: ubi_canal+id_preset (Opción A), rep_plantillas/rep_reportes_generados, presets | andresTNS, Bufigol |
 | 2026-03-11 | Estandarización de fechas: Luxon como única librería (Issue #5) | andresTNS, Bufigol |
 | 2026-01-26 | Documentación actualizada según feedback Issue #2 | andresTNS, Bufigol |
 | 2026-01-22 | Documentación completa de decisiones técnicas | andresTNS, Bufigol |

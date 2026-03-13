@@ -430,18 +430,9 @@ CREATE INDEX `idx_ubi_canal_id_ubicacion_real-activo`
 CREATE INDEX `idx_ubi_canal_activo-en_linea-id_ubicacion_real`
     ON `ubi_canal` (`activo`, `en_linea`, `id_ubicacion_real`);
 
--- Para búsqueda de canales según umbrales de temperatura mínima
--- (identificar canales con umbral bajo que podrían generar más alertas)
-CREATE INDEX `idx_ubi_canal_temperatura_minima_umbral-activo`
-    ON `ubi_canal` (`temperatura_minima_umbral`, `activo`);
-
--- Para búsqueda de canales según umbrales de temperatura máxima
-CREATE INDEX `idx_ubi_canal_temperatura_maxima_umbral-activo`
-    ON `ubi_canal` (`temperatura_maxima_umbral`, `activo`);
-
--- Para compound de umbrales (comparar umbral mín+máx con valor leído)
-CREATE INDEX `idx_ubi_canal_activo-temp_min_umbral-temp_max_umbral`
-    ON `ubi_canal` (`activo`, `temperatura_minima_umbral`, `temperatura_maxima_umbral`);
+-- Para búsqueda de canales por preset (Opción A: umbrales via ubi_presets_temperatura)
+CREATE INDEX `idx_ubi_canal_id_preset-activo`
+    ON `ubi_canal` (`id_preset`, `activo`);
 
 -- Para búsqueda directa de última alerta (sin filtro de activo)
 CREATE INDEX `idx_ubi_canal_ultima_alerta_enviada`

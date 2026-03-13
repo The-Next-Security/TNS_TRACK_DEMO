@@ -13,8 +13,7 @@ BEGIN
             'canal_id', NEW.canal_id,
             'nombre', NEW.nombre,
             'en_linea', NEW.en_linea,
-            'temperatura_minima_umbral', NEW.temperatura_minima_umbral,
-            'temperatura_maxima_umbral', NEW.temperatura_maxima_umbral,
+            'id_preset', NEW.id_preset,
             'activo', NEW.activo
         ),
         IFNULL(@app_usuario, 'SYSTEM')
@@ -35,8 +34,7 @@ BEGIN
             'canal_id', OLD.canal_id,
             'nombre', OLD.nombre,
             'en_linea', OLD.en_linea,
-            'temperatura_minima_umbral', OLD.temperatura_minima_umbral,
-            'temperatura_maxima_umbral', OLD.temperatura_maxima_umbral,
+            'id_preset', OLD.id_preset,
             'activo', OLD.activo
         ),
         JSON_OBJECT(
@@ -45,8 +43,7 @@ BEGIN
             'canal_id', NEW.canal_id,
             'nombre', NEW.nombre,
             'en_linea', NEW.en_linea,
-            'temperatura_minima_umbral', NEW.temperatura_minima_umbral,
-            'temperatura_maxima_umbral', NEW.temperatura_maxima_umbral,
+            'id_preset', NEW.id_preset,
             'activo', NEW.activo
         ),
         IFNULL(@app_usuario, 'SYSTEM')
@@ -67,8 +64,7 @@ BEGIN
             'canal_id', OLD.canal_id,
             'nombre', OLD.nombre,
             'en_linea', OLD.en_linea,
-            'temperatura_minima_umbral', OLD.temperatura_minima_umbral,
-            'temperatura_maxima_umbral', OLD.temperatura_maxima_umbral,
+            'id_preset', OLD.id_preset,
             'activo', OLD.activo
         ),
         IFNULL(@app_usuario, 'SYSTEM')

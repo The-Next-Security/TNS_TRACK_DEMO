@@ -86,14 +86,9 @@ const ConfigurationV2 = () => {
   useEffect(() => {
     const fetchSectors = async () => {
       try {
-        const response = await axios.get('/api/sectores/listar-sectores');
-        setSectors(response.data);
+        setSectors([]);
       } catch (error) {
-        console.error('Error fetching sectors:', error);
-        setFeedback({
-          type: 'error',
-          message: 'Error al cargar los sectores. Por favor, recargue la página.'
-        });
+        console.error('Error initializing sectors:', error);
       }
     };
 

@@ -251,27 +251,26 @@ INSERT INTO `ubi_presets_temperatura` (`id_preset`, `nombre_preset`, `temperatur
 --    id_dispositivo: device_id original (VARCHAR hex único por canal)
 -- ==============================================================================
 
+-- Opción A: umbrales via id_preset (ubi_presets_temperatura). 1=Ultra Congelado (-22/-13), 2=Refrigerado (-5/5). Reefer E con -2/5 → preset 2 (rango cercano).
 INSERT INTO `ubi_canal` (
     `id_ubicacion_real`, `canal_id`, `nombre`,
     `id_producto`, `id_dispositivo`,
     `latitud`, `longitud`, `firmware`, `mac_address`,
-    `en_linea`, `temperatura_minima_umbral`, `temperatura_maxima_umbral`,
-    `fecha_actualizacion_umbral`, `usuario_actualizacion_umbral`,
-    `ultima_alerta_enviada`, `activo`
+    `en_linea`, `id_preset`, `ultima_alerta_enviada`, `activo`
 ) VALUES
-(1,  92498, 'Camara 1', 'ubibot-ws1a', '7787f135de09d3af9c41dab3830aae8154862304', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:b0', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(2,  92505, 'Camara 2', 'ubibot-ws1a', '6ae7add025978d1a550d832a1d59fe75530d9a6d', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8c:dc', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(3,  92507, 'Camara 3', 'ubibot-ws1a', '862ad92a4ec056501d25a63d2f61db0eb5dcf7f0', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:82:68', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(4,  92509, 'Camara 4', 'ubibot-ws1a', '2769782e47b7bec525feb5fee445bfedc5503f32', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:94', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(5,  92431, 'Camara 5', 'ubibot-ws1a', '3612744868ec490e8d662df858fc31ab68bc2c99', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f6:7b:a4', 1,  -5.00,   5.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(6,  92519, 'Reefer A', 'ubibot-ws1a', '1710fa3162d8280e51eef48e2bc1ad53ac62d609', -33.43780000, -70.65030000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:30', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(7,  92521, 'Reefer B', 'ubibot-ws1a', 'f94060fce7662d68505329bde3f02e900500a8b8', -34.17080000, -70.74440000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:5c', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(8,  92523, 'Reefer C', 'ubibot-ws1a', '21ad0da0b5cf89c9dbb16e4dbdb0220b3733b2f9', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:80', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(9,  92729, 'Reefer D', 'ubibot-ws1a', 'bda7193855427875a68ee9b72655403931ce4761', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:68', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(10, 92486, 'Reefer E', 'ubibot-ws1a', '074d3f347adde1d8c3f41bf2897dd3a46ea53805', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:8c', 1,  -2.00,   5.00, '2026-01-15 16:26:52', 'Web UI',     NULL, 1),
-(11, 88850, 'Reefer F', 'ubibot-ws1a', '873de03514e1ab0668979a802e44bdd227f21b58', -33.42768965, -70.68643212, 'ws1a_v2.2.9', '08:f9:e0:d4:92:d8', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(12, 90024, 'Reefer G', 'ubibot-ws1a', '3a59454bde1ede75555a89eed91e7e13e43d0edd', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:d4:8f:c4', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1),
-(13, 92494, 'Reefer H', 'ubibot-ws1a', 'd2447cac064bb9761eb87bf8d769bdb2695f9bfa', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:44', 1, -22.00, -13.00, '2025-12-22 11:24:41', 'Desarrollo', NULL, 1);
+(1,  92498, 'Camara 1', 'ubibot-ws1a', '7787f135de09d3af9c41dab3830aae8154862304', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:b0', 1, 1, NULL, 1),
+(2,  92505, 'Camara 2', 'ubibot-ws1a', '6ae7add025978d1a550d832a1d59fe75530d9a6d', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8c:dc', 1, 1, NULL, 1),
+(3,  92507, 'Camara 3', 'ubibot-ws1a', '862ad92a4ec056501d25a63d2f61db0eb5dcf7f0', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:82:68', 1, 1, NULL, 1),
+(4,  92509, 'Camara 4', 'ubibot-ws1a', '2769782e47b7bec525feb5fee445bfedc5503f32', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:94', 1, 1, NULL, 1),
+(5,  92431, 'Camara 5', 'ubibot-ws1a', '3612744868ec490e8d662df858fc31ab68bc2c99', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f6:7b:a4', 1, 2, NULL, 1),
+(6,  92519, 'Reefer A', 'ubibot-ws1a', '1710fa3162d8280e51eef48e2bc1ad53ac62d609', -33.43780000, -70.65030000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:30', 1, 1, NULL, 1),
+(7,  92521, 'Reefer B', 'ubibot-ws1a', 'f94060fce7662d68505329bde3f02e900500a8b8', -34.17080000, -70.74440000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:5c', 1, 1, NULL, 1),
+(8,  92523, 'Reefer C', 'ubibot-ws1a', '21ad0da0b5cf89c9dbb16e4dbdb0220b3733b2f9', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:80', 1, 1, NULL, 1),
+(9,  92729, 'Reefer D', 'ubibot-ws1a', 'bda7193855427875a68ee9b72655403931ce4761', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:68', 1, 1, NULL, 1),
+(10, 92486, 'Reefer E', 'ubibot-ws1a', '074d3f347adde1d8c3f41bf2897dd3a46ea53805', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:8c', 1, 2, NULL, 1),
+(11, 88850, 'Reefer F', 'ubibot-ws1a', '873de03514e1ab0668979a802e44bdd227f21b58', -33.42768965, -70.68643212, 'ws1a_v2.2.9', '08:f9:e0:d4:92:d8', 1, 1, NULL, 1),
+(12, 90024, 'Reefer G', 'ubibot-ws1a', '3a59454bde1ede75555a89eed91e7e13e43d0edd', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:d4:8f:c4', 1, 1, NULL, 1),
+(13, 92494, 'Reefer H', 'ubibot-ws1a', 'd2447cac064bb9761eb87bf8d769bdb2695f9bfa', -33.46250000, -70.66820000, 'ws1a_v2.2.9', '08:f9:e0:f7:8d:44', 1, 1, NULL, 1);
 
 
 -- ==============================================================================
@@ -555,16 +554,16 @@ INSERT INTO `rep_tipo_reporte` (`id_tipo_reporte`, `nombre`, `descripcion`) VALU
 --     Plantillas PDF disponibles. Fuente: migraciones 20251023, 20251103, 20251104.
 -- ==============================================================================
 
-INSERT INTO `rep_plantillas` (`id_plantilla`, `clave_plantilla`, `id_tipo_reporte`, `nombre`, `descripcion`, `activo`) VALUES
+INSERT INTO `rep_plantillas` (`id_plantilla`, `clave_plantilla`, `id_tipo_reporte`, `nombre`, `descripcion`, `activo`, `max_dispositivos`, `max_dias`, `admite_comparativo`, `tiempo_estimado_segundos`) VALUES
 (1, 'executive_temperature', 1,
    'Reporte Ejecutivo de Temperaturas',
-   'Reporte completo con KPIs consolidados, gráficos de tendencias, heatmaps y análisis comparativo de temperaturas', 1),
+   'Reporte completo con KPIs consolidados, gráficos de tendencias, heatmaps y análisis comparativo de temperaturas', 1, 50, 90, 1, 60),
 (2, 'executive_alerts',      3,
    'Reporte Ejecutivo de Alertas',
-   'Análisis completo de alertas del sistema con métricas de respuesta, SLA y distribución temporal', 1),
+   'Análisis completo de alertas del sistema con métricas de respuesta, SLA y distribución temporal', 1, NULL, 90, 1, 30),
 (3, 'executive_consumption', 2,
    'Reporte Ejecutivo Consumo Eléctrico',
-   'Análisis de consumo, demanda máxima, factor de carga y costos eléctricos con KPIs operacionales, gráficos de tendencias y ranking de dispositivos', 1);
+   'Análisis de consumo, demanda máxima, factor de carga y costos eléctricos con KPIs operacionales, gráficos de tendencias y ranking de dispositivos', 1, 50, 90, 1, 45);
 
 
 -- ==============================================================================

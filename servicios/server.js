@@ -22,12 +22,9 @@ const totalesRoutes = require("./src/routes/totales_Routes");
 const analysisRoutes = require("./src/routes/analysis_Routes");
 const usuariosRoutes = require("./src/routes/usuarios_Routes");
 const personalRoutes = require("./src/routes/personal_Routes");
-const sectoresRoutes = require("./src/routes/sectores_Routes");
 const powerAnalysisRoutes = require("./src/routes/powerAnalysis_Routes");
 const gpsRoutes = require("./src/routes/gps_Routes");
-const beaconsRoutes = require("./src/routes/beacons_Routes");
 const ubibotRoutes = require("./src/routes/ubibot_Routes");
-const gpsDataRoutes = require("./src/routes/gpsData_Routes");
 const blindSpotRoutes = require("./src/routes/blindSpot_Routes");
 const consumoCategoriaRoutes = require('./src/routes/consumoCategoria_Routes');
 const pushNotificationRoutes = require('./src/routes/pushNotification_Routes');
@@ -159,16 +156,12 @@ class Server {
     mountApiRoute("/api/devices", deviceRoutes);
     mountApiRoute("/api/config", configRoutes);
     mountApiRoute("/api/totals", totalesRoutes);
-    mountApiRoute("/api/analysis", analysisRoutes);
     mountApiRoute("/api/usuarios", usuariosRoutes);
     mountApiRoute("/api/personal", personalRoutes);
-    mountApiRoute("/api/sectores", sectoresRoutes);
     mountApiRoute("/api/powerAnalysis", powerAnalysisRoutes);
     mountApiRoute("/api/gps", gpsRoutes);
-    mountApiRoute("/api/beacons", beaconsRoutes);
     mountApiRoute("/api/ubibot", ubibotRoutes);
     mountApiRoute("/api/blindspot", blindSpotRoutes);
-    mountApiRoute("/gps-data", gpsDataRoutes); // ¿Debería estar bajo /api?
     
     const authRoutes = require("./src/routes/auth_Routes");
     mountApiRoute("/api/auth", authRoutes);
@@ -177,7 +170,7 @@ class Server {
     mountApiRoute('/api/alerts', alertTrackingRoutes); // Sistema de gestión de alertas
     mountApiRoute('/api', presetsRoutes); // Sistema de gestión de presets de temperatura
     mountApiRoute('/api/reports', reportsRoutes); // Sistema de generación de reportes (Feature 004)
-    mountApiRoute('/api/v1/ai-analysis', aiAnalysisRoutes); // AI Cold Chamber Analysis (Feature 005)
+    mountApiRoute('/api/ia/analisis', aiAnalysisRoutes); // AI Cold Chamber Analysis (Feature 005)
 
     console.log("[Server] setupRoutes: Rutas API montadas (en / y /TNSTrack).");
 
