@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-13 — @dependabot[bot] ([#28](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/28))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.14.0 to 6.27.0 in /servicios
+
+
 ### 2026-03-13 — @dependabot[bot] ([#29](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/29))
 - **chore** `back-end, dependencies, npm, security` | bump mysql2 from 3.16.0 to 3.19.1 in /servicios
 
