@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-13 — @dependabot[bot] ([#29](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/29))
+- **chore** `back-end, dependencies, npm, security` | bump mysql2 from 3.16.0 to 3.19.1 in /servicios
+
+
 ### 2026-03-13 — @dependabot[bot] ([#30](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/30))
 - **chore** `back-end, dependencies, npm, security` | bump react-datepicker from 7.6.0 to 9.1.0 in /servicios
 
