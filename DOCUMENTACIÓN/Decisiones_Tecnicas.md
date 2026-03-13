@@ -295,12 +295,30 @@ La API del backend heredó múltiples endpoints de un proyecto anterior, incluye
 
 ---
 
+## 12. Alineación total endpoints con BD (ubi_canal + id_preset, reportería)
+
+### Contexto
+Plan de alineación de todos los endpoints con el esquema de BD definido en SQL_FILES y Base_de_Datos.md. Incluye migración de tablas legacy a rep_*, ubi_*, sem_*, etc.
+
+### Decisiones aplicadas
+
+- **ubi_canal ↔ ubi_presets_temperatura (Opción A):** Se añadió FK `id_preset` en ubi_canal; se eliminaron `temperatura_minima_umbral`, `temperatura_maxima_umbral`, `fecha_actualizacion_umbral`, `usuario_actualizacion_umbral`. Los umbrales se obtienen siempre por JOIN con ubi_presets_temperatura. Al cambiar un preset, todos los canales que lo usan se actualizan implícitamente.
+- **Reportería:** Se añadieron columnas a rep_plantillas (max_dispositivos, max_dias, admite_comparativo, tiempo_estimado_segundos) y rep_reportes_generados (id_usuario, fecha_inicio_periodo, fecha_fin_periodo, ids_dispositivos, config_reporte, tiempo_generacion_segundos, mensaje_error_generacion).
+- **Presets:** presets_Controller migrado de temperature_presets a ubi_presets_temperatura. SP stpr_apply_preset_to_cameras actualizado para usar UPDATE id_preset.
+- **GPS/blindspot/sectores/beacons:** Sin cambios en esquema; dominios reservados (Issue #26 para sectores/beacons).
+
+### Estado Actual
+✅ Parcialmente implementado — Esquema SQL, SP, triggers, ubibot_Service, presets_Controller, Base_de_Datos.md, inventario en APIs_internas.md.
+
+---
+
 ## 📝 Historial de Cambios
 
 > **Nota**: Para historial detallado de cambios del proyecto, ver [CHANGELOG.md](./CHANGELOG.md)
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-03-12 | Alineación endpoints con BD: ubi_canal+id_preset (Opción A), rep_plantillas/rep_reportes_generados, presets | andresTNS, Bufigol |
 | 2026-03-11 | Estandarización de fechas: Luxon como única librería (Issue #5) | andresTNS, Bufigol |
 | 2026-01-26 | Documentación actualizada según feedback Issue #2 | andresTNS, Bufigol |
 | 2026-01-22 | Documentación completa de decisiones técnicas | andresTNS, Bufigol |
