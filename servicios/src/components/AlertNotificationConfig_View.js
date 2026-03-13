@@ -35,8 +35,11 @@ import {
   Monitor,
   Smartphone,
   Globe,
-  HelpCircle
+  HelpCircle,
+  Plus,
+  Trash2
 } from "lucide-react";
+import { myNotificationHorarios } from "../services/notificationHorarios_Service";
 
 /**
  * Días de la semana con sus etiquetas
@@ -134,8 +137,38 @@ const AlertNotificationConfigV2 = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [originalPreferences, setOriginalPreferences] = useState(null);
 
+  // Mis horarios de envío (ale_horarios_usuario)
+  const [misHorarios, setMisHorarios] = useState([]);
+  const [misHorariosLoading, setMisHorariosLoading] = useState(false);
+  const [showAddHorario, setShowAddHorario] = useState(false);
+  const [nuevoHorario, setNuevoHorario] = useState({
+    id_tipo_alerta: 1,
+    canal: "email",
+    dia_semana: 1,
+    hora_inicio: "08:00:00",
+    hora_fin: "18:00:00"
+  });
+
   useEffect(() => {
     loadSubscriptionAndPreferences();
+  }, []);
+
+  const loadMisHorarios = async () => {
+    setMisHorariosLoading(true);
+    try {
+      const data = await myNotificationHorarios.list();
+      setMisHorarios(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error("[AlertNotificationConfig] loadMisHorarios:", e);
+      toast({ title: "Error", description: e.message || "No se pudieron cargar tus horarios", variant: "destructive" });
+      setMisHorarios([]);
+    } finally {
+      setMisHorariosLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMisHorarios();
   }, []);
 
   /**
@@ -714,6 +747,151 @@ const AlertNotificationConfigV2 = () => {
                 />
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Mis horarios de envío (ale_horarios_usuario) */}
+        <Card className="border-teal-200/60 border-l-4 border-l-teal-400">
+          <CardHeader>
+            <div className="space-y-1.5">
+              <CardTitle className="text-lg flex items-center gap-2">
+                <Clock className="h-5 w-5 text-teal-500" />
+                Mis horarios de envío
+              </CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Ventanas en las que quieres recibir alertas por tipo y canal. Si no defines horario, se usa el horario base definido por el administrador.
+              </p>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {misHorariosLoading ? (
+              <Skeleton className="h-20 w-full" />
+            ) : (
+              <>
+                {misHorarios.length === 0 && !showAddHorario && (
+                  <p className="text-sm text-gray-500">No tienes horarios personalizados. Se usa el horario base.</p>
+                )}
+                {misHorarios.length > 0 && (
+                  <ul className="space-y-2">
+                    {misHorarios.map((h) => (
+                      <li
+                        key={h.id_horario_usuario}
+                        className="flex items-center justify-between gap-2 p-3 rounded-lg bg-gray-50 border border-gray-200"
+                      >
+                        <span className="text-sm">
+                          {h.id_tipo_alerta === 1 ? "Temperatura" : "Desconexión"} · {h.canal} · {h.dia_semana === 0 ? "Feriado" : `Día ${h.dia_semana}`} · {String(h.hora_inicio).slice(0, 5)}–{String(h.hora_fin).slice(0, 5)}
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                          disabled={saving}
+                          onClick={async () => {
+                            try {
+                              await myNotificationHorarios.delete(h.id_horario_usuario);
+                              toast({ title: "Eliminado", description: "Horario eliminado." });
+                              loadMisHorarios();
+                            } catch (e) {
+                              toast({ title: "Error", description: e.message || "No se pudo eliminar", variant: "destructive" });
+                            }
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {showAddHorario ? (
+                  <div className="p-4 rounded-lg border border-teal-200 bg-teal-50/50 space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label className="text-xs">Tipo</Label>
+                        <select
+                          className="w-full mt-1 rounded border border-gray-300 px-2 py-1.5 text-sm"
+                          value={nuevoHorario.id_tipo_alerta}
+                          onChange={(e) => setNuevoHorario((prev) => ({ ...prev, id_tipo_alerta: parseInt(e.target.value, 10) }))}
+                        >
+                          <option value={1}>Temperatura</option>
+                          <option value={2}>Desconexión</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Canal</Label>
+                        <select
+                          className="w-full mt-1 rounded border border-gray-300 px-2 py-1.5 text-sm"
+                          value={nuevoHorario.canal}
+                          onChange={(e) => setNuevoHorario((prev) => ({ ...prev, canal: e.target.value }))}
+                        >
+                          <option value="email">Email</option>
+                          <option value="push">Push</option>
+                        </select>
+                      </div>
+                      <div>
+                        <Label className="text-xs">Día</Label>
+                        <select
+                          className="w-full mt-1 rounded border border-gray-300 px-2 py-1.5 text-sm"
+                          value={nuevoHorario.dia_semana}
+                          onChange={(e) => setNuevoHorario((prev) => ({ ...prev, dia_semana: parseInt(e.target.value, 10) }))}
+                        >
+                          <option value={0}>Feriado</option>
+                          {[1, 2, 3, 4, 5, 6, 7].map((d) => (
+                            <option key={d} value={d}>{["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"][d - 1]}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1">
+                        <div>
+                          <Label className="text-xs">Desde</Label>
+                          <Input
+                            type="time"
+                            className="mt-1 h-8"
+                            value={nuevoHorario.hora_inicio.slice(0, 5)}
+                            onChange={(e) => setNuevoHorario((prev) => ({ ...prev, hora_inicio: e.target.value + ":00" }))}
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Hasta</Label>
+                          <Input
+                            type="time"
+                            className="mt-1 h-8"
+                            value={nuevoHorario.hora_fin.slice(0, 5)}
+                            onChange={(e) => setNuevoHorario((prev) => ({ ...prev, hora_fin: e.target.value + ":00" }))}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          try {
+                            await myNotificationHorarios.create(nuevoHorario);
+                            toast({ title: "Guardado", description: "Horario añadido." });
+                            setShowAddHorario(false);
+                            setNuevoHorario({ id_tipo_alerta: 1, canal: "email", dia_semana: 1, hora_inicio: "08:00:00", hora_fin: "18:00:00" });
+                            loadMisHorarios();
+                          } catch (e) {
+                            toast({ title: "Error", description: e.message || "No se pudo crear", variant: "destructive" });
+                          }
+                        }}
+                      >
+                        Añadir
+                      </Button>
+                      <Button size="sm" variant="outline" onClick={() => setShowAddHorario(false)}>
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => setShowAddHorario(true)}>
+                    <Plus className="h-4 w-4" />
+                    Añadir horario
+                  </Button>
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
 

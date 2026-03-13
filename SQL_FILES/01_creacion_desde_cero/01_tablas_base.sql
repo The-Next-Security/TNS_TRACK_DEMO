@@ -234,6 +234,10 @@ CREATE TABLE `rep_plantillas` (
   `nombre` VARCHAR(100) NOT NULL COMMENT 'Nombre de la plantilla',
   `descripcion` VARCHAR(255) NOT NULL COMMENT 'Descripción de la plantilla',
   `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si la plantilla está activa',
+  `max_dispositivos` INT UNSIGNED NULL DEFAULT NULL COMMENT 'Máximo de dispositivos permitidos en el reporte',
+  `max_dias` INT UNSIGNED NULL DEFAULT NULL COMMENT 'Máximo de días permitidos en el período del reporte',
+  `admite_comparativo` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = plantilla admite período comparativo',
+  `tiempo_estimado_segundos` INT UNSIGNED NULL DEFAULT NULL COMMENT 'Tiempo estimado de generación en segundos',
   `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_plantilla`),
@@ -276,11 +280,18 @@ CREATE TABLE `rep_reportes_programados` (
 CREATE TABLE `rep_reportes_generados` (
   `id_reporte_generado` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `id_plantilla` INT UNSIGNED NOT NULL COMMENT 'FK a rep_plantillas',
+  `id_usuario` INT UNSIGNED NULL COMMENT 'FK a gen_usuario - usuario que generó o solicitó el reporte',
   `nombre_reporte` VARCHAR(100) NOT NULL COMMENT 'Nombre del reporte generado',
-  `ruta_archivo` VARCHAR(255) NOT NULL COMMENT 'Ruta del archivo del reporte generado',
-  `tamanio_bytes` INT NOT NULL COMMENT 'Tamaño del archivo en bytes',
+  `ruta_archivo` VARCHAR(500) NOT NULL COMMENT 'Ruta del archivo del reporte generado',
+  `tamanio_bytes` BIGINT NOT NULL COMMENT 'Tamaño del archivo en bytes',
   `estado_generacion` ENUM('pendiente','generando','completado','fallido','expirado') NOT NULL DEFAULT 'pendiente',
   `fuente` ENUM('manual','programado','api','otro') NOT NULL DEFAULT 'manual',
+  `fecha_inicio_periodo` DATE NULL DEFAULT NULL COMMENT 'Inicio del período reportado',
+  `fecha_fin_periodo` DATE NULL DEFAULT NULL COMMENT 'Fin del período reportado',
+  `ids_dispositivos` JSON NULL COMMENT 'IDs de dispositivos incluidos en el reporte',
+  `config_reporte` JSON NULL COMMENT 'Configuración usada para generar el reporte',
+  `tiempo_generacion_segundos` DECIMAL(10,2) NULL DEFAULT NULL COMMENT 'Tiempo real de generación en segundos',
+  `mensaje_error_generacion` TEXT NULL COMMENT 'Mensaje de error si estado_generacion=fallido',
   `fecha_descarga` DATETIME NULL DEFAULT NULL,
   `fecha_expiracion` DATETIME NULL DEFAULT NULL COMMENT 'Fecha desde la cual el archivo fue eliminado por TTL',
   `id_reporte_programado` INT UNSIGNED NULL COMMENT 'FK a rep_reportes_programados',
@@ -289,11 +300,18 @@ CREATE TABLE `rep_reportes_generados` (
   PRIMARY KEY (`id_reporte_generado`),
   UNIQUE KEY `uk_rep_reportes_generados_nombre_reporte` (`nombre_reporte`),
   INDEX `idx_rep_reportes_generados_id_plantilla` (`id_plantilla`),
+  INDEX `idx_rep_reportes_generados_id_usuario` (`id_usuario`),
+  INDEX `idx_rep_reportes_generados_fecha_inicio_fin_periodo` (`fecha_inicio_periodo`, `fecha_fin_periodo`),
   INDEX `idx_rep_reportes_generados_id_reporte_programado` (`id_reporte_programado`),
   CONSTRAINT `fk_reportes_generados_id_plantilla_plantillas_id_plantilla`
     FOREIGN KEY (`id_plantilla`)
     REFERENCES `rep_plantillas`(`id_plantilla`)
     ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_rep_generados_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `gen_usuario`(`id_usuario`)
+    ON DELETE SET NULL
     ON UPDATE CASCADE,
   CONSTRAINT `fk_rep_generados_id_programado_rep_programados_id`
     FOREIGN KEY (`id_reporte_programado`)
@@ -301,6 +319,35 @@ CREATE TABLE `rep_reportes_generados` (
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reportes generados';
+
+-- ============================================
+-- TABLAS UBIBOT - PRESETS DE TEMPERATURA (ubi_)
+-- Debe ir antes de ubi_canal por FK id_preset
+-- ============================================
+
+-- Presets de temperatura para umbrales de alerta
+CREATE TABLE `ubi_presets_temperatura` (
+  `id_preset` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `nombre_preset` VARCHAR(100) NOT NULL COMMENT 'Nombre descriptivo del preset',
+  `temperatura_minima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura mínima del umbral',
+  `temperatura_maxima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura máxima del umbral',
+  `es_predeterminado` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = preset predeterminado del sistema',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `creado_por` VARCHAR(100) NOT NULL COMMENT 'Usuario que creó el preset',
+  `actualizado_por` VARCHAR(100) NOT NULL COMMENT 'Último usuario que actualizó el preset',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_preset`),
+  UNIQUE KEY `uk_ubi_presets_temperatura_nombre_preset` (`nombre_preset`),
+  INDEX `idx_ubi_presets_temperatura_activo` (`activo`),
+  INDEX `idx_ubi_presets_temperatura_es_predeterminado` (`es_predeterminado`),
+  CONSTRAINT `chk_ubi_presets_temperatura_minima`
+    CHECK (`temperatura_minima` >= -50 AND `temperatura_minima` <= 150),
+  CONSTRAINT `chk_ubi_presets_temperatura_maxima`
+    CHECK (`temperatura_maxima` >= -50 AND `temperatura_maxima` <= 150),
+  CONSTRAINT `chk_ubi_presets_temperatura_rango`
+    CHECK (`temperatura_minima` < `temperatura_maxima`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Presets de temperatura para umbrales de alerta de canales Ubibot';
 
 -- ============================================
 -- TABLAS UBIBOT (ubi_)
@@ -319,10 +366,7 @@ CREATE TABLE `ubi_canal` (
   `firmware` VARCHAR(100) NOT NULL COMMENT 'Versión de firmware del sensor',
   `mac_address` VARCHAR(100) NOT NULL COMMENT 'Dirección MAC del sensor',
   `en_linea` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si el canal está en línea',
-  `temperatura_minima_umbral` DECIMAL(10,2) NOT NULL COMMENT 'Temperatura mínima de umbral de alerta',
-  `temperatura_maxima_umbral` DECIMAL(10,2) NOT NULL COMMENT 'Temperatura máxima de umbral de alerta',
-  `fecha_actualizacion_umbral` DATETIME NULL DEFAULT NULL COMMENT 'Fecha de última actualización del umbral',
-  `usuario_actualizacion_umbral` VARCHAR(100) NOT NULL COMMENT 'Usuario que actualizó el umbral',
+  `id_preset` INT UNSIGNED NULL COMMENT 'FK a ubi_presets_temperatura - umbrales via preset (Opción A)',
   `ultima_alerta_enviada` DATETIME NULL DEFAULT NULL COMMENT 'Fecha de última alerta enviada',
   `fuera_linea_desde` DATETIME NULL DEFAULT NULL COMMENT 'Fecha desde la cual el canal está sin conexión (NULL = actualmente en línea)',
   `serial` VARCHAR(20) NULL DEFAULT NULL COMMENT 'Número de serie físico del dispositivo (full_serial de Ubibot)',
@@ -335,10 +379,16 @@ CREATE TABLE `ubi_canal` (
   PRIMARY KEY (`id_canal`),
   UNIQUE KEY `uk_ubi_canal_canal_id` (`canal_id`),
   INDEX `idx_ubi_canal_id_ubicacion_real` (`id_ubicacion_real`),
+  INDEX `idx_ubi_canal_id_preset` (`id_preset`),
   CONSTRAINT `fk_ubi_canal_id_ubicacion_real_gen_ubicaciones_reales_id`
     FOREIGN KEY (`id_ubicacion_real`)
     REFERENCES `gen_ubicaciones_reales`(`id_ubicacion_real`)
     ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ubi_canal_id_preset_ubi_presets_temperatura_id_preset`
+    FOREIGN KEY (`id_preset`)
+    REFERENCES `ubi_presets_temperatura`(`id_preset`)
+    ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Canales de sensores Ubibot';
 
@@ -605,34 +655,6 @@ CREATE TABLE `sem_mediciones` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Mediciones brutas de energía de dispositivos Shelly';
 
--- ============================================
--- TABLAS UBIBOT - PRESETS DE TEMPERATURA (ubi_)
--- ============================================
-
--- Presets de temperatura para umbrales de alerta
-CREATE TABLE `ubi_presets_temperatura` (
-  `id_preset` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nombre_preset` VARCHAR(100) NOT NULL COMMENT 'Nombre descriptivo del preset',
-  `temperatura_minima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura mínima del umbral',
-  `temperatura_maxima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura máxima del umbral',
-  `es_predeterminado` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = preset predeterminado del sistema',
-  `activo` TINYINT(1) NOT NULL DEFAULT 1,
-  `creado_por` VARCHAR(100) NOT NULL COMMENT 'Usuario que creó el preset',
-  `actualizado_por` VARCHAR(100) NOT NULL COMMENT 'Último usuario que actualizó el preset',
-  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id_preset`),
-  UNIQUE KEY `uk_ubi_presets_temperatura_nombre_preset` (`nombre_preset`),
-  INDEX `idx_ubi_presets_temperatura_activo` (`activo`),
-  INDEX `idx_ubi_presets_temperatura_es_predeterminado` (`es_predeterminado`),
-  CONSTRAINT `chk_ubi_presets_temperatura_minima`
-    CHECK (`temperatura_minima` >= -50 AND `temperatura_minima` <= 150),
-  CONSTRAINT `chk_ubi_presets_temperatura_maxima`
-    CHECK (`temperatura_maxima` >= -50 AND `temperatura_maxima` <= 150),
-  CONSTRAINT `chk_ubi_presets_temperatura_rango`
-    CHECK (`temperatura_minima` < `temperatura_maxima`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Presets de temperatura para umbrales de alerta de canales Ubibot';
-
 -- Contadores de ciclos de temperatura diarios por canal Ubibot
 CREATE TABLE `ubi_contador_ciclos` (
   `id_contador_ciclo` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -755,6 +777,86 @@ CREATE TABLE `ale_datos_desconexion` (
     ON DELETE SET NULL
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Datos específicos de alertas de desconexión de sensores — extiende ale_seguimiento';
+
+-- Suscripciones unificadas de usuarios a alertas por canal (email o push)
+CREATE TABLE `ale_suscripciones_notificacion` (
+  `id_suscripcion_notificacion` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'FK a gen_usuario',
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL COMMENT 'FK a ale_tipo_alerta',
+  `id_origen_tipo` TINYINT UNSIGNED NOT NULL COMMENT 'FK a gen_tipos_origen',
+  `canal` ENUM('email','push') NOT NULL COMMENT 'Canal de envío',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = suscripción activa',
+  `ultima_notificacion_enviada` DATETIME NULL COMMENT 'Último envío por este canal para esta combinación usuario/tipo/origen',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_suscripcion_notificacion`),
+  UNIQUE KEY `uk_ale_suscripciones_notificacion_regla` (`id_usuario`, `id_tipo_alerta`, `id_origen_tipo`, `canal`),
+  CONSTRAINT `fk_ale_suscripciones_notificacion_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `gen_usuario`(`id_usuario`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_suscripciones_notificacion_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+    FOREIGN KEY (`id_tipo_alerta`)
+    REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_suscripciones_notificacion_id_origen_tipo_gen_tipos_origen_id_tipo_origen`
+    FOREIGN KEY (`id_origen_tipo`)
+    REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Suscripciones unificadas de usuarios a alertas por tipo, origen y canal (email/push)';
+
+-- Horarios base de envío por tipo de alerta y canal (definidos por administradores)
+CREATE TABLE `ale_horarios_alerta_canal` (
+  `id_horario_alerta_canal` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL COMMENT 'FK a ale_tipo_alerta',
+  `canal` ENUM('email','push') NOT NULL COMMENT 'Canal de envío',
+  `dia_semana` TINYINT(1) NOT NULL COMMENT '1=Lun..7=Dom; 0=día feriado',
+  `hora_inicio` TIME NOT NULL COMMENT 'Inicio ventana de envío',
+  `hora_fin` TIME NOT NULL COMMENT 'Fin ventana de envío',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = fila activa',
+  `respeta_horario_operacional` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = intersección con gen_horario_operacional; 0 = solo esta ventana',
+  `respeta_feriados` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = no enviar en feriados; 0 = sí enviar en feriados',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_horario_alerta_canal`),
+  UNIQUE KEY `uk_ale_horarios_alerta_canal_tipo_canal_dia` (`id_tipo_alerta`, `canal`, `dia_semana`),
+  CONSTRAINT `fk_ale_horarios_alerta_canal_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+    FOREIGN KEY (`id_tipo_alerta`)
+    REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Horarios base de envío por tipo de alerta y canal (admin); dia_semana=0 para feriados';
+
+-- Horarios personalizados por usuario (sobrescriben base si existen)
+CREATE TABLE `ale_horarios_usuario` (
+  `id_horario_usuario` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'FK a gen_usuario',
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL COMMENT 'FK a ale_tipo_alerta',
+  `canal` ENUM('email','push') NOT NULL COMMENT 'Canal de envío',
+  `dia_semana` TINYINT(1) NOT NULL COMMENT '0=feriado, 1=Lun..7=Dom',
+  `hora_inicio` TIME NOT NULL,
+  `hora_fin` TIME NOT NULL,
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `respeta_horario_operacional` TINYINT(1) NOT NULL DEFAULT 1,
+  `respeta_feriados` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_horario_usuario`),
+  UNIQUE KEY `uk_ale_horarios_usuario_usuario_tipo_canal_dia` (`id_usuario`, `id_tipo_alerta`, `canal`, `dia_semana`),
+  CONSTRAINT `fk_ale_horarios_usuario_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `gen_usuario`(`id_usuario`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_horarios_usuario_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+    FOREIGN KEY (`id_tipo_alerta`)
+    REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Horarios personalizados por usuario/tipo/canal/día; si no hay filas se usa base';
 
 -- Métricas resumen de alertas por día y hora
 CREATE TABLE `ale_metricas_resumen` (

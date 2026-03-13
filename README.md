@@ -291,7 +291,6 @@ Los controladores manejan la lógica de negocio y validación de endpoints:
 - `totalesController.js` - Totales y agregaciones
 - `analysisController.js` - Análisis de datos
 - `powerAnalysisController.js` - Análisis de consumo eléctrico
-- `contadorCiclosController.js` - Contador de ciclos de descongelamiento
 - `notificationController.js` - Notificaciones multi-canal
 - `reportController.js` - Generación y gestión de reportes
 - `aiAnalysisController.js` - Análisis con IA

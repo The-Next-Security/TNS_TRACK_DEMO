@@ -7,7 +7,7 @@
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "axios";
-import moment from "moment";
+import { DateTime } from "luxon";
 import { motion } from "framer-motion";
 import HeaderV2 from "./Header_View";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -327,8 +327,8 @@ const AlertMetricsDashboardV2 = () => {
 
   // Estados del componente
   const [dateRange, setDateRange] = useState({
-    start: moment().subtract(7, "days").format("YYYY-MM-DD"),
-    end: moment().format("YYYY-MM-DD"),
+    start: DateTime.now().minus({ days: 7 }).toFormat("yyyy-MM-dd"),
+    end: DateTime.now().toFormat("yyyy-MM-dd"),
     type: "week"
   });
 
@@ -485,35 +485,35 @@ const AlertMetricsDashboardV2 = () => {
    * Maneja el cambio de rango de fechas - Memoizado
    */
   const handleDateRangeChange = useCallback((value) => {
-    const now = moment();
+    const now = DateTime.now();
     let newRange = {};
 
     switch (value) {
       case "today":
         newRange = {
-          start: now.startOf('day').format("YYYY-MM-DD HH:mm:ss"),
-          end: now.endOf('day').format("YYYY-MM-DD HH:mm:ss"),
+          start: now.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss"),
+          end: now.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss"),
           type: "today"
         };
         break;
       case "week":
         newRange = {
-          start: now.subtract(7, "days").format("YYYY-MM-DD"),
-          end: moment().format("YYYY-MM-DD"),
+          start: now.minus({ days: 7 }).toFormat("yyyy-MM-dd"),
+          end: DateTime.now().toFormat("yyyy-MM-dd"),
           type: "week"
         };
         break;
       case "month":
         newRange = {
-          start: now.subtract(30, "days").format("YYYY-MM-DD"),
-          end: moment().format("YYYY-MM-DD"),
+          start: now.minus({ days: 30 }).toFormat("yyyy-MM-dd"),
+          end: DateTime.now().toFormat("yyyy-MM-dd"),
           type: "month"
         };
         break;
       case "quarter":
         newRange = {
-          start: now.subtract(90, "days").format("YYYY-MM-DD"),
-          end: moment().format("YYYY-MM-DD"),
+          start: now.minus({ days: 90 }).toFormat("yyyy-MM-dd"),
+          end: DateTime.now().toFormat("yyyy-MM-dd"),
           type: "quarter"
         };
         break;

@@ -1,9 +1,8 @@
 // src/utils/consumption/chartUtils.js
-import moment from "moment-timezone";
+import { DateTime } from "luxon";
 import { CATEGORY_COLORS, CATEGORY_LABELS } from "./category_Utils";
 
-// Configurar zona horaria por defecto
-moment.tz.setDefault("America/Santiago");
+const TZ = "America/Santiago";
 
 /**
  * Configuraciones de colores para gráficos
@@ -74,11 +73,13 @@ export const generateXAxisLabels = (data, period) => {
     return data.map((item, index) => `Item ${index + 1}`);
   }
 
+  // Luxon format tokens: HH:mm, dd/MM, MMM (month short)
+  const luxonFormat = config.timeFormat.replace("DD/MM", "dd/MM");
   return data.map((item) => {
     if (!item.periodo) return "Sin fecha";
-
     try {
-      return moment(item.periodo).format(config.timeFormat);
+      const dt = typeof item.periodo === "string" ? DateTime.fromISO(item.periodo, { zone: TZ }) : DateTime.fromJSDate(item.periodo).setZone(TZ);
+      return dt.toFormat(luxonFormat);
     } catch (error) {
       console.warn(`Error formateando fecha ${item.periodo}:`, error);
       return "Fecha inválida";

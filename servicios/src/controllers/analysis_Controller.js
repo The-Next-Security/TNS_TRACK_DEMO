@@ -1,7 +1,7 @@
 // controllers/analysisController.js
 const databaseService = require('../services/database_Service');
 const transformUtils = require('../utils/transform_Utils');
-const moment = require('moment');
+const { DateTime } = require('luxon');
 
 class AnalysisController {
     async getTemperaturePowerAnalysis(req, res, next) {
@@ -59,7 +59,7 @@ class AnalysisController {
             // Procesar resultados para el frontend
             const processedData = results.map(row => ({
                 ...row,
-                intervalo_tiempo: moment(row.intervalo_tiempo).format('YYYY-MM-DD HH:mm:ss'),
+                intervalo_tiempo: DateTime.fromJSDate(row.intervalo_tiempo).toFormat('yyyy-MM-dd HH:mm:ss'),
                 promedio_temperatura_externa: row.promedio_temperatura_externa || null,
                 promedio_potencia_kw: row.promedio_potencia_kw || null
             }));

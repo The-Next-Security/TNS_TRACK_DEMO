@@ -1,6 +1,7 @@
 // src/controllers/ubibotController.js
 
-const moment = require("moment");
+const { DateTime } = require("luxon");
+const TZ_UBI = "America/Santiago";
 const axios = require("axios");
 const fs = require("fs").promises; // Usar promesas de fs
 const path = require("path"); // <--- Importante: Añadido import de path
@@ -283,7 +284,7 @@ class UbibotController {
       // Validar respuesta
       if (response.data?.result === "success" && Array.isArray(response.data.channels)) {
         const ubibotConfig = config.getConfig().ubibot; // Obtener config de nuevo por si cambió
-        const excludedChannels = ubibotConfig?.excludedChannels || [];
+        const excludedChannels = ubibotConfig?.excluded_channels || [];
         const filteredChannels = response.data.channels.filter(
           (channel) => !excludedChannels.includes(channel.channel_id?.toString()) // Comparar como strings por si acaso
         );
@@ -443,14 +444,14 @@ class UbibotController {
       const { date } = req.query;
       console.log(`[UbibotController] getTemperatureCamarasData: Fecha solicitada: ${date}`);
 
-      if (!date || !moment(date, 'YYYY-MM-DD', true).isValid()) {
+      const dtDate = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+      if (!date || !dtDate.isValid) {
         console.warn("[UbibotController] getTemperatureCamarasData: Fecha inválida o faltante.");
         return res.status(400).json({ error: "Se requiere una fecha válida en formato YYYY-MM-DD" });
       }
 
-      // Usar Moment para asegurar el formato correcto para la query
-      const start = moment(date).startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      const end = moment(date).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      const start = dtDate.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const end = dtDate.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
       console.log(`[UbibotController] getTemperatureCamarasData: Querying entre ${start} y ${end}`);
 
@@ -552,16 +553,15 @@ class UbibotController {
     try {
       const { startDate, endDate, sector } = req.query;
       
-      // Validar fechas obligatorias (sector es opcional)
-      if (!startDate || !endDate ||
-        !moment(startDate, 'YYYY-MM-DD', true).isValid() ||
-        !moment(endDate, 'YYYY-MM-DD', true).isValid()) {
+      const dtStart = DateTime.fromFormat(startDate, "yyyy-MM-dd", { zone: TZ_UBI });
+      const dtEnd = DateTime.fromFormat(endDate, "yyyy-MM-dd", { zone: TZ_UBI });
+      if (!startDate || !endDate || !dtStart.isValid || !dtEnd.isValid) {
         console.warn(`[UbibotController] getTemperatureRangeData: Parámetros inválidos:`, req.query);
         return res.status(400).json({ error: "Faltan datos o formato inválido (startDate, endDate YYYY-MM-DD requeridos)" });
       }
 
-      const start = moment(startDate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      const end = moment(endDate).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      const start = dtStart.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const end = dtEnd.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
       // Si sector está presente, retornar datos de un solo sector
       if (sector) {
@@ -634,10 +634,6 @@ class UbibotController {
     }
   }
 
-  // MÉTODOS OBSOLETOS ELIMINADOS:
-  // - getChannelStatus: Reemplazado por getAllChannelsThresholds que ya incluye esOperativa
-  // - handleUpdateChannelStatus: Reemplazado por updateChannelOperativa (PUT /channel/:channelId/operativa)
-
   // --- Métodos de Reportes ---
   // (Se mantienen sin cambios funcionales relevantes para el error del token,
   //  pero se podrían mejorar validaciones o logs si fuera necesario)
@@ -646,21 +642,13 @@ class UbibotController {
     const { channelId, date } = req.query;
 
     try {
-      // Fecha seleccionada
-      const startOfDay = moment(date)
-        .startOf("day")
-        .format("YYYY-MM-DD HH:mm:ss");
-      const endOfDay = moment(date).endOf("day").format("YYYY-MM-DD HH:mm:ss");
+      const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+      const startOfDay = dt.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const endOfDay = dt.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
-      // Fecha del domingo anterior
-      const startOfPreviousDay = moment(date)
-        .subtract(7, "days")
-        .startOf("day")
-        .format("YYYY-MM-DD HH:mm:ss");
-      const endOfPreviousDay = moment(date)
-        .subtract(7, "days")
-        .endOf("day")
-        .format("YYYY-MM-DD HH:mm:ss");
+      const dtPrev = dt.minus({ days: 7 });
+      const startOfPreviousDay = dtPrev.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const endOfPreviousDay = dtPrev.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
       const query = `
       (SELECT 
@@ -713,34 +701,19 @@ class UbibotController {
   async getWeeklyDefrostAnalysisData(req, res) {
     const { channelId, date } = req.query;
 
-    // Calcular fechas para la semana actual
-    const endDate = moment(date);
-    const startDate = moment(date).subtract(6, "days").startOf("day");
-    const endCurrentWeek = moment(date).endOf("day"); // Fixed log
+    const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+    const endDate = dt;
+    const startDate = dt.minus({ days: 6 }).startOf("day");
+    const endCurrentWeek = dt.endOf("day");
+    const prevEndDate = dt.minus({ days: 7 });
+    const prevStartDate = dt.minus({ days: 13 }).startOf("day");
 
-    // Calcular fechas para la semana anterior
-    const prevEndDate = moment(date).subtract(7, "days");
-    const prevStartDate = moment(date).subtract(13, "days").startOf("day");
-
-    // Log the dates before querying the database
     console.log("API /api/weekly-defrost-analysis-data - Dates:");
-    console.log("  Selected Date:", endDate.format("YYYY-MM-DD HH:mm:ss"));
-    console.log(
-      "  Current Week Start:",
-      startDate.format("YYYY-MM-DD HH:mm:ss")
-    );
-    console.log(
-      "  Current Week End:",
-      endCurrentWeek.format("YYYY-MM-DD HH:mm:ss")
-    ); // Fixed log
-    console.log(
-      "  Previous Week Start:",
-      prevStartDate.format("YYYY-MM-DD HH:mm:ss")
-    );
-    console.log(
-      "  Previous Week End:",
-      prevEndDate.format("YYYY-MM-DD HH:mm:ss")
-    );
+    console.log("  Selected Date:", endDate.toFormat("yyyy-MM-dd HH:mm:ss"));
+    console.log("  Current Week Start:", startDate.toFormat("yyyy-MM-dd HH:mm:ss"));
+    console.log("  Current Week End:", endCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
+    console.log("  Previous Week Start:", prevStartDate.toFormat("yyyy-MM-dd HH:mm:ss"));
+    console.log("  Previous Week End:", prevEndDate.toFormat("yyyy-MM-dd HH:mm:ss"));
 
     try {
       const query = `
@@ -764,32 +737,25 @@ class UbibotController {
 
       const [results] = await databaseService.pool.query(query, [
         channelId,
-        startDate.format("YYYY-MM-DD HH:mm:ss"),
-        endCurrentWeek.format("YYYY-MM-DD HH:mm:ss"),
+        startDate.toFormat("yyyy-MM-dd HH:mm:ss"),
+        endCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
         channelId,
-        prevStartDate.format("YYYY-MM-DD HH:mm:ss"),
-        prevEndDate.format("YYYY-MM-DD HH:mm:ss"),
+        prevStartDate.toFormat("yyyy-MM-dd HH:mm:ss"),
+        prevEndDate.toFormat("yyyy-MM-dd HH:mm:ss"),
       ]);
 
       const currentData = results.filter((r) => r.period === "current");
       const previousData = results.filter((r) => r.period === "previous");
-      // Log the number of records returned
       console.log("API /api/weekly-defrost-analysis-data - Results:");
       console.log("  Current Data Length:", currentData.length);
       console.log("  Previous Data Length:", previousData.length);
       if (currentData && currentData.length > 0) {
         console.log("First current record:", currentData[0].timestamp);
-        console.log(
-          "Last current record:",
-          currentData[currentData.length - 1].timestamp
-        );
+        console.log("Last current record:", currentData[currentData.length - 1].timestamp);
       }
       if (previousData && previousData.length > 0) {
         console.log("First previous record:", previousData[0].timestamp);
-        console.log(
-          "Last previous record:",
-          previousData[previousData.length - 1].timestamp
-        );
+        console.log("Last previous record:", previousData[previousData.length - 1].timestamp);
       }
 
       res.json({
@@ -797,12 +763,12 @@ class UbibotController {
         previousData,
         periods: {
           current: {
-            start: startDate.format("YYYY-MM-DD"),
-            end: endDate.format("YYYY-MM-DD"),
+            start: startDate.toFormat("yyyy-MM-dd"),
+            end: endDate.toFormat("yyyy-MM-dd"),
           },
           previous: {
-            start: prevStartDate.format("YYYY-MM-DD"),
-            end: prevEndDate.format("YYYY-MM-DD"),
+            start: prevStartDate.toFormat("yyyy-MM-dd"),
+            end: prevEndDate.toFormat("yyyy-MM-dd"),
           },
         },
       });
@@ -824,19 +790,18 @@ class UbibotController {
       const cameraName = cameraInfo[0]?.name || "Unknown";
 
       // Get data for current date and 7 days before
-      const selectedDate = moment(date);
-      const previousDate = moment(date).subtract(7, "days");
+      const selectedDate = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+      const previousDate = selectedDate.minus({ days: 7 });
 
-      // Get current and previous data
       const { results: currentData } = await this.getDefrostData(
         channelId,
-        selectedDate.format("YYYY-MM-DD"),
+        selectedDate.toFormat("yyyy-MM-dd"),
         cameraName
       );
 
       const { results: previousData, fileName } = await this.getDefrostData(
         channelId,
-        previousDate.format("YYYY-MM-DD"),
+        previousDate.toFormat("yyyy-MM-dd"),
         cameraName
       );
 
@@ -880,35 +845,19 @@ class UbibotController {
       );
       const cameraName = cameraInfo[0]?.name || "Unknown";
 
-      // Obtener fechas para la semana actual y anterior
-      const selectedDate = moment(date);
-      const startOfCurrentWeek = moment(date).subtract(6, "days");
-      const endOfCurrentWeek = moment(date).endOf("day"); // Fixed log
-      const startOfPreviousWeek = moment(date).subtract(13, "days");
-      const endOfPreviousWeek = moment(date).subtract(7, "days").endOf("day"); // Fixed log
+      const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+      const selectedDate = dt;
+      const startOfCurrentWeek = dt.minus({ days: 6 });
+      const endOfCurrentWeek = dt.endOf("day");
+      const startOfPreviousWeek = dt.minus({ days: 13 });
+      const endOfPreviousWeek = dt.minus({ days: 7 }).endOf("day");
 
-      // Log the dates before querying the database
       console.log("API /api/generate-weekly-defrost-report - Dates:");
-      console.log(
-        "  Selected Date:",
-        selectedDate.format("YYYY-MM-DD HH:mm:ss")
-      );
-      console.log(
-        "  Current Week Start:",
-        startOfCurrentWeek.format("YYYY-MM-DD HH:mm:ss")
-      );
-      console.log(
-        "  Current Week End:",
-        endOfCurrentWeek.format("YYYY-MM-DD HH:mm:ss")
-      );
-      console.log(
-        "  Previous Week Start:",
-        startOfPreviousWeek.format("YYYY-MM-DD HH:mm:ss")
-      );
-      console.log(
-        "   Previous Week End:",
-        endOfPreviousWeek.format("YYYY-MM-DD HH:mm:ss")
-      ); // Fixed log
+      console.log("  Selected Date:", selectedDate.toFormat("yyyy-MM-dd HH:mm:ss"));
+      console.log("  Current Week Start:", startOfCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
+      console.log("  Current Week End:", endOfCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
+      console.log("  Previous Week Start:", startOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
+      console.log("   Previous Week End:", endOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
 
       // Obtener datos de temperatura para ambas semanas
       const query = `
@@ -923,14 +872,14 @@ class UbibotController {
 
       const [currentWeekData] = await databaseService.pool.query(query, [
         channelId,
-        startOfCurrentWeek.format("YYYY-MM-DD HH:mm:ss"),
-        endOfCurrentWeek.format("YYYY-MM-DD HH:mm:ss"), // Fixed log
+        startOfCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
+        endOfCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
       ]);
 
       const [previousWeekData] = await databaseService.pool.query(query, [
         channelId,
-        startOfPreviousWeek.format("YYYY-MM-DD HH:mm:ss"),
-        endOfPreviousWeek.format("YYYY-MM-DD HH:mm:ss"), // Fixed log
+        startOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
+        endOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
       ]);
 
       if (!currentWeekData || currentWeekData.length === 0) {
@@ -975,9 +924,7 @@ class UbibotController {
 
       // Crear nombre del archivo
       const sanitizedCameraName = cameraName.replace(/\s+/g, "_").trim();
-      const fileName = `Weekly_Temperature_Analysis_${sanitizedCameraName}_${moment(
-        date
-      ).format("DD-MM-YYYY")}.pdf`;
+      const fileName = `Weekly_Temperature_Analysis_${sanitizedCameraName}_${DateTime.fromFormat(date, "yyyy-MM-dd").toFormat("dd-MM-yyyy")}.pdf`;
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
@@ -1333,11 +1280,10 @@ class UbibotController {
   }
 
   async getDefrostData(channelId, date, cameraName) {
-    const startOfDay = moment(date)
-      .startOf("day")
-      .format("YYYY-MM-DD HH:mm:ss");
-    const endOfDay = moment(date).endOf("day").format("YYYY-MM-DD HH:mm:ss");
-    const formattedDate = moment(date).format("DD-MM-YYYY");
+    const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+    const startOfDay = dt.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+    const endOfDay = dt.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+    const formattedDate = dt.toFormat("dd-MM-yyyy");
 
     // Create filename
     const sanitizedCameraName = cameraName.replace(/\s+/g, "_").trim();

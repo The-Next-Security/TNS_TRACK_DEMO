@@ -16,7 +16,7 @@
 
 const mysql = require('mysql2/promise');
 const configLoader = require('../../../config/js_files/configLoader_Config');
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
 
 let _dbConfig = null;
 function getDbConfig() {
@@ -78,10 +78,10 @@ async function calculateKPIs(deviceIds, startDate, endDate, tariffs = DEFAULT_TA
     // Placeholders for device IDs
     const placeholders = deviceIds.map(() => '?').join(',');
 
-    // Calculate date range in days
-    const start = moment.tz(startDate, TIMEZONE);
-    const end = moment.tz(endDate, TIMEZONE);
-    const daysDiff = end.diff(start, 'days') + 1;
+    // Calculate date range in days (America/Santiago per Decisiones_Tecnicas §6)
+    const start = DateTime.fromFormat(startDate, 'yyyy-MM-dd', { zone: TIMEZONE });
+    const end = DateTime.fromFormat(endDate, 'yyyy-MM-dd', { zone: TIMEZONE });
+    const daysDiff = Math.floor(end.diff(start, 'days').days) + 1;
 
     // Query to calculate comprehensive consumption KPIs
     // Using sem_mediciones table with formula: (potencia_activa * intervalo_segundos) / (3600 * 1000)
@@ -384,7 +384,7 @@ async function getDailyConsumption(deviceIds, startDate, endDate) {
       const avgDemandKW = Number(row.avgDemandKW) || 0;
       
       return {
-        date: moment(row.date).format('YYYY-MM-DD'),
+        date: DateTime.fromJSDate(row.date).toFormat('yyyy-MM-dd'),
         totalKWh: parseFloat(totalKWh.toFixed(2)),
         maxDemandKW: parseFloat(maxDemandKW.toFixed(3)),
         avgLoadFactor: calculateLoadFactor(avgDemandKW, maxDemandKW)

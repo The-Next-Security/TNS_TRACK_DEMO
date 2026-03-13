@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { es } from "date-fns/locale";
-import moment from "moment-timezone";
+import { DateTime } from "luxon";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -50,8 +50,6 @@ import { cn } from "../lib/utils";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-toastify/dist/ReactToastify.css";
 
-// Configuraciones iniciales
-moment.tz.setDefault("America/Santiago");
 registerLocale("es", es);
 
 /**
@@ -64,13 +62,13 @@ const ConsumoTotalMensualV2 = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(moment().toDate());
+  const [selectedDate, setSelectedDate] = useState(DateTime.now().toJSDate());
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [showContent, setShowContent] = useState(false);
   const [monthComparison, setMonthComparison] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
 
-  const currentMonthMaxDate = useRef(moment().endOf("month").toDate());
+  const currentMonthMaxDate = useRef(DateTime.now().endOf("month").toJSDate());
   const initialDeviceLoadDone = useRef(false);
   const currentFetchId = useRef(0);
 
@@ -110,7 +108,7 @@ const ConsumoTotalMensualV2 = () => {
   };
 
   const handleDateChange = (date) => {
-    if (moment(date).startOf("month").isAfter(moment().startOf("month"))) {
+    if (DateTime.fromJSDate(date).startOf("month") > DateTime.now().startOf("month")) {
       toast.warning("No se puede seleccionar un mes futuro.");
     } else {
       setSelectedDate(date);
@@ -118,11 +116,8 @@ const ConsumoTotalMensualV2 = () => {
   };
 
   const handleMonthNavigation = (direction) => {
-    const newDate = moment(selectedDate)
-      .add(direction === 'next' ? 1 : -1, 'month')
-      .toDate();
-
-    if (moment(newDate).startOf("month").isAfter(moment().startOf("month"))) {
+    const newDate = DateTime.fromJSDate(selectedDate).plus({ months: direction === 'next' ? 1 : -1 }).toJSDate();
+    if (DateTime.fromJSDate(newDate).startOf("month") > DateTime.now().startOf("month")) {
       toast.warning("No se puede seleccionar un mes futuro.");
     } else {
       setSelectedDate(newDate);
@@ -143,7 +138,7 @@ const ConsumoTotalMensualV2 = () => {
     setError(null);
 
     try {
-      const formattedDate = moment(dateToFetch).format("YYYY-MM-DD");
+      const formattedDate = DateTime.fromJSDate(dateToFetch).toFormat("yyyy-MM-dd");
       const response = await axios.get(`/api/totals/monthly/${formattedDate}`, {
         params: { deviceId: deviceToFetch.shelly_id },
       });
@@ -161,7 +156,7 @@ const ConsumoTotalMensualV2 = () => {
         );
       } else {
         const sortedData = responseData.sort((a, b) =>
-          moment(a.periodo).diff(moment(b.periodo))
+          DateTime.fromISO(a.periodo).toMillis() - DateTime.fromISO(b.periodo).toMillis()
         );
         setData(sortedData);
 
@@ -210,9 +205,7 @@ const ConsumoTotalMensualV2 = () => {
     const clickedDayData = clickData.dataPoint;
     if (clickedDayData && clickedDayData.periodo) {
       toast.info(
-        `Día seleccionado: ${moment(clickedDayData.periodo).format(
-          "DD [de] MMMM"
-        )}`
+        `Día seleccionado: ${DateTime.fromISO(clickedDayData.periodo).setLocale("es").toFormat("dd 'de' MMMM")}`
       );
     }
   };
@@ -228,7 +221,7 @@ const ConsumoTotalMensualV2 = () => {
       // Crear CSV
       const csvHeader = "Fecha,Consumo (kWh)\n";
       const csvData = data.map(item =>
-        `${moment(item.periodo).format('DD/MM/YYYY')},${item.consumo_kwh}`
+        `${DateTime.fromISO(item.periodo).toFormat("dd/MM/yyyy")},${item.consumo_kwh}`
       ).join("\n");
 
       const csv = csvHeader + csvData;
@@ -237,7 +230,7 @@ const ConsumoTotalMensualV2 = () => {
       const url = URL.createObjectURL(blob);
 
       link.setAttribute("href", url);
-      link.setAttribute("download", `consumo_mensual_${moment(selectedDate).format('YYYY-MM')}.csv`);
+      link.setAttribute("download", `consumo_mensual_${DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM")}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();

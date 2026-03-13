@@ -26,14 +26,14 @@ class UbibotServiceAdapter {
             const appConfig = config.getConfig();
 
             // Verificar si existe configuración Ubibot
-            if (!appConfig.ubibot || !appConfig.ubibot.accountKey) {
+            if (!appConfig.ubibot || !appConfig.ubibot.account_key) {
                 console.error('No se encontró configuración de Ubibot válida. Usando configuración de respaldo.');
                 this.useBackupConfig();
             } else {
                 this.config = {
-                    accountKey: appConfig.ubibot.accountKey,
-                    tokenFile: appConfig.ubibot.tokenFile,
-                    excludedChannels: appConfig.ubibot.excludedChannels || [],
+                    accountKey: appConfig.ubibot.account_key,
+                    tokenFile: appConfig.ubibot.token_file,
+                    excludedChannels: appConfig.ubibot.excluded_channels || [],
                     collectionInterval: appConfig.ubibot.collectionInterval || 300000, // 5 minutos por defecto
                     timeZone: appConfig.alertSystem?.timeZone || 'America/Santiago'
                 };
@@ -91,15 +91,15 @@ class UbibotServiceAdapter {
             const appConfig = config.reloadConfig();
 
             // Verificar si existe configuración Ubibot válida
-            if (!appConfig.ubibot || !appConfig.ubibot.accountKey) {
+            if (!appConfig.ubibot || !appConfig.ubibot.account_key) {
                 console.warn('Configuración de Ubibot inválida al recargar. Manteniendo configuración actual.');
                 return false;
             }
 
             this.config = {
-                accountKey: appConfig.ubibot.accountKey,
-                tokenFile: appConfig.ubibot.tokenFile,
-                excludedChannels: appConfig.ubibot.excludedChannels || [],
+                accountKey: appConfig.ubibot.account_key,
+                tokenFile: appConfig.ubibot.token_file,
+                excludedChannels: appConfig.ubibot.excluded_channels || [],
                 collectionInterval: appConfig.ubibot.collectionInterval || 300000,
                 timeZone: appConfig.alertSystem?.timeZone || 'America/Santiago'
             };

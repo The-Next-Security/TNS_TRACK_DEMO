@@ -149,7 +149,7 @@ async function enviarCorreoIncidencia(asunto, mensaje) {
   const emailConfig = configLoader.getConfig().email || {};
   const FROM_EMAIL = emailConfig.email_contacto?.from_verificado;
   const TO_EMAILS = Array.isArray(emailConfig.email_contacto?.destinatarios) ? emailConfig.email_contacto.destinatarios : [];
-  const apiKey = emailConfig.SENDGRID_API_KEY;
+  const apiKey = emailConfig.sendgrid_api_key;
 
   if (!apiKey || !FROM_EMAIL || TO_EMAILS.length === 0) {
     console.warn('control_incidencias: email no configurado, omitiendo envío');
@@ -189,7 +189,6 @@ async function enviarCorreoIncidencia(asunto, mensaje) {
 async function procesarPosibleIncidencia(device_name, ble_beacons, timestamp, event_enum, din2_value) {
   try {
     console.log(`[DEBUG] Iniciando procesamiento - Device: ${device_name}`);
- //   console.log(`[DEBUG] din2_value: ${din2_value}, timestamp: ${timestamp}`);
     console.log(`[DEBUG] ble_beacons: ${JSON.stringify(ble_beacons)}`);
     
     // Primero verificamos si el dispositivo es blind spot
@@ -200,9 +199,6 @@ async function procesarPosibleIncidencia(device_name, ble_beacons, timestamp, ev
       console.log(`[DEBUG] El dispositivo ${device_name} no es blind spot - Terminando`);
       return;
     }
-
-    // Bandera para rastrear si se detectó algún beacon
-    let beaconDetectado = false;
 
     // Primero procesamos los beacons si existen
     const hayBeacons = comprobarBleBeacons(ble_beacons);
@@ -217,9 +213,6 @@ async function procesarPosibleIncidencia(device_name, ble_beacons, timestamp, ev
         console.log(`[DEBUG] Verificando beacon: ${beacon.id}, RSSI: ${beacon.rssi}`);
         const beaconEsBlindSpot = await comprobarBlindSpot(beacon.id, 2);
         if (beaconEsBlindSpot && beacon.rssi > RSSI_THRESHOLD) {
-          console.log(`[DEBUG] Beacon ${beacon.id} válido para procesamiento`);
-          beaconDetectado = true;
-          
           // Verificar cooldown para inserción y SMS
           const cooldownKey = `${device_name}-${beacon.id}`;
           
@@ -244,78 +237,10 @@ async function procesarPosibleIncidencia(device_name, ble_beacons, timestamp, ev
       }
     }
 
-    // Solo si no se detectó ningún beacon, procesamos el cambio en din.2
-   // if (!beaconDetectado && din2_value !== undefined) {
-   //   console.log(`[DEBUG] Procesando din2 - No se detectaron beacons`);
-   //   console.log(`[DEBUG] din2_value actual: ${din2_value}`);
-   //   await procesarCambioDin2(device_name, din2_value, timestamp);
-   // }
   } catch (error) {
     console.error('[ERROR] Error en procesarPosibleIncidencia:', error);
   }
 }
-
-// async function procesarCambioDin2(device_name, din2_value, timestamp) {
-//   console.log(`[DEBUG] Entrando a procesarCambioDin2`);
-//   console.log(`[DEBUG] Parámetros - device: ${device_name}, din2: ${din2_value}, timestamp: ${timestamp}`);
-//   
-//   try {
-//     if (din2_value === false || din2_value === 0) {  // Agregamos la comparación con 0
-//       console.log('[DEBUG] din2 es false o 0 - Detectada posible intrusión');
-//       
-//       const connection = await getPool().getConnection();
-//       try {
-//         const [lastState] = await connection.query(
-//           `SELECT din_2 FROM gps_data 
-//            WHERE device_name = ? AND timestamp < ? 
-//            ORDER BY timestamp DESC LIMIT 1`,
-//           [device_name, timestamp]
-//         );
-// 
-//         console.log('[DEBUG] Último estado din2:', lastState[0]?.din_2);
-//         console.log('[DEBUG] Tipo de último estado:', typeof lastState[0]?.din_2);
-// 
-//         const estadoAnteriorValido = lastState.length === 0 || lastState[0].din_2 === 1 || lastState[0].din_2 === null;
-//         console.log('[DEBUG] ¿Estado anterior válido?:', estadoAnteriorValido);
-// 
-//         if (estadoAnteriorValido) {
-//           console.log('[DEBUG] Cambio válido detectado - Verificando cooldown');
-//           
-//           const cooldownKey = `${device_name}-din2`;
-//           if (!beaconCooldowns.has(cooldownKey)) {
-//             console.log('[DEBUG] No hay cooldown activo - Procediendo con alertas');
-//             
-//             try {
-//               await insertarIncidencia(device_name, 'SENSOR_DIN2');
-//               console.log('[DEBUG] Incidencia insertada correctamente');
-//               
-//               await enviarSMSIncidencia(device_name, 'SENSOR_DIN2');
-//               console.log('[DEBUG] SMS enviado correctamente');
-//               
-//               beaconCooldowns.set(cooldownKey, DateTime.now());
-//               console.log('[DEBUG] Cooldown establecido');
-//               
-//               setTimeout(() => {
-//                 beaconCooldowns.delete(cooldownKey);
-//                 console.log('[DEBUG] Cooldown eliminado');
-//               }, COOLDOWN_PERIODO * 1000);
-//             } catch (alertError) {
-//               console.error('[ERROR] Error en proceso de alerta:', alertError);
-//             }
-//           } else {
-//             console.log('[DEBUG] Cooldown activo - No se procesa la alerta');
-//           }
-//         }
-//       } finally {
-//         connection.release();
-//       }
-//     } else {
-//       console.log('[DEBUG] din2_value no indica intrusión:', din2_value);
-//     }
-//   } catch (error) {
-//     console.error('[ERROR] Error en procesarCambioDin2:', error);
-//   }
-// }
 
 async function procesarBeacon(device_name, beacon) {
   try {

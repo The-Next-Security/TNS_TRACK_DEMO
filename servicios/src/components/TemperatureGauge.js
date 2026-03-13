@@ -1,7 +1,7 @@
 // En TemperatureGauge.js
 import React, { useEffect, useRef } from "react";
 import { RadialGauge } from "canvas-gauges";
-import dayjs from "dayjs";
+import { DateTime } from "luxon";
 
 const TemperatureGauge = ({
   temperature,
@@ -76,7 +76,7 @@ const TemperatureGauge = ({
     <div style={{ textAlign: "center", margin: "10px" }}>
       <canvas ref={gaugeRef}></canvas>
       <p style={{ fontSize: "18px", fontWeight: "bold" }}>
-        {dayjs(timestamp).format("HH:mm")}
+        {timestamp ? (typeof timestamp === 'number' ? DateTime.fromMillis(timestamp) : DateTime.fromISO(timestamp)).setZone('America/Santiago').toFormat('HH:mm') : '--'}
       </p>
       <div
         style={{ display: "flex", justifyContent: "center", marginTop: "10px" }}

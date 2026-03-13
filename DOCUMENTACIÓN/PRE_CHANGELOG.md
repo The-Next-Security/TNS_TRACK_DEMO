@@ -17,6 +17,66 @@
 
 ## Unreleased
 
+### 2026-03-13 — @andresTNS ([#18](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/18))
+- **refactor** `documentation, SQL - BBDD, back-end, front-end` | eliminar dependencias y código comentado obsoleto
+
+
+### 2026-03-13 — @andresTNS ([#19](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/19))
+- **chore** `documentation, SQL - BBDD, back-end, front-end` | [REFACTOR] Revisión y estandarización de rutas API del backend
+
+
+### 2026-03-13 — @dependabot[bot] ([#27](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/27))
+- **chore** `back-end, dependencies, npm, security` | bump tailwind-merge from 3.4.0 to 3.5.0 in /servicios
+
+
+### 2026-03-13 — @dependabot[bot] ([#28](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/28))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.14.0 to 6.27.0 in /servicios
+
+
+### 2026-03-13 — @dependabot[bot] ([#29](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/29))
+- **chore** `back-end, dependencies, npm, security` | bump mysql2 from 3.16.0 to 3.19.1 in /servicios
+
+
+### 2026-03-13 — @dependabot[bot] ([#30](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/30))
+- **chore** `back-end, dependencies, npm, security` | bump react-datepicker from 7.6.0 to 9.1.0 in /servicios
+
+
+### 2026-03-13 — @dependabot[bot] ([#31](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/31))
+- **chore** `back-end, dependencies, npm, security` | bump twilio from 5.10.7 to 5.13.0 in /servicios
+
+
+### 2026-03-12 — @dependabot[bot] ([#25](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/25))
+- **chore** `back-end, dependencies, npm, security` | bump styled-components from 6.1.19 to 6.3.11 in /servicios
+
+
+### 2026-03-12 — @dependabot[bot] ([#24](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/24))
+- **chore** `back-end, dependencies, npm, security` | bump dotenv from 17.2.3 to 17.3.1 in /servicios
+
+
+### 2026-03-12 — @dependabot[bot] ([#23](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/23))
+- **chore** `back-end, dependencies, npm, security` | bump core-js from 3.47.0 to 3.48.0 in /servicios
+
+
+### 2026-03-12 — @dependabot[bot] ([#22](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/22))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 10 updates
+
+
+### 2026-03-12 — @dependabot[bot] ([#21](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/21))
+- **chore** `back-end, dependencies, npm, security` | bump the development-dependencies group in /servicios with 5 updates
+
+
+### 2026-03-11 — @Bufigol ([#17](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/17))
+- **chore** `back-end, analytics, front-end` | [REFACTOR] Cleanup de código legacy y archivos obsoletos
+
+
+### 2026-03-11 — @Bufigol ([#16](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/16))
+- **chore** `back-end` | [REFACTOR] Eliminar aliases de compatibilidad del config-loader
+
+
+### 2026-03-11 — @andresTNS ([#14](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/14))
+- **chore** `documentation, SQL - BBDD, back-end, analytics, front-end` | [REFACTOR] Migración a Luxon como única librería de fechas (Issue #5)
+
+
 > ⚠️ _Entradas retroactivas — registradas manualmente al implementar el flujo de PRE_CHANGELOG. Los issues anteriores no pasaron por el flujo automático de PR → dev._
 
 ---

@@ -8,7 +8,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { toast } from "react-toastify";
 import DatePicker, { registerLocale } from "react-datepicker";
 import { es } from "date-fns/locale";
-import moment from "moment-timezone";
+import { DateTime } from "luxon";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -49,8 +49,6 @@ import { cn } from "../lib/utils";
 import "react-datepicker/dist/react-datepicker.css";
 import "react-toastify/dist/ReactToastify.css";
 
-// Configuraciones iniciales
-moment.tz.setDefault("America/Santiago");
 registerLocale("es", es);
 
 /**
@@ -63,13 +61,13 @@ const ConsumoTotalDiarioV2 = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(moment().toDate());
+  const [selectedDate, setSelectedDate] = useState(DateTime.now().toJSDate());
   const [selectedDevice, setSelectedDevice] = useState(null);
   const [showContent, setShowContent] = useState(false);
   const [comparisonData, setComparisonData] = useState(null);
   const [exportLoading, setExportLoading] = useState(false);
 
-  const today = useRef(moment().tz("America/Santiago").endOf("day").toDate());
+  const today = useRef(DateTime.now().setZone("America/Santiago").endOf("day").toJSDate());
   const initialDeviceLoadDone = useRef(false);
   const currentFetchId = useRef(0);
 
@@ -109,7 +107,8 @@ const ConsumoTotalDiarioV2 = () => {
   };
 
   const handleDateChange = (date) => {
-    if (moment(date).isSameOrBefore(moment(), "day")) {
+    const dt = DateTime.fromJSDate(date).startOf("day");
+    if (dt <= DateTime.now().startOf("day")) {
       setSelectedDate(date);
     } else {
       toast.warning("No se puede seleccionar una fecha futura.");
@@ -130,7 +129,7 @@ const ConsumoTotalDiarioV2 = () => {
     setError(null);
 
     try {
-      const formattedDate = moment(dateToFetch).format("YYYY-MM-DD");
+      const formattedDate = DateTime.fromJSDate(dateToFetch).toFormat("yyyy-MM-dd");
       const response = await axios.get(`/api/totals/daily/${formattedDate}`, {
         params: { deviceId: deviceToFetch.shelly_id },
       });
@@ -154,7 +153,7 @@ const ConsumoTotalDiarioV2 = () => {
           min: minConsumption,
           total: responseData.reduce((acc, item) => acc + item.energia_activa_total, 0),
           peakHour: responseData.find(item => item.energia_activa_total === maxConsumption)?.periodo
-            ? moment(responseData.find(item => item.energia_activa_total === maxConsumption)?.periodo).format('HH:mm')
+            ? DateTime.fromISO(responseData.find(item => item.energia_activa_total === maxConsumption)?.periodo).setZone("America/Santiago").toFormat("HH:mm")
             : "N/A"
         });
       }
@@ -195,7 +194,7 @@ const ConsumoTotalDiarioV2 = () => {
       // Crear CSV
       const csvHeader = "Hora,Energía (kWh)\n";
       const csvData = data.map(item =>
-        `${moment(item.periodo).format('HH:mm')},${item.energia_activa_total}`
+        `${DateTime.fromISO(item.periodo).setZone("America/Santiago").toFormat("HH:mm")},${item.energia_activa_total}`
       ).join("\n");
 
       const csv = csvHeader + csvData;
@@ -204,7 +203,7 @@ const ConsumoTotalDiarioV2 = () => {
       const url = URL.createObjectURL(blob);
 
       link.setAttribute("href", url);
-      link.setAttribute("download", `consumo_diario_${moment(selectedDate).format('YYYY-MM-DD')}.csv`);
+      link.setAttribute("download", `consumo_diario_${DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd")}.csv`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();

@@ -157,16 +157,6 @@ async function updateAlertSchedules(req, res) {
     console.log('[AlertScheduleController] Updated fields:', Object.keys(updates).join(', '));
     console.log('[AlertScheduleController] Updated by:', updatedBy);
 
-    // TODO: Emit PostHog event for analytics (T083)
-    // posthog.capture({
-    //   distinctId: updatedBy,
-    //   event: 'alert_schedule_config_updated',
-    //   properties: {
-    //     config_keys: Object.keys(updates),
-    //     updated_count: result.updatedCount
-    //   }
-    // });
-
     res.status(200).json({
       success: true,
       data: updatedConfig,
