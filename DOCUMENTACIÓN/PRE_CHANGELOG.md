@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-13 — @dependabot[bot] ([#30](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/30))
+- **chore** `back-end, dependencies, npm, security` | bump react-datepicker from 7.6.0 to 9.1.0 in /servicios
+
+
 ### 2026-03-13 — @dependabot[bot] ([#31](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/31))
 - **chore** `back-end, dependencies, npm, security` | bump twilio from 5.10.7 to 5.13.0 in /servicios
 
