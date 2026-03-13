@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-13 — @andresTNS ([#19](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/19))
+- **chore** `documentation, SQL - BBDD, back-end, front-end` | [REFACTOR] Revisión y estandarización de rutas API del backend
+
+
 ### 2026-03-13 — @dependabot[bot] ([#27](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/27))
 - **chore** `back-end, dependencies, npm, security` | bump tailwind-merge from 3.4.0 to 3.5.0 in /servicios
 
