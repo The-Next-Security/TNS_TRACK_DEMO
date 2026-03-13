@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-13 — @andresTNS ([#18](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/18))
+- **refactor** `documentation, SQL - BBDD, back-end, front-end` | eliminar dependencias y código comentado obsoleto
+
+
 ### 2026-03-13 — @andresTNS ([#19](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/19))
 - **chore** `documentation, SQL - BBDD, back-end, front-end` | [REFACTOR] Revisión y estandarización de rutas API del backend
 
