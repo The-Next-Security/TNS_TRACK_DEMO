@@ -67,7 +67,7 @@
     "node-cron": "^4.2.1",
     "node-fetch": "^2.7.0",
     "node-schedule": "^2.1.1",
-    "openai": "^6.8.1",
+    "openai": "^6.27.0",
     "pdfkit": "^0.16.0",
     "posthog-js": "^1.276.0",
     "prop-types": "^15.8.1",
