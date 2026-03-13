@@ -579,3 +579,52 @@ INSERT INTO `rep_plantillas` (`id_plantilla`, `clave_plantilla`, `id_tipo_report
 INSERT INTO `ale_tipo_alerta` (`id_tipo_alerta`, `nombre`, `descripcion`, `activo`) VALUES
 (1, 'temperatura',  'Alerta por temperatura fuera de umbral configurado',         1),
 (2, 'desconexion',  'Alerta por desconexión de sensor sin reportar lecturas',     1);
+
+-- ==============================================================================
+-- 15. ale_horarios_alerta_canal
+--     Horarios base de envío por tipo de alerta y canal (admin).
+--     dia_semana: 1=Lun..7=Dom, 0=feriado.
+--     Temperatura: fuera horario laboral en días normales; todas las horas en feriados.
+--     Desconexión: 24/7 (todas las horas, sin respetar horario ni feriados).
+-- ==============================================================================
+
+-- Temperatura, email: días 1-7 = ventana todo el día, intersección con horario operacional (solo fuera de horario laboral)
+INSERT INTO `ale_horarios_alerta_canal` (`id_tipo_alerta`, `canal`, `dia_semana`, `hora_inicio`, `hora_fin`, `activo`, `respeta_horario_operacional`, `respeta_feriados`) VALUES
+(1, 'email', 1, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'email', 2, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'email', 3, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'email', 4, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'email', 5, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'email', 6, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'email', 7, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'email', 0, '00:00:00', '23:59:59', 1, 0, 0);
+-- Temperatura, push: igual que email
+INSERT INTO `ale_horarios_alerta_canal` (`id_tipo_alerta`, `canal`, `dia_semana`, `hora_inicio`, `hora_fin`, `activo`, `respeta_horario_operacional`, `respeta_feriados`) VALUES
+(1, 'push', 1, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'push', 2, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'push', 3, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'push', 4, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'push', 5, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'push', 6, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'push', 7, '00:00:00', '23:59:59', 1, 1, 1),
+(1, 'push', 0, '00:00:00', '23:59:59', 1, 0, 0);
+-- Desconexión, email: 24/7 (todas las horas, no respeta horario operacional ni feriados)
+INSERT INTO `ale_horarios_alerta_canal` (`id_tipo_alerta`, `canal`, `dia_semana`, `hora_inicio`, `hora_fin`, `activo`, `respeta_horario_operacional`, `respeta_feriados`) VALUES
+(2, 'email', 1, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'email', 2, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'email', 3, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'email', 4, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'email', 5, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'email', 6, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'email', 7, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'email', 0, '00:00:00', '23:59:59', 1, 0, 0);
+-- Desconexión, push: 24/7
+INSERT INTO `ale_horarios_alerta_canal` (`id_tipo_alerta`, `canal`, `dia_semana`, `hora_inicio`, `hora_fin`, `activo`, `respeta_horario_operacional`, `respeta_feriados`) VALUES
+(2, 'push', 1, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'push', 2, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'push', 3, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'push', 4, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'push', 5, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'push', 6, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'push', 7, '00:00:00', '23:59:59', 1, 0, 0),
+(2, 'push', 0, '00:00:00', '23:59:59', 1, 0, 0);

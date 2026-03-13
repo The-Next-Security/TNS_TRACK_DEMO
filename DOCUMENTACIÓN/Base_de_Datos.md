@@ -739,6 +739,68 @@ Similar a `sem_totales_dia` pero con `año INT` + `mes INT` (UNIQUE compuesto co
 
 ---
 
+#### `ale_suscripciones_notificacion` 🆕
+> Suscripciones unificadas por usuario, tipo de alerta, origen y **canal** (email o push). Reemplaza la antigua `ale_suscripciones_email`: una sola tabla para email y push.
+
+| Columna | Tipo | Nullable | Descripción |
+|---------|------|----------|-------------|
+| `id_suscripcion_notificacion` | INT UNSIGNED AI | NO | PK |
+| `id_usuario` | INT UNSIGNED | NO | FK → `gen_usuario` ON DELETE CASCADE |
+| `id_tipo_alerta` | TINYINT UNSIGNED | NO | FK → `ale_tipo_alerta` RESTRICT |
+| `id_origen_tipo` | TINYINT UNSIGNED | NO | FK → `gen_tipos_origen` RESTRICT |
+| `canal` | ENUM('email','push') | NO | Canal de entrega |
+| `activo` | TINYINT(1) | NO | DEFAULT 1 |
+| `ultima_notificacion_enviada` | DATETIME | SÍ | |
+| `fecha_creacion` / `fecha_actualizacion` | DATETIME | NO | Timestamps de auditoría |
+
+**UNIQUE** `(id_usuario, id_tipo_alerta, id_origen_tipo, canal)`.
+
+---
+
+#### `ale_horarios_alerta_canal` 🆕
+> Horario **base** de envío por tipo de alerta, canal y día. Definido por administradores. `dia_semana`: 1=Lun … 7=Dom; **0 = día feriado** (regla distinta en feriados).
+
+| Columna | Tipo | Nullable | Descripción |
+|---------|------|----------|-------------|
+| `id_horario_alerta_canal` | INT UNSIGNED AI | NO | PK |
+| `id_tipo_alerta` | TINYINT UNSIGNED | NO | FK → `ale_tipo_alerta` RESTRICT |
+| `canal` | ENUM('email','push') | NO | |
+| `dia_semana` | TINYINT(1) | NO | 1–7 Lun–Dom; **0 = feriado** |
+| `hora_inicio` / `hora_fin` | TIME | NO | Ventana de envío |
+| `activo` | TINYINT(1) | NO | DEFAULT 1 |
+| `respeta_horario_operacional` | TINYINT(1) | NO | DEFAULT 1 — intersección con `gen_horario_operacional` |
+| `respeta_feriados` | TINYINT(1) | NO | DEFAULT 1 — no enviar en feriados (según global) |
+| `fecha_creacion` / `fecha_actualizacion` | DATETIME | NO | Timestamps de auditoría |
+
+**UNIQUE** `(id_tipo_alerta, canal, dia_semana)`.
+
+---
+
+#### `ale_horarios_usuario` 🆕
+> Horario **personalizado** por usuario para un (tipo de alerta, canal, día). Si el usuario tiene al menos una fila para (id_usuario, id_tipo_alerta, canal), se usa esta tabla como horario efectivo; si no, se usa `ale_horarios_alerta_canal` (base).
+
+| Columna | Tipo | Nullable | Descripción |
+|---------|------|----------|-------------|
+| `id_horario_usuario` | INT UNSIGNED AI | NO | PK |
+| `id_usuario` | INT UNSIGNED | NO | FK → `gen_usuario` ON DELETE CASCADE |
+| `id_tipo_alerta` | TINYINT UNSIGNED | NO | FK → `ale_tipo_alerta` RESTRICT |
+| `canal` | ENUM('email','push') | NO | |
+| `dia_semana` | TINYINT(1) | NO | 0=feriado, 1–7 Lun–Dom |
+| `hora_inicio` / `hora_fin` | TIME | NO | Ventana de envío |
+| `activo` | TINYINT(1) | NO | DEFAULT 1 |
+| `respeta_horario_operacional` / `respeta_feriados` | TINYINT(1) | NO | DEFAULT 1 |
+| `fecha_creacion` / `fecha_actualizacion` | DATETIME | NO | Timestamps de auditoría |
+
+**UNIQUE** `(id_usuario, id_tipo_alerta, canal, dia_semana)`.
+
+---
+
+**Tablas de alertas eliminadas (alineación al modelo unificado):**
+- `ale_suscripciones_email` — reemplazada por `ale_suscripciones_notificacion` (canal='email').
+- `log_ale_suscripciones_email` — reemplazada por `log_ale_suscripciones_notificacion`.
+
+---
+
 ### Tablas de Auditoría y Log (`log_`)
 
 > **Fuente:** [`SQL_FILES/01_creacion_desde_cero/02_tablas_log.sql`](../SQL_FILES/01_creacion_desde_cero/02_tablas_log.sql)
@@ -789,6 +851,7 @@ Siguen el patrón `log_[tabla]` con columnas uniformes: `id_log_* BIGINT UNSIGNE
 | `log_sem_dispositivos` | `sem_dispositivos` |
 | `log_ubi_canal` | `ubi_canal` |
 | `log_ubi_presets_temperatura` | `ubi_presets_temperatura` |
+| `log_ale_suscripciones_notificacion` | `ale_suscripciones_notificacion` |
 
 ---
 

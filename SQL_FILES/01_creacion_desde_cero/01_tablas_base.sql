@@ -778,6 +778,86 @@ CREATE TABLE `ale_datos_desconexion` (
     ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Datos específicos de alertas de desconexión de sensores — extiende ale_seguimiento';
 
+-- Suscripciones unificadas de usuarios a alertas por canal (email o push)
+CREATE TABLE `ale_suscripciones_notificacion` (
+  `id_suscripcion_notificacion` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'FK a gen_usuario',
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL COMMENT 'FK a ale_tipo_alerta',
+  `id_origen_tipo` TINYINT UNSIGNED NOT NULL COMMENT 'FK a gen_tipos_origen',
+  `canal` ENUM('email','push') NOT NULL COMMENT 'Canal de envío',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = suscripción activa',
+  `ultima_notificacion_enviada` DATETIME NULL COMMENT 'Último envío por este canal para esta combinación usuario/tipo/origen',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_suscripcion_notificacion`),
+  UNIQUE KEY `uk_ale_suscripciones_notificacion_regla` (`id_usuario`, `id_tipo_alerta`, `id_origen_tipo`, `canal`),
+  CONSTRAINT `fk_ale_suscripciones_notificacion_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `gen_usuario`(`id_usuario`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_suscripciones_notificacion_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+    FOREIGN KEY (`id_tipo_alerta`)
+    REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_suscripciones_notificacion_id_origen_tipo_gen_tipos_origen_id_tipo_origen`
+    FOREIGN KEY (`id_origen_tipo`)
+    REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Suscripciones unificadas de usuarios a alertas por tipo, origen y canal (email/push)';
+
+-- Horarios base de envío por tipo de alerta y canal (definidos por administradores)
+CREATE TABLE `ale_horarios_alerta_canal` (
+  `id_horario_alerta_canal` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL COMMENT 'FK a ale_tipo_alerta',
+  `canal` ENUM('email','push') NOT NULL COMMENT 'Canal de envío',
+  `dia_semana` TINYINT(1) NOT NULL COMMENT '1=Lun..7=Dom; 0=día feriado',
+  `hora_inicio` TIME NOT NULL COMMENT 'Inicio ventana de envío',
+  `hora_fin` TIME NOT NULL COMMENT 'Fin ventana de envío',
+  `activo` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = fila activa',
+  `respeta_horario_operacional` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = intersección con gen_horario_operacional; 0 = solo esta ventana',
+  `respeta_feriados` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1 = no enviar en feriados; 0 = sí enviar en feriados',
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_horario_alerta_canal`),
+  UNIQUE KEY `uk_ale_horarios_alerta_canal_tipo_canal_dia` (`id_tipo_alerta`, `canal`, `dia_semana`),
+  CONSTRAINT `fk_ale_horarios_alerta_canal_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+    FOREIGN KEY (`id_tipo_alerta`)
+    REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Horarios base de envío por tipo de alerta y canal (admin); dia_semana=0 para feriados';
+
+-- Horarios personalizados por usuario (sobrescriben base si existen)
+CREATE TABLE `ale_horarios_usuario` (
+  `id_horario_usuario` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `id_usuario` INT UNSIGNED NOT NULL COMMENT 'FK a gen_usuario',
+  `id_tipo_alerta` TINYINT UNSIGNED NOT NULL COMMENT 'FK a ale_tipo_alerta',
+  `canal` ENUM('email','push') NOT NULL COMMENT 'Canal de envío',
+  `dia_semana` TINYINT(1) NOT NULL COMMENT '0=feriado, 1=Lun..7=Dom',
+  `hora_inicio` TIME NOT NULL,
+  `hora_fin` TIME NOT NULL,
+  `activo` TINYINT(1) NOT NULL DEFAULT 1,
+  `respeta_horario_operacional` TINYINT(1) NOT NULL DEFAULT 1,
+  `respeta_feriados` TINYINT(1) NOT NULL DEFAULT 1,
+  `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_horario_usuario`),
+  UNIQUE KEY `uk_ale_horarios_usuario_usuario_tipo_canal_dia` (`id_usuario`, `id_tipo_alerta`, `canal`, `dia_semana`),
+  CONSTRAINT `fk_ale_horarios_usuario_id_usuario_gen_usuario_id_usuario`
+    FOREIGN KEY (`id_usuario`)
+    REFERENCES `gen_usuario`(`id_usuario`)
+    ON DELETE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `fk_ale_horarios_usuario_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+    FOREIGN KEY (`id_tipo_alerta`)
+    REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Horarios personalizados por usuario/tipo/canal/día; si no hay filas se usa base';
+
 -- Métricas resumen de alertas por día y hora
 CREATE TABLE `ale_metricas_resumen` (
   `id_metrica` INT UNSIGNED NOT NULL AUTO_INCREMENT,

@@ -4,6 +4,8 @@ const sgMail = require("@sendgrid/mail");
 const BaseAlertService = require("../baseAlert_Service"); // Hereda de BaseAlertService
 const configLoader = require("../../config/js_files/configLoader_Config");
 const { DateTime } = require("luxon");
+const databaseService = require("../database_Service");
+const notificationScheduleService = require("../notificationSchedule_Service");
 
 /**
  * Servicio centralizado para el envío de correos electrónicos utilizando SendGrid.
@@ -260,6 +262,57 @@ class EmailService extends BaseAlertService {
     return { toRecipients, bccRecipients, usedFallback, usedEmergency };
   }
 
+  /**
+   * Obtiene destinatarios desde ale_suscripciones_notificacion (canal email) y filtra por shouldSendNotification.
+   * Única fuente de destinatarios para alertas; sin fallback a config.
+   * @param {number} idTipoAlerta - 1=temperatura, 2=desconexion
+   * @param {number} idOrigenTipo - FK gen_tipos_origen (ej. 1=ubibot)
+   * @returns {Promise<{ toRecipients: string[], recipientsDetail: Array<{ id_usuario: number, email: string }> }>}
+   */
+  async _getRecipientsFromSubscriptions(idTipoAlerta, idOrigenTipo) {
+    const toRecipients = [];
+    const recipientsDetail = [];
+    try {
+      if (!databaseService.connected) {
+        await databaseService.initialize();
+      }
+      const pool = databaseService.pool;
+      if (!pool) {
+        console.warn("[EmailService] _getRecipientsFromSubscriptions: pool no disponible");
+        return { toRecipients, recipientsDetail };
+      }
+      const [rows] = await pool.execute(
+        `SELECT s.id_usuario, u.email
+         FROM ale_suscripciones_notificacion s
+         JOIN gen_usuario u ON u.id_usuario = s.id_usuario
+         WHERE s.id_tipo_alerta = ? AND s.id_origen_tipo = ? AND s.canal = 'email' AND s.activo = 1`,
+        [idTipoAlerta, idOrigenTipo]
+      );
+      if (!rows || rows.length === 0) {
+        return { toRecipients, recipientsDetail };
+      }
+      const now = DateTime.now().setZone(this.timeZone || 'America/Santiago');
+      for (const row of rows) {
+        if (!row.email) continue;
+        const { allowed, motivo } = await notificationScheduleService.shouldSendNotification({
+          idTipoAlerta,
+          idOrigenTipo,
+          canal: 'email',
+          idUsuario: row.id_usuario,
+          fechaHora: now
+        });
+        if (allowed) {
+          toRecipients.push(row.email);
+          recipientsDetail.push({ id_usuario: row.id_usuario, email: row.email });
+        } else {
+          console.log(`[EmailService] No enviar a usuario ${row.id_usuario}: ${motivo}`);
+        }
+      }
+    } catch (err) {
+      console.error("[EmailService] _getRecipientsFromSubscriptions error:", err.message);
+    }
+    return { toRecipients, recipientsDetail };
+  }
 
   /**
    * Procesa una alerta genérica de la cola.
@@ -427,82 +480,57 @@ class EmailService extends BaseAlertService {
       return false;
     }
     if (recipients !== null) {
-      console.warn(`[EmailService/TempAlert][${callId}] Argumento 'recipients' deprecado, usando config/fallback.`);
+      console.warn(`[EmailService/TempAlert][${callId}] Argumento 'recipients' deprecado.`);
     }
 
-    // **** OBTENER DESTINATARIOS DINÁMICOS ****
-    const { toRecipients, bccRecipients, usedFallback, usedEmergency } = await this._getDynamicRecipients('TempAlert');
+    // Destinatarios solo desde ale_suscripciones_notificacion (canal email), filtrados por shouldSendNotification
+    const { toRecipients, recipientsDetail } = await this._getRecipientsFromSubscriptions(1, 1); // 1=temperatura, 1=ubibot
 
     if (toRecipients.length === 0) {
-      console.error("[EmailService/TempAlert] No se pudieron determinar destinatarios válidos (ni siquiera emergencia). Abortando envío.");
-      // No contar como fallo de envío SendGrid, sino fallo de configuración/lógica previa
-      this.metrics.lastError = "Sin destinatarios TO válidos para TempAlert";
-      return false; // No intentar enviar
+      console.log("[EmailService/TempAlert] No hay suscriptores activos para temperatura/email en este momento (o no pasan horario). No se envía.");
+      this.metrics.lastError = "Sin destinatarios para TempAlert (suscripciones/horario)";
+      return false;
     }
-    if (usedEmergency) {
-      console.warn(`[EmailService/TempAlert] ¡¡¡ENVIANDO A DESTINATARIO DE EMERGENCIA!!! (${toRecipients.join(', ')})`);
-    } else if (usedFallback) {
-      console.warn(`[EmailService/TempAlert] Usando destinatarios TO de fallback (${toRecipients.join(', ')})`);
-    }
+    console.log(`[EmailService/TempAlert] Enviando a ${toRecipients.length} destinatario(s): ${toRecipients.join(', ')}`);
 
     const formattedDateTime = DateTime.now().setZone(this.timeZone).toFormat("dd-MM HH:mm");
     const subject = `Alerta Horaria de Temperatura - ${formattedDateTime}`;
     const { html, text } = this._formatTemperatureAlertContent(channelsInAlert); // Formato sin cambios
 
     let attempt1Success = false;
-    // ... (Lógica de intento 1 con BCC y fallbacks A/B SIN CAMBIOS, pero usando las listas `toRecipients` y `bccRecipients` obtenidas arriba) ...
+    const bccRecipients = []; // Sin BCC desde config; destinatarios solo desde suscripciones
     try { // Intento 1
-      console.log("[EmailService/TempAlert] Iniciando Intento 1 (con BCC)...");
+      console.log("[EmailService/TempAlert] Iniciando envío a suscriptores...");
       const msgAttempt1 = { to: toRecipients, subject, text, html };
-      // Añadir BCC solo si la lista no está vacía Y NO estamos en modo emergencia
-      if (!usedEmergency && bccRecipients && bccRecipients.length > 0) {
-        msgAttempt1.bcc = bccRecipients;
-      } else if (usedEmergency) {
-        console.warn("[EmailService/TempAlert] Omitiendo BCC debido a envío de emergencia.");
-      } else {
-        console.log("[EmailService/TempAlert] Lista BCC está vacía o no aplica, enviando sin BCC en Intento 1.");
-      }
       attempt1Success = await this._sendMail(msgAttempt1);
       if (attempt1Success) {
-        console.log("[EmailService/TempAlert] Intento 1 (con BCC/emergencia) EXITOSO.");
-        this.recordEmailSuccess(subject + (usedEmergency ? " (EMERGENCIA)" : (msgAttempt1.bcc ? " (con BCC)" : "")), toRecipients.length + (msgAttempt1.bcc ? msgAttempt1.bcc.length : 0));
+        console.log("[EmailService/TempAlert] Envío EXITOSO.");
+        this.recordEmailSuccess(subject, toRecipients.length);
         this.metrics.sentAlerts++; this.metrics.lastSuccessTime = new Date(); return true;
       } else {
-        console.warn("[EmailService/TempAlert] Intento 1 (con BCC/emergencia) falló (reportado por _sendMail como false). Procediendo a fallback (si aplica)...");
+        console.warn("[EmailService/TempAlert] Envío falló (reportado por _sendMail como false).");
         this.metrics.failedAlerts++;
       }
     } catch (error) {
-      console.error("[EmailService/TempAlert] Intento 1 (con BCC/emergencia) falló con EXCEPCIÓN. Procediendo a fallback (si aplica)...");
+      console.error("[EmailService/TempAlert] Envío falló con EXCEPCIÓN:", error.message);
       this.metrics.failedAlerts++;
     }
 
-    // --- Fallback (Solo si attempt1Success es false Y NO se usó emergencia en el intento 1) ---
-    if (!attempt1Success && !usedEmergency) {
-      console.log("[EmailService/TempAlert] Ejecutando Fallback (envío sin BCC)...");
-      // Fallback A: Enviar solo a destinatarios principales (ya obtenidos)
+    if (!attempt1Success) {
       try {
-        console.log("[EmailService/TempAlert] Fallback A: Enviando solo a destinatarios principales...");
         const msgFallbackA = { to: toRecipients, subject, text, html };
-        if (await this._sendMail(msgFallbackA)) { console.log("[EmailService/TempAlert] Fallback A EXITOSO."); }
-        else { console.error("[EmailService/TempAlert] Fallback A FALLÓ."); this.recordEmailError(subject + " (Fallback Principales)", this.metrics.lastError || "Error desconocido en Fallback A"); }
-      } catch (error) { console.error("[EmailService/TempAlert] Fallback A falló con EXCEPCIÓN:", error.message); this.recordEmailError(subject + " (Fallback Principales)", error.message); }
-
-      // Fallback B: Enviar copia a "BCC" como destinatarios TO (si había BCC original)
-      if (bccRecipients && bccRecipients.length > 0) {
-        try {
-          console.log("[EmailService/TempAlert] Fallback B: Enviando copia a 'BCC' como destinatarios TO...");
-          const msgFallbackB = { to: bccRecipients, subject, text, html };
-          if (await this._sendMail(msgFallbackB)) { console.log("[EmailService/TempAlert] Fallback B EXITOSO."); }
-          else { console.error("[EmailService/TempAlert] Fallback B FALLÓ."); this.recordEmailError(subject + " (Fallback BCC como TO)", this.metrics.lastError || "Error desconocido en Fallback B"); }
-        } catch (error) { console.error("[EmailService/TempAlert] Fallback B falló con EXCEPCIÓN:", error.message); this.recordEmailError(subject + " (Fallback BCC como TO)", error.message); }
-      } else { console.log("[EmailService/TempAlert] Fallback B omitido: Lista BCC estaba vacía."); }
-    } else if (!attempt1Success && usedEmergency) {
-      console.error("[EmailService/TempAlert] El envío al destinatario de EMERGENCIA también falló.");
+        if (await this._sendMail(msgFallbackA)) {
+          console.log("[EmailService/TempAlert] Fallback EXITOSO.");
+          this.metrics.sentAlerts++; this.metrics.lastSuccessTime = new Date();
+          return true;
+        }
+      } catch (err) {
+        console.error("[EmailService/TempAlert] Fallback falló:", err.message);
+      }
     }
 
-    return attempt1Success; // Retornar éxito del intento original
+    return attempt1Success;
   }
-
 
   /**
    * Envía alertas de desconexión usando destinatarios dinámicos.
@@ -516,68 +544,51 @@ class EmailService extends BaseAlertService {
       return false;
     }
     if (recipients !== null) {
-      console.warn("[EmailService/DisconnAlert] Argumento 'recipients' deprecado, usando config/fallback.");
+      console.warn("[EmailService/DisconnAlert] Argumento 'recipients' deprecado.");
     }
 
-    // **** OBTENER DESTINATARIOS DINÁMICOS ****
-    const { toRecipients, bccRecipients, usedFallback, usedEmergency } = await this._getDynamicRecipients('DisconnAlert');
+    // Destinatarios solo desde ale_suscripciones_notificacion (canal email), filtrados por shouldSendNotification
+    const { toRecipients } = await this._getRecipientsFromSubscriptions(2, 1); // 2=desconexion, 1=ubibot
 
     if (toRecipients.length === 0) {
-      console.error("[EmailService/DisconnAlert] No se pudieron determinar destinatarios válidos (ni siquiera emergencia). Abortando envío.");
-      this.metrics.lastError = "Sin destinatarios TO válidos para DisconnAlert";
+      console.log("[EmailService/DisconnAlert] No hay suscriptores activos para desconexión/email en este momento (o no pasan horario). No se envía.");
+      this.metrics.lastError = "Sin destinatarios para DisconnAlert (suscripciones/horario)";
       return false;
     }
-    if (usedEmergency) {
-      console.warn(`[EmailService/DisconnAlert] ¡¡¡ENVIANDO A DESTINATARIO DE EMERGENCIA!!! (${toRecipients.join(', ')})`);
-    } else if (usedFallback) {
-      console.warn(`[EmailService/DisconnAlert] Usando destinatarios TO de fallback (${toRecipients.join(', ')})`);
-    }
+    console.log(`[EmailService/DisconnAlert] Enviando a ${toRecipients.length} destinatario(s): ${toRecipients.join(', ')}`);
 
     const formattedDateTime = DateTime.now().setZone(this.timeZone).toFormat("dd-MM HH:mm");
     const subject = `Alerta de Conexión / Desconexión - ${formattedDateTime}`;
     const { html, text } = this._formatDisconnectionAlertContent(disconnectedChannels);
 
     let attempt1Success = false;
-    // ... (Lógica de intento 1 con BCC y fallbacks A/B idéntica a la de temperatura, usando las listas obtenidas) ...
-    try { // Intento 1
-      console.log("[EmailService/DisconnAlert] Iniciando Intento 1 (con BCC/emergencia)...");
+    try {
+      console.log("[EmailService/DisconnAlert] Iniciando envío a suscriptores...");
       const msgAttempt1 = { to: toRecipients, subject, text, html };
-      if (!usedEmergency && bccRecipients && bccRecipients.length > 0) { msgAttempt1.bcc = bccRecipients; }
-      else if (usedEmergency) { console.warn("[EmailService/DisconnAlert] Omitiendo BCC debido a envío de emergencia."); }
-      else { console.log("[EmailService/DisconnAlert] Lista BCC está vacía o no aplica, enviando sin BCC en Intento 1."); }
       attempt1Success = await this._sendMail(msgAttempt1);
       if (attempt1Success) {
-        console.log("[EmailService/DisconnAlert] Intento 1 (con BCC/emergencia) EXITOSO.");
-        this.recordEmailSuccess(subject + (usedEmergency ? " (EMERGENCIA)" : (msgAttempt1.bcc ? " (con BCC)" : "")), toRecipients.length + (msgAttempt1.bcc ? msgAttempt1.bcc.length : 0));
-        this.metrics.sentAlerts++; this.metrics.lastSuccessTime = new Date(); return true;
-      } else {
-        console.warn("[EmailService/DisconnAlert] Intento 1 (con BCC/emergencia) falló (reportado por _sendMail como false). Procediendo a fallback (si aplica)...");
-        this.metrics.failedAlerts++;
+        console.log("[EmailService/DisconnAlert] Envío EXITOSO.");
+        this.recordEmailSuccess(subject, toRecipients.length);
+        this.metrics.sentAlerts++; this.metrics.lastSuccessTime = new Date();
+        return true;
       }
+      this.metrics.failedAlerts++;
     } catch (error) {
-      console.error("[EmailService/DisconnAlert] Intento 1 (con BCC/emergencia) falló con EXCEPCIÓN. Procediendo a fallback (si aplica)...");
+      console.error("[EmailService/DisconnAlert] Envío falló con EXCEPCIÓN:", error.message);
       this.metrics.failedAlerts++;
     }
-    if (!attempt1Success && !usedEmergency) { // Fallback
-      console.log("[EmailService/DisconnAlert] Ejecutando Fallback (envío sin BCC)...");
-      try { // Fallback A
-        console.log("[EmailService/DisconnAlert] Fallback A: Enviando solo a destinatarios principales...");
+    if (!attempt1Success) {
+      try {
         const msgFallbackA = { to: toRecipients, subject, text, html };
-        if (await this._sendMail(msgFallbackA)) console.log("[EmailService/DisconnAlert] Fallback A EXITOSO.");
-        else { console.error("[EmailService/DisconnAlert] Fallback A FALLÓ."); this.recordEmailError(subject + " (Fallback Principales)", this.metrics.lastError || "Error desconocido en Fallback A"); }
-      } catch (error) { console.error("[EmailService/DisconnAlert] Fallback A falló con EXCEPCIÓN:", error.message); this.recordEmailError(subject + " (Fallback Principales)", error.message); }
-      if (bccRecipients && bccRecipients.length > 0) { // Fallback B
-        try {
-          console.log("[EmailService/DisconnAlert] Fallback B: Enviando copia a 'BCC' como destinatarios TO...");
-          const msgFallbackB = { to: bccRecipients, subject, text, html };
-          if (await this._sendMail(msgFallbackB)) console.log("[EmailService/DisconnAlert] Fallback B EXITOSO.");
-          else { console.error("[EmailService/DisconnAlert] Fallback B FALLÓ."); this.recordEmailError(subject + " (Fallback BCC como TO)", this.metrics.lastError || "Error desconocido en Fallback B"); }
-        } catch (error) { console.error("[EmailService/DisconnAlert] Fallback B falló con EXCEPCIÓN:", error.message); this.recordEmailError(subject + " (Fallback BCC como TO)", error.message); }
-      } else { console.log("[EmailService/DisconnAlert] Fallback B omitido: Lista BCC estaba vacía."); }
-    } else if (!attempt1Success && usedEmergency) {
-      console.error("[EmailService/DisconnAlert] El envío al destinatario de EMERGENCIA también falló.");
+        if (await this._sendMail(msgFallbackA)) {
+          console.log("[EmailService/DisconnAlert] Fallback EXITOSO.");
+          this.metrics.sentAlerts++; this.metrics.lastSuccessTime = new Date();
+          return true;
+        }
+      } catch (err) {
+        console.error("[EmailService/DisconnAlert] Fallback falló:", err.message);
+      }
     }
-
     return attempt1Success;
   }
 

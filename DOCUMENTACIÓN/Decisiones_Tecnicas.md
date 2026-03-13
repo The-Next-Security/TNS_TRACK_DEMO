@@ -20,6 +20,7 @@
 8. [Notificaciones: Email + Push (NO SMS)](#8-notificaciones-email--push-no-sms)
 9. [MySQL como Base de Datos Principal](#9-mysql-como-base-de-datos-principal)
 10. [Estandarización de Librería de Fechas con Luxon](#10-estandarización-de-librería-de-fechas-con-luxon)
+11. [Modelo unificado de notificaciones y horarios](#11-modelo-unificado-de-notificaciones-y-horarios)
 
 ---
 
@@ -212,6 +213,27 @@ pushService.js        // Web Push 3.6.7
 
 ---
 
+## 11. Modelo unificado de notificaciones y horarios
+
+### Contexto
+Las suscripciones de notificación y los criterios de envío estaban repartidos entre email (ale_suscripciones_email) y push, con lógica de horario duplicada y sin horarios configurables por tipo de alerta ni por usuario.
+
+### Decisión
+- **Una sola tabla de suscripciones:** `ale_suscripciones_notificacion` por usuario/tipo/origen y **canal** (email o push). Reemplaza `ale_suscripciones_email`.
+- **Horarios base por tipo y canal:** `ale_horarios_alerta_canal` definidos por administradores (tipo de alerta, canal, día de la semana). **dia_semana = 0** indica regla para **día feriado** (permite ventana distinta en feriados).
+- **Horarios personalizados por usuario:** `ale_horarios_usuario`. Si el usuario tiene filas para (usuario, tipo, canal), se usa esta tabla como horario efectivo; si no, se usa el horario base.
+- **Un único servicio de decisión:** `notificationSchedule_Service.shouldSendNotification()` responde “¿enviar o no?” usando horario efectivo (usuario si existe, si no base), ventana, intersección con `gen_horario_operacional`, feriados (`gen_feriados_cl`) y, para push, DND (`ale_preferencias_push`).
+- **Eliminación de tablas obsoletas:** `ale_suscripciones_email` y `log_ale_suscripciones_email` (y triggers asociados) eliminados; creación desde cero y migración alineadas al modelo unificado.
+
+### Rationale
+- Un solo lugar para decidir envío; email y push comparten suscripciones y reglas de ventana.
+- Administradores definen cuándo se envían alertas por tipo (ej. temperatura fuera de horario laboral; feriados todas las horas); usuarios pueden sobrescribir con sus propias ventanas.
+
+### Estado Actual
+✅ **Implementado** - Modelo unificado en BD, servicio único de decisión, APIs y frontend para horarios base (admin) y horarios usuario (mis horarios).
+
+---
+
 ## 9. MySQL como Base de Datos Principal
 
 ### Contexto
@@ -319,6 +341,7 @@ Plan de alineación de todos los endpoints con el esquema de BD definido en SQL_
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
 | 2026-03-12 | Alineación endpoints con BD: ubi_canal+id_preset (Opción A), rep_plantillas/rep_reportes_generados, presets | andresTNS, Bufigol |
+| 2026-03-11 | Modelo unificado de notificaciones: ale_suscripciones_notificacion, horarios base/custom, servicio único de decisión; eliminación ale_suscripciones_email | Plan Notificaciones unificadas |
 | 2026-03-11 | Estandarización de fechas: Luxon como única librería (Issue #5) | andresTNS, Bufigol |
 | 2026-01-26 | Documentación actualizada según feedback Issue #2 | andresTNS, Bufigol |
 | 2026-01-22 | Documentación completa de decisiones técnicas | andresTNS, Bufigol |

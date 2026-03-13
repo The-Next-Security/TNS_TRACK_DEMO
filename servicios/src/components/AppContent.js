@@ -23,6 +23,7 @@ import ParametroTempCamaras from "./ParametroTempCamaras_View";
 import TemperaturePowerAnalysis from "./TemperaturePowerAnalysis_View";
 import AlertManagementView from "./AlertManagement_View";
 import AlertNotificationConfigView from "./AlertNotificationConfig_View";
+import NotificationHorariosEnvioView from "./NotificationHorariosEnvio_View";
 import AlertMetricsDashboardView from "./AlertMetricsDashboard_View";
 import ReportDashboardView from "./reports/ReportDashboard_View";
 import AIAnalysisView from "./AIAnalysis_View";
@@ -241,6 +242,14 @@ function AppContent() {
           element={
             <PrivateRoute userPermissions={userPermissions}>
               <AlertNotificationConfigView />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/configuracion-horarios-envio"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <NotificationHorariosEnvioView />
             </PrivateRoute>
           }
         />
