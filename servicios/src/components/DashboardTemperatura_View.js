@@ -57,7 +57,7 @@ const SevenSegmentDisplay = ({ value, isOutOfRange = false }) => {
         }
 
         // VERDE: Temperatura dentro del rango permitido (minimo <= temp <= maximo)
-        // Aplica para todas las cámaras según su grupo de parametrizaciones
+        // Aplica para todas las cámaras según su preset de grupo (ubi_presets_temperatura)
         return {
             text: "text-green-400",
             glow: "drop-shadow-[0_0_8px_rgba(34,197,94,0.7)]",
