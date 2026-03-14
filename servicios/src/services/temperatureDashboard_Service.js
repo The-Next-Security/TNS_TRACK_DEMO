@@ -89,24 +89,25 @@ class TemperatureDashboardService {
    */
   async getLatestTemperatureData() {
     try {
-      // Usar la misma consulta que ya funciona en ubibotController.js pero corregida
+      // Migrado: channels_ubibot → ubi_canal; sensor_readings_ubibot → ubi_lecturas_sensor
+      // Aliases para compatibilidad con JS downstream (channel_id, name, external_temperature, etc.)
       const query = `
-        SELECT 
-          c.channel_id, 
-          c.name, 
-          s.external_temperature, 
-          s.external_temperature_timestamp,
-          c.is_currently_out_of_range,
-          c.esOperativa
-        FROM channels_ubibot c
+        SELECT
+          c.canal_id AS channel_id,
+          c.nombre AS name,
+          s.temperatura_externa AS external_temperature,
+          s.fecha_lectura_externa AS external_temperature_timestamp,
+          (c.fuera_linea_desde IS NOT NULL) AS is_currently_out_of_range,
+          c.activo AS esOperativa
+        FROM ubi_canal c
         JOIN (
-          SELECT channel_id, external_temperature, external_temperature_timestamp,
-                 ROW_NUMBER() OVER (PARTITION BY channel_id ORDER BY external_temperature_timestamp DESC) as rn
-          FROM sensor_readings_ubibot
-          WHERE external_temperature IS NOT NULL
-        ) s ON c.channel_id = s.channel_id
-        WHERE s.rn = 1 AND c.esOperativa = 1
-        ORDER BY c.name
+          SELECT id_canal, temperatura_externa, fecha_lectura_externa,
+                 ROW_NUMBER() OVER (PARTITION BY id_canal ORDER BY fecha_lectura_externa DESC) AS rn
+          FROM ubi_lecturas_sensor
+          WHERE temperatura_externa IS NOT NULL
+        ) s ON c.id_canal = s.id_canal
+        WHERE s.rn = 1 AND c.activo = 1
+        ORDER BY c.nombre
       `;
 
       const results = await databaseService.query(query);
@@ -383,32 +384,33 @@ class TemperatureDashboardService {
         "[TemperatureDashboardService] Cargando mapeos de nombres desde BD..."
       );
 
-      // Consulta para obtener nombres únicos de dispositivos de temperatura con su ubicación real
+      // Migrado: channels_ubibot → ubi_canal; catalogo_ubicaciones_reales → gen_ubicaciones_reales
+      // (columna nombre en lugar de nombre_ubicacion; FK id_ubicacion_real en lugar de ubicacion_real)
       const tempNamesQuery = `
-        SELECT DISTINCT 
-          LOWER(TRIM(c.name)) as temp_name,
-          LOWER(TRIM(cur.nombre_ubicacion)) as temp_ubicacion_nombre
-        FROM channels_ubibot c
-        INNER JOIN catalogo_ubicaciones_reales cur ON c.ubicacion_real = cur.idcatalogo_ubicaciones_reales
-        WHERE c.name IS NOT NULL 
-        AND c.name != ''
-        AND c.esOperativa = 1
+        SELECT DISTINCT
+          LOWER(TRIM(c.nombre)) AS temp_name,
+          LOWER(TRIM(cur.nombre)) AS temp_ubicacion_nombre
+        FROM ubi_canal c
+        INNER JOIN gen_ubicaciones_reales cur ON c.id_ubicacion_real = cur.id_ubicacion_real
+        WHERE c.nombre IS NOT NULL
+        AND c.nombre != ''
+        AND c.activo = 1
       `;
 
-      // Consulta para obtener nombres únicos de ubicaciones eléctricas
-      // (las que tienen dispositivos eléctricos activos)
+      // Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales;
+      // sem_dispositivos.ubicacion → sem_dispositivos.id_ubicacion_real
       const electricNamesQuery = `
-        SELECT DISTINCT 
-          LOWER(TRIM(cur.nombre_ubicacion)) as electric_name
-        FROM catalogo_ubicaciones_reales cur
-        INNER JOIN sem_dispositivos sd ON cur.idcatalogo_ubicaciones_reales = sd.ubicacion
+        SELECT DISTINCT
+          LOWER(TRIM(cur.nombre)) AS electric_name
+        FROM gen_ubicaciones_reales cur
+        INNER JOIN sem_dispositivos sd ON cur.id_ubicacion_real = sd.id_ubicacion_real
         INNER JOIN sem_mediciones sm ON sd.shelly_id = sm.shelly_id
-        WHERE cur.nombre_ubicacion IS NOT NULL 
-        AND cur.nombre_ubicacion != ''
+        WHERE cur.nombre IS NOT NULL
+        AND cur.nombre != ''
         AND sd.activo = 1
         AND sm.timestamp_local > DATE_SUB(NOW(), INTERVAL 7 DAY)
         AND sm.fase = 'TOTAL'
-        GROUP BY cur.nombre_ubicacion
+        GROUP BY cur.nombre
       `;
 
       const [tempNames, electricNames] = await Promise.all([
@@ -584,11 +586,11 @@ class TemperatureDashboardService {
    */
   async getAllChannels() {
     try {
-      // Usar la misma consulta que ya existe en ubibotController
+      // Migrado: channels_ubibot → ubi_canal; aliases para compatibilidad JS
       const query = `
-        SELECT channel_id, name, esOperativa 
-        FROM channels_ubibot 
-        ORDER BY name
+        SELECT canal_id AS channel_id, nombre AS name, activo AS esOperativa
+        FROM ubi_canal
+        ORDER BY nombre
       `;
 
       const results = await databaseService.query(query);
