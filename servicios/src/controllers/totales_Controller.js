@@ -66,7 +66,7 @@ class TotalesController {
                 JOIN
                     sem_dispositivos AS dispo ON tot.shelly_id = dispo.shelly_id
                 JOIN 
-                    catalogo_ubicaciones_reales AS cur ON dispo.ubicacion = cur.idcatalogo_ubicaciones_reales
+                    gen_ubicaciones_reales AS cur ON dispo.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
                 LEFT JOIN 
                     sem_grupos AS sg ON dispo.grupo_id = sg.id
                 WHERE 
@@ -160,7 +160,7 @@ class TotalesController {
         std.cantidad_datos
       FROM sem_totales_dia std
       JOIN sem_dispositivos sd ON std.shelly_id = sd.shelly_id
-      JOIN catalogo_ubicaciones_reales cur ON sd.ubicacion = cur.idcatalogo_ubicaciones_reales
+      JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
       LEFT JOIN sem_grupos sg ON sd.grupo_id = sg.id
       CROSS JOIN LatestUpdate lu
       WHERE
@@ -265,11 +265,11 @@ class TotalesController {
                     sem_totales_mes stm
                 JOIN 
                     sem_dispositivos sd ON stm.shelly_id = sd.shelly_id
-                JOIN 
-                    catalogo_ubicaciones_reales cur ON sd.ubicacion = cur.idcatalogo_ubicaciones_reales
-                LEFT JOIN 
+                JOIN
+                    gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
+                LEFT JOIN
                     sem_grupos sg ON sd.grupo_id = sg.id
-                WHERE 
+                WHERE
                     stm.año = ?
                     AND stm.shelly_id = ?
                     AND sd.activo = 1
@@ -321,9 +321,9 @@ class TotalesController {
                 SELECT 
                     sd.shelly_id,
                     sd.activo,
-                    cur.nombre_ubicacion
+                    cur.nombre AS nombre_ubicacion -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales; nombre_ubicacion → nombre aliasado
                 FROM sem_dispositivos sd
-                JOIN catalogo_ubicaciones_reales cur ON sd.ubicacion = cur.idcatalogo_ubicaciones_reales
+                JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
                 WHERE sd.shelly_id = ?
                 LIMIT 1
             `;
@@ -650,10 +650,10 @@ class TotalesController {
                     sd.shelly_id,
                     sd.nombre as dispositivo_nombre,
                     sd.grupo_id,
-                    cur.nombre_ubicacion,
+                    cur.nombre AS nombre_ubicacion, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales; nombre_ubicacion → nombre aliasado
                     sg.nombre as grupo_nombre
                 FROM sem_dispositivos sd
-                JOIN catalogo_ubicaciones_reales cur ON sd.ubicacion = cur.idcatalogo_ubicaciones_reales
+                JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
                 LEFT JOIN sem_grupos sg ON sd.grupo_id = sg.id
                 WHERE sd.shelly_id = ?
                 LIMIT 1
