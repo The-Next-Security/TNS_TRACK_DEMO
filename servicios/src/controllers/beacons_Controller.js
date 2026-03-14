@@ -436,6 +436,7 @@ class beaconsController {
         const { date } = req.query;
         const query = `
             SELECT rt.beacon_id, rt.temperatura, rt.timestamp, b.lugar, b.ubicacion,
+                    -- TODO: Migrar a ubi_presets_temperatura — pendiente definir id_preset equivalente a param_id=6 (ver Issue #32)
                     (SELECT minimo FROM parametrizaciones WHERE param_id = 6) AS minimo,
                     (SELECT maximo FROM parametrizaciones WHERE param_id = 6) AS maximo
             FROM registro_temperaturas rt
