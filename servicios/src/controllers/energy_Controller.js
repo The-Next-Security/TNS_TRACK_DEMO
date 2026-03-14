@@ -102,15 +102,15 @@ class EnergyController {
                     COALESCE(ROUND(AVG(m.potencia_activa) * 300 / (3600 * 1000), 6), 0) as consumo_kwh
                 FROM sem_mediciones m
                 JOIN sem_dispositivos d ON m.shelly_id = d.shelly_id
-                JOIN catalogo_ubicaciones_reales cur ON d.ubicacion = cur.idcatalogo_ubicaciones_reales
+                JOIN gen_ubicaciones_reales cur ON d.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
                 WHERE d.activo = 1
                 AND m.fase = 'TOTAL'
                 AND m.timestamp_local >= ?
                 AND m.timestamp_local < ?
-                GROUP BY 
+                GROUP BY
                     d.shelly_id,
                     d.nombre,
-                    cur.nombre_ubicacion,
+                    cur.nombre,
                     DATE_FORMAT(
                         DATE_SUB(m.timestamp_local, 
                                 INTERVAL MOD(MINUTE(m.timestamp_local), 5) MINUTE
@@ -149,9 +149,9 @@ class EnergyController {
     
             // Verificar dispositivo
             const [deviceInfo] = await databaseService.pool.query(
-                `SELECT d.nombre as device_name, cur.nombre_ubicacion as location 
+                `SELECT d.nombre as device_name, cur.nombre as location -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
                  FROM sem_dispositivos d
-                 JOIN catalogo_ubicaciones_reales cur ON d.ubicacion = cur.idcatalogo_ubicaciones_reales
+                 JOIN gen_ubicaciones_reales cur ON d.id_ubicacion_real = cur.id_ubicacion_real
                  WHERE d.shelly_id = ?`,
                 [shellyId]
             );    
