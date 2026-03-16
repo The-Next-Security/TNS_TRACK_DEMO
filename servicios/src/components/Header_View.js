@@ -94,19 +94,22 @@ const HeaderV2 = ({ title, image }) => {
       console.error('[Analytics] Error tracking logout:', error);
     }
 
-    // Clear auth cookies via /logout endpoint
+    // Limpiar tokens de localStorage y revocar refresh en servidor
+    const refreshToken = localStorage.getItem('refreshToken');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem("token");
+    localStorage.removeItem("permissions");
+
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(refreshToken ? { refreshToken } : {})
       });
     } catch (error) {
       console.error('[Header] Error calling /logout:', error);
     }
-
-    // Clean up localStorage (legacy)
-    localStorage.removeItem("token");
-    localStorage.removeItem("permissions");
 
     // Redirect to login
     navigate("/");
