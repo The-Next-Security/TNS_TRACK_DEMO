@@ -1,50 +1,127 @@
-// axiosInterceptor.js
-// Global axios interceptor for handling 401 Unauthorized responses
-// Feature: 003-fix-session-expiry-handling
+// axiosInterceptor_Utils.js
+// Interceptores globales de axios: agrega Authorization header y maneja refresh automático en 401
 
 import axios from 'axios';
 
+// Flag para evitar múltiples intentos de refresh simultáneos
+let isRefreshing = false;
+// Cola de requests pendientes mientras se refresca el token
+let failedQueue = [];
+
+function processQueue(error, token = null) {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
+    }
+  });
+  failedQueue = [];
+}
+
 /**
- * Setup global axios interceptor to dispatch auth:unauthorized events on 401 responses
- * This captures ALL axios requests across the application (40+ files)
+ * Configura los interceptores globales de axios:
+ * 1. Request: añade Authorization: Bearer <accessToken> a cada llamada
+ * 2. Response: ante 401, intenta refresh automático; si falla, dispara auth:unauthorized
  *
- * Call this ONCE at application startup (App.js useEffect)
+ * Llamar ONCE al iniciar la aplicación (App.js useEffect)
  *
  * @example
- * import { setupAxiosInterceptor } from './utils/axiosInterceptor';
- *
- * useEffect(() => {
- *   setupAxiosInterceptor();
- * }, []);
+ * import { setupAxiosInterceptor } from './utils/axiosInterceptor_Utils';
+ * useEffect(() => { setupAxiosInterceptor(); }, []);
  */
 export function setupAxiosInterceptor() {
-  // Add response interceptor
+  // ─── Interceptor REQUEST: añadir token a cada llamada ───────────────────────
+  axios.interceptors.request.use(
+    (config) => {
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    },
+    (error) => Promise.reject(error)
+  );
+
+  // ─── Interceptor RESPONSE: manejar 401 con refresh automático ───────────────
   axios.interceptors.response.use(
-    // Pass through successful responses (2xx status codes)
     (response) => response,
 
-    // Handle errors (4xx, 5xx status codes)
-    (error) => {
-      // Intercept 401 Unauthorized responses
-      if (error.response && error.response.status === 401) {
-        console.log('[axiosInterceptor] 🔴 401 Unauthorized detected:', error.config?.url);
+    async (error) => {
+      const original = error.config;
 
-        // Dispatch custom event to trigger logout flow
-        // This event is listened to by App.js
-        window.dispatchEvent(new CustomEvent('auth:unauthorized', {
-          detail: {
-            url: error.config?.url || 'unknown',
-            timestamp: Date.now(),
-            method: error.config?.method || 'unknown',
-            source: 'axios'
-          }
-        }));
+      // Solo interceptar 401 que no sean del propio endpoint /refresh o /logout
+      const isAuthEndpoint =
+        original?.url?.includes('/api/auth/refresh') ||
+        original?.url?.includes('/api/auth/logout') ||
+        original?.url?.includes('/api/usuarios/login');
+
+      if (error.response?.status === 401 && !original._retry && !isAuthEndpoint) {
+        console.log('[axiosInterceptor] 🔄 401 detectado, intentando refresh:', original?.url);
+
+        if (isRefreshing) {
+          // Encolar request mientras se está refrescando
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then((token) => {
+              original.headers.Authorization = `Bearer ${token}`;
+              return axios(original);
+            })
+            .catch((err) => Promise.reject(err));
+        }
+
+        original._retry = true;
+        isRefreshing = true;
+
+        const refreshToken = localStorage.getItem('refreshToken');
+
+        if (!refreshToken) {
+          isRefreshing = false;
+          processQueue(new Error('No refresh token'));
+          _dispatchUnauthorized(original?.url);
+          return Promise.reject(error);
+        }
+
+        try {
+          const { data } = await axios.post('/api/auth/refresh', { refreshToken });
+          localStorage.setItem('accessToken', data.accessToken);
+          localStorage.setItem('refreshToken', data.refreshToken);
+          console.log('[axiosInterceptor] ✅ Token refrescado exitosamente');
+          processQueue(null, data.accessToken);
+          original.headers.Authorization = `Bearer ${data.accessToken}`;
+          return axios(original);
+        } catch (refreshError) {
+          processQueue(refreshError, null);
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          _dispatchUnauthorized(original?.url);
+          return Promise.reject(refreshError);
+        } finally {
+          isRefreshing = false;
+        }
       }
 
-      // Re-throw error so components can handle it locally if needed
+      // 401 en endpoints de auth o requests que ya se reintentaron
+      if (error.response?.status === 401 && isAuthEndpoint) {
+        _dispatchUnauthorized(original?.url);
+      }
+
       return Promise.reject(error);
     }
   );
 
-  console.log('[axiosInterceptor] ✅ Global axios interceptor configured');
+  console.log('[axiosInterceptor] ✅ Interceptores globales configurados (Authorization header + auto-refresh)');
+}
+
+function _dispatchUnauthorized(url) {
+  console.log('[axiosInterceptor] 🔴 Sesión expirada o inválida:', url);
+  window.dispatchEvent(new CustomEvent('auth:unauthorized', {
+    detail: {
+      url: url || 'unknown',
+      timestamp: Date.now(),
+      source: 'axios'
+    }
+  }));
 }
