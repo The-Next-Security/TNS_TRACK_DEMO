@@ -6,6 +6,13 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 module.exports = {
   mode: "development", // O 'production' al desplegar
   entry: path.resolve(__dirname, "src", "index.js"),
+  // Suprimir warning de require() dinámico en react-datepicker (issue conocido del paquete)
+  ignoreWarnings: [
+    {
+      module: /react-datepicker/,
+      message: /Critical dependency/,
+    },
+  ],
   plugins: [
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "src", "index.html"),
