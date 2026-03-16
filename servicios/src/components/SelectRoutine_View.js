@@ -330,8 +330,9 @@ const SelectRoutineV2 = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Obtener permisos desde el endpoint de validación (usando cookies httpOnly)
-    fetch('/api/auth/validate', { credentials: 'include' })
+    // ✅ Obtener permisos desde el endpoint de validación
+    const _token = localStorage.getItem('accessToken');
+    fetch('/api/auth/validate', { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && data.user) {
