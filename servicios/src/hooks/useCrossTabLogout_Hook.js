@@ -39,10 +39,14 @@ export function useCrossTabLogout(onLogout) {
         timestamp: logoutData.timestamp
       });
 
-      // Call logout endpoint to clear cookies
+      // Limpiar tokens locales y notificar al servidor
+      const _rt = localStorage.getItem('refreshToken');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
       fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(_rt ? { refreshToken: _rt } : {})
       }).catch((error) => {
         console.error('[useCrossTabLogout] Error calling /logout:', error);
       });
