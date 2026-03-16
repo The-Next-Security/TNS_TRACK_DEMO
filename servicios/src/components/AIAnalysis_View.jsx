@@ -54,8 +54,9 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
   const fetchChambers = async () => {
     try {
       setLoadingChambers(true);
+      const _tok = localStorage.getItem('accessToken');
       const response = await fetch('/api/ia/analisis/chambers', {
-        credentials: 'include'
+        headers: _tok ? { Authorization: `Bearer ${_tok}` } : {}
       });
 
       if (!response.ok) {
@@ -112,12 +113,13 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
 
       console.log('[AIAnalysis] Enviando query:', requestBody);
 
+      const _tok2 = localStorage.getItem('accessToken');
       const response = await fetch('/api/ia/analisis/query', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          ...(_tok2 ? { Authorization: `Bearer ${_tok2}` } : {})
         },
-        credentials: 'include',
         body: JSON.stringify(requestBody)
       });
 
