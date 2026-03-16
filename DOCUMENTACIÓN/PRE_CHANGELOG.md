@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-16 — @Bufigol ([#13](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/13))
+- **chore** `documentation, SQL - BBDD, back-end, analytics, front-end` | [FASE 0] Planificación y Fundamentos — Actualización de documentación (Closes #9)
+
+
 ### 2026-03-13 — @andresTNS ([#18](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/18))
 - **refactor** `documentation, SQL - BBDD, back-end, front-end` | eliminar dependencias y código comentado obsoleto
 
