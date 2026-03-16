@@ -10,6 +10,7 @@ import { setLogoutReason } from '../utils/session_Utils';
 import { broadcastLogout } from '../utils/crossTabSync_Utils';
 import { useCrossTabLogout } from '../hooks/useCrossTabLogout_Hook';
 import analyticsService from '../services/analytics_Service';
+import { useAuth } from '../context/AuthContext';
 
 // Warning threshold: show warning 5 minutes before expiry
 const WARNING_THRESHOLD_SECONDS = 300;
@@ -31,12 +32,11 @@ function _performLogout(reason) {
 
 /**
  * SessionManager Component
- * Monitors session expiration and shows warning when threshold is reached
- *
- * @param {Object} props
- * @param {boolean} props.isAuthenticated - Whether user is authenticated
+ * Monitors session expiration and shows warning when threshold is reached.
+ * Obtiene isAuthenticated desde AuthContext (fuente única de verdad).
  */
-export function SessionManager({ isAuthenticated, children }) {
+export function SessionManager({ children }) {
+  const { isAuthenticated } = useAuth();
   const [sessionData, setSessionData] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
 
