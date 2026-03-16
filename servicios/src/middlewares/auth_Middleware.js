@@ -25,57 +25,12 @@ class AuthMiddleware {
         });
     }
 
-    setAuthCookies(req, res, access, refresh, opts = {}) {
-        const isProduction = process.env.NODE_ENV === 'production';
-
-        // ✅ Configuración de cookies más segura
-        const common = {
-            httpOnly: true, // ✅ Protección XSS
-            secure: isProduction, // ✅ HTTPS obligatorio en producción
-            sameSite: isProduction ? 'strict' : 'lax', // ✅ Más restrictivo en producción
-            path: '/', // ✅ CRÍTICO: Cookie disponible en todas las rutas
-            ...opts
-        };
-
-        // ✅ Tiempos de expiración ajustados
-        res.cookie('access', access, {
-            ...common,
-            maxAge: 15 * 60 * 1000 // 15 minutos
-        });
-
-        res.cookie('refresh', refresh, {
-            ...common,
-            maxAge: 7 * 24 * 60 * 60 * 1000 // ✅ 7 días en vez de 30
-        });
-    }
-
-    clearAuthCookies(res) {
-        res.clearCookie('access');
-        res.clearCookie('refresh');
-    }
-
     async authenticate(req, res, next) {
-        const cookieToken = req.cookies && req.cookies.access ? req.cookies.access : null;
         const authHeader = req.headers.authorization;
-        const headerToken = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
-        const token = cookieToken || headerToken;
+        const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : null;
 
-        // ✅ DEV BYPASS: Si no hay token y estamos en desarrollo, crear usuario mock
         if (!token) {
-            const isProduction = process.env.NODE_ENV === 'production';
-            if (!isProduction) {
-                req.user = {
-                    userId: 1,
-                    id: 1,
-                    email: 'dev@localhost',
-                    username: 'dev-admin',
-                    role: 'admin',
-                    permissions: ['generate_reports', 'send_reports', 'schedule_reports', 'download_reports', 'admin'],
-                    exp: Math.floor(Date.now() / 1000) + 3600 // 1 hour from now
-                };
-                return next();
-            }
-            return next(new AuthenticationError('No authentication token provided or invalid format'));
+            return next(new AuthenticationError('No authentication token provided'));
         }
 
         try {
