@@ -36,3 +36,4 @@ SPRINGBOOT_MIGRATION_CONTEXT.md
 
 # Script de migración (herramienta interna, no va a GitHub)
 migracion/
+servicios/public/bundle.js
