@@ -178,8 +178,8 @@ const EmailModal = ({ isOpen, onClose, report, onSuccess }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`
         },
-        credentials: 'include',
         body: JSON.stringify({
           reportId: report.id,
           recipients: recipients,
