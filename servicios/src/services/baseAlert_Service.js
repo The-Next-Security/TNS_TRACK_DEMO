@@ -174,7 +174,7 @@ class BaseAlertService {
 
             // Consultar tabla de feriados usando el databaseService
             const [rows] = await alertScheduleConfigService.databaseService.pool.execute(
-                "SELECT 1 FROM feriados_cl WHERE fecha = ?",
+                "SELECT 1 FROM gen_feriados_cl WHERE fecha = ?", // Migrado: feriados_cl → gen_feriados_cl
                 [formattedDate]
             );
 

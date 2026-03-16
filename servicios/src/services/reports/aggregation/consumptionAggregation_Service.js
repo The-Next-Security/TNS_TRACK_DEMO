@@ -212,13 +212,13 @@ async function getDeviceStatistics(deviceIds, startDate, endDate, tariffs = DEFA
         
       FROM sem_dispositivos sd
       INNER JOIN sem_mediciones m ON sd.shelly_id = m.shelly_id
-      LEFT JOIN catalogo_ubicaciones_reales cur ON sd.ubicacion = cur.idcatalogo_ubicaciones_reales
+      LEFT JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
       WHERE sd.shelly_id IN (${placeholders})
         AND m.fase = 'TOTAL'
         AND DATE(m.timestamp_local) BETWEEN ? AND ?
         AND m.potencia_activa IS NOT NULL
         AND m.calidad_lectura IN ('NORMAL', 'INTERPOLADA')
-      GROUP BY sd.shelly_id, sd.nombre, cur.nombre_ubicacion
+      GROUP BY sd.shelly_id, sd.nombre, cur.nombre
       ORDER BY totalKWh DESC
     `;
 

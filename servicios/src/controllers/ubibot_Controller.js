@@ -349,40 +349,39 @@ class UbibotController {
   async getTemperatureDashboardData(req, res) {
 
     try {
-      // Query actualizada para usar umbrales individuales
+      // Query migrada al nuevo schema (ubi_canal, ubi_lecturas_sensor, ubi_presets_temperatura)
+      // SUPUESTO #3: ubi_canal no tiene columnas threshold_min/threshold_max individuales por canal.
+      // Se usan siempre los umbrales del preset del grupo (ubi_presets_temperatura).
+      // threshold_type siempre retorna 'group'; threshold_updated_at/by retornan NULL.
       const query = `
          SELECT
-           c.channel_id,
-           c.name,
-           s.external_temperature,
-           s.external_temperature_timestamp,
-           c.is_currently_out_of_range,
-           -- Usar umbrales individuales si existen, sino usar los de parametrizaciones
-           COALESCE(c.threshold_min, p.minimo) as minimo,
-           COALESCE(c.threshold_max, p.maximo) as maximo,
-           c.threshold_updated_at,
-           c.threshold_updated_by,
-           p.param_id,
-           -- Indicador si está usando umbrales individuales o grupales
+           c.canal_id AS channel_id,
+           c.nombre AS name,
+           s.temperatura_externa AS external_temperature,
+           s.fecha_lectura_externa AS external_temperature_timestamp,
+           -- is_currently_out_of_range: en nuevo schema se infiere de fuera_linea_desde
+           (c.fuera_linea_desde IS NOT NULL) AS is_currently_out_of_range,
+           p.temperatura_minima AS minimo,
+           p.temperatura_maxima AS maximo,
+           NULL AS threshold_updated_at,
+           NULL AS threshold_updated_by,
+           p.id_preset AS param_id,
+           'group' AS threshold_type,
+           -- Calcular si la temperatura está fuera de los umbrales del preset
            CASE
-             WHEN c.threshold_min IS NOT NULL THEN 'individual'
-             ELSE 'group'
-           END as threshold_type,
-           -- Calcular si la temperatura está fuera de los umbrales configurados
-           CASE
-             WHEN s.external_temperature < COALESCE(c.threshold_min, p.minimo) THEN 1
-             WHEN s.external_temperature > COALESCE(c.threshold_max, p.maximo) THEN 1
+             WHEN s.temperatura_externa < p.temperatura_minima THEN 1
+             WHEN s.temperatura_externa > p.temperatura_maxima THEN 1
              ELSE 0
            END AS is_temperature_out_of_range
-         FROM channels_ubibot c
+         FROM ubi_canal c
          JOIN (
-           SELECT channel_id, external_temperature, external_temperature_timestamp,
-                  ROW_NUMBER() OVER (PARTITION BY channel_id ORDER BY external_temperature_timestamp DESC) as rn
-           FROM sensor_readings_ubibot
-         ) s ON c.channel_id = s.channel_id
-         LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
+           SELECT id_canal, temperatura_externa, fecha_lectura_externa,
+                  ROW_NUMBER() OVER (PARTITION BY id_canal ORDER BY fecha_lectura_externa DESC) AS rn
+           FROM ubi_lecturas_sensor
+         ) s ON c.id_canal = s.id_canal
+         LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
          WHERE s.rn = 1
-         ORDER BY c.name;
+         ORDER BY c.nombre;
        `;
       const results = await databaseService.query(query);
 
@@ -455,26 +454,23 @@ class UbibotController {
 
       console.log(`[UbibotController] getTemperatureCamarasData: Querying entre ${start} y ${end}`);
 
-      // Query actualizada para usar umbrales individuales
+      // Query migrada al nuevo schema (ubi_lecturas_sensor, ubi_canal, ubi_presets_temperatura)
+      // SUPUESTO #3: umbrales siempre del preset del grupo; threshold_type siempre 'group'
       const query = `
          SELECT
-           sr.id,
-           sr.channel_id,
-           sr.external_temperature,
-           sr.external_temperature_timestamp,
-           c.name,
-           -- Usar umbrales individuales si existen, sino usar los de parametrizaciones
-           COALESCE(c.threshold_min, p.minimo) as minimo,
-           COALESCE(c.threshold_max, p.maximo) as maximo,
-           CASE
-             WHEN c.threshold_min IS NOT NULL THEN 'individual'
-             ELSE 'group'
-           END as threshold_type
-         FROM sensor_readings_ubibot sr
-         JOIN channels_ubibot c ON sr.channel_id = c.channel_id
-         LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
-         WHERE sr.external_temperature_timestamp BETWEEN ? AND ?
-         ORDER BY c.name, sr.external_temperature_timestamp ASC;
+           sr.id_lectura_sensor AS id,
+           c.canal_id AS channel_id,
+           sr.temperatura_externa AS external_temperature,
+           sr.fecha_lectura_externa AS external_temperature_timestamp,
+           c.nombre AS name,
+           p.temperatura_minima AS minimo,
+           p.temperatura_maxima AS maximo,
+           'group' AS threshold_type
+         FROM ubi_lecturas_sensor sr
+         JOIN ubi_canal c ON sr.id_canal = c.id_canal
+         LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+         WHERE sr.fecha_lectura_externa BETWEEN ? AND ?
+         ORDER BY c.nombre, sr.fecha_lectura_externa ASC;
        `;
 
       const rows = await databaseService.query(query, [start, end]);
@@ -537,8 +533,9 @@ class UbibotController {
   async getTemperatureDevices(req, res) {
     console.log("[UbibotController] getTemperatureDevices: Solicitud recibida.");
     try {
+      // Migrado: channels_ubibot → ubi_canal; aliases para compatibilidad con JS
       const devices = await databaseService.query(
-        "SELECT channel_id, name FROM channels_ubibot ORDER BY name"
+        "SELECT canal_id AS channel_id, nombre AS name FROM ubi_canal ORDER BY nombre"
       );
       console.log(`[UbibotController] getTemperatureDevices: ${devices.length} dispositivos encontrados.`);
       res.json(devices);
@@ -650,22 +647,24 @@ class UbibotController {
       const startOfPreviousDay = dtPrev.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
       const endOfPreviousDay = dtPrev.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
+      // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
+      // channel_id (API ID) → id_canal via subquery en ubi_canal
       const query = `
-      (SELECT 
-        external_temperature as temperature,
-        external_temperature_timestamp as timestamp,
-        'current' as period
-      FROM sensor_readings_ubibot 
-      WHERE channel_id = ? 
-      AND external_temperature_timestamp BETWEEN ? AND ?)
+      (SELECT
+        temperatura_externa AS temperature,
+        fecha_lectura_externa AS timestamp,
+        'current' AS period
+      FROM ubi_lecturas_sensor
+      WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+      AND fecha_lectura_externa BETWEEN ? AND ?)
       UNION ALL
-      (SELECT 
-        external_temperature as temperature,
-        external_temperature_timestamp as timestamp,
-        'previous' as period
-      FROM sensor_readings_ubibot 
-      WHERE channel_id = ? 
-      AND external_temperature_timestamp BETWEEN ? AND ?)
+      (SELECT
+        temperatura_externa AS temperature,
+        fecha_lectura_externa AS timestamp,
+        'previous' AS period
+      FROM ubi_lecturas_sensor
+      WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+      AND fecha_lectura_externa BETWEEN ? AND ?)
       ORDER BY timestamp ASC
     `;
 
@@ -716,22 +715,24 @@ class UbibotController {
     console.log("  Previous Week End:", prevEndDate.toFormat("yyyy-MM-dd HH:mm:ss"));
 
     try {
+      // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
+      // channel_id (API ID) → id_canal via subquery en ubi_canal
       const query = `
-        (SELECT 
-          external_temperature as temperature,
-          external_temperature_timestamp as timestamp,
-          'current' as period
-        FROM sensor_readings_ubibot 
-        WHERE channel_id = ? 
-        AND external_temperature_timestamp BETWEEN ? AND ?)
+        (SELECT
+          temperatura_externa AS temperature,
+          fecha_lectura_externa AS timestamp,
+          'current' AS period
+        FROM ubi_lecturas_sensor
+        WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+        AND fecha_lectura_externa BETWEEN ? AND ?)
         UNION ALL
-        (SELECT 
-          external_temperature as temperature,
-          external_temperature_timestamp as timestamp,
-          'previous' as period
-        FROM sensor_readings_ubibot 
-        WHERE channel_id = ? 
-        AND external_temperature_timestamp BETWEEN ? AND ?)
+        (SELECT
+          temperatura_externa AS temperature,
+          fecha_lectura_externa AS timestamp,
+          'previous' AS period
+        FROM ubi_lecturas_sensor
+        WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+        AND fecha_lectura_externa BETWEEN ? AND ?)
         ORDER BY timestamp ASC
       `;
 
@@ -782,9 +783,9 @@ class UbibotController {
     try {
       const { channelId, date } = req.body;
 
-      // Get camera name
+      // Get camera name — migrado: channels_ubibot → ubi_canal
       const [cameraInfo] = await databaseService.pool.query(
-        "SELECT name FROM channels_ubibot WHERE channel_id = ?",
+        "SELECT nombre AS name FROM ubi_canal WHERE canal_id = ?",
         [channelId]
       );
       const cameraName = cameraInfo[0]?.name || "Unknown";
@@ -839,8 +840,9 @@ class UbibotController {
     const { channelId, date } = req.body;
 
     try {
+      // Migrado: channels_ubibot → ubi_canal
       const [cameraInfo] = await databaseService.pool.query(
-        "SELECT name FROM channels_ubibot WHERE channel_id = ?",
+        "SELECT nombre AS name FROM ubi_canal WHERE canal_id = ?",
         [channelId]
       );
       const cameraName = cameraInfo[0]?.name || "Unknown";
@@ -859,15 +861,16 @@ class UbibotController {
       console.log("  Previous Week Start:", startOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
       console.log("   Previous Week End:", endOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
 
+      // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
       // Obtener datos de temperatura para ambas semanas
       const query = `
-      SELECT 
-        external_temperature as temperature,
-        external_temperature_timestamp as timestamp
-      FROM sensor_readings_ubibot 
-      WHERE channel_id = ? 
-      AND external_temperature_timestamp >= ? AND external_temperature_timestamp <= ?
-      ORDER BY external_temperature_timestamp ASC
+      SELECT
+        temperatura_externa AS temperature,
+        fecha_lectura_externa AS timestamp
+      FROM ubi_lecturas_sensor
+      WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+      AND fecha_lectura_externa >= ? AND fecha_lectura_externa <= ?
+      ORDER BY fecha_lectura_externa ASC
     `;
 
       const [currentWeekData] = await databaseService.pool.query(query, [
@@ -957,24 +960,24 @@ class UbibotController {
         return res.status(400).json({ error: "Se requiere channelId" });
       }
 
+      // Migrado: channels_ubibot → ubi_canal; parametrizaciones → ubi_presets_temperatura
+      // SUPUESTO #3: ubi_canal no tiene threshold_min/max individuales; se retorna el umbral del preset del grupo.
+      // threshold_updated_at/by retornan NULL hasta que se definan columnas individuales en ubi_canal.
       const query = `
         SELECT
-          c.channel_id,
-          c.name,
-          COALESCE(c.threshold_min, p.minimo) as threshold_min,
-          COALESCE(c.threshold_max, p.maximo) as threshold_max,
-          c.threshold_updated_at,
-          c.threshold_updated_by,
-          CASE
-            WHEN c.threshold_min IS NOT NULL THEN 'individual'
-            ELSE 'group'
-          END as threshold_type,
-          c.id_parametrizacion as legacy_param_id,
-          p.minimo as group_threshold_min,
-          p.maximo as group_threshold_max
-        FROM channels_ubibot c
-        LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
-        WHERE c.channel_id = ?
+          c.canal_id AS channel_id,
+          c.nombre AS name,
+          p.temperatura_minima AS threshold_min,
+          p.temperatura_maxima AS threshold_max,
+          NULL AS threshold_updated_at,
+          NULL AS threshold_updated_by,
+          'group' AS threshold_type,
+          c.id_preset AS legacy_param_id,
+          p.temperatura_minima AS group_threshold_min,
+          p.temperatura_maxima AS group_threshold_max
+        FROM ubi_canal c
+        LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+        WHERE c.canal_id = ?
       `;
 
       const results = await databaseService.query(query, [channelId]);
@@ -1070,15 +1073,17 @@ class UbibotController {
           reason || 'Actualización manual desde API'
         ]);
       } else {
-        // Actualización directa
+        // Migrado: channels_ubibot → ubi_canal; channel_id → canal_id
+        // SUPUESTO #3: ubi_canal no tiene columnas threshold_min, threshold_max, threshold_updated_at, threshold_updated_by.
+        // Este UPDATE fallará en runtime con "Unknown column" hasta que dichas columnas se agreguen a ubi_canal.
         const updateQuery = `
-          UPDATE channels_ubibot
+          UPDATE ubi_canal
           SET
             threshold_min = ?,
             threshold_max = ?,
             threshold_updated_at = CURRENT_TIMESTAMP,
             threshold_updated_by = ?
-          WHERE channel_id = ?
+          WHERE canal_id = ?
         `;
 
         const result = await databaseService.query(updateQuery, [
@@ -1159,10 +1164,11 @@ class UbibotController {
 
       console.log(`[UbibotController] updateChannelOperativa: Actualizando canal ${channelId} a esOperativa=${operativaValue}`);
 
+      // Migrado: channels_ubibot → ubi_canal; esOperativa → activo; channel_id → canal_id
       const updateQuery = `
-        UPDATE channels_ubibot
-        SET esOperativa = ?
-        WHERE channel_id = ?
+        UPDATE ubi_canal
+        SET activo = ?
+        WHERE canal_id = ?
       `;
 
       const result = await databaseService.query(updateQuery, [operativaValue, channelId]);
@@ -1198,41 +1204,41 @@ class UbibotController {
     console.log("[UbibotController] getAllChannelsThresholds: Solicitud recibida.");
 
     try {
+      // Migrado: channels_ubibot → ubi_canal; parametrizaciones → ubi_presets_temperatura;
+      // sensor_readings_ubibot → ubi_lecturas_sensor
+      // SUPUESTO #3: umbrales siempre del preset del grupo; threshold_type siempre 'group'
       const query = `
         SELECT
-          c.channel_id,
-          c.name,
-          c.esOperativa,
-          COALESCE(c.threshold_min, p.minimo) as threshold_min,
-          COALESCE(c.threshold_max, p.maximo) as threshold_max,
-          c.threshold_updated_at,
-          c.threshold_updated_by,
-          CASE
-            WHEN c.threshold_min IS NOT NULL THEN 'individual'
-            ELSE 'group'
-          END as threshold_type,
-          c.id_parametrizacion as legacy_param_id,
+          c.canal_id AS channel_id,
+          c.nombre AS name,
+          c.activo AS esOperativa,
+          p.temperatura_minima AS threshold_min,
+          p.temperatura_maxima AS threshold_max,
+          NULL AS threshold_updated_at,
+          NULL AS threshold_updated_by,
+          'group' AS threshold_type,
+          c.id_preset AS legacy_param_id,
           -- Última lectura de temperatura
-          lr.external_temperature as current_temperature,
-          lr.external_temperature_timestamp as last_reading,
-          -- Estado de temperatura
+          lr.temperatura_externa AS current_temperature,
+          lr.fecha_lectura_externa AS last_reading,
+          -- Estado de temperatura respecto a umbrales del preset
           CASE
-            WHEN lr.external_temperature IS NULL THEN 'NO_DATA'
-            WHEN lr.external_temperature < COALESCE(c.threshold_min, p.minimo) THEN 'BELOW_MIN'
-            WHEN lr.external_temperature > COALESCE(c.threshold_max, p.maximo) THEN 'ABOVE_MAX'
+            WHEN lr.temperatura_externa IS NULL THEN 'NO_DATA'
+            WHEN lr.temperatura_externa < p.temperatura_minima THEN 'BELOW_MIN'
+            WHEN lr.temperatura_externa > p.temperatura_maxima THEN 'ABOVE_MAX'
             ELSE 'IN_RANGE'
-          END as temperature_status
-        FROM channels_ubibot c
-        LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
+          END AS temperature_status
+        FROM ubi_canal c
+        LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
         LEFT JOIN (
           SELECT
-            channel_id,
-            external_temperature,
-            external_temperature_timestamp,
-            ROW_NUMBER() OVER (PARTITION BY channel_id ORDER BY external_temperature_timestamp DESC) as rn
-          FROM sensor_readings_ubibot
-        ) lr ON c.channel_id = lr.channel_id AND lr.rn = 1
-        ORDER BY c.name
+            id_canal,
+            temperatura_externa,
+            fecha_lectura_externa,
+            ROW_NUMBER() OVER (PARTITION BY id_canal ORDER BY fecha_lectura_externa DESC) AS rn
+          FROM ubi_lecturas_sensor
+        ) lr ON c.id_canal = lr.id_canal AND lr.rn = 1
+        ORDER BY c.nombre
       `;
 
       const results = await databaseService.query(query);
@@ -1289,14 +1295,16 @@ class UbibotController {
     const sanitizedCameraName = cameraName.replace(/\s+/g, "_").trim();
     const fileName = `Defrost_Analysis_${sanitizedCameraName}_${formattedDate}.pdf`;
 
+    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
+    // channel_id (API ID) → id_canal via subquery en ubi_canal
     const query = `
-    SELECT 
-      external_temperature as temperature,
-      external_temperature_timestamp as timestamp
-    FROM sensor_readings_ubibot 
-    WHERE channel_id = ? 
-    AND external_temperature_timestamp BETWEEN ? AND ?
-    ORDER BY external_temperature_timestamp ASC
+    SELECT
+      temperatura_externa AS temperature,
+      fecha_lectura_externa AS timestamp
+    FROM ubi_lecturas_sensor
+    WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+    AND fecha_lectura_externa BETWEEN ? AND ?
+    ORDER BY fecha_lectura_externa ASC
   `;
 
     const [results] = await databaseService.pool.query(query, [

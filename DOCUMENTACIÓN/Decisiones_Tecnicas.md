@@ -3,7 +3,7 @@
 **The Next Security - TNS Track Demo**
 
 > **Última actualización**: 2026-03-11
-> **Versión**: 2.0.0
+> **Versión**: 2.1.0
 > **Propósito**: Documentar todas las decisiones arquitectónicas y técnicas del proyecto
 
 ---
@@ -161,6 +161,8 @@ timezone: 'America/Santiago'
 const { DateTime } = require('luxon');
 DateTime.now().setZone('America/Santiago');
 ```
+
+> **Nota**: El proyecto está estandarizando en **Luxon** (Issue #5); moment se mantiene temporalmente en partes del código hasta completar la migración.
 
 ### Estado Actual
 ✅ **Implementado** - Timezone base configurado en `America/Santiago`

@@ -3,8 +3,8 @@
  * Feature: 004-reportes-base-core (T012)
  *
  * Calculates temperature KPIs and statistics for report generation
- * Uses sensor_readings_ubibot table and v_daily_temperature_kpis view
- * Works with channels_ubibot for device metadata and thresholds
+ * Migrado a nuevo schema: ubi_lecturas_sensor, ubi_canal, ubi_presets_temperatura
+ * (Reemplaza: sensor_readings_ubibot, channels_ubibot, parametrizaciones)
  */
 
 const mysql = require('mysql2/promise');
@@ -49,29 +49,28 @@ async function calculateKPIs(channelIds, startDate, endDate) {
     // Placeholders for channel IDs
     const placeholders = channelIds.map(() => '?').join(',');
 
-    // Query to calculate comprehensive KPIs
+    // Query migrada: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal
+    // channelIds son API IDs (canal_id) → se resuelven a id_canal via subquery
     const query = `
       SELECT
         -- Overall averages
-        AVG(sr.external_temperature) AS avg_temp,
-        MIN(sr.external_temperature) AS min_temp,
-        MAX(sr.external_temperature) AS max_temp,
-        STDDEV(sr.external_temperature) AS stddev_temp,
+        AVG(sr.temperatura_externa) AS avg_temp,
+        MIN(sr.temperatura_externa) AS min_temp,
+        MAX(sr.temperatura_externa) AS max_temp,
+        STDDEV(sr.temperatura_externa) AS stddev_temp,
 
         -- Total readings
         COUNT(*) AS total_readings,
 
-        -- Calculate data coverage (days with data / total days)
-        -- This measures if cameras have data each day, independent of reading frequency
-        -- Formula: (distinct days with data / total days in range) * 100
-        (COUNT(DISTINCT DATE(sr.timestamp)) / (DATEDIFF(?, ?) + 1)) * 100 AS uptime_percentage
+        -- Cobertura de datos (días con datos / total días en rango) * 100
+        (COUNT(DISTINCT DATE(sr.fecha_lectura)) / (DATEDIFF(?, ?) + 1)) * 100 AS uptime_percentage
 
-      FROM sensor_readings_ubibot sr
-      INNER JOIN channels_ubibot ch ON sr.channel_id = ch.channel_id
-      WHERE sr.channel_id IN (${placeholders})
-        AND DATE(sr.timestamp) BETWEEN ? AND ?
-        AND sr.external_temperature IS NOT NULL
-        AND ch.esOperativa = 1
+      FROM ubi_lecturas_sensor sr
+      INNER JOIN ubi_canal ch ON sr.id_canal = ch.id_canal
+      WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(sr.fecha_lectura) BETWEEN ? AND ?
+        AND sr.temperatura_externa IS NOT NULL
+        AND ch.activo = 1
     `;
 
     const params = [
@@ -85,12 +84,12 @@ async function calculateKPIs(channelIds, startDate, endDate) {
     const [rows] = await connection.execute(query, params);
     const result = rows[0];
 
-    // Query alert_tracking table for actual alerts sent (consistent with dashboard methodology)
+    // Migrado: alert_tracking → ale_seguimiento; channel_id (API ID) → origen_id via subquery id_canal
     const alertsQuery = `
       SELECT COUNT(*) AS alerts_count
-      FROM alert_tracking
-      WHERE channel_id IN (${placeholders})
-        AND DATE(alert_timestamp) BETWEEN ? AND ?
+      FROM ale_seguimiento
+      WHERE origen_id IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(fecha_alerta) BETWEEN ? AND ?
     `;
 
     const alertsParams = [...channelIds, startDate, endDate];
@@ -104,7 +103,7 @@ async function calculateKPIs(channelIds, startDate, endDate) {
       max: result.max_temp != null && !isNaN(result.max_temp) ? parseFloat(Number(result.max_temp).toFixed(2)) : null,
       stddev: result.stddev_temp != null && !isNaN(result.stddev_temp) ? parseFloat(Number(result.stddev_temp).toFixed(2)) : null,
       uptime: result.uptime_percentage != null && !isNaN(result.uptime_percentage) ? parseFloat(Number(result.uptime_percentage).toFixed(2)) : 0,
-      alertsCount: alertsCount, // Now using actual alerts from alert_tracking table
+      alertsCount: alertsCount,
       totalReadings: result.total_readings || 0,
       dateRange: {
         start: startDate,
@@ -114,7 +113,7 @@ async function calculateKPIs(channelIds, startDate, endDate) {
     };
 
     console.log(`[TemperatureAggregation] Calculated KPIs for ${channelIds.length} channels (${startDate} to ${endDate}):`, kpis);
-    console.log(`[TemperatureAggregation] Alerts count from alert_tracking: ${alertsCount}`);
+    console.log(`[TemperatureAggregation] Alerts count from ale_seguimiento: ${alertsCount}`);
 
     return kpis;
 
@@ -143,38 +142,43 @@ async function getDeviceStatistics(channelIds, startDate, endDate) {
 
     const placeholders = channelIds.map(() => '?').join(',');
 
+    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal;
+    // parametrizaciones (threshold_min/max) → ubi_presets_temperatura;
+    // catalogo_ubicaciones_reales → gen_ubicaciones_reales (columna nombre en lugar de nombre_ubicacion)
+    // SUPUESTO #3: threshold_min/max provienen del preset del grupo (ubi_presets_temperatura)
     const query = `
       SELECT
-        sr.channel_id,
-        ch.name AS device_name,
-        loc.nombre_ubicacion AS device_location,
-        AVG(sr.external_temperature) AS avg_temp,
-        MIN(sr.external_temperature) AS min_temp,
-        MAX(sr.external_temperature) AS max_temp,
-        STDDEV(sr.external_temperature) AS stddev_temp,
+        ch.canal_id AS channel_id,
+        ch.nombre AS device_name,
+        loc.nombre AS device_location,
+        AVG(sr.temperatura_externa) AS avg_temp,
+        MIN(sr.temperatura_externa) AS min_temp,
+        MAX(sr.temperatura_externa) AS max_temp,
+        STDDEV(sr.temperatura_externa) AS stddev_temp,
         COUNT(*) AS total_readings,
         SUM(CASE
-          WHEN sr.external_temperature < ch.threshold_min
-            OR sr.external_temperature > ch.threshold_max
+          WHEN sr.temperatura_externa < p.temperatura_minima
+            OR sr.temperatura_externa > p.temperatura_maxima
           THEN 1
           ELSE 0
         END) AS readings_out_of_range,
-        ch.threshold_min,
-        ch.threshold_max
-      FROM sensor_readings_ubibot sr
-      INNER JOIN channels_ubibot ch ON sr.channel_id = ch.channel_id
-      LEFT JOIN catalogo_ubicaciones_reales loc ON ch.ubicacion_real = loc.idcatalogo_ubicaciones_reales
-      WHERE sr.channel_id IN (${placeholders})
-        AND DATE(sr.timestamp) BETWEEN ? AND ?
-        AND sr.external_temperature IS NOT NULL
-        AND ch.esOperativa = 1
+        p.temperatura_minima AS threshold_min,
+        p.temperatura_maxima AS threshold_max
+      FROM ubi_lecturas_sensor sr
+      INNER JOIN ubi_canal ch ON sr.id_canal = ch.id_canal
+      LEFT JOIN gen_ubicaciones_reales loc ON ch.id_ubicacion_real = loc.id_ubicacion_real
+      LEFT JOIN ubi_presets_temperatura p ON ch.id_preset = p.id_preset
+      WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(sr.fecha_lectura) BETWEEN ? AND ?
+        AND sr.temperatura_externa IS NOT NULL
+        AND ch.activo = 1
       GROUP BY
-        sr.channel_id,
-        ch.name,
-        loc.nombre_ubicacion,
-        ch.threshold_min,
-        ch.threshold_max
-      ORDER BY ch.name ASC, sr.channel_id ASC
+        ch.canal_id,
+        ch.nombre,
+        loc.nombre,
+        p.temperatura_minima,
+        p.temperatura_maxima
+      ORDER BY ch.nombre ASC, ch.canal_id ASC
     `;
 
     const params = [...channelIds, startDate, endDate];
@@ -224,18 +228,19 @@ async function getHourlyTemperatures(channelIds, startDate, endDate) {
 
     const placeholders = channelIds.map(() => '?').join(',');
 
+    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal
     const query = `
       SELECT
-        DATE(sr.timestamp) AS date,
-        HOUR(sr.timestamp) AS hour,
-        AVG(sr.external_temperature) AS avg_temp
-      FROM sensor_readings_ubibot sr
-      INNER JOIN channels_ubibot ch ON sr.channel_id = ch.channel_id
-      WHERE sr.channel_id IN (${placeholders})
-        AND DATE(sr.timestamp) BETWEEN ? AND ?
-        AND sr.external_temperature IS NOT NULL
-        AND ch.esOperativa = 1
-      GROUP BY DATE(sr.timestamp), HOUR(sr.timestamp)
+        DATE(sr.fecha_lectura) AS date,
+        HOUR(sr.fecha_lectura) AS hour,
+        AVG(sr.temperatura_externa) AS avg_temp
+      FROM ubi_lecturas_sensor sr
+      INNER JOIN ubi_canal ch ON sr.id_canal = ch.id_canal
+      WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(sr.fecha_lectura) BETWEEN ? AND ?
+        AND sr.temperatura_externa IS NOT NULL
+        AND ch.activo = 1
+      GROUP BY DATE(sr.fecha_lectura), HOUR(sr.fecha_lectura)
       ORDER BY date, hour
     `;
 
@@ -282,8 +287,8 @@ async function calculateTimeAboveZeroPercentage(channelIds, startDate, endDate) 
 
     const placeholders = channelIds.map(() => '?').join(',');
 
-    // Calculate minutes with temp >= 0°C using a subquery approach
-    // This avoids the window function limitation inside SUM()
+    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal
+    // El channel_id resultante es el API canal_id (ch.canal_id) para preservar la lógica JS (línea row.channel_id === 92431)
     const query = `
       SELECT
         channel_id,
@@ -295,21 +300,21 @@ async function calculateTimeAboveZeroPercentage(channelIds, startDate, endDate) 
         ) AS minutes_above_zero
       FROM (
         SELECT
-          sr.channel_id,
-          sr.external_temperature,
+          ch.canal_id AS channel_id,
+          sr.temperatura_externa AS external_temperature,
           COALESCE(
             TIMESTAMPDIFF(MINUTE,
-              sr.timestamp,
-              LEAD(sr.timestamp) OVER (PARTITION BY sr.channel_id ORDER BY sr.timestamp)
+              sr.fecha_lectura,
+              LEAD(sr.fecha_lectura) OVER (PARTITION BY sr.id_canal ORDER BY sr.fecha_lectura)
             ),
-            TIMESTAMPDIFF(MINUTE, sr.timestamp, CONCAT(?, ' 23:59:59'))
+            TIMESTAMPDIFF(MINUTE, sr.fecha_lectura, CONCAT(?, ' 23:59:59'))
           ) AS time_diff_minutes
-        FROM sensor_readings_ubibot sr
-        INNER JOIN channels_ubibot ch ON sr.channel_id = ch.channel_id
-        WHERE sr.channel_id IN (${placeholders})
-          AND DATE(sr.timestamp) BETWEEN ? AND ?
-          AND sr.external_temperature IS NOT NULL
-          AND ch.esOperativa = 1
+        FROM ubi_lecturas_sensor sr
+        INNER JOIN ubi_canal ch ON sr.id_canal = ch.id_canal
+        WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+          AND DATE(sr.fecha_lectura) BETWEEN ? AND ?
+          AND sr.temperatura_externa IS NOT NULL
+          AND ch.activo = 1
       ) AS temp_intervals
       GROUP BY channel_id
     `;

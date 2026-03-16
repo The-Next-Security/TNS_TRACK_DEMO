@@ -152,8 +152,9 @@ class UbibotServiceAdapter {
 
         const connection = await this.pool.getConnection();
         try {
+            // Migrado: channels_ubibot → ubi_canal, channel_id → canal_id
             const [existingChannel] = await connection.query(
-                "SELECT * FROM channels_ubibot WHERE channel_id = ?",
+                "SELECT * FROM ubi_canal WHERE canal_id = ?",
                 [channelData.channel_id]
             );
 
@@ -174,20 +175,23 @@ class UbibotServiceAdapter {
 
             if (existingChannel.length === 0) {
                 // Canal nuevo
-                await connection.query("INSERT INTO channels_ubibot SET ?", {
+                // Migrado: channels_ubibot → ubi_canal; is_currently_out_of_range eliminado,
+                // se usa en_linea (conectividad) y fuera_linea_desde (timestamp de desconexión)
+                await connection.query("INSERT INTO ubi_canal SET ?", {
                     ...basicInfo,
-                    channel_id: channelData.channel_id,
-                    name: channelData.name,
-                    is_currently_out_of_range: isOnline ? 0 : 1,
-                    out_of_range_since: isOnline ? null : currentTime,
-                    last_alert_sent: null,
+                    canal_id: channelData.channel_id,
+                    nombre: channelData.name,
+                    en_linea: isOnline ? 1 : 0,
+                    fuera_linea_desde: isOnline ? null : currentTime,
+                    ultima_alerta_enviada: null,
                 });
                 console.log(`Canal nuevo ${channelData.channel_id} (${channelData.name}) registrado`);
             } else {
                 // Canal existente
                 const currentChannel = existingChannel[0];
-                const wasOffline = currentChannel.is_currently_out_of_range === 1;
-                const isOperational = currentChannel.esOperativa === 1;
+                // Migrado: is_currently_out_of_range eliminado → inferir de fuera_linea_desde; esOperativa → activo
+                const wasOffline = currentChannel.fuera_linea_desde !== null;
+                const isOperational = currentChannel.activo === 1;
 
                 // Actualizar información básica
                 const hasChanges = Object.keys(basicInfo).some((key) =>
@@ -197,8 +201,9 @@ class UbibotServiceAdapter {
                 );
 
                 if (hasChanges) {
+                    // Migrado: channels_ubibot → ubi_canal, channel_id → canal_id
                     await connection.query(
-                        "UPDATE channels_ubibot SET ? WHERE channel_id = ?",
+                        "UPDATE ubi_canal SET ? WHERE canal_id = ?",
                         [basicInfo, channelData.channel_id]
                     );
                 }
@@ -252,8 +257,9 @@ class UbibotServiceAdapter {
                 // Canal en línea
                 if (wasOffline) {
                     // Si estaba offline, actualizar a online
+                    // Migrado: channels_ubibot → ubi_canal; is_currently_out_of_range → en_linea + fuera_linea_desde
                     await connection.query(
-                        "UPDATE channels_ubibot SET is_currently_out_of_range = 0 WHERE channel_id = ?",
+                        "UPDATE ubi_canal SET en_linea = 1, fuera_linea_desde = NULL WHERE canal_id = ?",
                         [channelId]
                     );
                     console.log(`Canal ${channelId} (${channelName}) está nuevamente en línea`);
@@ -262,8 +268,9 @@ class UbibotServiceAdapter {
                 // Canal offline
                 if (!wasOffline) {
                     // Si acaba de quedar offline, actualizar out_of_range_since
+                    // Migrado: channels_ubibot → ubi_canal; out_of_range_since → fuera_linea_desde
                     await connection.query(
-                        "UPDATE channels_ubibot SET is_currently_out_of_range = 1, out_of_range_since = ? WHERE channel_id = ?",
+                        "UPDATE ubi_canal SET en_linea = 0, fuera_linea_desde = ? WHERE canal_id = ?",
                         [currentTime, channelId]
                     );
                     console.log(`Canal ${channelId} (${channelName}) ha quedado fuera de línea a las ${currentTime.toISOString()}`);
@@ -272,13 +279,14 @@ class UbibotServiceAdapter {
 
             // Notificar al controlador
             if (notificationController && typeof notificationController.processConnectionStatusChange === 'function') {
+                // Migrado: out_of_range_since → fuera_linea_desde, last_alert_sent → ultima_alerta_enviada
                 await notificationController.processConnectionStatusChange(
                     channelId,
                     channelName,
                     isOnline,
                     wasOffline,
-                    currentChannel.out_of_range_since,
-                    currentChannel.last_alert_sent,
+                    currentChannel.fuera_linea_desde,
+                    currentChannel.ultima_alerta_enviada,
                     isOperational
                 );
             }
@@ -323,19 +331,23 @@ class UbibotServiceAdapter {
             console.log("Local Time:", localTime.toISO());
 
             // Insertar lecturas en la base de datos
+            // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
+            // id_canal es FK a ubi_canal.id_canal (PK), NO a canal_id (API ID) — se usa subquery
+            // fecha_creacion tiene DEFAULT CURRENT_TIMESTAMP, no se inserta manualmente
             await connection.query(
-                "INSERT INTO sensor_readings_ubibot (channel_id, timestamp, temperature, humidity, light, voltage, wifi_rssi, external_temperature, external_temperature_timestamp, insercion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                `INSERT INTO ubi_lecturas_sensor
+                 (id_canal, temperatura, humedad, luz, voltaje, wifi_rssi, temperatura_externa, fecha_lectura_externa, fecha_lectura)
+                 VALUES ((SELECT id_canal FROM ubi_canal WHERE canal_id = ?), ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
-                    channelId,
-                    utcTimestamp.toJSDate(),
-                    lastValues.field1.value,
-                    lastValues.field2.value,
-                    lastValues.field3.value,
-                    lastValues.field4.value,
-                    lastValues.field5.value,
-                    lastValues.field8 ? lastValues.field8.value : null,
-                    lastValues.field8 ? convertToMySQLDateTime(lastValues.field8.created_at) : null,
-                    localTime.toFormat('yyyy-MM-dd HH:mm:ss'),
+                    channelId,                                                          // para subquery canal_id → id_canal
+                    lastValues.field1.value,                                            // temperatura
+                    lastValues.field2.value,                                            // humedad
+                    lastValues.field3.value,                                            // luz
+                    lastValues.field4.value,                                            // voltaje
+                    lastValues.field5.value,                                            // wifi_rssi
+                    lastValues.field8 ? lastValues.field8.value : null,                 // temperatura_externa
+                    lastValues.field8 ? convertToMySQLDateTime(lastValues.field8.created_at) : null, // fecha_lectura_externa
+                    utcTimestamp.toJSDate(),                                            // fecha_lectura (field1.created_at)
                 ]
             );
 
@@ -376,11 +388,13 @@ class UbibotServiceAdapter {
             connection = await this.pool.getConnection();
 
             // Obtener información del canal
+            // Migrado: channels_ubibot → ubi_canal, parametrizaciones → ubi_presets_temperatura
+            // Aliases preservan nombres de variables JS downstream (channelName, isOperational)
             const [channelInfo] = await connection.query(
-                "SELECT c.name, c.esOperativa, p.minimo AS minima_temp_camara, p.maximo AS maxima_temp_camara " +
-                "FROM channels_ubibot c " +
-                "JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id " +
-                "WHERE c.channel_id = ?",
+                "SELECT c.nombre AS name, c.activo AS esOperativa, p.temperatura_minima AS minima_temp_camara, p.temperatura_maxima AS maxima_temp_camara " +
+                "FROM ubi_canal c " +
+                "JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset " +
+                "WHERE c.canal_id = ?",
                 [channelId]
             );
 
@@ -396,7 +410,7 @@ class UbibotServiceAdapter {
                 maxima_temp_camara,
             } = channelInfo[0];
 
-            // Convertir a booleano explícitamente
+            // Convertir a booleano explícitamente (activo reemplaza esOperativa)
             const isOperational = esOperativa === 1;
 
             // Si el canal no está operativo, ignorarlo
@@ -452,8 +466,9 @@ class UbibotServiceAdapter {
         }
 
         try {
+            // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; id_canal via lookup de canal_id
             const [rows] = await this.pool.query(
-                "SELECT external_temperature_timestamp FROM sensor_readings_ubibot WHERE channel_id = ? ORDER BY external_temperature_timestamp DESC LIMIT 1",
+                "SELECT fecha_lectura_externa AS external_temperature_timestamp FROM ubi_lecturas_sensor WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?) ORDER BY fecha_lectura_externa DESC LIMIT 1",
                 [channelId]
             );
 

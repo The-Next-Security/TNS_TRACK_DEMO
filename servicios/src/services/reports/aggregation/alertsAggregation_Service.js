@@ -3,7 +3,7 @@
  * Feature: 004-reportes-base-core (Phase 10 - US7)
  *
  * Calculates alerts KPIs and statistics for report generation
- * Uses alert_tracking table with comprehensive metrics
+ * Uses ale_seguimiento table with comprehensive metrics
  */
 
 const mysql = require('mysql2/promise');
@@ -48,41 +48,41 @@ async function calculateKPIs(channelIds, startDate, endDate) {
     // Placeholders for channel IDs
     const placeholders = channelIds.map(() => '?').join(',');
 
-    // Main KPIs query
+    // Main KPIs query — canal_id (API ID) se resuelve a id_canal vía subquery
     const query = `
       SELECT
-        -- Total alerts
+        -- Total alertas
         COUNT(*) AS total_alerts,
 
-        -- Critical alerts (temperature type alerts)
-        SUM(CASE WHEN alert_type = 'temperature' THEN 1 ELSE 0 END) AS critical_alerts,
+        -- Alertas críticas (tipo temperatura = id_tipo_alerta 1)
+        SUM(CASE WHEN id_tipo_alerta = 1 THEN 1 ELSE 0 END) AS critical_alerts,
 
-        -- Average response time (acknowledged alerts only)
+        -- Tiempo promedio de respuesta (solo alertas confirmadas)
         AVG(CASE
-          WHEN acknowledged_at IS NOT NULL AND response_time_minutes IS NOT NULL
-          THEN response_time_minutes
+          WHEN fecha_confirmacion IS NOT NULL AND tiempo_respuesta_minutos IS NOT NULL
+          THEN tiempo_respuesta_minutos
           ELSE NULL
         END) AS avg_response_time_minutes,
 
-        -- Average resolution time (resolved alerts only)
+        -- Tiempo promedio de resolución (solo alertas resueltas)
         AVG(CASE
-          WHEN resolved_at IS NOT NULL AND resolution_time_minutes IS NOT NULL
-          THEN resolution_time_minutes
+          WHEN fecha_resolucion IS NOT NULL AND tiempo_resolucion_minutos IS NOT NULL
+          THEN tiempo_resolucion_minutos
           ELSE NULL
         END) AS avg_resolution_time_hours,
 
-        -- Resolution rate (resolved / total)
-        (SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS resolution_rate,
+        -- Tasa de resolución (resuelto / total)
+        (SUM(CASE WHEN estado = 'resuelto' THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS resolution_rate,
 
-        -- False alarm rate
-        (SUM(CASE WHEN is_false_alarm = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS false_alarm_rate,
+        -- Tasa de falsas alarmas
+        (SUM(CASE WHEN es_falsa_alarma = 1 THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS false_alarm_rate,
 
-        -- Pending alerts
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending_alerts
+        -- Alertas pendientes
+        SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) AS pending_alerts
 
-      FROM alert_tracking
-      WHERE channel_id IN (${placeholders})
-        AND DATE(alert_timestamp) BETWEEN ? AND ?
+      FROM ale_seguimiento
+      WHERE origen_id IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(fecha_alerta) BETWEEN ? AND ?
     `;
 
     const params = [
@@ -150,24 +150,26 @@ async function getDeviceStatistics(channelIds, startDate, endDate) {
 
     const placeholders = channelIds.map(() => '?').join(',');
 
+    // JOIN ubi_canal para obtener canal_id (API ID) y nombre del dispositivo
     const query = `
       SELECT
-        at.channel_id,
-        at.channel_name AS device_name,
+        uc.canal_id AS channel_id,
+        uc.nombre AS device_name,
         'N/A' AS location,
         COUNT(*) AS total_alerts,
-        SUM(CASE WHEN at.alert_type = 'temperature' THEN 1 ELSE 0 END) AS critical_count,
-        SUM(CASE WHEN at.alert_type = 'disconnection' THEN 1 ELSE 0 END) AS disconnection_count,
+        SUM(CASE WHEN al.id_tipo_alerta = 1 THEN 1 ELSE 0 END) AS critical_count,
+        SUM(CASE WHEN al.id_tipo_alerta = 2 THEN 1 ELSE 0 END) AS disconnection_count,
         AVG(CASE
-          WHEN at.acknowledged_at IS NOT NULL AND at.response_time_minutes IS NOT NULL
-          THEN at.response_time_minutes
+          WHEN al.fecha_confirmacion IS NOT NULL AND al.tiempo_respuesta_minutos IS NOT NULL
+          THEN al.tiempo_respuesta_minutos
           ELSE NULL
         END) AS avg_response_minutes,
-        (SUM(CASE WHEN at.status = 'resolved' THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS resolution_rate
-      FROM alert_tracking at
-      WHERE at.channel_id IN (${placeholders})
-        AND DATE(at.alert_timestamp) BETWEEN ? AND ?
-      GROUP BY at.channel_id, at.channel_name
+        (SUM(CASE WHEN al.estado = 'resuelto' THEN 1 ELSE 0 END) / COUNT(*)) * 100 AS resolution_rate
+      FROM ale_seguimiento al
+      JOIN ubi_canal uc ON uc.id_canal = al.origen_id
+      WHERE uc.canal_id IN (${placeholders})
+        AND DATE(al.fecha_alerta) BETWEEN ? AND ?
+      GROUP BY uc.canal_id, uc.nombre
       ORDER BY total_alerts DESC
     `;
 
@@ -221,14 +223,15 @@ async function getHourlyDistribution(channelIds, startDate, endDate) {
 
     const placeholders = channelIds.map(() => '?').join(',');
 
+    // canal_id (API ID) se resuelve a id_canal vía subquery
     const query = `
       SELECT
-        HOUR(alert_timestamp) AS hour,
+        HOUR(fecha_alerta) AS hour,
         COUNT(*) AS alert_count
-      FROM alert_tracking
-      WHERE channel_id IN (${placeholders})
-        AND DATE(alert_timestamp) BETWEEN ? AND ?
-      GROUP BY HOUR(alert_timestamp)
+      FROM ale_seguimiento
+      WHERE origen_id IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(fecha_alerta) BETWEEN ? AND ?
+      GROUP BY HOUR(fecha_alerta)
       ORDER BY hour
     `;
 
@@ -272,18 +275,19 @@ async function getSLAMetrics(channelIds, startDate, endDate) {
 
     const placeholders = channelIds.map(() => '?').join(',');
 
+    // canal_id (API ID) se resuelve a id_canal vía subquery
     const query = `
       SELECT
-        SUM(CASE WHEN response_time_minutes < 5 THEN 1 ELSE 0 END) AS under_5min,
-        SUM(CASE WHEN response_time_minutes >= 5 AND response_time_minutes < 15 THEN 1 ELSE 0 END) AS between_5_15min,
-        SUM(CASE WHEN response_time_minutes >= 15 AND response_time_minutes < 30 THEN 1 ELSE 0 END) AS between_15_30min,
-        SUM(CASE WHEN response_time_minutes >= 30 THEN 1 ELSE 0 END) AS over_30min,
+        SUM(CASE WHEN tiempo_respuesta_minutos < 5 THEN 1 ELSE 0 END) AS under_5min,
+        SUM(CASE WHEN tiempo_respuesta_minutos >= 5 AND tiempo_respuesta_minutos < 15 THEN 1 ELSE 0 END) AS between_5_15min,
+        SUM(CASE WHEN tiempo_respuesta_minutos >= 15 AND tiempo_respuesta_minutos < 30 THEN 1 ELSE 0 END) AS between_15_30min,
+        SUM(CASE WHEN tiempo_respuesta_minutos >= 30 THEN 1 ELSE 0 END) AS over_30min,
         COUNT(*) AS total_acknowledged
-      FROM alert_tracking
-      WHERE channel_id IN (${placeholders})
-        AND DATE(alert_timestamp) BETWEEN ? AND ?
-        AND acknowledged_at IS NOT NULL
-        AND response_time_minutes IS NOT NULL
+      FROM ale_seguimiento
+      WHERE origen_id IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(fecha_alerta) BETWEEN ? AND ?
+        AND fecha_confirmacion IS NOT NULL
+        AND tiempo_respuesta_minutos IS NOT NULL
     `;
 
     const params = [...channelIds, startDate, endDate];
@@ -345,15 +349,16 @@ async function getDailyTrend(channelIds, startDate, endDate) {
 
     const placeholders = channelIds.map(() => '?').join(',');
 
+    // canal_id (API ID) se resuelve a id_canal vía subquery; tipo temperatura = id_tipo_alerta 1
     const query = `
       SELECT
-        DATE(alert_timestamp) AS alert_date,
+        DATE(fecha_alerta) AS alert_date,
         COUNT(*) AS alert_count,
-        SUM(CASE WHEN alert_type = 'temperature' THEN 1 ELSE 0 END) AS critical_count
-      FROM alert_tracking
-      WHERE channel_id IN (${placeholders})
-        AND DATE(alert_timestamp) BETWEEN ? AND ?
-      GROUP BY DATE(alert_timestamp)
+        SUM(CASE WHEN id_tipo_alerta = 1 THEN 1 ELSE 0 END) AS critical_count
+      FROM ale_seguimiento
+      WHERE origen_id IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(fecha_alerta) BETWEEN ? AND ?
+      GROUP BY DATE(fecha_alerta)
       ORDER BY alert_date
     `;
 
@@ -398,14 +403,16 @@ async function getAlertTypeDistribution(channelIds, startDate, endDate) {
 
     const placeholders = channelIds.map(() => '?').join(',');
 
+    // CASE para devolver strings 'temperature'/'disconnection' que espera el caller
+    // canal_id (API ID) se resuelve a id_canal vía subquery
     const query = `
       SELECT
-        alert_type,
+        CASE id_tipo_alerta WHEN 1 THEN 'temperature' WHEN 2 THEN 'disconnection' ELSE 'unknown' END AS alert_type,
         COUNT(*) AS count
-      FROM alert_tracking
-      WHERE channel_id IN (${placeholders})
-        AND DATE(alert_timestamp) BETWEEN ? AND ?
-      GROUP BY alert_type
+      FROM ale_seguimiento
+      WHERE origen_id IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND DATE(fecha_alerta) BETWEEN ? AND ?
+      GROUP BY id_tipo_alerta
     `;
 
     const params = [...channelIds, startDate, endDate];

@@ -401,22 +401,24 @@ class NotificationController {
             if (disconnectionResults.channelsToUpdateLastSent.length > 0) {
                 const idsToUpdate = disconnectionResults.channelsToUpdateLastSent;
                 console.log(`  -> Actualizando last_alert_sent a ${nowTimestamp} para canales: ${idsToUpdate.join(', ')}`);
+                // Migrado: channels_ubibot → ubi_canal, last_alert_sent → ultima_alerta_enviada, channel_id → canal_id
                 const [updateResult] = await connection.query(
-                    "UPDATE channels_ubibot SET last_alert_sent = ? WHERE channel_id IN (?)",
+                    "UPDATE ubi_canal SET ultima_alerta_enviada = ? WHERE canal_id IN (?)",
                     [nowTimestamp, idsToUpdate]
                 );
-                console.log(`    -> Filas afectadas por UPDATE last_alert_sent: ${updateResult.affectedRows}`);
+                console.log(`    -> Filas afectadas por UPDATE ultima_alerta_enviada: ${updateResult.affectedRows}`);
             } else { console.log("  -> No hay canales que requieran actualizar last_alert_sent (nuevas desconexiones)."); }
 
             // Resetear last_alert_sent
             if (disconnectionResults.channelsToResetLastSent.length > 0) {
                 const idsToReset = disconnectionResults.channelsToResetLastSent;
                 console.log(`  -> Reseteando last_alert_sent a NULL para canales: ${idsToReset.join(', ')}`);
+                // Migrado: channels_ubibot → ubi_canal, last_alert_sent → ultima_alerta_enviada, channel_id → canal_id
                 const [resetResult] = await connection.query(
-                    "UPDATE channels_ubibot SET last_alert_sent = NULL WHERE channel_id IN (?)",
+                    "UPDATE ubi_canal SET ultima_alerta_enviada = NULL WHERE canal_id IN (?)",
                     [idsToReset]
                 );
-                console.log(`    -> Filas afectadas por RESET last_alert_sent: ${resetResult.affectedRows}`);
+                console.log(`    -> Filas afectadas por RESET ultima_alerta_enviada: ${resetResult.affectedRows}`);
             } else { console.log("  -> No hay canales que requieran resetear last_alert_sent (reconexiones)."); }
 
         } catch (dbError) {
@@ -465,8 +467,9 @@ class NotificationController {
                 const firstDisconnectTs = firstDisconnectEvent ? DateTime.fromISO(firstDisconnectEvent.timestamp).setZone(this.timeZone) : null;
                 const lastReconnectTs = lastConnectEvent ? DateTime.fromISO(lastConnectEvent.timestamp).setZone(this.timeZone) : null;
 
+                // Migrado: channels_ubibot → ubi_canal; is_currently_out_of_range inferido de fuera_linea_desde
                 const [channelDbStateRows] = await connection.query(
-                    "SELECT is_currently_out_of_range, out_of_range_since, last_alert_sent FROM channels_ubibot WHERE channel_id = ?",
+                    "SELECT (fuera_linea_desde IS NOT NULL) AS fuera_linea, fuera_linea_desde, ultima_alerta_enviada FROM ubi_canal WHERE canal_id = ?",
                     [channelId]
                 );
                 if (channelDbStateRows.length === 0) {
@@ -474,8 +477,9 @@ class NotificationController {
                     continue;
                 }
                 const dbState = channelDbStateRows[0];
-                const dbOutOfRangeSince = dbState.out_of_range_since ? DateTime.fromJSDate(dbState.out_of_range_since).setZone(this.timeZone) : null;
-                const dbLastAlertSent = dbState.last_alert_sent ? DateTime.fromJSDate(dbState.last_alert_sent).setZone(this.timeZone) : null;
+                // Migrado: out_of_range_since → fuera_linea_desde, last_alert_sent → ultima_alerta_enviada
+                const dbOutOfRangeSince = dbState.fuera_linea_desde ? DateTime.fromJSDate(dbState.fuera_linea_desde).setZone(this.timeZone) : null;
+                const dbLastAlertSent = dbState.ultima_alerta_enviada ? DateTime.fromJSDate(dbState.ultima_alerta_enviada).setZone(this.timeZone) : null;
 
                 if (finalStatus === 'disconnected') {
                     if (dbOutOfRangeSince && (!dbLastAlertSent || dbLastAlertSent < dbOutOfRangeSince)) {
@@ -503,17 +507,19 @@ class NotificationController {
             console.log(`[NotificationCtrl] Iniciando monitoreo continuo de desconexiones para ${hourKey}...`);
 
             // Consultar TODOS los canales operativos y su última lectura
+            // Migrado: channels_ubibot → ubi_canal, sensor_readings_ubibot → ubi_lecturas_sensor
+            // JOIN usa id_canal (PK), no canal_id (API ID)
             const [currentStatus] = await connection.query(`
                 SELECT
-                    c.channel_id,
-                    c.name,
-                    c.product_id,
-                    MAX(sr.external_temperature_timestamp) as last_reading,
-                    TIMESTAMPDIFF(MINUTE, MAX(sr.external_temperature_timestamp), NOW()) as minutes_disconnected
-                FROM channels_ubibot c
-                LEFT JOIN sensor_readings_ubibot sr ON c.channel_id = sr.channel_id
-                WHERE c.esOperativa = 1
-                GROUP BY c.channel_id, c.name, c.product_id
+                    c.canal_id,
+                    c.nombre,
+                    c.id_producto,
+                    MAX(sr.fecha_lectura_externa) as last_reading,
+                    TIMESTAMPDIFF(MINUTE, MAX(sr.fecha_lectura_externa), NOW()) as minutes_disconnected
+                FROM ubi_canal c
+                LEFT JOIN ubi_lecturas_sensor sr ON c.id_canal = sr.id_canal
+                WHERE c.activo = 1
+                GROUP BY c.canal_id, c.nombre, c.id_producto
             `);
 
             // Separar en DESCONECTADOS vs CONECTADOS
@@ -542,44 +548,33 @@ class NotificationController {
                         : 'Sin lecturas';
 
                     results.formattedAlerts.push({
-                        name: channel.name,
-                        channelId: channel.channel_id,
-                        productId: channel.product_id,
+                        name: channel.nombre,
+                        channelId: channel.canal_id,
+                        productId: channel.id_producto,
                         finalStatus: 'DESCONECTADO',
                         horaDesconexion: horaDesconexion,
                         horaReconexion: 'N/A',
                         minutesDisconnected: channel.minutes_disconnected
                     });
 
-                    // Verificar si ya existe alerta activa en alert_tracking
+                    // Verificar si ya existe alerta activa en ale_seguimiento
+                    // Migrado: alert_tracking → ale_seguimiento; alert_type='disconnection' → id_tipo_alerta=2
                     const [existingAlert] = await connection.query(`
-                        SELECT alert_id, occurrence_count
-                        FROM alert_tracking
-                        WHERE channel_id = ?
-                          AND alert_type = 'disconnection'
-                          AND status IN ('pending', 'acknowledged')
-                        ORDER BY alert_timestamp DESC
+                        SELECT id_alerta
+                        FROM ale_seguimiento
+                        WHERE origen_id = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+                          AND id_tipo_alerta = 2
+                          AND estado IN ('pendiente', 'confirmado')
+                        ORDER BY fecha_alerta DESC
                         LIMIT 1
-                    `, [channel.channel_id]);
+                    `, [channel.canal_id]);
 
                     if (existingAlert.length > 0) {
-                        // Ya existe alerta - Actualizar occurrence_count
-                        await connection.query(`
-                            UPDATE alert_tracking
-                            SET last_occurrence = NOW(),
-                                occurrence_count = occurrence_count + 1,
-                                alert_data = JSON_SET(
-                                    COALESCE(alert_data, '{}'),
-                                    '$.minutesDisconnected', ?,
-                                    '$.lastCheck', ?
-                                )
-                            WHERE alert_id = ?
-                        `, [channel.minutes_disconnected, hourKey, existingAlert[0].alert_id]);
-
-                        console.log(`[NotificationCtrl]   - ${channel.name}: Alerta ${existingAlert[0].alert_id} actualizada (envío #${existingAlert[0].occurrence_count + 1})`);
+                        // Nuevo modelo: un registro por evento, sin contador de ocurrencias
+                        console.log(`[NotificationCtrl]   - ${channel.nombre}: Alerta ${existingAlert[0].id_alerta} activa (sensor aún desconectado)`);
                     } else {
-                        // No existe alerta - Crear nueva (se creará después en el flujo principal)
-                        console.log(`[NotificationCtrl]   - ${channel.name}: Nueva alerta de desconexión detectada`);
+                        // No existe alerta activa — nueva desconexión detectada
+                        console.log(`[NotificationCtrl]   - ${channel.nombre}: Nueva alerta de desconexión detectada`);
                     }
                 }
             }
@@ -587,44 +582,47 @@ class NotificationController {
             // PASO B: Procesar RECONECTADOS - Detectar y notificar reconexiones
             if (currentlyConnected.length > 0) {
                 // Buscar si alguno tiene alerta activa (estaba desconectado antes)
+                // Migrado: alert_tracking → ale_seguimiento, channels_ubibot → ubi_canal
                 const [reconnectedAlerts] = await connection.query(`
-                    SELECT at.*, c.name as channel_name
-                    FROM alert_tracking at
-                    INNER JOIN channels_ubibot c ON at.channel_id = c.channel_id
-                    WHERE at.channel_id IN (?)
-                      AND at.alert_type = 'disconnection'
-                      AND at.status IN ('pending', 'acknowledged')
-                `, [currentlyConnected.map(ch => ch.channel_id)]);
+                    SELECT aseg.*, uc.nombre AS channel_name
+                    FROM ale_seguimiento aseg
+                    INNER JOIN ubi_canal uc ON uc.id_canal = aseg.origen_id
+                    WHERE aseg.origen_id IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (?))
+                      AND aseg.id_tipo_alerta = 2
+                      AND aseg.estado IN ('pendiente', 'confirmado')
+                `, [currentlyConnected.map(ch => ch.canal_id)]);
 
                 if (reconnectedAlerts.length > 0) {
                     console.log(`[NotificationCtrl] ${reconnectedAlerts.length} canales RECONECTADOS detectados`);
 
                     for (const alert of reconnectedAlerts) {
-                        const channel = currentlyConnected.find(ch => ch.channel_id === alert.channel_id);
+                        // Migrado: channel_id → canal_id, alert.channel_id → alert.origen_id
+                        const channel = currentlyConnected.find(ch => ch.canal_id === alert.origen_id);
                         const horaReconexion = DateTime.fromJSDate(channel.last_reading).setZone(this.timeZone).toFormat("dd/MM HH:mm:ss");
 
                         // Agregar a results como CONECTADO
                         results.formattedAlerts.push({
                             name: alert.channel_name,
-                            channelId: alert.channel_id,
+                            channelId: alert.origen_id,
                             finalStatus: 'CONECTADO',
-                            horaDesconexion: alert.alert_timestamp
-                                ? DateTime.fromJSDate(alert.alert_timestamp).setZone(this.timeZone).toFormat("dd/MM HH:mm:ss")
+                            horaDesconexion: alert.fecha_alerta
+                                ? DateTime.fromJSDate(alert.fecha_alerta).setZone(this.timeZone).toFormat("dd/MM HH:mm:ss")
                                 : 'N/A',
                             horaReconexion: horaReconexion,
-                            alertId: alert.alert_id
+                            alertId: alert.id_alerta
                         });
 
                         // Marcar alerta como resuelta
+                        // Migrado: alert_tracking → ale_seguimiento; status='resolved' → estado='resuelto'
                         await connection.query(`
-                            UPDATE alert_tracking
-                            SET status = 'resolved',
-                                resolution_timestamp = NOW(),
-                                resolution_time = TIMESTAMPDIFF(MINUTE, alert_timestamp, NOW())
-                            WHERE alert_id = ?
-                        `, [alert.alert_id]);
+                            UPDATE ale_seguimiento
+                            SET estado = 'resuelto',
+                                fecha_resolucion = NOW(),
+                                tiempo_resolucion_minutos = TIMESTAMPDIFF(MINUTE, fecha_alerta, NOW())
+                            WHERE id_alerta = ?
+                        `, [alert.id_alerta]);
 
-                        console.log(`[NotificationCtrl]   - ${alert.channel_name}: Reconectado (alerta ${alert.alert_id} resuelta)`);
+                        console.log(`[NotificationCtrl]   - ${alert.channel_name}: Reconectado (alerta ${alert.id_alerta} resuelta)`);
                     }
                 }
             }
@@ -682,8 +680,9 @@ class NotificationController {
             connection = await this.pool.getConnection();
 
             // Consultar si la fecha existe en la tabla de feriados
+            // Migrado: feriados_cl → gen_feriados_cl
             const [rows] = await connection.query(
-                "SELECT 1 FROM feriados_cl WHERE fecha = ?",
+                "SELECT 1 FROM gen_feriados_cl WHERE fecha = ?",
                 [formattedDate]
             );
 
@@ -759,9 +758,10 @@ class NotificationController {
             if (!message.startsWith('INFO:') && !message.startsWith('WARN:') && !message.startsWith('ERROR:')) {
                 message = `INFO: ${message}`;
             }
-            await connection.query("INSERT INTO process_log (message) VALUES (?)", [message]);
+            // Migrado: process_log → log_general; origen es NOT NULL y debe especificarse siempre
+            await connection.query("INSERT INTO log_general (origen, mensaje) VALUES ('NotificationController', ?)", [message]);
         } catch (error) {
-            console.error("Error al registrar en la base de datos (process_log):", error);
+            console.error("Error al registrar en la base de datos (log_general):", error);
         } finally {
             if (connection) connection.release(); // Asegurar liberación
         }

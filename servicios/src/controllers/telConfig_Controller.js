@@ -78,6 +78,7 @@ class tel_ConfigController {
     try {
       console.log("Accediendo a getConfigTemperaturaUmbral"); // Log para debug
       const [results] = await databaseService.pool.query(
+        // TODO: Migrar a ubi_presets_temperatura — pendiente definir id_preset equivalente a param_id=7,8 (ver Issue #32)
         "SELECT * FROM parametrizaciones WHERE param_id IN (7, 8)"
       );
       console.log("Resultados:", results); // Log para debug
@@ -96,6 +97,7 @@ class tel_ConfigController {
     try {
       for (const param of params) {
         await databaseService.pool.query(
+          // TODO: Migrar a ubi_presets_temperatura — pendiente definir id_preset (ver Issue #32)
           "UPDATE parametrizaciones SET minimo = ?, maximo = ? WHERE param_id = ?",
           [param.minimo, param.maximo, param.param_id]
         );

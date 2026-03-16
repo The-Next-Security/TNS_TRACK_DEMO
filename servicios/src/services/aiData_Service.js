@@ -35,28 +35,28 @@ class AIDataService {
   async fetchChamberDataRaw(chamberIds, startDateTime, endDateTime) {
     const placeholders = chamberIds.map(() => '?').join(',');
     
+    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal;
+    // parametrizaciones → ubi_presets_temperatura
+    // SUPUESTO #3: threshold_min/max provienen del preset del grupo (ubi_presets_temperatura)
+    // chamberIds son API IDs (canal_id) → resueltos via subquery a id_canal
     const query = `
       SELECT
-        sr.id,
-        sr.channel_id,
-        sr.external_temperature as temperature,
-        sr.external_temperature_timestamp as timestamp,
-        c.name as chamber_name,
-        c.channel_id,
-        COALESCE(c.threshold_min, p.minimo) as threshold_min,
-        COALESCE(c.threshold_max, p.maximo) as threshold_max,
-        CASE
-          WHEN c.threshold_min IS NOT NULL THEN 'individual'
-          ELSE 'group'
-        END as threshold_type,
-        'ubibot' as sensor_type
-      FROM sensor_readings_ubibot sr
-      JOIN channels_ubibot c ON sr.channel_id = c.channel_id
-      LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
-      WHERE sr.channel_id IN (${placeholders})
-        AND sr.external_temperature_timestamp BETWEEN ? AND ?
-        AND sr.external_temperature IS NOT NULL
-      ORDER BY sr.channel_id, sr.external_temperature_timestamp ASC
+        sr.id_lectura_sensor AS id,
+        c.canal_id AS channel_id,
+        sr.temperatura_externa AS temperature,
+        sr.fecha_lectura_externa AS timestamp,
+        c.nombre AS chamber_name,
+        p.temperatura_minima AS threshold_min,
+        p.temperatura_maxima AS threshold_max,
+        'group' AS threshold_type,
+        'ubibot' AS sensor_type
+      FROM ubi_lecturas_sensor sr
+      JOIN ubi_canal c ON sr.id_canal = c.id_canal
+      LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+      WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND sr.fecha_lectura_externa BETWEEN ? AND ?
+        AND sr.temperatura_externa IS NOT NULL
+      ORDER BY c.canal_id, sr.fecha_lectura_externa ASC
     `;
 
     const params = [...chamberIds, startDateTime, endDateTime];
@@ -74,37 +74,37 @@ class AIDataService {
   async fetchChamberDataAggregated(chamberIds, startDateTime, endDateTime) {
     const placeholders = chamberIds.map(() => '?').join(',');
     
+    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal;
+    // parametrizaciones → ubi_presets_temperatura
+    // SUPUESTO #3: threshold_min/max del preset del grupo
     const query = `
       SELECT
-        DATE(sr.external_temperature_timestamp) as date,
-        sr.channel_id,
-        c.name as chamber_name,
-        AVG(sr.external_temperature) as avg_temp,
-        MIN(sr.external_temperature) as min_temp,
-        MAX(sr.external_temperature) as max_temp,
-        STDDEV(sr.external_temperature) as std_dev,
-        COUNT(*) as reading_count,
-        COALESCE(c.threshold_min, p.minimo) as threshold_min,
-        COALESCE(c.threshold_max, p.maximo) as threshold_max,
-        SUM(CASE 
-          WHEN sr.external_temperature < COALESCE(c.threshold_min, p.minimo) 
-            OR sr.external_temperature > COALESCE(c.threshold_max, p.maximo) 
-          THEN 1 ELSE 0 
-        END) as breach_count,
-        CASE
-          WHEN c.threshold_min IS NOT NULL THEN 'individual'
-          ELSE 'group'
-        END as threshold_type,
-        'ubibot' as sensor_type
-      FROM sensor_readings_ubibot sr
-      JOIN channels_ubibot c ON sr.channel_id = c.channel_id
-      LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
-      WHERE sr.channel_id IN (${placeholders})
-        AND sr.external_temperature_timestamp BETWEEN ? AND ?
-        AND sr.external_temperature IS NOT NULL
-      GROUP BY DATE(sr.external_temperature_timestamp), sr.channel_id, c.name, 
-               c.threshold_min, c.threshold_max, p.minimo, p.maximo
-      ORDER BY sr.channel_id, date ASC
+        DATE(sr.fecha_lectura_externa) AS date,
+        c.canal_id AS channel_id,
+        c.nombre AS chamber_name,
+        AVG(sr.temperatura_externa) AS avg_temp,
+        MIN(sr.temperatura_externa) AS min_temp,
+        MAX(sr.temperatura_externa) AS max_temp,
+        STDDEV(sr.temperatura_externa) AS std_dev,
+        COUNT(*) AS reading_count,
+        p.temperatura_minima AS threshold_min,
+        p.temperatura_maxima AS threshold_max,
+        SUM(CASE
+          WHEN sr.temperatura_externa < p.temperatura_minima
+            OR sr.temperatura_externa > p.temperatura_maxima
+          THEN 1 ELSE 0
+        END) AS breach_count,
+        'group' AS threshold_type,
+        'ubibot' AS sensor_type
+      FROM ubi_lecturas_sensor sr
+      JOIN ubi_canal c ON sr.id_canal = c.id_canal
+      LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+      WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
+        AND sr.fecha_lectura_externa BETWEEN ? AND ?
+        AND sr.temperatura_externa IS NOT NULL
+      GROUP BY DATE(sr.fecha_lectura_externa), c.canal_id, c.nombre,
+               p.temperatura_minima, p.temperatura_maxima
+      ORDER BY c.canal_id, date ASC
     `;
 
     const params = [...chamberIds, startDateTime, endDateTime];
@@ -159,15 +159,16 @@ class AIDataService {
     const startDateTime = DateTime.fromISO(String(startDate)).startOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
     const endDateTime = DateTime.fromISO(String(endDate)).endOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
 
-    // This is a simplified gap detection - for production, might need more sophisticated logic
+    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
+    // chamberId es API canal_id → resuelto a id_canal via subquery
     const query = `
-      SELECT 
-        external_temperature_timestamp as timestamp,
-        LAG(external_temperature_timestamp) OVER (ORDER BY external_temperature_timestamp) as prev_timestamp
-      FROM sensor_readings_ubibot
-      WHERE channel_id = ?
-        AND external_temperature_timestamp BETWEEN ? AND ?
-      ORDER BY external_temperature_timestamp
+      SELECT
+        fecha_lectura_externa AS timestamp,
+        LAG(fecha_lectura_externa) OVER (ORDER BY fecha_lectura_externa) AS prev_timestamp
+      FROM ubi_lecturas_sensor
+      WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+        AND fecha_lectura_externa BETWEEN ? AND ?
+      ORDER BY fecha_lectura_externa
     `;
 
     const rows = await databaseService.query(query, [chamberId, startDateTime, endDateTime]);
