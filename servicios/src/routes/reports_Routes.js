@@ -12,14 +12,10 @@ const router = express.Router();
 
 // Middleware
 const reportPermissions = require('../middlewares/reportPermissions_Middleware');
-const devAuthBypass = require('../middlewares/devAuthBypass_Middleware');
 
 // Controllers
 const reportController = require('../controllers/report_Controller');
 const reportSchedulerController = require('../controllers/reportScheduler_Controller'); // Phase 4 - T041
-
-// Dev-only auth bypass
-router.use(devAuthBypass);
 
 /**
  * @route   POST /api/reports/generate
