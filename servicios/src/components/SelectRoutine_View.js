@@ -1,8 +1,8 @@
 // SelectRoutineV2.js - Migrated to Shadcn/UI with Tailwind CSS - Sprint 3 Complete
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import jwt from "jsonwebtoken";
 import { motion } from "framer-motion";
+import { useAuth } from "../context/AuthContext";
 import { Card, CardContent, CardFooter } from "./ui/card";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
@@ -325,81 +325,45 @@ const routines = [
 
 const SelectRoutineV2 = () => {
   const navigate = useNavigate();
-  const [userPermissions, setUserPermissions] = useState([]);
+  const { userPermissions, isLoading: authLoading } = useAuth();
   const [isMobile, setIsMobile] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [skeletonLoading, setSkeletonLoading] = useState(true);
 
   useEffect(() => {
-    // ✅ Obtener permisos desde el endpoint de validación
-    const _token = localStorage.getItem('accessToken');
-    fetch('/api/auth/validate', { headers: _token ? { Authorization: `Bearer ${_token}` } : {} })
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.user) {
-          // Handle permissions (string or array)
-          const perms = data.user.permissions 
-            ? (typeof data.user.permissions === 'string'
-                ? data.user.permissions.split(",")
-                : data.user.permissions)
-            : [];
-          
-          // Add ai_analysis as a permission if user has it
-          const hasAIAnalysis = data.user.ai_analysis === true || data.user.ai_analysis === 1 || data.user.ai_analysis === '1';
-          
-          if (hasAIAnalysis && !perms.includes('ai_analysis')) {
-            perms.push('ai_analysis');
-          }
-          
-          setUserPermissions(perms);
-        } else {
-          setUserPermissions([]);
-        }
-      })
-      .catch(error => {
-        console.error("[SelectRoutine] ❌ Error al obtener permisos:", error);
-        setUserPermissions([]);
-      });
-
-
-    // Detectar si es un dispositivo móvil - exactly as original
+    // Detectar si es un dispositivo móvil
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
 
-    // Verificar inicialmente
     checkMobile();
-
-    // Agregar listener para cambios de tamaño
     window.addEventListener('resize', checkMobile);
 
-    // Simular loading para mostrar skeletons
+    // Mostrar skeletons un mínimo de 800ms para UX
     const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 800); // 800ms para dar tiempo a ver el skeleton
+      setSkeletonLoading(false);
+    }, 800);
 
-    // Limpiar el listener cuando el componente se desmonte
     return () => {
       window.removeEventListener('resize', checkMobile);
       clearTimeout(timer);
     };
   }, []);
 
-  // Preserve exact handleCardClick logic from original
-  const handleCardClick = (routine) => {
-    if (userPermissions.includes(routine.permission)) {
-      // 🆕 ANALYTICS: Trackear selección de routine
-      try {
-        analyticsService.trackRoutineAccess(routine.title, routine.route);
-      } catch (error) {
-        console.error('[Analytics] Error tracking routine:', error);
-      }
+  // Solo mostrar módulos para los que el usuario tiene permiso
+  const modulosVisibles = routines.filter(r =>
+    !r.permission || userPermissions.includes(r.permission)
+  );
 
-      navigate(routine.route, {
-        state: { title: routine.title, image: routine.image },
-      });
-    } else {
-      alert("No tienes permiso para acceder a esta rutina");
+  // Si hay permiso (módulo visible), navegar directamente
+  const handleCardClick = (routine) => {
+    try {
+      analyticsService.trackRoutineAccess(routine.title, routine.route);
+    } catch (error) {
+      console.error('[Analytics] Error tracking routine:', error);
     }
+    navigate(routine.route, {
+      state: { title: routine.title, image: routine.image },
+    });
   };
 
   // Preserve exact formatTitle logic from original
@@ -473,7 +437,7 @@ const SelectRoutineV2 = () => {
             "lg:grid-cols-4", // Desktop: 4 columnas
             "xl:grid-cols-5" // Desktop XL (1920+): 5 columnas para 9 items = 2 filas completas
           )}>
-          {isLoading ? (
+          {(skeletonLoading || authLoading) ? (
             // Mostrar 8 skeleton cards mientras carga
             Array(8).fill(0).map((_, i) => (
               <motion.div
@@ -486,8 +450,8 @@ const SelectRoutineV2 = () => {
               </motion.div>
             ))
           ) : (
-            // Cards reales
-            routines.map((routine, index) => (
+            // Solo módulos con permisos
+            modulosVisibles.map((routine, index) => (
               <motion.div
               key={index}
               initial={{ opacity: 0, y: 20 }}
