@@ -14,6 +14,8 @@ module.exports = {
       process: "process/browser",
       Buffer: ["buffer", "Buffer"],
     }),
+    // Limita los locales de date-fns al español — evita require() dinámico de react-datepicker
+    new webpack.ContextReplacementPlugin(/date-fns\/locale/, /es/),
     // Plugin para copiar archivos PWA
     new CopyWebpackPlugin({
       patterns: [
