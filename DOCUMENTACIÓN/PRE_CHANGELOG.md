@@ -17,6 +17,46 @@
 
 ## Unreleased
 
+### 2026-03-16 — @dependabot[bot] ([#45](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/45))
+- **chore** `back-end, dependencies, npm, security` | bump babel-loader from 10.0.0 to 10.1.1 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#44](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/44))
+- **chore** `back-end, dependencies, npm, security` | bump lucide-react from 0.544.0 to 0.577.0 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#43](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/43))
+- **chore** `back-end, dependencies, npm, security` | bump react-router from 7.12.0 to 7.13.1 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#42](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/42))
+- **chore** `back-end, dependencies, npm, security` | bump joi from 17.13.3 to 18.0.2 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#41](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/41))
+- **chore** `back-end, dependencies, npm, security` | bump mysql2 from 3.19.1 to 3.20.0 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#40](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/40))
+- **chore** `dependencies` | bump actions/stale from 9 to 10
+
+
+### 2026-03-16 — @dependabot[bot] ([#39](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/39))
+- **chore** `dependencies` | bump actions/setup-node from 4 to 6
+
+
+### 2026-03-16 — @dependabot[bot] ([#38](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/38))
+- **chore** `dependencies` | bump actions/setup-python from 5 to 6
+
+
+### 2026-03-16 — @dependabot[bot] ([#37](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/37))
+- **chore** `dependencies` | bump actions/github-script from 7 to 8
+
+
+### 2026-03-16 — @dependabot[bot] ([#36](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/36))
+- **chore** `dependencies` | bump actions/labeler from 5 to 6
+
+
 ### 2026-03-13 — @andresTNS ([#18](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/18))
 - **refactor** `documentation, SQL - BBDD, back-end, front-end` | eliminar dependencias y código comentado obsoleto
 
