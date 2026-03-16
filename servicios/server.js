@@ -19,7 +19,6 @@ const totalEnergyService = require("./src/services/totalEnergy_Service");
 const deviceRoutes = require("./src/routes/device_Routes");
 const configRoutes = require("./src/routes/config_Routes");
 const totalesRoutes = require("./src/routes/totales_Routes");
-const analysisRoutes = require("./src/routes/analysis_Routes");
 const usuariosRoutes = require("./src/routes/usuarios_Routes");
 const personalRoutes = require("./src/routes/personal_Routes");
 const powerAnalysisRoutes = require("./src/routes/powerAnalysis_Routes");
