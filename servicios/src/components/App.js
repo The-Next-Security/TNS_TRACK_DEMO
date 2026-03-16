@@ -24,14 +24,18 @@ function App() {
     // Feature: 003-fix-session-expiry-handling
     setupAxiosInterceptor();
 
-    // Check authentication status on mount
+    // Check authentication status on mount usando token de localStorage
     const checkAuth = async () => {
       try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          setIsAuthenticated(false);
+          return;
+        }
         const response = await fetch('/api/auth/validate', {
-          credentials: 'include'
+          headers: { Authorization: `Bearer ${token}` }
         });
-        const isAuth = response.ok;
-        setIsAuthenticated(isAuth);
+        setIsAuthenticated(response.ok);
       } catch (error) {
         console.error('[App] Auth check error:', error);
         setIsAuthenticated(false);
@@ -48,10 +52,16 @@ function App() {
       // Store logout reason
       setLogoutReason(LogoutReason.TOKEN_EXPIRED);
 
-      // Clear auth cookies by calling /logout
+      // Limpiar tokens de localStorage
+      const refreshToken = localStorage.getItem('refreshToken');
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('refreshToken');
+
+      // Notificar al servidor para revocar refresh token (fire and forget)
       fetch('/api/auth/logout', {
         method: 'POST',
-        credentials: 'include'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(refreshToken ? { refreshToken } : {})
       }).catch((error) => {
         console.error('[App] Error calling /logout:', error);
       });
