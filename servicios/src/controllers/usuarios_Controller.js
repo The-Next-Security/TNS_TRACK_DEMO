@@ -78,7 +78,6 @@ class usuariosController {
       }
 
       const tokenService = require("../services/token_Service");
-      const authMiddleware = require("../middlewares/auth_Middleware");
       const payload = {
         userId: localUser.id_usuario,
         permissions: localUser.permissions,
@@ -89,7 +88,6 @@ class usuariosController {
       };
       const access = tokenService.signAccess(payload);
       const refresh = tokenService.signRefresh(payload);
-      authMiddleware.setAuthCookies(req, res, access, refresh);
 
       console.log(`[Login] Login exitoso para: ${localUser.email} (ID: ${localUser.id_usuario})`);
 
@@ -101,7 +99,9 @@ class usuariosController {
           permissions: localUser.permissions,
           ai_analysis: localUser.ai_analysis || false,
         },
-        // ✅ Tokens eliminados - ya están en cookies httpOnly
+        accessToken: access,
+        refreshToken: refresh,
+        expiresIn: tokenService.ACCESS_TTL_SECONDS,
       });
     } catch (error) {
       next(error);
