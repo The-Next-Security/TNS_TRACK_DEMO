@@ -1,17 +1,18 @@
-// httpInterceptor.js
-// HTTP fetch wrapper with 401 interception and auth:unauthorized event dispatch
+// httpInterceptor_Utils.js
+// HTTP fetch wrapper con Authorization header y manejo de 401
 // Feature: 003-fix-session-expiry-handling
 
 /**
  * Authenticated fetch wrapper
- * Automatically dispatches 'auth:unauthorized' CustomEvent on 401 responses
+ * Añade automáticamente el header Authorization: Bearer <token> desde localStorage
+ * Despacha 'auth:unauthorized' CustomEvent en respuestas 401
  *
  * @param {string} url - Request URL
  * @param {Object} options - Fetch options
  * @returns {Promise<Response>} - Fetch response
  *
  * @example
- * import { authenticatedFetch } from './utils/httpInterceptor';
+ * import { authenticatedFetch } from './utils/httpInterceptor_Utils';
  *
  * const response = await authenticatedFetch('/api/users', {
  *   method: 'GET',
@@ -20,19 +21,19 @@
  */
 export async function authenticatedFetch(url, options = {}) {
   try {
+    const token = localStorage.getItem('accessToken');
     const response = await fetch(url, {
       ...options,
-      credentials: 'include', // Always include cookies for auth
       headers: {
         'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers
       }
     });
 
-    // Dispatch auth:unauthorized event on 401 responses
+    // Despachar auth:unauthorized en respuestas 401
     if (response.status === 401) {
-      console.log('[httpInterceptor] 401 Unauthorized detected, dispatching event:', url);
-
+      console.log('[httpInterceptor] 401 Unauthorized detectado:', url);
       window.dispatchEvent(new CustomEvent('auth:unauthorized', {
         detail: {
           url,
@@ -51,7 +52,7 @@ export async function authenticatedFetch(url, options = {}) {
 
 /**
  * Authenticated JSON fetch helper
- * Parses response as JSON automatically
+ * Parsea la respuesta como JSON automáticamente
  *
  * @param {string} url - Request URL
  * @param {Object} options - Fetch options
