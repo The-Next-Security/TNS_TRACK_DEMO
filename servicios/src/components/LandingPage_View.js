@@ -86,7 +86,7 @@ const LandingPageV2 = () => {
       // ✅ FEATURE: 003-fix-session-expiry-handling
       // Dispatch login success event to trigger SessionManager
       window.dispatchEvent(new CustomEvent('auth:login_success', {
-        detail: { userId: data.userId || data.id_Usuario || email }
+        detail: { userId: data.userId || data.id_Usuario || email, user: data.user }
       }));
 
       // ✅ NUEVO: Verificar si hay una URL guardada para redirigir (ej: desde notificación push)
