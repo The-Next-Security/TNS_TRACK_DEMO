@@ -3,7 +3,7 @@
 
 const mysql = require("mysql2/promise");
 const configLoader = require("../config/js_files/configLoader_Config");
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 
 // Pool interno del servicio
 let pool = null;
@@ -145,7 +145,8 @@ class AlertTrackingService {
      */
     _formatToSqlDatetime(date) {
         if (!date) return null;
-        return moment(date).tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss');
+        const dt = date instanceof DateTime ? date : DateTime.fromJSDate(date instanceof Date ? date : new Date(date));
+        return dt.setZone(this.timeZone).toFormat('yyyy-MM-dd HH:mm:ss');
     }
 
     /**
@@ -189,8 +190,8 @@ class AlertTrackingService {
             // Validar parámetros requeridos
             const { channelId, channelName, alertType, alertTimestamp, alertData: details } = alertData;
 
-            if (!channelId || !channelName || !alertType) {
-                throw new Error("Faltan parámetros requeridos: channelId, channelName, alertType");
+            if (!channelId || !alertType) {
+                throw new Error("Faltan parámetros requeridos: channelId, alertType");
             }
 
             if (!['temperature', 'disconnection'].includes(alertType)) {
@@ -199,33 +200,27 @@ class AlertTrackingService {
 
             console.log(`[AlertTrackingService] Creando alerta de tipo '${alertType}' para canal ${channelId}`);
 
-            // Preparar datos para inserción
-            const insertData = {
-                channel_id: channelId,
-                channel_name: channelName,
-                alert_type: alertType,
-                alert_timestamp: this._formatToSqlDatetime(alertTimestamp || new Date()),
-                status: 'pending',
-                alert_data: JSON.stringify(details || {}),
-                created_at: this._formatToSqlDatetime(new Date())
-            };
+            // Mapeo de tipo de alerta string → id numérico (ale_tipo_alerta)
+            const alertTypeMap = { temperature: 1, disconnection: 2 };
+            const idTipoAlerta = alertTypeMap[alertType];
+            if (!idTipoAlerta) throw new Error(`Tipo de alerta inválido: ${alertType}`);
 
-            // Insertar alerta
+            // Insertar alerta — origen_id se resuelve via subquery desde ubi_canal.canal_id
             const [result] = await connection.query(
-                "INSERT INTO alert_tracking SET ?",
-                insertData
+                `INSERT INTO ale_seguimiento
+                 (origen_id, id_tipo_alerta, id_origen_tipo, estado, severidad, datos_alerta, fecha_alerta)
+                 VALUES (
+                   (SELECT id_canal FROM ubi_canal WHERE canal_id = ?),
+                   ?, 1, 'pendiente', 'media', ?, ?
+                 )`,
+                [channelId, idTipoAlerta, JSON.stringify(details || {}), this._formatToSqlDatetime(alertTimestamp || new Date())]
             );
 
             const alertId = result.insertId;
 
             console.log(`✅ [AlertTrackingService] Alerta creada con ID: ${alertId}`);
 
-            // Intentar sincronizar campos de temperatura vía SP (omite si no aplica)
-            try {
-                await connection.query("CALL sp_sync_alert_temperature_by_id(?)", [alertId]);
-            } catch (spErr) {
-                console.warn(`[AlertTrackingService] SP sync omitido para alerta ${alertId}: ${spErr.message}`);
-            }
+            // SP eliminado: era específico del schema legacy alert_tracking
             // Actualizar métricas
             await this._updateMetrics(alertType, 'created', connection);
 
@@ -302,28 +297,24 @@ class AlertTrackingService {
                         };
                     }
 
-                    const insertData = {
-                        channel_id: channelId,
-                        channel_name: channelName,
-                        alert_type: alertType,
-                        alert_timestamp: timestamp,
-                        status: 'pending',
-                        alert_data: JSON.stringify(alertData),
-                        created_at: timestamp
-                    };
+                    // Mapeo de tipo de alerta string → id numérico (ale_tipo_alerta)
+                    const alertTypeMap = { temperature: 1, disconnection: 2 };
+                    const idTipoAlerta = alertTypeMap[alertType];
+                    if (!idTipoAlerta) throw new Error(`Tipo de alerta inválido: ${alertType}`);
 
+                    // Insertar alerta — origen_id se resuelve via subquery desde ubi_canal.canal_id
                     const [result] = await connection.query(
-                        "INSERT INTO alert_tracking SET ?",
-                        insertData
+                        `INSERT INTO ale_seguimiento
+                         (origen_id, id_tipo_alerta, id_origen_tipo, estado, severidad, datos_alerta, fecha_alerta)
+                         VALUES (
+                           (SELECT id_canal FROM ubi_canal WHERE canal_id = ?),
+                           ?, 1, 'pendiente', 'media', ?, ?
+                         )`,
+                        [channelId, idTipoAlerta, JSON.stringify(alertData), timestamp]
                     );
 
                     alertIds.push(result.insertId);
-                    // Intentar sincronizar campos de temperatura vía SP por cada fila insertada
-                    try {
-                        await connection.query("CALL sp_sync_alert_temperature_by_id(?)", [result.insertId]);
-                    } catch (spErr) {
-                        console.warn(`[AlertTrackingService] SP sync omitido para alerta ${result.insertId}: ${spErr.message}`);
-                    }
+                    // SP eliminado: era específico del schema legacy alert_tracking
 
                 } catch (itemError) {
                     console.error(`[AlertTrackingService] Error insertando alerta individual:`, itemError.message);
@@ -383,7 +374,7 @@ class AlertTrackingService {
 
             // Verificar que la alerta existe y obtener su timestamp
             const [alerts] = await connection.query(
-                "SELECT alert_id, alert_timestamp, status, acknowledged_at FROM alert_tracking WHERE alert_id = ?",
+                "SELECT id_alerta, fecha_alerta, estado, fecha_confirmacion FROM ale_seguimiento WHERE id_alerta = ?",
                 [alertId]
             );
 
@@ -393,8 +384,8 @@ class AlertTrackingService {
 
             const alert = alerts[0];
 
-            // Verificar si ya fue reconocida
-            if (alert.acknowledged_at) {
+            // Verificar si ya fue reconocida — fecha_confirmacion reemplaza acknowledged_at
+            if (alert.fecha_confirmacion) {
                 console.warn(`[AlertTrackingService] Alerta ${alertId} ya fue reconocida anteriormente`);
                 return {
                     success: true,
@@ -404,19 +395,19 @@ class AlertTrackingService {
             }
 
             const acknowledgedAt = new Date();
-            const responseTimeMs = acknowledgedAt - new Date(alert.alert_timestamp);
+            // fecha_alerta reemplaza alert_timestamp
+            const responseTimeMs = acknowledgedAt - new Date(alert.fecha_alerta);
             const responseTimeMinutes = Math.round(responseTimeMs / 60000);
 
             // Actualizar alerta
             await connection.query(
-                `UPDATE alert_tracking
-                 SET status = 'acknowledged',
-                     acknowledged_at = ?,
-                     acknowledged_by = ?,
-                     response_time_minutes = ?,
-                     device_info = ?,
-                     updated_at = NOW()
-                 WHERE alert_id = ?`,
+                `UPDATE ale_seguimiento
+                 SET estado = 'confirmado',
+                     fecha_confirmacion = ?,
+                     atendido_por = ?,
+                     tiempo_respuesta_minutos = ?,
+                     info_dispositivo = ?
+                 WHERE id_alerta = ?`,
                 [
                     this._formatToSqlDatetime(acknowledgedAt),
                     userId,
@@ -471,7 +462,7 @@ class AlertTrackingService {
 
             // Verificar que la alerta existe
             const [alerts] = await connection.query(
-                "SELECT alert_id, observations FROM alert_tracking WHERE alert_id = ?",
+                "SELECT id_alerta, observaciones FROM ale_seguimiento WHERE id_alerta = ?",
                 [alertId]
             );
 
@@ -479,8 +470,9 @@ class AlertTrackingService {
                 throw new Error(`Alerta con ID ${alertId} no encontrada`);
             }
 
-            const currentObservations = alerts[0].observations || '';
-            const timestamp = moment().tz(this.timeZone).format('YYYY-MM-DD HH:mm:ss');
+            // observaciones reemplaza observations
+            const currentObservations = alerts[0].observaciones || '';
+            const timestamp = DateTime.now().setZone(this.timeZone).toFormat('yyyy-MM-dd HH:mm:ss');
 
             // Construir nueva observación
             const newObservation = `[${timestamp}] ${userId}: ${observation}`;
@@ -490,10 +482,9 @@ class AlertTrackingService {
 
             // Actualizar alerta
             await connection.query(
-                `UPDATE alert_tracking
-                 SET observations = ?,
-                     updated_at = NOW()
-                 WHERE alert_id = ?`,
+                `UPDATE ale_seguimiento
+                 SET observaciones = ?
+                 WHERE id_alerta = ?`,
                 [updatedObservations, alertId]
             );
 
@@ -538,8 +529,8 @@ class AlertTrackingService {
 
             // Verificar que la alerta existe y obtener timestamps
             const [alerts] = await connection.query(
-                `SELECT alert_id, alert_timestamp, status, resolved_at
-                 FROM alert_tracking WHERE alert_id = ?`,
+                `SELECT id_alerta, fecha_alerta, estado, fecha_resolucion
+                 FROM ale_seguimiento WHERE id_alerta = ?`,
                 [alertId]
             );
 
@@ -549,8 +540,8 @@ class AlertTrackingService {
 
             const alert = alerts[0];
 
-            // Verificar si ya fue resuelta
-            if (alert.resolved_at) {
+            // Verificar si ya fue resuelta — fecha_resolucion reemplaza resolved_at
+            if (alert.fecha_resolucion) {
                 console.warn(`[AlertTrackingService] Alerta ${alertId} ya fue resuelta anteriormente`);
                 return {
                     success: true,
@@ -560,19 +551,19 @@ class AlertTrackingService {
             }
 
             const resolvedAt = new Date();
-            const resolutionTimeMs = resolvedAt - new Date(alert.alert_timestamp);
+            // fecha_alerta reemplaza alert_timestamp
+            const resolutionTimeMs = resolvedAt - new Date(alert.fecha_alerta);
             const resolutionTimeMinutes = Math.round(resolutionTimeMs / 60000);
 
             // Actualizar alerta
             await connection.query(
-                `UPDATE alert_tracking
-                 SET status = 'resolved',
-                     resolution_notes = ?,
-                     resolved_at = ?,
-                     resolved_by = ?,
-                     resolution_time_minutes = ?,
-                     updated_at = NOW()
-                 WHERE alert_id = ?`,
+                `UPDATE ale_seguimiento
+                 SET estado = 'resuelto',
+                     notas_resolucion = ?,
+                     fecha_resolucion = ?,
+                     resuelto_por = ?,
+                     tiempo_resolucion_minutos = ?
+                 WHERE id_alerta = ?`,
                 [
                     resolutionNotes,
                     this._formatToSqlDatetime(resolvedAt),
@@ -627,7 +618,7 @@ class AlertTrackingService {
 
             // Verificar que la alerta existe
             const [alerts] = await connection.query(
-                "SELECT alert_id, status FROM alert_tracking WHERE alert_id = ?",
+                "SELECT id_alerta, estado FROM ale_seguimiento WHERE id_alerta = ?",
                 [alertId]
             );
 
@@ -642,14 +633,13 @@ class AlertTrackingService {
 
             // Actualizar alerta
             await connection.query(
-                `UPDATE alert_tracking
-                 SET status = 'false_alarm',
-                     is_false_alarm = TRUE,
-                     resolution_notes = ?,
-                     resolved_at = ?,
-                     resolved_by = ?,
-                     updated_at = NOW()
-                 WHERE alert_id = ?`,
+                `UPDATE ale_seguimiento
+                 SET estado = 'falsa_alarma',
+                     es_falsa_alarma = TRUE,
+                     notas_resolucion = ?,
+                     fecha_resolucion = ?,
+                     resuelto_por = ?
+                 WHERE id_alerta = ?`,
                 [falseAlarmNote, timestamp, userId, alertId]
             );
 
@@ -695,29 +685,29 @@ class AlertTrackingService {
         try {
             console.log(`[AlertTrackingService] Obteniendo detalles de alerta ${alertId}`);
 
+            // Query con JOIN a ubi_canal para obtener channel_id y channel_name via alias
             const [alerts] = await connection.query(
                 `SELECT
-                    alert_id,
-                    channel_id,
-                    channel_name,
-                    alert_type,
-                    alert_timestamp,
-                    status,
-                    alert_data,
-                    acknowledged_at,
-                    acknowledged_by,
-                    observations,
-                    resolution_notes,
-                    resolved_at,
-                    resolved_by,
-                    response_time_minutes,
-                    resolution_time_minutes,
-                    is_false_alarm,
-                    device_info,
-                    created_at,
-                    updated_at
-                 FROM alert_tracking
-                 WHERE alert_id = ?`,
+                    alerta.id_alerta,
+                    uc.canal_id AS channel_id,
+                    uc.nombre AS channel_name,
+                    CASE alerta.id_tipo_alerta WHEN 1 THEN 'temperature' WHEN 2 THEN 'disconnection' ELSE 'unknown' END AS alert_type,
+                    alerta.fecha_alerta AS alert_timestamp,
+                    alerta.estado AS status,
+                    alerta.datos_alerta AS alert_data,
+                    alerta.fecha_confirmacion AS acknowledged_at,
+                    alerta.atendido_por AS acknowledged_by,
+                    alerta.observaciones AS observations,
+                    alerta.notas_resolucion AS resolution_notes,
+                    alerta.fecha_resolucion AS resolved_at,
+                    alerta.resuelto_por AS resolved_by,
+                    alerta.tiempo_respuesta_minutos AS response_time_minutes,
+                    alerta.tiempo_resolucion_minutos AS resolution_time_minutes,
+                    alerta.es_falsa_alarma AS is_false_alarm,
+                    alerta.info_dispositivo AS device_info
+                 FROM ale_seguimiento alerta
+                 LEFT JOIN ubi_canal uc ON uc.id_canal = alerta.origen_id
+                 WHERE alerta.id_alerta = ?`,
                 [alertId]
             );
 
@@ -742,12 +732,10 @@ class AlertTrackingService {
             delete alert.alert_data;
             delete alert.device_info;
 
-            // Formatear timestamps
+            // Formatear timestamps — created_at y updated_at no existen en ale_seguimiento
             alert.alertTimestamp = alert.alert_timestamp;
             alert.acknowledgedAt = alert.acknowledged_at;
             alert.resolvedAt = alert.resolved_at;
-            alert.createdAt = alert.created_at;
-            alert.updatedAt = alert.updated_at;
 
             // Limpiar nombres de campos
             alert.alertId = alert.alert_id;
@@ -775,8 +763,6 @@ class AlertTrackingService {
             delete alert.response_time_minutes;
             delete alert.resolution_time_minutes;
             delete alert.is_false_alarm;
-            delete alert.created_at;
-            delete alert.updated_at;
 
             console.log(`✅ [AlertTrackingService] Detalles de alerta ${alertId} obtenidos`);
 
@@ -810,25 +796,26 @@ class AlertTrackingService {
         try {
             console.log("[AlertTrackingService] Obteniendo lista de alertas con filtros:", filters);
 
-            // Construir query base
+            // Construir query base — JOIN con ubi_canal para channel_id y channel_name
             let query = `
                 SELECT
-                    alert_id,
-                    channel_id,
-                    channel_name,
-                    alert_type,
-                    alert_timestamp,
-                    status,
-                    alert_data,
-                    acknowledged_at,
-                    acknowledged_by,
-                    resolved_at,
-                    resolved_by,
-                    response_time_minutes,
-                    resolution_time_minutes,
-                    is_false_alarm,
-                    observations
-                FROM alert_tracking
+                    alerta.id_alerta AS alert_id,
+                    uc.canal_id AS channel_id,
+                    uc.nombre AS channel_name,
+                    CASE alerta.id_tipo_alerta WHEN 1 THEN 'temperature' WHEN 2 THEN 'disconnection' ELSE 'unknown' END AS alert_type,
+                    alerta.fecha_alerta AS alert_timestamp,
+                    alerta.estado AS status,
+                    alerta.datos_alerta AS alert_data,
+                    alerta.fecha_confirmacion AS acknowledged_at,
+                    alerta.atendido_por AS acknowledged_by,
+                    alerta.fecha_resolucion AS resolved_at,
+                    alerta.resuelto_por AS resolved_by,
+                    alerta.tiempo_respuesta_minutos AS response_time_minutes,
+                    alerta.tiempo_resolucion_minutos AS resolution_time_minutes,
+                    alerta.es_falsa_alarma AS is_false_alarm,
+                    alerta.observaciones AS observations
+                FROM ale_seguimiento alerta
+                LEFT JOIN ubi_canal uc ON uc.id_canal = alerta.origen_id
                 WHERE 1=1
             `;
 
@@ -836,42 +823,57 @@ class AlertTrackingService {
 
             // Aplicar filtros
             if (filters.startDate) {
-                query += " AND alert_timestamp >= ?";
+                query += " AND alerta.fecha_alerta >= ?";
                 params.push(this._formatToSqlDatetime(filters.startDate));
             }
 
             if (filters.endDate) {
-                query += " AND alert_timestamp <= ?";
+                query += " AND alerta.fecha_alerta <= ?";
                 params.push(this._formatToSqlDatetime(filters.endDate));
             }
 
+            // Mapeo de status string inglés → ENUM español en ale_seguimiento
             if (filters.status) {
+                const statusMap = { pending: 'pendiente', acknowledged: 'confirmado', resolved: 'resuelto', false_alarm: 'falsa_alarma' };
                 const statusArray = Array.isArray(filters.status) ? filters.status : [filters.status];
-                const placeholders = statusArray.map(() => '?').join(',');
-                query += ` AND status IN (${placeholders})`;
-                params.push(...statusArray);
+                const mappedStatuses = statusArray.map(s => statusMap[s] || s);
+                const placeholders = mappedStatuses.map(() => '?').join(',');
+                query += ` AND alerta.estado IN (${placeholders})`;
+                params.push(...mappedStatuses);
             }
 
+            // Mapeo de alertType string → id numérico (ale_tipo_alerta)
             if (filters.alertType) {
-                query += " AND alert_type = ?";
-                params.push(filters.alertType);
+                const alertTypeMap = { temperature: 1, disconnection: 2 };
+                const idTipoAlerta = alertTypeMap[filters.alertType];
+                if (idTipoAlerta) {
+                    query += " AND alerta.id_tipo_alerta = ?";
+                    params.push(idTipoAlerta);
+                }
             }
 
+            // channelId filtra por canal_id en ubi_canal (JOIN)
             if (filters.channelId) {
-                query += " AND channel_id = ?";
+                query += " AND uc.canal_id = ?";
                 params.push(filters.channelId);
             }
 
-            // Agregar ordenamiento
+            // Agregar ordenamiento — mapeo de nombres legacy a columnas reales del nuevo schema
             const orderBy = filters.orderBy || 'alert_timestamp';
             const order = filters.order?.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
             // Mapear createdAt a alert_timestamp para compatibilidad frontend
             const orderColumn = orderBy === 'createdAt' ? 'alert_timestamp' : orderBy;
 
-            // Validar que la columna existe (seguridad)
-            const validColumns = ['alert_timestamp', 'alert_id', 'status', 'alert_type', 'channel_id'];
-            const safeOrderColumn = validColumns.includes(orderColumn) ? orderColumn : 'alert_timestamp';
+            // Validar y mapear columnas al nuevo schema
+            const columnMap = {
+                'alert_timestamp': 'alerta.fecha_alerta',
+                'alert_id': 'alerta.id_alerta',
+                'status': 'alerta.estado',
+                'alert_type': 'alerta.id_tipo_alerta',
+                'channel_id': 'uc.canal_id'
+            };
+            const safeOrderColumn = columnMap[orderColumn] || 'alerta.fecha_alerta';
 
             query += ` ORDER BY ${safeOrderColumn} ${order}`;
 
@@ -954,7 +956,7 @@ class AlertTrackingService {
         const connection = await this._getConnection();
 
         try {
-            const startDateSql = this._formatToSqlDatetime(startDate || moment().subtract(30, 'days').toDate());
+            const startDateSql = this._formatToSqlDatetime(startDate || DateTime.now().minus({ days: 30 }).toJSDate());
             const endDateSql = this._formatToSqlDatetime(endDate || new Date());
 
             console.log(`[AlertTrackingService] Obteniendo métricas: ${startDateSql} a ${endDateSql}${alertType ? `, tipo: ${alertType}` : ''}`);
@@ -963,46 +965,54 @@ class AlertTrackingService {
             let metricsQuery = `
                 SELECT
                     COUNT(*) as totalAlerts,
-                    SUM(CASE WHEN alert_type = 'temperature' THEN 1 ELSE 0 END) as temperatureAlerts,
-                    SUM(CASE WHEN alert_type = 'disconnection' THEN 1 ELSE 0 END) as disconnectionAlerts,
-                    SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pendingAlerts,
-                    SUM(CASE WHEN status = 'acknowledged' THEN 1 ELSE 0 END) as acknowledgedAlerts,
-                    SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolvedAlerts,
-                    SUM(CASE WHEN status = 'false_alarm' THEN 1 ELSE 0 END) as falseAlarms,
-                    AVG(CASE WHEN response_time_minutes IS NOT NULL THEN response_time_minutes ELSE NULL END) as avgResponseTimeMinutes,
-                    AVG(CASE WHEN resolution_time_minutes IS NOT NULL THEN resolution_time_minutes ELSE NULL END) as avgResolutionTimeMinutes,
-                    MIN(response_time_minutes) as minResponseTime,
-                    MAX(response_time_minutes) as maxResponseTime,
-                    MIN(resolution_time_minutes) as minResolutionTime,
-                    MAX(resolution_time_minutes) as maxResolutionTime
-                FROM alert_tracking
-                WHERE alert_timestamp BETWEEN ? AND ?
+                    SUM(CASE WHEN id_tipo_alerta = 1 THEN 1 ELSE 0 END) as temperatureAlerts,
+                    SUM(CASE WHEN id_tipo_alerta = 2 THEN 1 ELSE 0 END) as disconnectionAlerts,
+                    SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as pendingAlerts,
+                    SUM(CASE WHEN estado = 'confirmado' THEN 1 ELSE 0 END) as acknowledgedAlerts,
+                    SUM(CASE WHEN estado = 'resuelto' THEN 1 ELSE 0 END) as resolvedAlerts,
+                    SUM(CASE WHEN estado = 'falsa_alarma' THEN 1 ELSE 0 END) as falseAlarms,
+                    AVG(CASE WHEN tiempo_respuesta_minutos IS NOT NULL THEN tiempo_respuesta_minutos ELSE NULL END) as avgResponseTimeMinutes,
+                    AVG(CASE WHEN tiempo_resolucion_minutos IS NOT NULL THEN tiempo_resolucion_minutos ELSE NULL END) as avgResolutionTimeMinutes,
+                    MIN(tiempo_respuesta_minutos) as minResponseTime,
+                    MAX(tiempo_respuesta_minutos) as maxResponseTime,
+                    MIN(tiempo_resolucion_minutos) as minResolutionTime,
+                    MAX(tiempo_resolucion_minutos) as maxResolutionTime
+                FROM ale_seguimiento
+                WHERE fecha_alerta BETWEEN ? AND ?
             `;
 
             const params = [startDateSql, endDateSql];
 
-            // Agregar filtro de tipo si se especifica
+            // Agregar filtro de tipo si se especifica — mapeo string → id numérico
             if (alertType) {
-                metricsQuery += ` AND alert_type = ?`;
-                params.push(alertType);
+                const alertTypeMap = { temperature: 1, disconnection: 2 };
+                const idTipoAlerta = alertTypeMap[alertType];
+                if (idTipoAlerta) {
+                    metricsQuery += ` AND id_tipo_alerta = ?`;
+                    params.push(idTipoAlerta);
+                }
             }
 
             const [metricsResult] = await connection.query(metricsQuery, params);
             const metrics = metricsResult[0];
 
-            // Calcular tasa de entrega de push (simplificado - basado en alertas con acknowledged_at)
+            // Calcular tasa de entrega de push (simplificado - basado en alertas con fecha_confirmacion)
             let deliveryQuery = `
                 SELECT
                     COUNT(*) as total,
-                    SUM(CASE WHEN acknowledged_at IS NOT NULL THEN 1 ELSE 0 END) as delivered
-                FROM alert_tracking
-                WHERE alert_timestamp BETWEEN ? AND ?
+                    SUM(CASE WHEN fecha_confirmacion IS NOT NULL THEN 1 ELSE 0 END) as delivered
+                FROM ale_seguimiento
+                WHERE fecha_alerta BETWEEN ? AND ?
             `;
 
             const deliveryParams = [startDateSql, endDateSql];
             if (alertType) {
-                deliveryQuery += ` AND alert_type = ?`;
-                deliveryParams.push(alertType);
+                const alertTypeMapDelivery = { temperature: 1, disconnection: 2 };
+                const idTipoAlertaDelivery = alertTypeMapDelivery[alertType];
+                if (idTipoAlertaDelivery) {
+                    deliveryQuery += ` AND id_tipo_alerta = ?`;
+                    deliveryParams.push(idTipoAlertaDelivery);
+                }
             }
 
             const [deliveryResult] = await connection.query(deliveryQuery, deliveryParams);
@@ -1011,24 +1021,30 @@ class AlertTrackingService {
                 ? ((delivery.delivered / delivery.total) * 100).toFixed(1)
                 : 0;
 
-            // Query de canales más activos
+            // Query de canales más activos — JOIN ubi_canal para obtener canal_id y nombre
             let topChannelsQuery = `
                 SELECT
-                    channel_id,
-                    channel_name,
+                    uc.canal_id AS channel_id,
+                    uc.nombre AS channel_name,
                     COUNT(*) as alert_count
-                FROM alert_tracking
-                WHERE alert_timestamp BETWEEN ? AND ?
+                FROM ale_seguimiento alerta
+                JOIN ubi_canal uc ON uc.id_canal = alerta.origen_id
+                WHERE alerta.fecha_alerta BETWEEN ? AND ?
             `;
 
             const topChannelsParams = [startDateSql, endDateSql];
             if (alertType) {
-                topChannelsQuery += ` AND alert_type = ?`;
-                topChannelsParams.push(alertType);
+                // Mapear tipo string a id_tipo_alerta INT
+                const alertTypeMapTop = { temperature: 1, disconnection: 2 };
+                const idTipoAlertaTop = alertTypeMapTop[alertType];
+                if (idTipoAlertaTop) {
+                    topChannelsQuery += ` AND alerta.id_tipo_alerta = ?`;
+                    topChannelsParams.push(idTipoAlertaTop);
+                }
             }
 
             topChannelsQuery += `
-                GROUP BY channel_id, channel_name
+                GROUP BY uc.canal_id, uc.nombre
                 ORDER BY alert_count DESC
                 LIMIT 5
             `;
@@ -1088,7 +1104,7 @@ class AlertTrackingService {
         const connection = await this._getConnection();
 
         try {
-            const startDateSql = this._formatToSqlDatetime(startDate || moment().subtract(7, 'days').toDate());
+            const startDateSql = this._formatToSqlDatetime(startDate || DateTime.now().minus({ days: 7 }).toJSDate());
             const endDateSql = this._formatToSqlDatetime(endDate || new Date());
 
             console.log(`[AlertTrackingService] Obteniendo datos de gráfico tipo '${type}'${alertType ? `, alertType: ${alertType}` : ''}`);
@@ -1102,17 +1118,22 @@ class AlertTrackingService {
                     // Alertas por hora (últimas 24 horas)
                     query = `
                         SELECT
-                            DATE_FORMAT(alert_timestamp, '%Y-%m-%d %H:00:00') as hour,
+                            DATE_FORMAT(fecha_alerta, '%Y-%m-%d %H:00:00') as hour,
                             COUNT(*) as total,
-                            SUM(CASE WHEN alert_type = 'temperature' THEN 1 ELSE 0 END) as temperature,
-                            SUM(CASE WHEN alert_type = 'disconnection' THEN 1 ELSE 0 END) as disconnection
-                        FROM alert_tracking
-                        WHERE alert_timestamp BETWEEN DATE_SUB(NOW(), INTERVAL 24 HOUR) AND NOW()
+                            SUM(CASE WHEN id_tipo_alerta = 1 THEN 1 ELSE 0 END) as temperature,
+                            SUM(CASE WHEN id_tipo_alerta = 2 THEN 1 ELSE 0 END) as disconnection
+                        FROM ale_seguimiento
+                        WHERE fecha_alerta BETWEEN DATE_SUB(NOW(), INTERVAL 24 HOUR) AND NOW()
                     `;
 
                     if (alertType) {
-                        query += ` AND alert_type = ?`;
-                        params = [alertType];
+                        // Mapear tipo string a id_tipo_alerta INT
+                        const alertTypeMapHourly = { temperature: 1, disconnection: 2 };
+                        const idTipoAlertaHourly = alertTypeMapHourly[alertType];
+                        if (idTipoAlertaHourly) {
+                            query += ` AND id_tipo_alerta = ?`;
+                            params = [idTipoAlertaHourly];
+                        }
                     }
 
                     query += `
@@ -1123,7 +1144,7 @@ class AlertTrackingService {
                     const [hourlyData] = await connection.query(query, params);
 
                     data = hourlyData.map(row => ({
-                        time: moment(row.hour).format('HH:00'),
+                        time: DateTime.fromJSDate(row.hour instanceof Date ? row.hour : new Date(row.hour)).toFormat('HH:00'),
                         total: row.total,
                         temperature: row.temperature,
                         disconnection: row.disconnection
@@ -1132,25 +1153,32 @@ class AlertTrackingService {
 
                 case 'daily':
                     // Alertas por día agrupadas por canal (para barras apiladas)
+                    // JOIN ubi_canal para obtener canal_id y nombre del canal
                     query = `
                         SELECT
-                            DATE(alert_timestamp) as day,
-                            channel_id,
-                            channel_name,
+                            DATE(alerta.fecha_alerta) as day,
+                            uc.canal_id AS channel_id,
+                            uc.nombre AS channel_name,
                             COUNT(*) as count
-                        FROM alert_tracking
-                        WHERE alert_timestamp BETWEEN ? AND ?
+                        FROM ale_seguimiento alerta
+                        JOIN ubi_canal uc ON uc.id_canal = alerta.origen_id
+                        WHERE alerta.fecha_alerta BETWEEN ? AND ?
                     `;
 
                     params = [startDateSql, endDateSql];
 
                     if (alertType) {
-                        query += ` AND alert_type = ?`;
-                        params.push(alertType);
+                        // Mapear tipo string a id_tipo_alerta INT
+                        const alertTypeMapDaily = { temperature: 1, disconnection: 2 };
+                        const idTipoAlertaDaily = alertTypeMapDaily[alertType];
+                        if (idTipoAlertaDaily) {
+                            query += ` AND alerta.id_tipo_alerta = ?`;
+                            params.push(idTipoAlertaDaily);
+                        }
                     }
 
                     query += `
-                        GROUP BY day, channel_id, channel_name
+                        GROUP BY day, uc.canal_id, uc.nombre
                         ORDER BY day ASC, count DESC
                     `;
 
@@ -1160,7 +1188,7 @@ class AlertTrackingService {
                     const dataByDate = {};
 
                     dailyData.forEach(row => {
-                        const dateKey = moment(row.day).format('DD/MM');
+                        const dateKey = DateTime.fromJSDate(row.day instanceof Date ? row.day : new Date(row.day)).toFormat('dd/MM');
                         if (!dataByDate[dateKey]) {
                             dataByDate[dateKey] = { fecha: dateKey };
                         }
@@ -1180,27 +1208,33 @@ class AlertTrackingService {
                     break;
 
                 case 'by_channel':
-                    // Alertas por canal (top 10)
+                    // Alertas por canal (top 10) — JOIN ubi_canal para canal_id y nombre
                     query = `
                         SELECT
-                            channel_id,
-                            channel_name,
+                            uc.canal_id AS channel_id,
+                            uc.nombre AS channel_name,
                             COUNT(*) as total,
-                            SUM(CASE WHEN alert_type = 'temperature' THEN 1 ELSE 0 END) as temperature,
-                            SUM(CASE WHEN alert_type = 'disconnection' THEN 1 ELSE 0 END) as disconnection
-                        FROM alert_tracking
-                        WHERE alert_timestamp BETWEEN ? AND ?
+                            SUM(CASE WHEN alerta.id_tipo_alerta = 1 THEN 1 ELSE 0 END) as temperature,
+                            SUM(CASE WHEN alerta.id_tipo_alerta = 2 THEN 1 ELSE 0 END) as disconnection
+                        FROM ale_seguimiento alerta
+                        JOIN ubi_canal uc ON uc.id_canal = alerta.origen_id
+                        WHERE alerta.fecha_alerta BETWEEN ? AND ?
                     `;
 
                     params = [startDateSql, endDateSql];
 
                     if (alertType) {
-                        query += ` AND alert_type = ?`;
-                        params.push(alertType);
+                        // Mapear tipo string a id_tipo_alerta INT
+                        const alertTypeMapByChannel = { temperature: 1, disconnection: 2 };
+                        const idTipoAlertaByChannel = alertTypeMapByChannel[alertType];
+                        if (idTipoAlertaByChannel) {
+                            query += ` AND alerta.id_tipo_alerta = ?`;
+                            params.push(idTipoAlertaByChannel);
+                        }
                     }
 
                     query += `
-                        GROUP BY channel_id, channel_name
+                        GROUP BY uc.canal_id, uc.nombre
                         ORDER BY total DESC
                         LIMIT 10
                     `;
@@ -1220,23 +1254,29 @@ class AlertTrackingService {
 
                 case 'by_type':
                     // Distribución por tipo (formato para PieChart)
+                    // CASE para devolver string 'temperature'/'disconnection' que espera el frontend
                     query = `
                         SELECT
-                            alert_type,
+                            CASE id_tipo_alerta WHEN 1 THEN 'temperature' WHEN 2 THEN 'disconnection' ELSE 'unknown' END AS alert_type,
                             COUNT(*) as count
-                        FROM alert_tracking
-                        WHERE alert_timestamp BETWEEN ? AND ?
+                        FROM ale_seguimiento
+                        WHERE fecha_alerta BETWEEN ? AND ?
                     `;
 
                     params = [startDateSql, endDateSql];
 
                     if (alertType) {
-                        query += ` AND alert_type = ?`;
-                        params.push(alertType);
+                        // Mapear tipo string a id_tipo_alerta INT
+                        const alertTypeMapByType = { temperature: 1, disconnection: 2 };
+                        const idTipoAlertaByType = alertTypeMapByType[alertType];
+                        if (idTipoAlertaByType) {
+                            query += ` AND id_tipo_alerta = ?`;
+                            params.push(idTipoAlertaByType);
+                        }
                     }
 
                     query += `
-                        GROUP BY alert_type
+                        GROUP BY id_tipo_alerta
                         ORDER BY count DESC
                     `;
 
@@ -1287,16 +1327,16 @@ class AlertTrackingService {
 
         try {
             const [alerts] = await connection.query(
-                `SELECT alert_timestamp, acknowledged_at
-                 FROM alert_tracking
-                 WHERE alert_id = ? AND acknowledged_at IS NOT NULL`,
+                `SELECT fecha_alerta, fecha_confirmacion
+                 FROM ale_seguimiento
+                 WHERE id_alerta = ? AND fecha_confirmacion IS NOT NULL`,
                 [alertId]
             );
 
             if (alerts.length === 0) return null;
 
             const alert = alerts[0];
-            const responseTimeMs = new Date(alert.acknowledged_at) - new Date(alert.alert_timestamp);
+            const responseTimeMs = new Date(alert.fecha_confirmacion) - new Date(alert.fecha_alerta);
             return Math.round(responseTimeMs / 60000);
 
         } catch (error) {
@@ -1321,7 +1361,7 @@ class AlertTrackingService {
 
         try {
             await connection.query(
-                "UPDATE alert_tracking SET status = ?, updated_at = NOW() WHERE alert_id = ?",
+                "UPDATE ale_seguimiento SET estado = ? WHERE id_alerta = ?",
                 [newStatus, alertId]
             );
 
@@ -1364,11 +1404,11 @@ class AlertTrackingService {
         try {
             const statsQuery = `
                 SELECT
-                    (SELECT COUNT(*) FROM alert_tracking) as totalAlerts,
-                    (SELECT COUNT(*) FROM alert_tracking WHERE status = 'pending') as pendingAlerts,
-                    (SELECT COUNT(*) FROM alert_tracking WHERE DATE(alert_timestamp) = CURDATE()) as todayAlerts,
-                    (SELECT COUNT(*) FROM alert_tracking WHERE acknowledged_at IS NOT NULL) as acknowledgedAlerts,
-                    (SELECT AVG(response_time_minutes) FROM alert_tracking WHERE response_time_minutes IS NOT NULL) as avgResponseTime
+                    (SELECT COUNT(*) FROM ale_seguimiento) as totalAlerts,
+                    (SELECT COUNT(*) FROM ale_seguimiento WHERE estado = 'pendiente') as pendingAlerts,
+                    (SELECT COUNT(*) FROM ale_seguimiento WHERE DATE(fecha_alerta) = CURDATE()) as todayAlerts,
+                    (SELECT COUNT(*) FROM ale_seguimiento WHERE fecha_confirmacion IS NOT NULL) as acknowledgedAlerts,
+                    (SELECT AVG(tiempo_respuesta_minutos) FROM ale_seguimiento WHERE tiempo_respuesta_minutos IS NOT NULL) as avgResponseTime
             `;
 
             const [stats] = await connection.query(statsQuery);

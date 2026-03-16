@@ -8,7 +8,6 @@ import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 import Header from "./Header_View";
 import analyticsService from "../services/analytics_Service";
-// import SideNav from "./SideNav_View"; // Oculto temporalmente
 
 // Import all routine images - preserving exact imports from original
 import dashboardImage from "../assets/images/dashboard.png";
@@ -121,6 +120,7 @@ const getDescriptionText = (title) => {
     "📊 Monitor de Alertas": "Dashboard de métricas y estadísticas",
     "🔔 Gestión de Alertas": "Atender y resolver alertas activas",
     "⚙️ Config. Notificaciones": "Configurar horarios y preferencias",
+    "⏰ Horarios de envío (admin)": "Horarios base de envío por tipo y canal",
     "Gráfico KW por Cámara": "Consumo eléctrico por unidad",
     "Gráfico KW por Dia": "Análisis diario de consumo",
     "Gráfico KW por Mes": "Tendencias mensuales de energía",
@@ -301,6 +301,12 @@ const routines = [
     title: "⚙️ Config. Alertas",
     image: setting_push, // Placeholder
     route: "/configuracion-notificaciones",
+    permission: "config_notifications",
+  },
+  {
+    title: "⏰ Horarios de envío (admin)",
+    image: setting_push,
+    route: "/configuracion-horarios-envio",
     permission: "config_notifications",
   },
   {

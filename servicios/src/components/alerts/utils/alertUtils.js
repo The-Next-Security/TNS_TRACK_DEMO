@@ -1,46 +1,42 @@
 /**
  * @fileoverview Alert Utility Functions
- * @description Reusable utility functions for date formatting, observation parsing, and calculations
+ * @description Reusable utility functions for date formatting, observation parsing, and calculations (Luxon per Decisiones_Tecnicas §10)
  * @version 1.0.0
  * @module alerts/utils
  */
 
-import moment from "moment";
+import { DateTime } from "luxon";
+
+const TZ = "America/Santiago";
 
 /**
  * Formats a date-time string to a short format
  * @param {string} dateString - ISO date string
  * @returns {string} Formatted date string (DD/MM/YY HH:mm) or 'N/A'
- * @example
- * formatDate("2025-10-17T10:30:00Z") // "17/10/25 10:30"
  */
 export const formatDate = (dateString) => {
   if (!dateString) return 'N/A';
-  return moment(dateString).format('DD/MM/YY HH:mm');
+  return DateTime.fromISO(dateString).setZone(TZ).toFormat('dd/MM/yy HH:mm');
 };
 
 /**
  * Formats a date-time string to a detailed format
  * @param {string} dateString - ISO date string
  * @returns {string} Formatted date string (DD/MM/YYYY HH:mm:ss) or 'N/A'
- * @example
- * formatDateTime("2025-10-17T10:30:00Z") // "17/10/2025 10:30:00"
  */
 export const formatDateTime = (dateString) => {
   if (!dateString) return "N/A";
-  return moment(dateString).format("DD/MM/YYYY HH:mm:ss");
+  return DateTime.fromISO(dateString).setZone(TZ).toFormat("dd/MM/yyyy HH:mm:ss");
 };
 
 /**
  * Formats a date-time string to relative time (e.g., "2 hours ago")
  * @param {string} dateString - ISO date string
  * @returns {string} Relative time string or empty string
- * @example
- * formatRelativeTime("2025-10-17T10:30:00Z") // "2 hours ago"
  */
 export const formatRelativeTime = (dateString) => {
   if (!dateString) return "";
-  return moment(dateString).fromNow();
+  return DateTime.fromISO(dateString).toRelative() || "";
 };
 
 /**
@@ -69,13 +65,12 @@ export const formatResponseTime = (minutes) => {
 export const getElapsedTime = (createdAt) => {
   if (!createdAt) return "N/A";
 
-  const now = moment();
-  const created = moment(createdAt);
-  const duration = moment.duration(now.diff(created));
-
-  const days = Math.floor(duration.asDays());
-  const hours = duration.hours();
-  const minutes = duration.minutes();
+  const now = DateTime.now();
+  const created = DateTime.fromISO(createdAt);
+  const diff = now.diff(created, ["days", "hours", "minutes"]);
+  const days = Math.floor(diff.days);
+  const hours = diff.hours;
+  const minutes = Math.floor(diff.minutes);
 
   if (days > 0) {
     return `${days}d ${hours}h ${minutes}min`;
@@ -230,28 +225,29 @@ export const calculateAlertStats = (alerts) => {
  * // { startDate: "2025-10-10 00:00:00", endDate: "2025-10-17 23:59:59" }
  */
 export const getDateRangeParams = (rangeType) => {
+  const now = DateTime.now().setZone(TZ);
   let startDate, endDate;
 
   switch (rangeType) {
     case 'today':
-      startDate = moment().startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      endDate = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      startDate = now.startOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
+      endDate = now.endOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
       break;
     case 'week':
-      startDate = moment().subtract(7, 'days').startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      endDate = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      startDate = now.minus({ days: 7 }).startOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
+      endDate = now.endOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
       break;
     case 'month':
-      startDate = moment().subtract(30, 'days').startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      endDate = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      startDate = now.minus({ days: 30 }).startOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
+      endDate = now.endOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
       break;
     case 'quarter':
-      startDate = moment().subtract(90, 'days').startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      endDate = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      startDate = now.minus({ days: 90 }).startOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
+      endDate = now.endOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
       break;
     default:
-      startDate = moment().subtract(7, 'days').startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      endDate = moment().endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      startDate = now.minus({ days: 7 }).startOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
+      endDate = now.endOf('day').toFormat('yyyy-MM-dd HH:mm:ss');
   }
 
   return { startDate, endDate };

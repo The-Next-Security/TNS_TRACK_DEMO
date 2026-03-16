@@ -1,4 +1,4 @@
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 const config = require("../config/js_files/configLoader_Config");
 const alertScheduleConfigService = require("./db/alertScheduleConfig_Service");
 
@@ -148,7 +148,7 @@ class BaseAlertService {
      *
      * Feature: 002-configurable-alert-schedules (T051 - User Story 2)
      *
-     * @param {Date|string|moment.Moment|null} [checkTime=null] - Fecha a verificar (null = hoy)
+     * @param {Date|string|DateTime|null} [checkTime=null] - Fecha a verificar (null = hoy)
      * @returns {Promise<boolean>} true si la fecha es un feriado
      */
     async isHoliday(checkTime = null) {
@@ -159,17 +159,22 @@ class BaseAlertService {
                 return false; // Graceful degradation
             }
 
-            // Normalizar fecha a objeto moment en zona horaria correcta
-            const dateToCheck = checkTime
-                ? (moment.isMoment(checkTime) ? checkTime.clone() : moment(checkTime))
-                : moment();
+            // Normalizar fecha a objeto DateTime en zona horaria correcta
+            let dateToCheck;
+            if (!checkTime) {
+                dateToCheck = DateTime.now();
+            } else if (checkTime instanceof DateTime) {
+                dateToCheck = checkTime;
+            } else {
+                dateToCheck = DateTime.fromJSDate(checkTime instanceof Date ? checkTime : new Date(checkTime));
+            }
 
-            const localDate = dateToCheck.tz(this.timeZone);
-            const formattedDate = localDate.format('YYYY-MM-DD');
+            const localDate = dateToCheck.setZone(this.timeZone);
+            const formattedDate = localDate.toFormat('yyyy-MM-dd');
 
             // Consultar tabla de feriados usando el databaseService
             const [rows] = await alertScheduleConfigService.databaseService.pool.execute(
-                "SELECT 1 FROM feriados_cl WHERE fecha = ?",
+                "SELECT 1 FROM gen_feriados_cl WHERE fecha = ?", // Migrado: feriados_cl → gen_feriados_cl
                 [formattedDate]
             );
 
@@ -198,18 +203,22 @@ class BaseAlertService {
      *
      * Nota: El Nivel 2 (DND por usuario) lo gestiona MySQL vía fun_should_send_notification().
      *
-     * @param {Date|string|moment.Moment|null} [checkTime=null] - Tiempo a verificar (null = ahora)
+     * @param {Date|string|DateTime|null} [checkTime=null] - Tiempo a verificar (null = ahora)
      * @returns {Promise<boolean>} true si estamos en horario operacional (NO enviar alertas)
      */
     async isWithinWorkingHours(checkTime = null) {
         let timeToCheck;
         if (checkTime) {
-            timeToCheck = moment.isMoment(checkTime) ? checkTime.clone() : moment(checkTime);
+            if (checkTime instanceof DateTime) {
+                timeToCheck = checkTime;
+            } else {
+                timeToCheck = DateTime.fromJSDate(checkTime instanceof Date ? checkTime : new Date(checkTime));
+            }
         } else {
-            timeToCheck = moment();
+            timeToCheck = DateTime.now();
         }
 
-        const localTime = timeToCheck.tz(this.timeZone);
+        const localTime = timeToCheck.setZone(this.timeZone);
 
         // Verificar feriados si respetar_feriados está habilitado
         if (this.configCache?.respetar_feriados) {

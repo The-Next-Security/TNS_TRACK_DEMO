@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import moment from 'moment';
+import { DateTime } from 'luxon';
 import { motion } from 'framer-motion';
 import HeaderV2 from './Header_View';
 import { Card, CardContent } from './ui/card';
@@ -219,9 +219,9 @@ const DashboardElectricoV2 = () => {
     if (!timestamp) return 'Sin actualización';
 
     if (isMobile) {
-      return moment(timestamp).format('DD/MM HH:mm');
+      return DateTime.fromISO(timestamp).setZone('America/Santiago').toFormat('dd/MM HH:mm');
     } else {
-      return moment(timestamp).format('DD/MM/YYYY HH:mm');
+      return DateTime.fromISO(timestamp).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm');
     }
   };
 

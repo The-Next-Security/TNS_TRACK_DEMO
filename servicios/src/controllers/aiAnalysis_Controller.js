@@ -2,12 +2,12 @@ const openaiService = require('../services/openai_Service');
 const aiDataService = require('../services/aiData_Service');
 const costTracker = require('../services/aiCostTracker_Service');
 const databaseService = require('../services/database_Service');
-const moment = require('moment');
+const { DateTime } = require('../utils/date_Utils');
 
 class AIAnalysisController {
   /**
    * Execute AI analysis query
-   * POST /api/v1/ai-analysis/query
+   * POST /api/ia/analisis/query
    */
   async query(req, res) {
     const startTime = Date.now();
@@ -28,8 +28,8 @@ class AIAnalysisController {
       let finalDateRange = dateRange;
       if (!finalDateRange) {
         finalDateRange = {
-          start: moment().subtract(7, 'days').format('YYYY-MM-DD'),
-          end: moment().format('YYYY-MM-DD')
+          start: DateTime.now().minus({ days: 7 }).toFormat('yyyy-MM-dd'),
+          end: DateTime.now().toFormat('yyyy-MM-dd')
         };
       }
 
@@ -124,7 +124,7 @@ class AIAnalysisController {
 
   /**
    * Get user's session history
-   * GET /api/v1/ai-analysis/sessions
+   * GET /api/ia/analisis/sessions
    */
   async getSessions(req, res) {
     try {
@@ -198,26 +198,32 @@ class AIAnalysisController {
 
   /**
    * Get available chambers
-   * GET /api/v1/ai-analysis/chambers
+   * GET /api/ia/analisis/chambers
    */
   async getChambers(req, res) {
     try {
+      // Migrado: channels_ubibot → ubi_canal; sensor_readings_ubibot → ubi_lecturas_sensor;
+      // parametrizaciones → ubi_presets_temperatura
+      // SUPUESTO #3: threshold_min/max provienen del preset del grupo (ubi_presets_temperatura),
+      //   ya que ubi_canal no tiene umbrales individuales por canal.
+      // SUPUESTO #5: ubi_presets_temperatura no tiene columna nombre_parametro;
+      //   se retorna NULL como group_name hasta definir campo equivalente en nuevo schema.
       const query = `
-        SELECT 
-          c.channel_id as id,
-          c.name,
-          c.threshold_min,
-          c.threshold_max,
-          c.id_parametrizacion,
-          p.nombre_parametro as group_name,
-          COUNT(DISTINCT DATE(sr.external_temperature_timestamp)) as days_with_data
-        FROM channels_ubibot c
-        LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
-        LEFT JOIN sensor_readings_ubibot sr ON c.channel_id = sr.channel_id
-          AND sr.external_temperature_timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        GROUP BY c.channel_id, c.name, c.threshold_min, c.threshold_max, c.id_parametrizacion, p.nombre_parametro
+        SELECT
+          c.canal_id AS id,
+          c.nombre AS name,
+          p.temperatura_minima AS threshold_min,
+          p.temperatura_maxima AS threshold_max,
+          c.id_preset,
+          NULL AS group_name,
+          COUNT(DISTINCT DATE(sr.fecha_lectura_externa)) as days_with_data
+        FROM ubi_canal c
+        LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+        LEFT JOIN ubi_lecturas_sensor sr ON c.id_canal = sr.id_canal
+          AND sr.fecha_lectura_externa >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        GROUP BY c.canal_id, c.nombre, p.temperatura_minima, p.temperatura_maxima, c.id_preset
         HAVING days_with_data > 0
-        ORDER BY c.name
+        ORDER BY c.nombre
       `;
 
       const chambers = await databaseService.query(query);
@@ -246,19 +252,21 @@ class AIAnalysisController {
 
   /**
    * Get suggested questions
-   * GET /api/v1/ai-analysis/suggested-questions
+   * GET /api/ia/analisis/suggested-questions
    */
   async getSuggestedQuestions(req, res) {
     try {
       const userId = req.user.userId || req.user.id_Usuario || req.user.id;
       
+      // Migrado: channels_ubibot → ubi_canal; sensor_readings_ubibot → ubi_lecturas_sensor
+      // Se retorna canal_id (API ID de Ubibot) con alias channel_id para compatibilidad con JS posterior
       // Get first 3 chambers with data for suggestions
       const chambersQuery = `
-        SELECT DISTINCT c.channel_id
-        FROM channels_ubibot c
-        JOIN sensor_readings_ubibot sr ON c.channel_id = sr.channel_id
-        WHERE sr.external_temperature_timestamp >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        ORDER BY c.channel_id
+        SELECT DISTINCT c.canal_id AS channel_id
+        FROM ubi_canal c
+        JOIN ubi_lecturas_sensor sr ON c.id_canal = sr.id_canal
+        WHERE sr.fecha_lectura_externa >= DATE_SUB(NOW(), INTERVAL 30 DAY)
+        ORDER BY c.canal_id
         LIMIT 3
       `;
       
@@ -270,24 +278,24 @@ class AIAnalysisController {
           text: "¿Qué cámaras tuvieron brechas de temperatura en los últimos 7 días?",
           chambers: defaultChambers,
           dateRange: {
-            start: moment().subtract(7, 'days').format('YYYY-MM-DD'),
-            end: moment().format('YYYY-MM-DD')
+            start: DateTime.now().minus({ days: 7 }).toFormat('yyyy-MM-dd'),
+            end: DateTime.now().toFormat('yyyy-MM-dd')
           }
         },
         {
           text: "Compara la estabilidad de temperatura entre cámaras este mes",
           chambers: defaultChambers,
           dateRange: {
-            start: moment().startOf('month').format('YYYY-MM-DD'),
-            end: moment().format('YYYY-MM-DD')
+            start: DateTime.now().startOf('month').toFormat('yyyy-MM-dd'),
+            end: DateTime.now().toFormat('yyyy-MM-dd')
           }
         },
         {
           text: "Muestra el patrón de temperatura de las cámaras durante el último evento de frío",
           chambers: defaultChambers.slice(0, 1), // Solo primera cámara para análisis de patrón
           dateRange: {
-            start: moment().subtract(7, 'days').format('YYYY-MM-DD'),
-            end: moment().format('YYYY-MM-DD')
+            start: DateTime.now().minus({ days: 7 }).toFormat('yyyy-MM-dd'),
+            end: DateTime.now().toFormat('yyyy-MM-dd')
           }
         }
       ];

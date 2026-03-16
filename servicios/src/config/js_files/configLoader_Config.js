@@ -215,9 +215,6 @@ class ConfigLoader extends BaseConfigLoader {
       // Construir objeto anidado desde filas planas
       const bdConfig = this._buildNestedConfig(rows);
 
-      // Agregar aliases de compatibilidad para servicios que usan paths anteriores
-      this._applyCompatibilityAliases(bdConfig);
-
       // Combinar: credenciales DB (Fase 1) + resto de config (BD)
       this.config = {
         ...bdConfig,
@@ -317,40 +314,6 @@ class ConfigLoader extends BaseConfigLoader {
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // COMPATIBILIDAD CON PATHS ANTERIORES
-  // ─────────────────────────────────────────────────────────────────────────
-
-  /**
-   * Agrega aliases para servicios que usan los paths de unified-config.json.
-   * Solo aplica a los casos donde el path en BD difiere del path anterior.
-   *
-   * NOTA: Eliminar estos aliases a medida que se migren los servicios.
-   * @param {Object} cfg - Objeto de config construido desde BD
-   * @private
-   */
-  _applyCompatibilityAliases(cfg) {
-    // email.sendgrid_api_key → email.SENDGRID_API_KEY
-    if (cfg.email?.sendgrid_api_key !== undefined) {
-      cfg.email.SENDGRID_API_KEY = cfg.email.sendgrid_api_key;
-    }
-
-    // ubibot.account_key → ubibot.accountKey
-    if (cfg.ubibot?.account_key !== undefined) {
-      cfg.ubibot.accountKey = cfg.ubibot.account_key;
-    }
-
-    // ubibot.token_file → ubibot.tokenFile
-    if (cfg.ubibot?.token_file !== undefined) {
-      cfg.ubibot.tokenFile = cfg.ubibot.token_file;
-    }
-
-    // ubibot.excluded_channels → ubibot.excludedChannels (si algún servicio lo usa)
-    if (cfg.ubibot?.excluded_channels !== undefined) {
-      cfg.ubibot.excludedChannels = cfg.ubibot.excluded_channels;
-    }
-  }
-
-  // ─────────────────────────────────────────────────────────────────────────
   // VALIDACIÓN
   // ─────────────────────────────────────────────────────────────────────────
 
@@ -380,7 +343,7 @@ class ConfigLoader extends BaseConfigLoader {
     }
 
     // ── Email API Key (crítico para notificaciones)
-    if (!cfg.email?.SENDGRID_API_KEY) {
+    if (!cfg.email?.sendgrid_api_key) {
       console.warn('[ConfigLoader] ⚠️  Falta email.sendgrid_api_key (id=11). Notificaciones por email deshabilitadas.');
     }
 

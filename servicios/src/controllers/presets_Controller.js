@@ -23,21 +23,18 @@ class PresetsController {
     try {
       const query = `
         SELECT
-          preset_id as id,
-          preset_name as name,
-          preset_min as min,
-          preset_max as max,
-          preset_color as color,
-          preset_icon as icon,
-          preset_description as description,
-          is_default,
-          created_at,
-          created_by,
-          updated_at,
-          updated_by
-        FROM temperature_presets
-        WHERE is_active = 1
-        ORDER BY is_default DESC, preset_name ASC
+          id_preset as id,
+          nombre_preset as name,
+          temperatura_minima as min,
+          temperatura_maxima as max,
+          es_predeterminado as is_default,
+          fecha_creacion as created_at,
+          creado_por as created_by,
+          fecha_actualizacion as updated_at,
+          actualizado_por as updated_by
+        FROM ubi_presets_temperatura
+        WHERE activo = 1
+        ORDER BY es_predeterminado DESC, nombre_preset ASC
       `;
 
       const results = await databaseService.query(query);
@@ -52,9 +49,9 @@ class PresetsController {
           name: preset.name,
           min: parseFloat(preset.min),
           max: parseFloat(preset.max),
-          color: preset.color,
-          icon: preset.icon,
-          description: preset.description,
+          color: null,
+          icon: null,
+          description: null,
           isDefault: preset.is_default === 1,
           createdAt: preset.created_at,
           createdBy: preset.created_by,
@@ -92,21 +89,18 @@ class PresetsController {
 
       const query = `
         SELECT
-          preset_id as id,
-          preset_name as name,
-          preset_min as min,
-          preset_max as max,
-          preset_color as color,
-          preset_icon as icon,
-          preset_description as description,
-          is_default,
-          is_active,
-          created_at,
-          created_by,
-          updated_at,
-          updated_by
-        FROM temperature_presets
-        WHERE preset_id = ?
+          id_preset as id,
+          nombre_preset as name,
+          temperatura_minima as min,
+          temperatura_maxima as max,
+          es_predeterminado as is_default,
+          activo as is_active,
+          fecha_creacion as created_at,
+          creado_por as created_by,
+          fecha_actualizacion as updated_at,
+          actualizado_por as updated_by
+        FROM ubi_presets_temperatura
+        WHERE id_preset = ?
       `;
 
       const results = await databaseService.query(query, [id]);
@@ -127,9 +121,9 @@ class PresetsController {
           name: preset.name,
           min: parseFloat(preset.min),
           max: parseFloat(preset.max),
-          color: preset.color,
-          icon: preset.icon,
-          description: preset.description,
+          color: null,
+          icon: null,
+          description: null,
           isDefault: preset.is_default === 1,
           isActive: preset.is_active === 1,
           createdAt: preset.created_at,
@@ -208,8 +202,8 @@ class PresetsController {
       // Verificar nombre único
       const checkQuery = `
         SELECT COUNT(*) as count
-        FROM temperature_presets
-        WHERE preset_name = ? AND is_active = 1
+        FROM ubi_presets_temperatura
+        WHERE nombre_preset = ? AND activo = 1
       `;
       const checkResult = await databaseService.query(checkQuery, [name.trim()]);
 
@@ -220,26 +214,22 @@ class PresetsController {
         });
       }
 
-      // Insertar nuevo preset
+      // Insertar nuevo preset (ubi_presets_temperatura)
       const insertQuery = `
-        INSERT INTO temperature_presets (
-          preset_name,
-          preset_min,
-          preset_max,
-          preset_color,
-          preset_icon,
-          preset_description,
-          created_by
-        ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO ubi_presets_temperatura (
+          nombre_preset,
+          temperatura_minima,
+          temperatura_maxima,
+          creado_por,
+          actualizado_por
+        ) VALUES (?, ?, ?, ?, ?)
       `;
 
       const result = await databaseService.query(insertQuery, [
         name.trim(),
         minValue,
         maxValue,
-        color || 'from-blue-500 to-cyan-500',
-        icon || 'Thermometer',
-        description || '',
+        createdBy || 'API',
         createdBy || 'API'
       ]);
 
@@ -248,18 +238,15 @@ class PresetsController {
       // Obtener el preset recién creado
       const getQuery = `
         SELECT
-          preset_id as id,
-          preset_name as name,
-          preset_min as min,
-          preset_max as max,
-          preset_color as color,
-          preset_icon as icon,
-          preset_description as description,
-          is_default,
-          created_at,
-          created_by
-        FROM temperature_presets
-        WHERE preset_id = ?
+          id_preset as id,
+          nombre_preset as name,
+          temperatura_minima as min,
+          temperatura_maxima as max,
+          es_predeterminado as is_default,
+          fecha_creacion as created_at,
+          creado_por as created_by
+        FROM ubi_presets_temperatura
+        WHERE id_preset = ?
       `;
 
       const newPreset = await databaseService.query(getQuery, [result.insertId]);
@@ -272,9 +259,9 @@ class PresetsController {
           name: newPreset[0].name,
           min: parseFloat(newPreset[0].min),
           max: parseFloat(newPreset[0].max),
-          color: newPreset[0].color,
-          icon: newPreset[0].icon,
-          description: newPreset[0].description,
+          color: null,
+          icon: null,
+          description: null,
           isDefault: newPreset[0].is_default === 1,
           createdAt: newPreset[0].created_at,
           createdBy: newPreset[0].created_by
@@ -320,9 +307,9 @@ class PresetsController {
 
       // Verificar que el preset existe
       const checkQuery = `
-        SELECT preset_id, is_default
-        FROM temperature_presets
-        WHERE preset_id = ?
+        SELECT id_preset, es_predeterminado as is_default
+        FROM ubi_presets_temperatura
+        WHERE id_preset = ?
       `;
       const checkResult = await databaseService.query(checkQuery, [id]);
 
@@ -378,8 +365,8 @@ class PresetsController {
       if (name) {
         const uniqueCheckQuery = `
           SELECT COUNT(*) as count
-          FROM temperature_presets
-          WHERE preset_name = ? AND preset_id != ? AND is_active = 1
+          FROM ubi_presets_temperatura
+          WHERE nombre_preset = ? AND id_preset != ? AND activo = 1
         `;
         const uniqueResult = await databaseService.query(uniqueCheckQuery, [name.trim(), id]);
 
@@ -396,39 +383,27 @@ class PresetsController {
       const values = [];
 
       if (name !== undefined) {
-        updates.push('preset_name = ?');
+        updates.push('nombre_preset = ?');
         values.push(name.trim());
       }
       if (min !== undefined) {
-        updates.push('preset_min = ?');
+        updates.push('temperatura_minima = ?');
         values.push(parseFloat(min));
       }
       if (max !== undefined) {
-        updates.push('preset_max = ?');
+        updates.push('temperatura_maxima = ?');
         values.push(parseFloat(max));
       }
-      if (color !== undefined) {
-        updates.push('preset_color = ?');
-        values.push(color);
-      }
-      if (icon !== undefined) {
-        updates.push('preset_icon = ?');
-        values.push(icon);
-      }
-      if (description !== undefined) {
-        updates.push('preset_description = ?');
-        values.push(description);
-      }
 
-      updates.push('updated_by = ?');
+      updates.push('actualizado_por = ?');
       values.push(updatedBy || 'API');
 
       values.push(id);
 
       const updateQuery = `
-        UPDATE temperature_presets
+        UPDATE ubi_presets_temperatura
         SET ${updates.join(', ')}
-        WHERE preset_id = ?
+        WHERE id_preset = ?
       `;
 
       await databaseService.query(updateQuery, values);
@@ -438,18 +413,15 @@ class PresetsController {
       // Obtener preset actualizado
       const getQuery = `
         SELECT
-          preset_id as id,
-          preset_name as name,
-          preset_min as min,
-          preset_max as max,
-          preset_color as color,
-          preset_icon as icon,
-          preset_description as description,
-          is_default,
-          updated_at,
-          updated_by
-        FROM temperature_presets
-        WHERE preset_id = ?
+          id_preset as id,
+          nombre_preset as name,
+          temperatura_minima as min,
+          temperatura_maxima as max,
+          es_predeterminado as is_default,
+          fecha_actualizacion as updated_at,
+          actualizado_por as updated_by
+        FROM ubi_presets_temperatura
+        WHERE id_preset = ?
       `;
 
       const updatedPreset = await databaseService.query(getQuery, [id]);
@@ -462,9 +434,9 @@ class PresetsController {
           name: updatedPreset[0].name,
           min: parseFloat(updatedPreset[0].min),
           max: parseFloat(updatedPreset[0].max),
-          color: updatedPreset[0].color,
-          icon: updatedPreset[0].icon,
-          description: updatedPreset[0].description,
+          color: null,
+          icon: null,
+          description: null,
           isDefault: updatedPreset[0].is_default === 1,
           updatedAt: updatedPreset[0].updated_at,
           updatedBy: updatedPreset[0].updated_by
@@ -509,8 +481,8 @@ class PresetsController {
 
       // Intentar eliminar (triggers validarán si está en uso o es default)
       const deleteQuery = `
-        DELETE FROM temperature_presets
-        WHERE preset_id = ?
+        DELETE FROM ubi_presets_temperatura
+        WHERE id_preset = ?
       `;
 
       await databaseService.query(deleteQuery, [id]);
@@ -552,7 +524,7 @@ class PresetsController {
       const { restoredBy } = req.body;
 
       // Llamar al procedimiento almacenado
-      const query = `CALL sp_restore_default_presets(?)`;
+      const query = `CALL stpr_restore_default_presets(?)`;
 
       const [results] = await databaseService.pool.query(query, [restoredBy || 'API']);
 
@@ -560,8 +532,8 @@ class PresetsController {
 
       res.json({
         success: true,
-        message: results[0][0].message,
-        activePresets: results[0][0].active_presets
+        message: results[0][0].mensaje,
+        activePresets: results[0][0].presets_activos
       });
 
     } catch (error) {
@@ -603,7 +575,7 @@ class PresetsController {
       const cameraIdsCsv = cameraIds.join(',');
 
       // Llamar al procedimiento almacenado
-      const query = `CALL sp_apply_preset_to_cameras(?, ?, ?)`;
+      const query = `CALL stpr_apply_preset_to_cameras(?, ?, ?)`;
 
       const [results] = await databaseService.pool.query(query, [
         id,
@@ -617,10 +589,10 @@ class PresetsController {
 
       res.json({
         success: true,
-        message: result.message,
-        camerasUpdated: result.cameras_updated,
-        appliedMin: parseFloat(result.applied_min),
-        appliedMax: parseFloat(result.applied_max)
+        message: result.mensaje,
+        camerasUpdated: result.canales_actualizados,
+        appliedMin: parseFloat(result.temperatura_minima_aplicada),
+        appliedMax: parseFloat(result.temperatura_maxima_aplicada)
       });
 
     } catch (error) {
@@ -652,14 +624,17 @@ class PresetsController {
     try {
       const query = `
         SELECT
-          preset_id,
-          preset_name,
-          preset_min,
-          preset_max,
-          is_default,
-          cameras_using,
-          camera_names
-        FROM v_preset_usage
+          p.id_preset AS preset_id,
+          p.nombre_preset AS preset_name,
+          p.temperatura_minima AS preset_min,
+          p.temperatura_maxima AS preset_max,
+          p.es_predeterminado AS is_default,
+          COUNT(c.id_canal) AS cameras_using,
+          GROUP_CONCAT(c.nombre ORDER BY c.nombre) AS camera_names
+        FROM ubi_presets_temperatura p
+        LEFT JOIN ubi_canal c ON c.id_preset = p.id_preset AND c.activo = 1
+        WHERE p.activo = 1
+        GROUP BY p.id_preset
       `;
 
       const results = await databaseService.query(query);
@@ -672,8 +647,8 @@ class PresetsController {
           min: parseFloat(row.preset_min),
           max: parseFloat(row.preset_max),
           isDefault: row.is_default === 1,
-          camerasUsing: row.cameras_using,
-          cameraNames: row.camera_names ? row.camera_names.split(', ') : []
+          camerasUsing: parseInt(row.cameras_using, 10) || 0,
+          cameraNames: row.camera_names ? row.camera_names.split(',').map(s => s.trim()) : []
         }))
       });
 

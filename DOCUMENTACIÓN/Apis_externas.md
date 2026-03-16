@@ -23,6 +23,8 @@
 
 > **Nota**: La funcionalidad SMS/Twilio fue eliminada del desarrollo inicial. Todas las notificaciones críticas se envían por **Email + Push Notifications**.
 
+**Configuración operativa**: La fuente de verdad para credenciales y parámetros (API keys, intervalos, etc.) es la **base de datos** (tablas `gen_cofiguracion_*`). Los ejemplos en JSON que aparecen en este documento son referencia histórica o formato de ejemplo; el esquema y uso actual se documentan en [Configuracion.md](Configuracion.md) y [Base_de_Datos.md](Base_de_Datos.md).
+
 ---
 
 ## 1️⃣ Shelly Cloud API
@@ -65,7 +67,7 @@ Recolección de datos de consumo eléctrico en tiempo real de dispositivos Shell
 - **Retry Delay**: 5 segundos
 - **Timeout**: Configurable
 
-> **Nota**: Los intervalos de recolección son **configurables desde la base de datos** (no hardcodeados). Ver Issue [#3](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3) (Tabla de configuración) para detalles de implementación.
+> **Nota**: Los intervalos de recolección son **configurables desde la base de datos** (no hardcodeados). Esquema y uso en [Configuracion.md](Configuracion.md).
 
 ### Impacto en el Proyecto
 **Funcionalidades Depend ientes**:
@@ -122,7 +124,7 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 - **Intervalo**: Configurable desde base de datos (predeterminado: 1 minuto)
 - **Retención**: 7 días en memoria
 
-> **Nota**: Los intervalos de recolección son **configurables desde la base de datos** (no hardcodeados). Ver Issue #3 (Tabla de configuración) para detalles de implementación.
+> **Nota**: Los intervalos de recolección son **configurables desde la base de datos** (no hardcodeados). Esquema y uso en [Configuracion.md](Configuracion.md).
 
 ### Impacto en el Proyecto
 **Funcionalidades Dependientes**:
@@ -186,7 +188,7 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 
 ### Configuración
 
-> **Migración a Base de Datos**: La configuración de SendGrid (API Key, remitente verificado "from", destinatarios) se está migrando a la base de datos. Ver [Base_de_Datos.md](Base_de_Datos.md) para detalles del esquema.
+> **Configuración en BD**: La configuración de SendGrid (API Key, remitente verificado "from", destinatarios) se gestiona en base de datos. Ver [Configuracion.md](Configuracion.md) y [Base_de_Datos.md](Base_de_Datos.md) para el esquema.
 
 ```json
 {
@@ -238,7 +240,7 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 
 ### Configuración
 
-> **Migración a Base de Datos**: La configuración de DeepSeek (API Key, modelo, parámetros) se está migrando a la base de datos. Ver [Base_de_Datos.md](Base_de_Datos.md) para detalles del esquema.
+> **Configuración en BD**: La configuración de DeepSeek (API Key, modelo, parámetros) se gestiona en base de datos. Ver [Configuracion.md](Configuracion.md) y [Base_de_Datos.md](Base_de_Datos.md) para el esquema.
 
 ```json
 {
@@ -413,11 +415,11 @@ posthog.init('phc_xxxxxxxxxxxxxxxx', {
 - **Archivo Principal**: `/servicios/src/config/jsons/unified-config.json` ⚠️ **OBSOLETO**
 - **Loader**: `/servicios/src/config/js_files/configLoader_Config.js` (revisa BD periódicamente)
 
-> **Nota**: Los archivos JSON están siendo reemplazados por configuración en base de datos. Ver Issue #3 (Tabla de configuración) para detalles de implementación.
+> **Nota**: La configuración operativa vive en base de datos. Esquema y uso en [Configuracion.md](Configuracion.md).
 
-### Ubicación Futura (EN DESARROLLO - Issue #3)
-- **Base de Datos MySQL**: Tabla de configuración centralizada
-- **Config Loader**: Consulta periódica a BD para cambios de configuración
+### Configuración en base de datos (vigente)
+- **Base de Datos MySQL**: Tablas `gen_cofiguracion_grupos`, `gen_cofiguracion_parametros`, `gen_cofiguracion_valores`
+- **Config Loader**: Consulta BD al arranque y caché con TTL; ver [Configuracion.md](Configuracion.md)
 - **Beneficios**: Gestión centralizada, cambios sin redeploy, auditabilidad
 
 ### 🚫 NO SE UTILIZAN VARIABLES DE ENTORNO (Por Diseño)
@@ -468,7 +470,7 @@ Para problemas con API Keys, consultar [Troubleshooting.md](Troubleshooting.md) 
 - [ ] Actualizar este documento (Apis_externas.md)
 - [ ] Crear service adapter en `/servicios/src/services/api/`
 - [ ] Agregar configuración en **base de datos** (NO en archivos JSON ⚠️ OBSOLETO)
-- [ ] Documentar en Issue #3 si requiere nueva columna en tabla de configuración
+- [ ] Si aplica, añadir parámetro o grupo en tablas `gen_cofiguracion_*` (ver [Configuracion.md](Configuracion.md))
 - [ ] Actualizar [Troubleshooting.md](./Troubleshooting.md) con errores comunes de la nueva API
 - [ ] Implementar manejo de errores y reintentos
 - [ ] Agregar métricas de uso

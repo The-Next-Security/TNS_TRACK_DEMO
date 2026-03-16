@@ -17,12 +17,6 @@
  */
 const checkGenerateReports = async (req, res, next) => {
   try {
-    // Temporary: Allow bypass for testing (TODO: Remove when auth is integrated)
-    if (!req.user) {
-      console.warn('[ReportPermissions] No user found - bypassing for testing. TODO: Integrate auth middleware');
-      req.user = { id: 1, role: 'admin', permissions: ['generate_reports'] }; // Mock user for testing
-    }
-
     // Verify user is authenticated
     if (!req.user || !req.user.id) {
       return res.status(401).json({
@@ -63,12 +57,6 @@ const checkGenerateReports = async (req, res, next) => {
  */
 const checkScheduleReports = async (req, res, next) => {
   try {
-    // Temporary: Allow bypass for testing (TODO: Remove when auth is integrated)
-    if (!req.user) {
-      console.warn('[ReportPermissions] No user found - bypassing for testing. TODO: Integrate auth middleware');
-      req.user = { id: 1, role: 'admin', permissions: ['schedule_reports'] };
-    }
-
     // Verify user is authenticated
     if (!req.user || !req.user.id) {
       return res.status(401).json({
@@ -108,12 +96,6 @@ const checkScheduleReports = async (req, res, next) => {
  */
 const checkSendReports = async (req, res, next) => {
   try {
-    // Temporary: Allow bypass for testing (TODO: Remove when auth is integrated)
-    if (!req.user) {
-      console.warn('[ReportPermissions] No user found - bypassing for testing. TODO: Integrate auth middleware');
-      req.user = { id: 1, role: 'admin', permissions: ['send_reports'] };
-    }
-
     // Verify user is authenticated
     if (!req.user || !req.user.id) {
       return res.status(401).json({

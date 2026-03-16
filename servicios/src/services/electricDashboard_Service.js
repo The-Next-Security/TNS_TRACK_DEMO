@@ -104,7 +104,7 @@ class ElectricDashboardService {
           ELSE 'disconnected'
         END as status
       FROM sem_dispositivos d
-      JOIN catalogo_ubicaciones_reales cur ON d.ubicacion = cur.idcatalogo_ubicaciones_reales
+      JOIN gen_ubicaciones_reales cur ON d.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
       LEFT JOIN sem_grupos sg ON d.grupo_id = sg.id
       LEFT JOIN (
         SELECT 
@@ -661,27 +661,28 @@ class ElectricDashboardService {
     try {
       const query = `
         SELECT DISTINCT
-          cur.nombre_ubicacion as location,
-          cur.idcatalogo_ubicaciones_reales as locationId,
+          -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales; nombre_ubicacion → nombre aliasado
+          cur.nombre AS location,
+          cur.id_ubicacion_real AS locationId,
           COUNT(d.shelly_id) as deviceCount,
-          CASE 
-            WHEN cur.nombre_ubicacion LIKE 'Cámara%' THEN 'camera'
-            WHEN cur.nombre_ubicacion LIKE 'Reefer%' THEN 'reefer'
+          CASE
+            WHEN cur.nombre LIKE 'Cámara%' THEN 'camera'
+            WHEN cur.nombre LIKE 'Reefer%' THEN 'reefer'
             ELSE 'other'
           END as locationType
-        FROM catalogo_ubicaciones_reales cur
-        LEFT JOIN sem_dispositivos d ON cur.idcatalogo_ubicaciones_reales = d.ubicacion 
+        FROM gen_ubicaciones_reales cur
+        LEFT JOIN sem_dispositivos d ON cur.id_ubicacion_real = d.id_ubicacion_real
                                     AND d.activo = 1
-        WHERE cur.nombre_ubicacion IS NOT NULL 
-        AND cur.nombre_ubicacion != ''
-        GROUP BY cur.idcatalogo_ubicaciones_reales, cur.nombre_ubicacion
-        ORDER BY 
-          CASE 
-            WHEN cur.nombre_ubicacion LIKE 'Cámara%' THEN 1
-            WHEN cur.nombre_ubicacion LIKE 'Reefer%' THEN 2
+        WHERE cur.nombre IS NOT NULL
+        AND cur.nombre != ''
+        GROUP BY cur.id_ubicacion_real, cur.nombre
+        ORDER BY
+          CASE
+            WHEN cur.nombre LIKE 'Cámara%' THEN 1
+            WHEN cur.nombre LIKE 'Reefer%' THEN 2
             ELSE 3
           END,
-          cur.nombre_ubicacion ASC
+          cur.nombre ASC
       `;
 
       const [rows] = await databaseService.pool.query(query);

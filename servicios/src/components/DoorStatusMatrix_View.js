@@ -27,7 +27,7 @@ import {
   Area,
 } from "recharts";
 import "react-datepicker/dist/react-datepicker.css";
-import dayjs from "dayjs";
+import { DateTime } from "luxon";
 
 // Componentes Shadcn/UI
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -78,8 +78,8 @@ const DoorStatusMatrixV2 = () => {
 
   /** @type {[Object, Function]} Intervalo de tiempo seleccionado */
   const [selectedInterval, setSelectedInterval] = useState({
-    start: dayjs().set("hour", 8).set("minute", 0),
-    end: dayjs().set("hour", 9).set("minute", 0),
+    start: DateTime.now().set({ hour: 8, minute: 0 }),
+    end: DateTime.now().set({ hour: 9, minute: 0 }),
   });
 
   /** @type {[Object, Function]} Datos de temperatura por sector */
@@ -118,12 +118,10 @@ const DoorStatusMatrixV2 = () => {
    */
   useEffect(() => {
     if (data.length > 0 && selectedSector) {
-      const startDate = dayjs(selectedDate)
-        .set("hour", selectedInterval.start.hour())
-        .set("minute", selectedInterval.start.minute());
-      const endDate = dayjs(selectedDate)
-        .set("hour", selectedInterval.end.hour())
-        .set("minute", selectedInterval.end.minute());
+      const startDate = DateTime.fromJSDate(selectedDate)
+        .set({ hour: selectedInterval.start.hour, minute: selectedInterval.start.minute });
+      const endDate = DateTime.fromJSDate(selectedDate)
+        .set({ hour: selectedInterval.end.hour, minute: selectedInterval.end.minute });
       processLineChartData(data, startDate, endDate);
     }
   }, [selectedInterval, data, selectedDate, selectedSector]);
@@ -154,8 +152,8 @@ const DoorStatusMatrixV2 = () => {
   };
 
   const fetchTemperatureData = async (date) => {
-    const startDate = dayjs(date).startOf("day").format("YYYY-MM-DD");
-    const endDate = dayjs(date).endOf("day").format("YYYY-MM-DD");
+    const startDate = DateTime.fromJSDate(date).startOf("day").toFormat("yyyy-MM-dd");
+    const endDate = DateTime.fromJSDate(date).endOf("day").toFormat("yyyy-MM-dd");
 
     try {
       // Incluir sector en los parámetros si está seleccionado (no null, no vacío, no __all__)
@@ -178,13 +176,13 @@ const DoorStatusMatrixV2 = () => {
         }
         device.data.forEach((reading) => {
           tempsByTime[device.name].push({
-            timestamp: dayjs(reading.timestamp),
+            timestamp: typeof reading.timestamp === 'number' ? DateTime.fromMillis(reading.timestamp) : DateTime.fromISO(reading.timestamp),
             temperature: reading.external_temperature,
           });
         });
         // Ordenar las lecturas por timestamp
         tempsByTime[device.name].sort(
-          (a, b) => a.timestamp.valueOf() - b.timestamp.valueOf()
+          (a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()
         );
       });
 
@@ -220,22 +218,22 @@ const DoorStatusMatrixV2 = () => {
       return null;
     }
 
-    const targetTime = dayjs(selectedDate).hour(hour).minute(endMinute);
+    const targetTime = DateTime.fromJSDate(selectedDate).set({ hour, minute: endMinute });
 
     // Encontrar la lectura más cercana al final del intervalo de 10 minutos
     let closestReading = temperatureData[sector].reduce((closest, current) => {
       const currentDiff = Math.abs(
-        current.timestamp.valueOf() - targetTime.valueOf()
+        current.timestamp.toMillis() - targetTime.toMillis()
       );
       const closestDiff = Math.abs(
-        closest.timestamp.valueOf() - targetTime.valueOf()
+        closest.timestamp.toMillis() - targetTime.toMillis()
       );
       return currentDiff < closestDiff ? current : closest;
     });
 
     // Si la diferencia es mayor a 30 minutos, retornar null
     const diffInMinutes = Math.abs(
-      closestReading.timestamp.diff(targetTime, "minute")
+      closestReading.timestamp.diff(targetTime, "minutes").minutes
     );
     if (diffInMinutes > 30) {
       return null;
@@ -252,8 +250,8 @@ const DoorStatusMatrixV2 = () => {
    * @returns {Promise<void>}
    */
   const fetchDataForSelectedDate = async (date) => {
-    const startDate = dayjs(date).startOf("day").format("YYYY-MM-DD HH:mm:ss");
-    const endDate = dayjs(date).endOf("day").format("YYYY-MM-DD HH:mm:ss");
+    const startDate = DateTime.fromJSDate(date).startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+    const endDate = DateTime.fromJSDate(date).endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
     try {
       const response = await axios.get("/api/beacons/door-status", {
@@ -273,8 +271,8 @@ const DoorStatusMatrixV2 = () => {
 
       processChartData(fetchedData);
       setSelectedInterval({
-        start: dayjs(date).set("hour", 8).set("minute", 0),
-        end: dayjs(date).set("hour", 8).set("minute", 30),
+        start: DateTime.fromJSDate(date).set({ hour: 8, minute: 0 }),
+        end: DateTime.fromJSDate(date).set({ hour: 8, minute: 30 }),
       });
     } catch (error) {
       console.error("Error fetching door status:", error);
@@ -312,23 +310,24 @@ const DoorStatusMatrixV2 = () => {
    * Procesa datos para el gráfico de línea temporal
    *
    * @param {Array} fetchedData - Datos obtenidos
-   * @param {dayjs.Dayjs} startDate - Fecha de inicio
-   * @param {dayjs.Dayjs} endDate - Fecha de fin
+   * @param {DateTime} startDate - Fecha de inicio (Luxon)
+   * @param {DateTime} endDate - Fecha de fin (Luxon)
    */
   const processLineChartData = (fetchedData, startDate, endDate) => {
     const chartData = [];
-    let currentTime = dayjs(startDate);
-    const endTime = dayjs(endDate);
+    let currentTime = startDate;
+    const endTime = endDate;
 
+    const toDt = (t) => typeof t === 'number' ? DateTime.fromMillis(t) : DateTime.fromISO(t);
     const relevantData = fetchedData
       .filter(
         (d) =>
           d.sector === selectedSector &&
-          dayjs(d.timestamp).isAfter(startDate) &&
-          dayjs(d.timestamp).isBefore(endTime)
+          toDt(d.timestamp).toMillis() > startDate.toMillis() &&
+          toDt(d.timestamp).toMillis() < endTime.toMillis()
       )
       .sort(
-        (a, b) => dayjs(a.timestamp).valueOf() - dayjs(b.timestamp).valueOf()
+        (a, b) => toDt(a.timestamp).toMillis() - toDt(b.timestamp).toMillis()
       );
 
     if (relevantData.length === 0) {
@@ -340,10 +339,10 @@ const DoorStatusMatrixV2 = () => {
     let potentialChangeStart = null;
     let currentStatus = lastValidStatus;
 
-    while (currentTime.isBefore(endTime) || currentTime.isSame(endTime)) {
-      const currentTimeStr = currentTime.format("HH:mm");
+    while (currentTime.toMillis() <= endTime.toMillis()) {
+      const currentTimeStr = currentTime.toFormat("HH:mm");
       const entriesAtThisTime = relevantData.filter(
-        (d) => dayjs(d.timestamp).format("HH:mm") === currentTimeStr
+        (d) => toDt(d.timestamp).toFormat("HH:mm") === currentTimeStr
       );
 
       if (entriesAtThisTime.length > 0) {
@@ -353,7 +352,7 @@ const DoorStatusMatrixV2 = () => {
         if (newStatus !== currentStatus) {
           if (!potentialChangeStart) {
             potentialChangeStart = currentTime;
-          } else if (currentTime.diff(potentialChangeStart, "minute") >= 2) {
+          } else if (currentTime.diff(potentialChangeStart, "minutes").minutes >= 2) {
             lastValidStatus = newStatus;
             currentStatus = newStatus;
             potentialChangeStart = null;
@@ -368,7 +367,7 @@ const DoorStatusMatrixV2 = () => {
         status: currentStatus === 0 ? 2 : 1,
       });
 
-      currentTime = currentTime.add(1, "minute");
+      currentTime = currentTime.plus({ minutes: 1 });
     }
 
     setLineChartData(chartData);
@@ -395,8 +394,8 @@ const DoorStatusMatrixV2 = () => {
    * @param {string} sector - Sector seleccionado
    */
   const handleCellClick = (hour, minute, sector) => {
-    const start = dayjs(selectedDate).set("hour", hour).set("minute", minute);
-    const end = start.add(10, "minute");
+    const start = DateTime.fromJSDate(selectedDate).set({ hour, minute });
+    const end = start.plus({ minutes: 10 });
     setSelectedInterval({ start, end });
     setSelectedSector(sector);
   };
@@ -453,20 +452,20 @@ const DoorStatusMatrixV2 = () => {
                   {minuteRanges.map((_, minuteIndex) => {
                     const startMinute = minuteIndex * 10;
                     const endMinute = startMinute + 10;
+                    const entryToDt = (t) => typeof t === 'number' ? DateTime.fromMillis(t) : DateTime.fromISO(t);
                     const trameData = sectorData.filter((d) => {
-                      const entryTime = dayjs(d.timestamp);
+                      const entryTime = entryToDt(d.timestamp);
                       return (
-                        entryTime.hour() === hour &&
-                        entryTime.minute() >= startMinute &&
-                        entryTime.minute() < endMinute
+                        entryTime.hour === hour &&
+                        entryTime.minute >= startMinute &&
+                        entryTime.minute < endMinute
                       );
                     });
                     const lastEntry =
                       trameData.length > 0
                         ? trameData.reduce((prev, current) =>
-                            dayjs(current.timestamp).isAfter(
-                              dayjs(prev.timestamp)
-                            )
+                            entryToDt(current.timestamp).toMillis() >
+                            entryToDt(prev.timestamp).toMillis()
                               ? current
                               : prev
                           )

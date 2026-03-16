@@ -22,12 +22,12 @@ import {
   Legend,
   Filler
 } from 'chart.js';
-import 'chartjs-adapter-date-fns';
-import { es } from 'date-fns/locale';
+import 'chartjs-adapter-luxon';
 import DatePicker, { registerLocale } from 'react-datepicker';
+import { es } from 'date-fns/locale';
 import "react-datepicker/dist/react-datepicker.css";
 import Header from './Header_View';
-import moment from 'moment-timezone';
+import { DateTime } from 'luxon';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
@@ -53,7 +53,6 @@ import { Badge } from './ui/badge';
 import { cn } from '../lib/utils';
 
 // Configuración de timezone y locale
-moment.tz.setDefault('America/Santiago');
 registerLocale('es', es);
 
 // Registro de componentes de Chart.js
@@ -101,7 +100,7 @@ const ConsumoElectricoV2 = () => {
   const [loading, setLoading] = useState(false);
 
   /** @type {[Date, Function]} Fecha seleccionada - inicializada con fecha actual */
-  const [selectedDate, setSelectedDate] = useState(moment().toDate());
+  const [selectedDate, setSelectedDate] = useState(DateTime.now().toJSDate());
 
   /** @type {[boolean, Function]} Controla la visualización de gráficos */
   const [showCharts, setShowCharts] = useState(false);
@@ -110,7 +109,7 @@ const ConsumoElectricoV2 = () => {
   const [error, setError] = useState(null);
 
   /** @type {React.MutableRefObject<Date>} Referencia a la fecha máxima seleccionable */
-  const today = useRef(moment().tz('America/Santiago').endOf('day').toDate());
+  const today = useRef(DateTime.now().setZone('America/Santiago').endOf('day').toJSDate());
 
   /**
    * Effect hook para cargar datos cuando cambia la fecha seleccionada
@@ -131,7 +130,7 @@ const ConsumoElectricoV2 = () => {
     setLoading(true);
     setShowCharts(true);
     try {
-      const formattedDate = moment(date).format('YYYY-MM-DD');
+      const formattedDate = DateTime.fromJSDate(date).toFormat('yyyy-MM-dd');
       const response = await axios.get(`/api/devices/consumption/${formattedDate}`);
       setData(response.data.data);
       setLoading(false);
@@ -148,7 +147,7 @@ const ConsumoElectricoV2 = () => {
    * @param {Date} date - Nueva fecha seleccionada
    */
   const handleDateChange = (date) => {
-    if (moment(date).isSameOrBefore(moment(), 'day')) {
+    if (DateTime.fromJSDate(date).startOf('day') <= DateTime.now().startOf('day')) {
       setSelectedDate(date);
       setLoading(true);
     } else {
@@ -165,7 +164,7 @@ const ConsumoElectricoV2 = () => {
    */
   const handleDownload = async (shellyId, deviceName) => {
     try {
-      const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
+      const formattedDate = DateTime.fromJSDate(selectedDate).toFormat('yyyy-MM-dd');
       const response = await axios.get(`/api/devices/download/${shellyId}/${formattedDate}`, {
         responseType: 'blob'
       });
@@ -240,7 +239,7 @@ const ConsumoElectricoV2 = () => {
         },
         adapters: {
           date: {
-            locale: es,
+            locale: 'es',
           },
         },
         grid: {
@@ -299,7 +298,8 @@ const ConsumoElectricoV2 = () => {
         displayColors: false,
         callbacks: {
           title: function(tooltipItems) {
-            return moment(tooltipItems[0].parsed.x).format('DD/MM/YYYY HH:mm');
+            const x = tooltipItems[0].parsed.x;
+            return (typeof x === 'number' ? DateTime.fromMillis(x) : DateTime.fromJSDate(x)).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm');
           },
           label: function(context) {
             return `Potencia: ${context.parsed.y.toFixed(3)} kW`;
@@ -552,12 +552,12 @@ const ConsumoElectricoV2 = () => {
                   const stats = calculateStats(deviceData.data);
 
                   const chartData = {
-                    labels: deviceData.data.map(item => moment(item.timestamp).toDate()),
+                    labels: deviceData.data.map(item => (typeof item.timestamp === 'number' ? DateTime.fromMillis(item.timestamp) : DateTime.fromISO(item.timestamp)).toJSDate()),
                     datasets: [
                       {
                         label: 'Potencia',
                         data: deviceData.data.map(item => ({
-                          x: moment(item.timestamp).toDate(),
+                          x: (typeof item.timestamp === 'number' ? DateTime.fromMillis(item.timestamp) : DateTime.fromISO(item.timestamp)).toJSDate(),
                           y: parseFloat(item.potencia_kw)
                         })),
                         backgroundColor: (context) => {
@@ -619,7 +619,7 @@ const ConsumoElectricoV2 = () => {
                             <div className="text-right">
                               <div className="flex items-center gap-1 text-xs text-gray-500">
                                 <Clock className="h-3 w-3" />
-                                Último: {moment(deviceData.data[deviceData.data.length - 1]?.timestamp).format("HH:mm")}
+                                Último: {(() => { const t = deviceData.data[deviceData.data.length - 1]?.timestamp; return t ? (typeof t === 'number' ? DateTime.fromMillis(t) : DateTime.fromISO(t)).setZone('America/Santiago').toFormat('HH:mm') : '--'; })()}
                               </div>
                             </div>
                           </div>

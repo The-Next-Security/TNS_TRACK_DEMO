@@ -1,6 +1,7 @@
 // src/controllers/beaconsController.js
 const databaseService = require('../services/database_Service');
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
+const TZ = 'America/Santiago';
 
 class beaconsController {
   async getDoorStatus(req, res) {
@@ -179,14 +180,12 @@ class beaconsController {
         "SELECT id, device_asignado FROM devices"
       );
       const latestSectors = [];
-      const now = moment().tz("America/Santiago");
-      const startOfDay = now.clone().startOf("day").unix();
+      const now = DateTime.now().setZone(TZ);
+      const startOfDay = now.startOf("day").toUnixInteger();
 
-      console.log(`Tiempo actual: ${now.format("YYYY-MM-DD HH:mm:ss")}`);
+      console.log(`Tiempo actual: ${now.toFormat("yyyy-MM-dd HH:mm:ss")}`);
       console.log(
-        `Inicio del día: ${moment
-          .unix(startOfDay)
-          .format("YYYY-MM-DD HH:mm:ss")}`
+        `Inicio del día: ${DateTime.fromSeconds(startOfDay, { zone: TZ }).toFormat("yyyy-MM-dd HH:mm:ss")}`
       );
 
       for (const device of devices) {
@@ -235,20 +234,16 @@ class beaconsController {
               "SELECT nombre FROM sectores WHERE id = ?",
               [latestBeaconId]
             );
-            const timeDiff = now.unix() - oldestTimestamp;
+            const timeDiff = now.toUnixInteger() - oldestTimestamp;
             const hours = Math.floor(timeDiff / 3600);
             const minutes = Math.floor((timeDiff % 3600) / 60);
 
             console.log(`Beacon más reciente: ${latestBeaconId}`);
             console.log(
-              `Timestamp más reciente: ${moment
-                .unix(latestTimestamp)
-                .format("YYYY-MM-DD HH:mm:ss")}`
+              `Timestamp más reciente: ${DateTime.fromSeconds(latestTimestamp, { zone: TZ }).toFormat("yyyy-MM-dd HH:mm:ss")}`
             );
             console.log(
-              `Timestamp más antiguo del mismo beacon: ${moment
-                .unix(oldestTimestamp)
-                .format("YYYY-MM-DD HH:mm:ss")}`
+              `Timestamp más antiguo del mismo beacon: ${DateTime.fromSeconds(oldestTimestamp, { zone: TZ }).toFormat("yyyy-MM-dd HH:mm:ss")}`
             );
             console.log(
               `Tiempo transcurrido: ${hours} horas y ${minutes} minutos`
@@ -257,9 +252,7 @@ class beaconsController {
             latestSectors.push({
               device_id: device.id,
               sector: sector.length > 0 ? sector[0].nombre : "Desconocido",
-              timestamp: moment
-                .unix(oldestTimestamp)
-                .format("YYYY-MM-DD HH:mm:ss"),
+              timestamp: DateTime.fromSeconds(oldestTimestamp, { zone: TZ }).toFormat("yyyy-MM-dd HH:mm:ss"),
               timeSinceDetection: `${hours
                 .toString()
                 .padStart(2, "0")}:${minutes.toString().padStart(2, "0")}`,
@@ -443,6 +436,7 @@ class beaconsController {
         const { date } = req.query;
         const query = `
             SELECT rt.beacon_id, rt.temperatura, rt.timestamp, b.lugar, b.ubicacion,
+                    -- TODO: Migrar a ubi_presets_temperatura — pendiente definir id_preset equivalente a param_id=6 (ver Issue #32)
                     (SELECT minimo FROM parametrizaciones WHERE param_id = 6) AS minimo,
                     (SELECT maximo FROM parametrizaciones WHERE param_id = 6) AS maximo
             FROM registro_temperaturas rt

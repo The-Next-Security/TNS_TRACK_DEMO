@@ -2,7 +2,7 @@
 
 > **Última actualización:** 2026-03-04
 > **Branch de implementación:** `feat/integracon-base-datos`
-> **Issue relacionado:** [#3 — Creación de tabla de configuración](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3)
+> **Implementado según** [Issue #3 — Creación de tabla de configuración](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3) (cerrado).
 
 ---
 

@@ -65,19 +65,18 @@ class DeviceController {
 
   async getLatestDevicesMeasurements(req, res, next) {
     try {
-      // Consultar todas las ubicaciones que existen en catalogo_ubicaciones_reales
-      // Esto garantiza que se muestren todas las ubicaciones, tengan o no mediciones
+      // Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales; aliases preservan nombres JS
       const queryUbicaciones = `
-        SELECT 
-            cur.idcatalogo_ubicaciones_reales,
-            cur.nombre_ubicacion,
+        SELECT
+            cur.id_ubicacion_real AS idcatalogo_ubicaciones_reales,
+            cur.nombre AS nombre_ubicacion,
             d.shelly_id
-        FROM catalogo_ubicaciones_reales cur
-        LEFT JOIN sem_dispositivos d ON cur.idcatalogo_ubicaciones_reales = d.ubicacion AND d.activo = 1
-        WHERE cur.nombre_ubicacion LIKE '%Camara%' 
-           OR cur.nombre_ubicacion LIKE '%Cámara%'
-           OR cur.nombre_ubicacion LIKE '%Reefer%'
-        ORDER BY cur.nombre_ubicacion`;
+        FROM gen_ubicaciones_reales cur
+        LEFT JOIN sem_dispositivos d ON cur.id_ubicacion_real = d.id_ubicacion_real AND d.activo = 1
+        WHERE cur.nombre LIKE '%Camara%'
+           OR cur.nombre LIKE '%Cámara%'
+           OR cur.nombre LIKE '%Reefer%'
+        ORDER BY cur.nombre`;
 
       const [ubicaciones] = await databaseService.pool.query(queryUbicaciones);
 
@@ -179,17 +178,17 @@ class DeviceController {
         sd.nombre as dispositivo_nombre,
         sd.activo,
         sd.grupo_id,
-        cur.nombre_ubicacion as ubicacion_nombre,
-        cur.idcatalogo_ubicaciones_reales as ubicacion_id,
+        cur.nombre AS ubicacion_nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
+        cur.id_ubicacion_real AS ubicacion_id,
         sg.nombre as grupo_nombre,
         sd.fecha_creacion,
         sd.fecha_actualizacion,
         COALESCE(latest_data.ultima_medicion, 'Sin datos') as ultima_medicion,
         COALESCE(latest_data.estado_conexion, 'Desconocido') as estado_conexion
-      FROM 
+      FROM
         sem_dispositivos sd
-      JOIN 
-        catalogo_ubicaciones_reales cur ON sd.ubicacion = cur.idcatalogo_ubicaciones_reales
+      JOIN
+        gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
       LEFT JOIN 
         sem_grupos sg ON sd.grupo_id = sg.id
       LEFT JOIN (
@@ -293,8 +292,8 @@ class DeviceController {
           sd.nombre as dispositivo_nombre,
           sd.activo,
           sd.grupo_id,
-          cur.nombre_ubicacion as ubicacion_nombre,
-          cur.idcatalogo_ubicaciones_reales as ubicacion_id,
+          cur.nombre AS ubicacion_nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
+          cur.id_ubicacion_real AS ubicacion_id,
           sg.nombre as grupo_nombre,
           sd.fecha_creacion,
           sd.fecha_actualizacion,
@@ -302,15 +301,15 @@ class DeviceController {
           COALESCE(stats.total_mediciones, 0) as total_mediciones,
           COALESCE(stats.primera_medicion, 'Sin datos') as primera_medicion,
           COALESCE(stats.ultima_medicion, 'Sin datos') as ultima_medicion,
-          CASE 
+          CASE
             WHEN stats.ultima_medicion > DATE_SUB(NOW(), INTERVAL 1 HOUR) THEN 'Conectado'
             WHEN stats.ultima_medicion > DATE_SUB(NOW(), INTERVAL 24 HOUR) THEN 'Intermitente'
             ELSE 'Desconectado'
           END as estado_conexion
-        FROM 
+        FROM
           sem_dispositivos sd
-        JOIN 
-          catalogo_ubicaciones_reales cur ON sd.ubicacion = cur.idcatalogo_ubicaciones_reales
+        JOIN
+          gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
         LEFT JOIN 
           sem_grupos sg ON sd.grupo_id = sg.id
         LEFT JOIN (

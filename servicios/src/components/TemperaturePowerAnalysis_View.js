@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Area, AreaChart } from 'recharts';
 import DatePicker from 'react-datepicker';
-import moment from 'moment-timezone';
+import { DateTime } from 'luxon';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -139,7 +139,7 @@ const TemperaturePowerAnalysisV2 = () => {
   const processData = useCallback((rawData) => {
     return rawData.map(item => ({
       ...item,
-      time: moment(item.intervalo_tiempo).format('HH:mm'),
+      time: DateTime.fromISO(item.intervalo_tiempo).setZone('America/Santiago').toFormat('HH:mm'),
       promedio_temperatura_externa: parseFloat(item.promedio_temperatura_externa),
       promedio_potencia_kw: parseFloat(item.promedio_potencia_kw)
     }));
@@ -162,7 +162,7 @@ const TemperaturePowerAnalysisV2 = () => {
 
     try {
       const location = locations.find(loc => loc.id === parseInt(selectedLocation));
-      const formattedDate = moment(selectedDate).format('YYYY-MM-DD');
+      const formattedDate = DateTime.fromISO(selectedDate).toFormat('yyyy-MM-dd');
 
       const response = await axios.get(
         `/api/powerAnalysis/temperature-power-analysis/${formattedDate}`,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import moment from "moment-timezone";
+import { DateTime } from "luxon";
 import Header from "./Header";
 import pinIcon from "./assets/images/pngkit.png";
 import MapModal from "./MapModal";
@@ -29,9 +29,8 @@ const SmsData = () => {
   }, []);
 
   const formatTimestamp = (timestamp) => {
-    return moment(timestamp)
-      .tz("America/Santiago")
-      .format("YYYY-MM-DD HH:mm:ss");
+    const dt = typeof timestamp === "number" ? DateTime.fromMillis(timestamp) : DateTime.fromISO(timestamp);
+    return dt.setZone("America/Santiago").toFormat("yyyy-MM-dd HH:mm:ss");
   };
 
   const handleIconClick = (latitud, longitud) => {

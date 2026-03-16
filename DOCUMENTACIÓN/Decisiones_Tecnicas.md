@@ -2,8 +2,8 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-26
-> **Versión**: 2.0.0
+> **Última actualización**: 2026-03-11
+> **Versión**: 2.1.0
 > **Propósito**: Documentar todas las decisiones arquitectónicas y técnicas del proyecto
 
 ---
@@ -19,6 +19,8 @@
 7. [DeepSeek como Provider de IA](#7-deepseek-como-provider-de-ia)
 8. [Notificaciones: Email + Push (NO SMS)](#8-notificaciones-email--push-no-sms)
 9. [MySQL como Base de Datos Principal](#9-mysql-como-base-de-datos-principal)
+10. [Estandarización de Librería de Fechas con Luxon](#10-estandarización-de-librería-de-fechas-con-luxon)
+11. [Modelo unificado de notificaciones y horarios](#11-modelo-unificado-de-notificaciones-y-horarios)
 
 ---
 
@@ -155,10 +157,12 @@ El sistema puede usarse desde distintas zonas horarias, pero los servidores y da
 // Backend - timezone configurado en config
 timezone: 'America/Santiago'
 
-// Uso con moment-timezone
-const moment = require('moment-timezone');
-moment.tz('America/Santiago');
+// Uso con Luxon (única librería de fechas del proyecto)
+const { DateTime } = require('luxon');
+DateTime.now().setZone('America/Santiago');
 ```
+
+> **Nota**: El proyecto está estandarizando en **Luxon** (Issue #5); moment se mantiene temporalmente en partes del código hasta completar la migración.
 
 ### Estado Actual
 ✅ **Implementado** - Timezone base configurado en `America/Santiago`
@@ -211,6 +215,27 @@ pushService.js        // Web Push 3.6.7
 
 ---
 
+## 11. Modelo unificado de notificaciones y horarios
+
+### Contexto
+Las suscripciones de notificación y los criterios de envío estaban repartidos entre email (ale_suscripciones_email) y push, con lógica de horario duplicada y sin horarios configurables por tipo de alerta ni por usuario.
+
+### Decisión
+- **Una sola tabla de suscripciones:** `ale_suscripciones_notificacion` por usuario/tipo/origen y **canal** (email o push). Reemplaza `ale_suscripciones_email`.
+- **Horarios base por tipo y canal:** `ale_horarios_alerta_canal` definidos por administradores (tipo de alerta, canal, día de la semana). **dia_semana = 0** indica regla para **día feriado** (permite ventana distinta en feriados).
+- **Horarios personalizados por usuario:** `ale_horarios_usuario`. Si el usuario tiene filas para (usuario, tipo, canal), se usa esta tabla como horario efectivo; si no, se usa el horario base.
+- **Un único servicio de decisión:** `notificationSchedule_Service.shouldSendNotification()` responde “¿enviar o no?” usando horario efectivo (usuario si existe, si no base), ventana, intersección con `gen_horario_operacional`, feriados (`gen_feriados_cl`) y, para push, DND (`ale_preferencias_push`).
+- **Eliminación de tablas obsoletas:** `ale_suscripciones_email` y `log_ale_suscripciones_email` (y triggers asociados) eliminados; creación desde cero y migración alineadas al modelo unificado.
+
+### Rationale
+- Un solo lugar para decidir envío; email y push comparten suscripciones y reglas de ventana.
+- Administradores definen cuándo se envían alertas por tipo (ej. temperatura fuera de horario laboral; feriados todas las horas); usuarios pueden sobrescribir con sus propias ventanas.
+
+### Estado Actual
+✅ **Implementado** - Modelo unificado en BD, servicio único de decisión, APIs y frontend para horarios base (admin) y horarios usuario (mis horarios).
+
+---
+
 ## 9. MySQL como Base de Datos Principal
 
 ### Contexto
@@ -229,12 +254,97 @@ Usar **MySQL** (NO MariaDB) como base de datos principal.
 
 ---
 
+## 10. Estandarización de Librería de Fechas con Luxon
+
+### Contexto
+El proyecto utilizaba simultáneamente cuatro librerías de manejo de fechas (**moment**, **moment-timezone**, **date-fns**, **dayjs**), lo que generaba redundancia, bundle inflado, inconsistencia en formatos y mayor superficie de mantenimiento. El análisis del Issue #5 identificó ~54 archivos afectados en backend y frontend.
+
+### Decisión
+Usar **Luxon** como **única** librería de fechas en todo el proyecto (backend y frontend).
+
+### Rationale
+- El wrapper central `date_Utils.js` y varios controllers ya utilizaban Luxon; parte del trabajo estaba hecho.
+- Soporte **nativo** de zonas horarias (sin paquete adicional), alineado con la decisión de zona base **America/Santiago** (sección 6).
+- API inmutable y moderna; reemplazo directo de patrones como `moment().tz('America/Santiago')` y `moment.utc().tz()`.
+- Existe **chartjs-adapter-luxon** para reemplazar `chartjs-adapter-date-fns` en los componentes que usan Chart.js.
+
+### Alcance
+- Migrar todos los usos de **moment**, **moment-timezone**, **dayjs** y **date-fns** a Luxon.
+- Sustituir **chartjs-adapter-date-fns** por **chartjs-adapter-luxon**.
+- Crear o ampliar utilidades centralizadas de fechas (`date_Utils.js` y las que se definan) para apoyo al resto del proyecto.
+- Eliminar dependencias redundantes de `package.json` una vez completada la migración.
+
+### Implementación
+```javascript
+// Zona base (alineado con sección 6)
+const { DateTime } = require('luxon');
+DateTime.now().setZone('America/Santiago');
+
+// Formato estándar
+DateTime.fromISO(date).toFormat('yyyy-MM-dd HH:mm:ss');
+```
+
+### Estado Actual
+✅ **Implementado** — Luxon como única librería de fechas (Issue #5). Chart.js con chartjs-adapter-luxon; zona America/Santiago en backend y frontend.
+
+### Referencias
+- **Issue**: [#5 — REFACTOR Estandarizar Librería de Fechas](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/5)
+- Parte de **#9** (FASE 0 - Planificación y Fundamentos)
+
+---
+
+## 11. Refactor de rutas API (Issue #11)
+
+### Contexto
+La API del backend heredó múltiples endpoints de un proyecto anterior, incluyendo módulos legacy y rutas parcialmente integradas (dashboards, contador de ciclos, ingesta GPS antigua, sectores/beacons, etc.). Esto generaba ruido, complejidad y endpoints que ya no formaban parte del producto real.
+
+### Decisión
+
+- Eliminar los módulos y endpoints obsoletos:
+  - Capa de `/api/dashboard` (archivo `dashboard_Routes.js` y controladores de dashboard eléctrico/temperatura).
+  - Módulo de contador de ciclos de descongelamiento (`contadorCiclos_Routes.js`, `contadorCiclos_Controller.js`, `contadorCiclos_Utils.js` y el componente `ContadorCiclosDescongelamiento`).
+  - Endpoint legacy `POST /gps-data` (`gpsData_Routes.js` y su montaje en `server.js`).
+  - Rutas actuales de `/api/sectores` y `/api/beacons`, junto con su uso directo en la SPA. Los dominios quedan reservados para un rediseño futuro del apartado de sectores y beacons.
+
+- Reagrupar análisis bajo el dominio que analizan:
+  - Eliminar el dominio genérico `/api/analysis` y mantener `/api/powerAnalysis` como punto único para el análisis de temperatura y potencia (alineado con `TemperaturePowerAnalysis_View`).
+  - Regla general: cualquier análisis futuro debe exponerse bajo el dominio que analiza (ej: `/api/temperatura/analisis/...`, `/api/alertas/analisis/...`).
+
+- Ajustar dominios de Temperatura e IA:
+  - Mantener a corto plazo el dominio `/api/ubibot` por compatibilidad, documentando que el dominio de negocio es **temperatura** y que Ubibot es un detalle de implementación. En refactors futuros, los endpoints se reexpondrán bajo `/api/temperatura/...`.
+  - Sustituir el dominio `/api/v1/ai-analysis` por `/api/ia/analisis`, eliminando el versionado explícito en la URL y actualizando servidor y frontend.
+
+### Estado Actual
+✅ Implementado — Limpieza de endpoints legacy y ajuste de dominios según Issue #11.
+
+---
+
+## 12. Alineación total endpoints con BD (ubi_canal + id_preset, reportería)
+
+### Contexto
+Plan de alineación de todos los endpoints con el esquema de BD definido en SQL_FILES y Base_de_Datos.md. Incluye migración de tablas legacy a rep_*, ubi_*, sem_*, etc.
+
+### Decisiones aplicadas
+
+- **ubi_canal ↔ ubi_presets_temperatura (Opción A):** Se añadió FK `id_preset` en ubi_canal; se eliminaron `temperatura_minima_umbral`, `temperatura_maxima_umbral`, `fecha_actualizacion_umbral`, `usuario_actualizacion_umbral`. Los umbrales se obtienen siempre por JOIN con ubi_presets_temperatura. Al cambiar un preset, todos los canales que lo usan se actualizan implícitamente.
+- **Reportería:** Se añadieron columnas a rep_plantillas (max_dispositivos, max_dias, admite_comparativo, tiempo_estimado_segundos) y rep_reportes_generados (id_usuario, fecha_inicio_periodo, fecha_fin_periodo, ids_dispositivos, config_reporte, tiempo_generacion_segundos, mensaje_error_generacion).
+- **Presets:** presets_Controller migrado de temperature_presets a ubi_presets_temperatura. SP stpr_apply_preset_to_cameras actualizado para usar UPDATE id_preset.
+- **GPS/blindspot/sectores/beacons:** Sin cambios en esquema; dominios reservados (Issue #26 para sectores/beacons).
+
+### Estado Actual
+✅ Parcialmente implementado — Esquema SQL, SP, triggers, ubibot_Service, presets_Controller, Base_de_Datos.md, inventario en APIs_internas.md.
+
+---
+
 ## 📝 Historial de Cambios
 
 > **Nota**: Para historial detallado de cambios del proyecto, ver [CHANGELOG.md](./CHANGELOG.md)
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-03-12 | Alineación endpoints con BD: ubi_canal+id_preset (Opción A), rep_plantillas/rep_reportes_generados, presets | andresTNS, Bufigol |
+| 2026-03-11 | Modelo unificado de notificaciones: ale_suscripciones_notificacion, horarios base/custom, servicio único de decisión; eliminación ale_suscripciones_email | Plan Notificaciones unificadas |
+| 2026-03-11 | Estandarización de fechas: Luxon como única librería (Issue #5) | andresTNS, Bufigol |
 | 2026-01-26 | Documentación actualizada según feedback Issue #2 | andresTNS, Bufigol |
 | 2026-01-22 | Documentación completa de decisiones técnicas | andresTNS, Bufigol |
 | 2026-01-15 | Eliminación de SMS/Twilio | andresTNS |
@@ -251,4 +361,4 @@ Usar **MySQL** (NO MariaDB) como base de datos principal.
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-26
+**Última revisión**: 2026-03-11

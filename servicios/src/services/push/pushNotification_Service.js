@@ -4,8 +4,9 @@
 const webpush = require('web-push');
 const mysql = require("mysql2/promise");
 const configLoader = require("../../config/js_files/configLoader_Config");
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 const alertScheduleConfigService = require("../db/alertScheduleConfig_Service");
+const notificationScheduleService = require("../notificationSchedule_Service");
 
 /**
  * Servicio para gestionar suscripciones y envío de Push Notifications
@@ -326,6 +327,34 @@ class PushNotificationService {
     }
 
     /**
+     * Obtiene suscripciones push solo de usuarios que tienen ale_suscripciones_notificacion (canal=push) para el tipo/origen dado.
+     * @param {number} idTipoAlerta - 1=temperatura, 2=desconexion
+     * @param {number} idOrigenTipo - FK gen_tipos_origen (ej. 1=ubibot)
+     * @returns {Promise<Array>} Filas de ale_push_suscripciones (activas) para esos usuarios
+     */
+    async getPushSubscriptionsForAlertType(idTipoAlerta, idOrigenTipo) {
+        if (!this.initialized || !this.pool) {
+            return [];
+        }
+        const connection = await this.pool.getConnection();
+        try {
+            const [rows] = await connection.query(
+                `SELECT p.* FROM ale_push_suscripciones p
+                 INNER JOIN ale_suscripciones_notificacion s ON s.id_usuario = p.id_usuario
+                   AND s.id_tipo_alerta = ? AND s.id_origen_tipo = ? AND s.canal = 'push' AND s.activo = 1
+                 WHERE p.activo = 1`,
+                [idTipoAlerta, idOrigenTipo]
+            );
+            return rows || [];
+        } catch (error) {
+            console.error("❌ [PushNotificationService] getPushSubscriptionsForAlertType:", error.message);
+            return [];
+        } finally {
+            connection.release();
+        }
+    }
+
+    /**
      * Obtiene las preferencias de DND de una suscripción
      * @param {number} subscriptionId - ID de la suscripción
      * @returns {Promise<Object|null>} Objeto con las preferencias o null si no existen
@@ -563,8 +592,8 @@ class PushNotificationService {
     _isInDNDWindow(currentTime, preferences) {
         if (!preferences.dndEnabled) return false;
 
-        const now = moment(currentTime).tz(this.timeZone);
-        const dayName = now.format('dddd'); // "Monday", "Tuesday", etc.
+        const now = DateTime.fromJSDate(currentTime instanceof Date ? currentTime : new Date(currentTime)).setZone(this.timeZone);
+        const dayName = now.toFormat('EEEE'); // "Monday", "Tuesday", etc.
 
         // Validar día de la semana
         if (preferences.dndDays && preferences.dndDays.length > 0) {
@@ -574,7 +603,7 @@ class PushNotificationService {
         }
 
         // Validar horario
-        const currentMinutes = now.hours() * 60 + now.minutes();
+        const currentMinutes = now.hour * 60 + now.minute;
         const startMinutes = this._timeToMinutes(preferences.dndStartTime);
         const endMinutes = this._timeToMinutes(preferences.dndEndTime);
 
@@ -650,9 +679,9 @@ class PushNotificationService {
     }
 
     /**
-     * Envía notificación a todas las suscripciones activas
+     * Envía notificación a todas las suscripciones activas (o a las de un tipo/origen si se indica).
      * @param {Object} payload - Datos de la notificación
-     * @param {Object} filters - Filtros opcionales
+     * @param {Object} filters - Filtros opcionales. Si idTipoAlerta e idOrigenTipo están presentes, se usan ale_suscripciones_notificacion y shouldSendNotification (ventana + DND).
      * @returns {Promise<Object>} Resultados del envío
      */
     async sendNotificationToAll(payload, filters = {}) {
@@ -660,36 +689,57 @@ class PushNotificationService {
             throw new Error("Servicio no inicializado");
         }
 
-        console.log("[PushNotificationService] Enviando notificación a todas las suscripciones activas...");
+        const { idTipoAlerta, idOrigenTipo } = filters;
+        const useScheduleService = idTipoAlerta != null && idOrigenTipo != null;
 
-        const subscriptions = await this.getActiveSubscriptions(filters);
+        let subscriptions;
+        if (useScheduleService) {
+            console.log("[PushNotificationService] Enviando a suscriptores push (tipo=" + idTipoAlerta + ", origen=" + idOrigenTipo + ") con ventana + DND...");
+            subscriptions = await this.getPushSubscriptionsForAlertType(idTipoAlerta, idOrigenTipo);
+        } else {
+            console.log("[PushNotificationService] Enviando notificación a todas las suscripciones activas...");
+            subscriptions = await this.getActiveSubscriptions(filters);
+        }
 
         if (subscriptions.length === 0) {
             console.warn("[PushNotificationService] No hay suscripciones activas.");
             return { sent: 0, failed: 0, total: 0, skippedByDND: 0 };
         }
 
-        // NUEVO: Filtrar por DND antes de enviar
         const alertType = payload.data?.type || 'unknown';
         const isCritical = payload.requireInteraction === true &&
                           (payload.data?.isCritical === true || payload.isCritical === true);
 
-        console.log(`[PushNotificationService] Evaluando DND para tipo: ${alertType}, crítica: ${isCritical}`);
-
         const eligibleSubs = [];
         let skippedByDND = 0;
+        const now = DateTime.now().setZone(this.timeZone || 'America/Santiago');
 
         for (const sub of subscriptions) {
-            const shouldSend = await this.shouldSendToSubscription(sub, alertType, isCritical);
+            let shouldSend;
+            if (useScheduleService) {
+                const { allowed } = await notificationScheduleService.shouldSendNotification({
+                    idTipoAlerta,
+                    idOrigenTipo,
+                    canal: 'push',
+                    idUsuario: sub.id_usuario,
+                    fechaHora: now,
+                    idSuscripcionPush: sub.id_suscripcion
+                });
+                shouldSend = allowed;
+            } else {
+                shouldSend = await this.shouldSendToSubscription(sub, alertType, isCritical);
+            }
             if (shouldSend) {
                 eligibleSubs.push(sub);
             } else {
                 skippedByDND++;
-                console.log(`[PushNotificationService] Skipping sub ${sub.id_suscripcion} (DND active)`);
+                if (!useScheduleService) {
+                    console.log(`[PushNotificationService] Skipping sub ${sub.id_suscripcion} (DND active)`);
+                }
             }
         }
 
-        console.log(`[PushNotificationService] Filtered: ${eligibleSubs.length}/${subscriptions.length} eligible after DND (${skippedByDND} skipped)`);
+        console.log(`[PushNotificationService] Filtered: ${eligibleSubs.length}/${subscriptions.length} eligible (${skippedByDND} skipped)`);
 
         if (eligibleSubs.length === 0) {
             console.warn("[PushNotificationService] No hay suscripciones elegibles después del filtrado DND.");
@@ -739,7 +789,7 @@ class PushNotificationService {
 
         const count = channelsInAlert.length;
         const firstChannel = channelsInAlert[0];
-        const time = moment().tz(this.timeZone).format("DD/MM HH:mm");
+        const time = DateTime.now().setZone(this.timeZone).toFormat('dd/MM HH:mm');
 
         // Evaluar criticidad: Si algún canal está fuera de rango según configuración
         let isCritical = false;
@@ -819,7 +869,7 @@ class PushNotificationService {
         };
 
         console.log(`📱 [${callId}] ➡️  LLAMANDO sendNotificationToAll()...`);
-        const result = await this.sendNotificationToAll(payload);
+        const result = await this.sendNotificationToAll(payload, { idTipoAlerta: 1, idOrigenTipo: 1 });
         console.log(`📱 [${callId}] ✅  sendNotificationToAll() completado: ${result.sent}/${result.total} exitosas`);
         return result;
     }
@@ -835,8 +885,8 @@ class PushNotificationService {
 
         const count = disconnectedChannels.length;
         const firstChannel = disconnectedChannels[0];
-        const time = moment().tz(this.timeZone).format("DD/MM HH:mm");
-        const now = moment().tz(this.timeZone);
+        const time = DateTime.now().setZone(this.timeZone).toFormat('dd/MM HH:mm');
+        const now = DateTime.now().setZone(this.timeZone);
 
         // Evaluar criticidad: Si algún canal está desconectado según configuración
         let isCritical = false;
@@ -848,8 +898,8 @@ class PushNotificationService {
             if (channel.finalStatus === 'disconnected' || channel.finalStatus === 'Desconectado') {
                 if (channel.horaDesconexion) {
                     // Calcular duración de desconexión
-                    const disconnectTime = moment(channel.horaDesconexion).tz(this.timeZone);
-                    const hoursDisconnected = now.diff(disconnectTime, 'hours', true);
+                    const disconnectTime = DateTime.fromJSDate(channel.horaDesconexion instanceof Date ? channel.horaDesconexion : new Date(channel.horaDesconexion)).setZone(this.timeZone);
+                    const hoursDisconnected = now.diff(disconnectTime, 'hours').hours;
 
                     if (hoursDisconnected > criticalThresholdHours) {
                         isCritical = true;
@@ -928,7 +978,7 @@ class PushNotificationService {
             isCritical // Marcador adicional para el filtrado DND
         };
 
-        return await this.sendNotificationToAll(payload);
+        return await this.sendNotificationToAll(payload, { idTipoAlerta: 2, idOrigenTipo: 1 });
     }
 
     /**

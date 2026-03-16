@@ -430,18 +430,9 @@ CREATE INDEX `idx_ubi_canal_id_ubicacion_real-activo`
 CREATE INDEX `idx_ubi_canal_activo-en_linea-id_ubicacion_real`
     ON `ubi_canal` (`activo`, `en_linea`, `id_ubicacion_real`);
 
--- Para búsqueda de canales según umbrales de temperatura mínima
--- (identificar canales con umbral bajo que podrían generar más alertas)
-CREATE INDEX `idx_ubi_canal_temperatura_minima_umbral-activo`
-    ON `ubi_canal` (`temperatura_minima_umbral`, `activo`);
-
--- Para búsqueda de canales según umbrales de temperatura máxima
-CREATE INDEX `idx_ubi_canal_temperatura_maxima_umbral-activo`
-    ON `ubi_canal` (`temperatura_maxima_umbral`, `activo`);
-
--- Para compound de umbrales (comparar umbral mín+máx con valor leído)
-CREATE INDEX `idx_ubi_canal_activo-temp_min_umbral-temp_max_umbral`
-    ON `ubi_canal` (`activo`, `temperatura_minima_umbral`, `temperatura_maxima_umbral`);
+-- Para búsqueda de canales por preset (Opción A: umbrales via ubi_presets_temperatura)
+CREATE INDEX `idx_ubi_canal_id_preset-activo`
+    ON `ubi_canal` (`id_preset`, `activo`);
 
 -- Para búsqueda directa de última alerta (sin filtro de activo)
 CREATE INDEX `idx_ubi_canal_ultima_alerta_enviada`
@@ -571,6 +562,44 @@ CREATE INDEX `idx_ale_seguimiento_tipo_alerta-severidad-estado-fecha_alerta`
 -- Para análisis de valor de temperatura que disparó la alerta
 CREATE INDEX `idx_ale_seguimiento_id_canal-valor_temperatura-fecha_alerta`
     ON `ale_seguimiento` (`id_canal`, `valor_temperatura`, `fecha_alerta`);
+
+
+-- ----------------------------------------------------------
+-- ale_suscripciones_notificacion
+-- Suscripciones unificadas por usuario/tipo/origen/canal.
+-- Patrones: destinatarios por tipo/origen/canal; por usuario
+-- ----------------------------------------------------------
+
+CREATE INDEX `idx_ale_suscripciones_notificacion_tipo_origen_canal_activo`
+    ON `ale_suscripciones_notificacion` (`id_tipo_alerta`, `id_origen_tipo`, `canal`, `activo`);
+
+CREATE INDEX `idx_ale_suscripciones_notificacion_id_usuario`
+    ON `ale_suscripciones_notificacion` (`id_usuario`);
+
+CREATE INDEX `idx_ale_suscripciones_notificacion_activo`
+    ON `ale_suscripciones_notificacion` (`activo`);
+
+-- ----------------------------------------------------------
+-- ale_horarios_alerta_canal
+-- Horarios base por tipo/canal/día (admin). Patrón: resolver ventana efectiva
+-- ----------------------------------------------------------
+
+CREATE INDEX `idx_ale_horarios_alerta_canal_tipo_canal`
+    ON `ale_horarios_alerta_canal` (`id_tipo_alerta`, `canal`);
+
+CREATE INDEX `idx_ale_horarios_alerta_canal_canal_dia`
+    ON `ale_horarios_alerta_canal` (`canal`, `dia_semana`);
+
+-- ----------------------------------------------------------
+-- ale_horarios_usuario
+-- Horarios custom por usuario/tipo/canal. Patrón: ¿tiene custom para tipo/canal?
+-- ----------------------------------------------------------
+
+CREATE INDEX `idx_ale_horarios_usuario_usuario_tipo_canal`
+    ON `ale_horarios_usuario` (`id_usuario`, `id_tipo_alerta`, `canal`);
+
+CREATE INDEX `idx_ale_horarios_usuario_activo`
+    ON `ale_horarios_usuario` (`activo`);
 
 
 -- ----------------------------------------------------------

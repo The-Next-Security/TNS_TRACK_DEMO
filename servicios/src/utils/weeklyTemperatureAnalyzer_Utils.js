@@ -1,6 +1,6 @@
 // WeeklyTemperatureAnalyzer.js
 const PDFDocument = require("pdfkit");
-const moment = require("moment-timezone");
+const { DateTime } = require("luxon");
 const QuickChart = require("quickchart-js");
 const fetch = require("node-fetch");
 
@@ -77,7 +77,7 @@ class WeeklyTemperatureAnalyzer {
     for (let dayIndex = 1; dayIndex <= 7; dayIndex++) {
       const dayName = dayNames[dayIndex - 1];
       this.records[period]
-        .filter((record) => record.datetime.isoWeekday() === dayIndex)
+        .filter((record) => record.datetime.weekday === dayIndex)
         .forEach((record) => {
           const temp = record.temperature;
           const dayData = distribution.get(dayName);
@@ -270,57 +270,46 @@ class WeeklyTemperatureAnalyzer {
   }
 
   async analyzeData(currentData, previousData, cameraName, dataDate) {
-    // Configurar moment para usar lunes como primer día de la semana
-    moment.locale("es", {
-      week: {
-        dow: 1, // Lunes es 1
-        doy: 4, // La semana que contiene Ene 4 es la primera semana del año
-      },
-    });
-
     // Use selectedDate as anchor point
-    const selectedDate = moment(dataDate).tz("America/Santiago");
+    const selectedDate = DateTime.fromISO(String(dataDate)).setZone("America/Santiago");
 
     // Calculate date ranges correctly
-    const startDate = selectedDate.clone().subtract(6, "days").startOf("day");
-    const endDate = selectedDate.clone().endOf("day");
-    const prevStartDate = selectedDate
-      .clone()
-      .subtract(13, "days")
-      .startOf("day");
-    const prevEndDate = selectedDate.clone().subtract(7, "days").endOf("day");
+    const startDate = selectedDate.minus({ days: 6 }).startOf("day");
+    const endDate = selectedDate.endOf("day");
+    const prevStartDate = selectedDate.minus({ days: 13 }).startOf("day");
+    const prevEndDate = selectedDate.minus({ days: 7 }).endOf("day");
 
     console.log("analyzeData - Calculated Date Ranges:");
     console.log(
       "  Current Week Start:",
-      startDate.format("YYYY-MM-DD HH:mm:ss")
+      startDate.toFormat("yyyy-MM-dd HH:mm:ss")
     );
-    console.log("  Current Week End:", endDate.format("YYYY-MM-DD HH:mm:ss"));
+    console.log("  Current Week End:", endDate.toFormat("yyyy-MM-dd HH:mm:ss"));
     console.log(
       "  Previous Week Start:",
-      prevStartDate.format("YYYY-MM-DD HH:mm:ss")
+      prevStartDate.toFormat("yyyy-MM-dd HH:mm:ss")
     );
     console.log(
       "  Previous Week End:",
-      prevEndDate.format("YYYY-MM-DD HH:mm:ss")
+      prevEndDate.toFormat("yyyy-MM-dd HH:mm:ss")
     );
 
     console.log("Current Week Range:", {
-      start: startDate.format("YYYY-MM-DD HH:mm:ss"),
-      end: endDate.format("YYYY-MM-DD HH:mm:ss"),
-      weekNumber: endDate.isoWeek(),
+      start: startDate.toFormat("yyyy-MM-dd HH:mm:ss"),
+      end: endDate.toFormat("yyyy-MM-dd HH:mm:ss"),
+      weekNumber: endDate.weekNumber,
     });
 
     console.log("Previous Week Range:", {
-      start: prevStartDate.format("YYYY-MM-DD HH:mm:ss"),
-      end: prevEndDate.format("YYYY-MM-DD HH:mm:ss"),
-      weekNumber: prevEndDate.isoWeek(),
+      start: prevStartDate.toFormat("yyyy-MM-dd HH:mm:ss"),
+      end: prevEndDate.toFormat("yyyy-MM-dd HH:mm:ss"),
+      weekNumber: prevEndDate.weekNumber,
     });
 
     // Filter the data using the correctly calculated ranges
     this.records.current = currentData
       .map((record) => {
-        const datetime = moment.tz(record.timestamp, "America/Santiago");
+        const datetime = DateTime.fromISO(String(record.timestamp)).setZone("America/Santiago");
         return {
           datetime: datetime,
           timestamp: record.timestamp, // Log the raw timestamp
@@ -329,12 +318,12 @@ class WeeklyTemperatureAnalyzer {
         };
       })
       .filter((record) => {
-        return record.datetime.isBetween(startDate, endDate, null, "[]");
+        return record.datetime >= startDate && record.datetime <= endDate;
       });
 
     this.records.previous = previousData
       .map((record) => {
-        const datetime = moment.tz(record.timestamp, "America/Santiago");
+        const datetime = DateTime.fromISO(String(record.timestamp)).setZone("America/Santiago");
         return {
           datetime: datetime,
           timestamp: record.timestamp, // Log the raw timestamp
@@ -343,27 +332,22 @@ class WeeklyTemperatureAnalyzer {
         };
       })
       .filter((record) => {
-        return record.datetime.isBetween(
-          prevStartDate,
-          prevEndDate,
-          null,
-          "[]"
-        );
+        return record.datetime >= prevStartDate && record.datetime <= prevEndDate;
       });
 
     // Almacenar los números de semana
-    this.stats.current.weekNumber = endDate.isoWeek();
-    this.stats.previous.weekNumber = prevEndDate.isoWeek();
+    this.stats.current.weekNumber = endDate.weekNumber;
+    this.stats.previous.weekNumber = prevEndDate.weekNumber;
 
     // Store the date ranges for reference
     this.dateRanges = {
       current: {
-        start: startDate.format("DD/MM/YYYY"),
-        end: endDate.format("DD/MM/YYYY"),
+        start: startDate.toFormat("dd/MM/yyyy"),
+        end: endDate.toFormat("dd/MM/yyyy"),
       },
       previous: {
-        start: prevStartDate.format("DD/MM/YYYY"),
-        end: prevEndDate.format("DD/MM/YYYY"),
+        start: prevStartDate.toFormat("dd/MM/yyyy"),
+        end: prevEndDate.toFormat("dd/MM/yyyy"),
       },
     };
 
@@ -377,8 +361,8 @@ class WeeklyTemperatureAnalyzer {
     console.log(
       "Sample of current records:",
       this.records.current.slice(0, 5).map((r) => ({
-        date: r.datetime.format("YYYY-MM-DD"),
-        day: r.datetime.format("dddd"),
+        date: r.datetime.toFormat("yyyy-MM-dd"),
+        day: r.datetime.toFormat("cccc"),
         temp: r.temperature,
         timestamp: r.timestamp,
         rawTimestamp: r.rawTimestamp,
@@ -387,12 +371,12 @@ class WeeklyTemperatureAnalyzer {
 
     // Log específico para registros del domingo
     const sundayRecords = this.records.current.filter(
-      (r) => r.datetime.isoWeekday() === 7
+      (r) => r.datetime.weekday === 7
     );
 
     // Conteo por día para la semana actual
     const currentDayCount = this.records.current.reduce((acc, record) => {
-      const day = record.datetime.format("dddd");
+      const day = record.datetime.toFormat("cccc");
       acc[day] = (acc[day] || 0) + 1;
       return acc;
     }, {});
@@ -401,7 +385,7 @@ class WeeklyTemperatureAnalyzer {
 
     // Conteo por día para la semana anterior
     const previousDayCount = this.records.previous.reduce((acc, record) => {
-      const day = record.datetime.format("dddd");
+      const day = record.datetime.toFormat("cccc");
       acc[day] = (acc[day] || 0) + 1;
       return acc;
     }, {});
@@ -413,25 +397,25 @@ class WeeklyTemperatureAnalyzer {
       current: {
         firstRecord:
           this.records.current.length > 0
-            ? this.records.current[0].datetime.format("YYYY-MM-DD HH:mm:ss")
+            ? this.records.current[0].datetime.toFormat("yyyy-MM-dd HH:mm:ss")
             : "No records",
         lastRecord:
           this.records.current.length > 0
             ? this.records.current[
                 this.records.current.length - 1
-              ].datetime.format("YYYY-MM-DD HH:mm:ss")
+              ].datetime.toFormat("yyyy-MM-dd HH:mm:ss")
             : "No records",
       },
       previous: {
         firstRecord:
           this.records.previous.length > 0
-            ? this.records.previous[0].datetime.format("YYYY-MM-DD HH:mm:ss")
+            ? this.records.previous[0].datetime.toFormat("yyyy-MM-dd HH:mm:ss")
             : "No records",
         lastRecord:
           this.records.previous.length > 0
             ? this.records.previous[
                 this.records.previous.length - 1
-              ].datetime.format("YYYY-MM-DD HH:mm:ss")
+              ].datetime.toFormat("yyyy-MM-dd HH:mm:ss")
             : "No records",
       },
     });
@@ -465,10 +449,10 @@ class WeeklyTemperatureAnalyzer {
       "Domingo",
     ];
 
-    // Usar isoWeekday() en lugar de day()
+    // Usar weekday (propiedad Luxon, 1=lunes, 7=domingo)
     for (let dayIndex = 1; dayIndex <= 7; dayIndex++) {
       const dayData = this.records[period].filter((record) => {
-        return record.datetime.isoWeekday() === dayIndex;
+        return record.datetime.weekday === dayIndex;
       });
 
       console.log(
@@ -610,7 +594,7 @@ class WeeklyTemperatureAnalyzer {
       console.error("Error loading logos:", error);
     }
 
-    const currentWeek = moment(dataDate).isoWeek();
+    const currentWeek = DateTime.fromISO(String(dataDate)).weekNumber;
 
     doc
       .moveDown(2)
@@ -623,14 +607,14 @@ class WeeklyTemperatureAnalyzer {
       })
       .fontSize(12)
       .text(
-        `Fecha de los Datos Analizados: ${moment(dataDate).format(
-          "DD-MM-YYYY"
+        `Fecha de los Datos Analizados: ${DateTime.fromISO(String(dataDate)).toFormat(
+          "dd-MM-yyyy"
         )} , Semana ${this.stats.current.weekNumber}`,
         { align: "center" }
       )
       .moveDown(0.5)
       .text("Analiza Inter-Semanas", { align: "center" })
-      .text(`Fecha de Análisis: ${moment().format("DD-MM-YYYY HH:mm")}`, {
+      .text(`Fecha de Análisis: ${DateTime.now().toFormat("dd-MM-yyyy HH:mm")}`, {
         align: "center",
       })
       .moveDown(2);

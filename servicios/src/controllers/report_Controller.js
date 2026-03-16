@@ -10,7 +10,7 @@ const emailService = require('../services/email/email_Service');
 const emailValidator = require('../services/reports/emailValidator_Utils');
 const path = require('path');
 const fs = require('fs').promises;
-const moment = require('moment');
+const { DateTime } = require('luxon');
 const configLoader = require('../config/js_files/configLoader_Config');
 
 // Database configuration aligned with unified-config.json (same as services)
@@ -488,8 +488,8 @@ async function sendEmail(req, res) {
       // Prepare report metadata for enhanced email template
       const reportMetadata = {
         reportName: report.report_name,
-        periodStart: moment(report.period_start_date).format('DD/MM/YYYY'),
-        periodEnd: moment(report.period_end_date).format('DD/MM/YYYY'),
+        periodStart: DateTime.fromJSDate(report.period_start_date).toFormat('dd/MM/yyyy'),
+        periodEnd: DateTime.fromJSDate(report.period_end_date).toFormat('dd/MM/yyyy'),
         reportType: reportType
       };
 

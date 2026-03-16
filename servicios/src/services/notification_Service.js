@@ -3,7 +3,7 @@
 
 const mysql = require("mysql2/promise");
 const configLoader = require("../config/js_files/configLoader_Config");
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 
 // Pool interno del servicio
 let pool = null;
@@ -152,7 +152,7 @@ class NotificationService {
         // Formatear fechas a SQL DATETIME string 'YYYY-MM-DD HH:MM:SS'
         const formatToSqlDatetime = (date) => {
             if (!date || !(date instanceof Date)) return null;
-            return moment(date).format('YYYY-MM-DD HH:mm:ss');
+            return DateTime.fromJSDate(date).toFormat('yyyy-MM-dd HH:mm:ss');
         };
 
         const logEntry = {
@@ -255,8 +255,8 @@ class NotificationService {
         
         // Marcas de tiempo para logging (usar Date objects)
         const analysisExecutionTime = new Date(); // Hora real de ejecución
-        const windowStartTime = moment(startTimeStr, 'YYYY-MM-DD HH:mm:ss').toDate();
-        const windowEndTime = moment(endTimeStr, 'YYYY-MM-DD HH:mm:ss').toDate();
+        const windowStartTime = DateTime.fromFormat(startTimeStr, 'yyyy-MM-dd HH:mm:ss').toJSDate();
+        const windowEndTime = DateTime.fromFormat(endTimeStr, 'yyyy-MM-dd HH:mm:ss').toJSDate();
 
         // Log a consola (más inmediato)
         console.log(`[NotificationService] Iniciando análisis horario: ${startTimeStr} -> ${endTimeStr}`);
@@ -279,20 +279,25 @@ class NotificationService {
             }
 
             // Obtener conteo total de canales y canales no operativos para logging
+            // Migrado: channels_ubibot → ubi_canal, esOperativa → activo
             const [totalChannelsResult] = await connection.query(
-                `SELECT COUNT(*) as total FROM channels_ubibot`
+                `SELECT COUNT(*) as total FROM ubi_canal`
             );
             const [nonOperativeResult] = await connection.query(
-                `SELECT COUNT(*) as count FROM channels_ubibot WHERE esOperativa = 0`
+                `SELECT COUNT(*) as count FROM ubi_canal WHERE activo = 0`
             );
             const totalChannels = totalChannelsResult[0]?.total || 0;
             const nonOperativeCount = nonOperativeResult[0]?.count || 0;
 
             // Obtener canales operativos
+            // Migrado: channels_ubibot → ubi_canal, parametrizaciones → ubi_presets_temperatura
+            // Aliases preservan nombres de variables JS downstream (channel_id, channelName, minThreshold, maxThreshold, id_parametrizacion)
             const [channels] = await connection.query(
-                `SELECT c.channel_id, c.name AS channelName, p.minimo AS minThreshold, p.maximo AS maxThreshold, c.id_parametrizacion
-                 FROM channels_ubibot c JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
-                 WHERE c.esOperativa = 1 AND p.minimo IS NOT NULL AND p.maximo IS NOT NULL`
+                `SELECT c.canal_id AS channel_id, c.nombre AS channelName,
+                        p.temperatura_minima AS minThreshold, p.temperatura_maxima AS maxThreshold,
+                        c.id_preset AS id_parametrizacion
+                 FROM ubi_canal c JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+                 WHERE c.activo = 1 AND p.temperatura_minima IS NOT NULL AND p.temperatura_maxima IS NOT NULL`
             );
             console.log(`[NotificationService] ${channels.length} canales operativos encontrados (${nonOperativeCount} canales no operativos omitidos, ${totalChannels} total).`);
 
@@ -330,7 +335,14 @@ class NotificationService {
 
 
                     // 2. Consultar Lecturas
-                    const querySQL = `SELECT external_temperature, external_temperature_timestamp FROM sensor_readings_ubibot WHERE channel_id = ? AND external_temperature_timestamp BETWEEN ? AND ? AND external_temperature IS NOT NULL ORDER BY external_temperature_timestamp ASC`;
+                    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; id_canal via lookup de canal_id (API ID)
+                    // Aliases preservan nombres de variables JS downstream (external_temperature, external_temperature_timestamp)
+                    const querySQL = `SELECT temperatura_externa AS external_temperature, fecha_lectura_externa AS external_temperature_timestamp
+                                      FROM ubi_lecturas_sensor
+                                      WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+                                        AND fecha_lectura_externa BETWEEN ? AND ?
+                                        AND temperatura_externa IS NOT NULL
+                                      ORDER BY fecha_lectura_externa ASC`;
                     const queryParams = [channel_id, startTimeStr, endTimeStr];
                     // Log antes de consulta
                     await this._logAnalysisEvent('DEBUG', channel_id, `Ejecutando consulta de lecturas...`, { sql: querySQL.substring(0, 200), params: queryParams }, connection, analysisExecutionTime, windowStartTime, windowEndTime);
@@ -368,19 +380,19 @@ class NotificationService {
                             const isInside = temp >= numMinThreshold && temp <= numMaxThreshold;
 
                             // Log detallado de cada lectura (controlado por nivel DEBUG)
-                            this._logAnalysisEvent('DEBUG', channel_id, `Lectura #${index + 1}: Temp=${temp.toFixed(2)}, TS=${moment(tempTs).toISOString()}, DentroRango=${isInside}`,
-                                { index: index + 1, temp: temp.toFixed(2), ts: moment(tempTs).toISOString(), inRange: isInside }, connection, analysisExecutionTime, windowStartTime, windowEndTime);
+                            this._logAnalysisEvent('DEBUG', channel_id, `Lectura #${index + 1}: Temp=${temp.toFixed(2)}, TS=${DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO()}, DentroRango=${isInside}`,
+                                { index: index + 1, temp: temp.toFixed(2), ts: DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO(), inRange: isInside }, connection, analysisExecutionTime, windowStartTime, windowEndTime);
 
 
                             if (isInside) {
                                 allOutOfRange = false; // Marcar si *alguna* está dentro
-                                if (!firstInRangeReading) firstInRangeReading = { temp: temp.toFixed(2), ts: moment(tempTs).toISOString() };
+                                if (!firstInRangeReading) firstInRangeReading = { temp: temp.toFixed(2), ts: DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO() };
                             } else {
-                                if (!firstOutOfRangeReading) firstOutOfRangeReading = { temp: temp.toFixed(2), ts: moment(tempTs).toISOString() };
+                                if (!firstOutOfRangeReading) firstOutOfRangeReading = { temp: temp.toFixed(2), ts: DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO() };
                             }
                         } else {
                             // Log WARN para lecturas inválidas
-                            const invalidData = { index: index + 1, value: temp, type: typeof temp, ts: tempTs ? moment(tempTs).toISOString() : null };
+                            const invalidData = { index: index + 1, value: temp, type: typeof temp, ts: tempTs ? DateTime.fromJSDate(tempTs instanceof Date ? tempTs : new Date(tempTs)).toISO() : null };
                             invalidReadingsFound.push(invalidData);
                             this._logAnalysisEvent('WARN', channel_id, `Lectura #${index + 1} inválida/no numérica omitida.`,
                                 invalidData, connection, analysisExecutionTime, windowStartTime, windowEndTime);

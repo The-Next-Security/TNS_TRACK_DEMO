@@ -8,13 +8,11 @@ import ConsumoTotalMensual from "./ConsumoTotalMensual_View";
 import ConsumoTotalAnual from "./ConsumoTotalAnual_View";
 import DashboardTemperatura from "./DashboardTemperatura_View";
 import LastKnownPosition from "./LastKnownPosition_View";
-import UbicacionTiempoRealInteriores from "./UbicacionTiempoRealInterior_View";
 import PersonSearch from "./PersonSearch_View";
 import LandingPage from "./LandingPage_View";
 import SelectRoutine from "./SelectRoutine_View";
 import HistoricalMovementsSearch from "./HistoricalMovementsSearch_View";
 import Configuration from "./Configuration_View";
-import DoorStatusMatrix from "./DoorStatusMatrix_View";
 import UserRegistration from "./UserRegistration_View";
 import ForgotPassword from "./ForgotPassword_View";
 import ResetPassword from "./ResetPassword_View";
@@ -25,6 +23,7 @@ import ParametroTempCamaras from "./ParametroTempCamaras_View";
 import TemperaturePowerAnalysis from "./TemperaturePowerAnalysis_View";
 import AlertManagementView from "./AlertManagement_View";
 import AlertNotificationConfigView from "./AlertNotificationConfig_View";
+import NotificationHorariosEnvioView from "./NotificationHorariosEnvio_View";
 import AlertMetricsDashboardView from "./AlertMetricsDashboard_View";
 import ReportDashboardView from "./reports/ReportDashboard_View";
 import AIAnalysisView from "./AIAnalysis_View";
@@ -221,24 +220,7 @@ function AppContent() {
             </PrivateRoute>
           }
         />
-        <Route
-          path="/ubicaciones-interior"
-          element={
-            <PrivateRoute userPermissions={userPermissions}>
-              <UbicacionTiempoRealInteriores />
-            </PrivateRoute>
-          }
-        />
-        
-
-        <Route
-          path="/door-status-matrix"
-          element={
-            <PrivateRoute userPermissions={userPermissions}>
-              <DoorStatusMatrix />
-            </PrivateRoute>
-          }
-        />
+       
         <Route
           path="/analisis-temperatura-potencia"
           element={
@@ -260,6 +242,14 @@ function AppContent() {
           element={
             <PrivateRoute userPermissions={userPermissions}>
               <AlertNotificationConfigView />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/configuracion-horarios-envio"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <NotificationHorariosEnvioView />
             </PrivateRoute>
           }
         />

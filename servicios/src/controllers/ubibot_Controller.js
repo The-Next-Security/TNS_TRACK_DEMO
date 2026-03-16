@@ -1,6 +1,7 @@
 // src/controllers/ubibotController.js
 
-const moment = require("moment");
+const { DateTime } = require("luxon");
+const TZ_UBI = "America/Santiago";
 const axios = require("axios");
 const fs = require("fs").promises; // Usar promesas de fs
 const path = require("path"); // <--- Importante: Añadido import de path
@@ -283,7 +284,7 @@ class UbibotController {
       // Validar respuesta
       if (response.data?.result === "success" && Array.isArray(response.data.channels)) {
         const ubibotConfig = config.getConfig().ubibot; // Obtener config de nuevo por si cambió
-        const excludedChannels = ubibotConfig?.excludedChannels || [];
+        const excludedChannels = ubibotConfig?.excluded_channels || [];
         const filteredChannels = response.data.channels.filter(
           (channel) => !excludedChannels.includes(channel.channel_id?.toString()) // Comparar como strings por si acaso
         );
@@ -348,40 +349,39 @@ class UbibotController {
   async getTemperatureDashboardData(req, res) {
 
     try {
-      // Query actualizada para usar umbrales individuales
+      // Query migrada al nuevo schema (ubi_canal, ubi_lecturas_sensor, ubi_presets_temperatura)
+      // SUPUESTO #3: ubi_canal no tiene columnas threshold_min/threshold_max individuales por canal.
+      // Se usan siempre los umbrales del preset del grupo (ubi_presets_temperatura).
+      // threshold_type siempre retorna 'group'; threshold_updated_at/by retornan NULL.
       const query = `
          SELECT
-           c.channel_id,
-           c.name,
-           s.external_temperature,
-           s.external_temperature_timestamp,
-           c.is_currently_out_of_range,
-           -- Usar umbrales individuales si existen, sino usar los de parametrizaciones
-           COALESCE(c.threshold_min, p.minimo) as minimo,
-           COALESCE(c.threshold_max, p.maximo) as maximo,
-           c.threshold_updated_at,
-           c.threshold_updated_by,
-           p.param_id,
-           -- Indicador si está usando umbrales individuales o grupales
+           c.canal_id AS channel_id,
+           c.nombre AS name,
+           s.temperatura_externa AS external_temperature,
+           s.fecha_lectura_externa AS external_temperature_timestamp,
+           -- is_currently_out_of_range: en nuevo schema se infiere de fuera_linea_desde
+           (c.fuera_linea_desde IS NOT NULL) AS is_currently_out_of_range,
+           p.temperatura_minima AS minimo,
+           p.temperatura_maxima AS maximo,
+           NULL AS threshold_updated_at,
+           NULL AS threshold_updated_by,
+           p.id_preset AS param_id,
+           'group' AS threshold_type,
+           -- Calcular si la temperatura está fuera de los umbrales del preset
            CASE
-             WHEN c.threshold_min IS NOT NULL THEN 'individual'
-             ELSE 'group'
-           END as threshold_type,
-           -- Calcular si la temperatura está fuera de los umbrales configurados
-           CASE
-             WHEN s.external_temperature < COALESCE(c.threshold_min, p.minimo) THEN 1
-             WHEN s.external_temperature > COALESCE(c.threshold_max, p.maximo) THEN 1
+             WHEN s.temperatura_externa < p.temperatura_minima THEN 1
+             WHEN s.temperatura_externa > p.temperatura_maxima THEN 1
              ELSE 0
            END AS is_temperature_out_of_range
-         FROM channels_ubibot c
+         FROM ubi_canal c
          JOIN (
-           SELECT channel_id, external_temperature, external_temperature_timestamp,
-                  ROW_NUMBER() OVER (PARTITION BY channel_id ORDER BY external_temperature_timestamp DESC) as rn
-           FROM sensor_readings_ubibot
-         ) s ON c.channel_id = s.channel_id
-         LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
+           SELECT id_canal, temperatura_externa, fecha_lectura_externa,
+                  ROW_NUMBER() OVER (PARTITION BY id_canal ORDER BY fecha_lectura_externa DESC) AS rn
+           FROM ubi_lecturas_sensor
+         ) s ON c.id_canal = s.id_canal
+         LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
          WHERE s.rn = 1
-         ORDER BY c.name;
+         ORDER BY c.nombre;
        `;
       const results = await databaseService.query(query);
 
@@ -443,37 +443,34 @@ class UbibotController {
       const { date } = req.query;
       console.log(`[UbibotController] getTemperatureCamarasData: Fecha solicitada: ${date}`);
 
-      if (!date || !moment(date, 'YYYY-MM-DD', true).isValid()) {
+      const dtDate = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+      if (!date || !dtDate.isValid) {
         console.warn("[UbibotController] getTemperatureCamarasData: Fecha inválida o faltante.");
         return res.status(400).json({ error: "Se requiere una fecha válida en formato YYYY-MM-DD" });
       }
 
-      // Usar Moment para asegurar el formato correcto para la query
-      const start = moment(date).startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      const end = moment(date).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      const start = dtDate.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const end = dtDate.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
       console.log(`[UbibotController] getTemperatureCamarasData: Querying entre ${start} y ${end}`);
 
-      // Query actualizada para usar umbrales individuales
+      // Query migrada al nuevo schema (ubi_lecturas_sensor, ubi_canal, ubi_presets_temperatura)
+      // SUPUESTO #3: umbrales siempre del preset del grupo; threshold_type siempre 'group'
       const query = `
          SELECT
-           sr.id,
-           sr.channel_id,
-           sr.external_temperature,
-           sr.external_temperature_timestamp,
-           c.name,
-           -- Usar umbrales individuales si existen, sino usar los de parametrizaciones
-           COALESCE(c.threshold_min, p.minimo) as minimo,
-           COALESCE(c.threshold_max, p.maximo) as maximo,
-           CASE
-             WHEN c.threshold_min IS NOT NULL THEN 'individual'
-             ELSE 'group'
-           END as threshold_type
-         FROM sensor_readings_ubibot sr
-         JOIN channels_ubibot c ON sr.channel_id = c.channel_id
-         LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
-         WHERE sr.external_temperature_timestamp BETWEEN ? AND ?
-         ORDER BY c.name, sr.external_temperature_timestamp ASC;
+           sr.id_lectura_sensor AS id,
+           c.canal_id AS channel_id,
+           sr.temperatura_externa AS external_temperature,
+           sr.fecha_lectura_externa AS external_temperature_timestamp,
+           c.nombre AS name,
+           p.temperatura_minima AS minimo,
+           p.temperatura_maxima AS maximo,
+           'group' AS threshold_type
+         FROM ubi_lecturas_sensor sr
+         JOIN ubi_canal c ON sr.id_canal = c.id_canal
+         LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+         WHERE sr.fecha_lectura_externa BETWEEN ? AND ?
+         ORDER BY c.nombre, sr.fecha_lectura_externa ASC;
        `;
 
       const rows = await databaseService.query(query, [start, end]);
@@ -536,8 +533,9 @@ class UbibotController {
   async getTemperatureDevices(req, res) {
     console.log("[UbibotController] getTemperatureDevices: Solicitud recibida.");
     try {
+      // Migrado: channels_ubibot → ubi_canal; aliases para compatibilidad con JS
       const devices = await databaseService.query(
-        "SELECT channel_id, name FROM channels_ubibot ORDER BY name"
+        "SELECT canal_id AS channel_id, nombre AS name FROM ubi_canal ORDER BY nombre"
       );
       console.log(`[UbibotController] getTemperatureDevices: ${devices.length} dispositivos encontrados.`);
       res.json(devices);
@@ -552,16 +550,15 @@ class UbibotController {
     try {
       const { startDate, endDate, sector } = req.query;
       
-      // Validar fechas obligatorias (sector es opcional)
-      if (!startDate || !endDate ||
-        !moment(startDate, 'YYYY-MM-DD', true).isValid() ||
-        !moment(endDate, 'YYYY-MM-DD', true).isValid()) {
+      const dtStart = DateTime.fromFormat(startDate, "yyyy-MM-dd", { zone: TZ_UBI });
+      const dtEnd = DateTime.fromFormat(endDate, "yyyy-MM-dd", { zone: TZ_UBI });
+      if (!startDate || !endDate || !dtStart.isValid || !dtEnd.isValid) {
         console.warn(`[UbibotController] getTemperatureRangeData: Parámetros inválidos:`, req.query);
         return res.status(400).json({ error: "Faltan datos o formato inválido (startDate, endDate YYYY-MM-DD requeridos)" });
       }
 
-      const start = moment(startDate).startOf('day').format('YYYY-MM-DD HH:mm:ss');
-      const end = moment(endDate).endOf('day').format('YYYY-MM-DD HH:mm:ss');
+      const start = dtStart.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const end = dtEnd.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
       // Si sector está presente, retornar datos de un solo sector
       if (sector) {
@@ -634,10 +631,6 @@ class UbibotController {
     }
   }
 
-  // MÉTODOS OBSOLETOS ELIMINADOS:
-  // - getChannelStatus: Reemplazado por getAllChannelsThresholds que ya incluye esOperativa
-  // - handleUpdateChannelStatus: Reemplazado por updateChannelOperativa (PUT /channel/:channelId/operativa)
-
   // --- Métodos de Reportes ---
   // (Se mantienen sin cambios funcionales relevantes para el error del token,
   //  pero se podrían mejorar validaciones o logs si fuera necesario)
@@ -646,38 +639,32 @@ class UbibotController {
     const { channelId, date } = req.query;
 
     try {
-      // Fecha seleccionada
-      const startOfDay = moment(date)
-        .startOf("day")
-        .format("YYYY-MM-DD HH:mm:ss");
-      const endOfDay = moment(date).endOf("day").format("YYYY-MM-DD HH:mm:ss");
+      const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+      const startOfDay = dt.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const endOfDay = dt.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
-      // Fecha del domingo anterior
-      const startOfPreviousDay = moment(date)
-        .subtract(7, "days")
-        .startOf("day")
-        .format("YYYY-MM-DD HH:mm:ss");
-      const endOfPreviousDay = moment(date)
-        .subtract(7, "days")
-        .endOf("day")
-        .format("YYYY-MM-DD HH:mm:ss");
+      const dtPrev = dt.minus({ days: 7 });
+      const startOfPreviousDay = dtPrev.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const endOfPreviousDay = dtPrev.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
 
+      // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
+      // channel_id (API ID) → id_canal via subquery en ubi_canal
       const query = `
-      (SELECT 
-        external_temperature as temperature,
-        external_temperature_timestamp as timestamp,
-        'current' as period
-      FROM sensor_readings_ubibot 
-      WHERE channel_id = ? 
-      AND external_temperature_timestamp BETWEEN ? AND ?)
+      (SELECT
+        temperatura_externa AS temperature,
+        fecha_lectura_externa AS timestamp,
+        'current' AS period
+      FROM ubi_lecturas_sensor
+      WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+      AND fecha_lectura_externa BETWEEN ? AND ?)
       UNION ALL
-      (SELECT 
-        external_temperature as temperature,
-        external_temperature_timestamp as timestamp,
-        'previous' as period
-      FROM sensor_readings_ubibot 
-      WHERE channel_id = ? 
-      AND external_temperature_timestamp BETWEEN ? AND ?)
+      (SELECT
+        temperatura_externa AS temperature,
+        fecha_lectura_externa AS timestamp,
+        'previous' AS period
+      FROM ubi_lecturas_sensor
+      WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+      AND fecha_lectura_externa BETWEEN ? AND ?)
       ORDER BY timestamp ASC
     `;
 
@@ -713,83 +700,63 @@ class UbibotController {
   async getWeeklyDefrostAnalysisData(req, res) {
     const { channelId, date } = req.query;
 
-    // Calcular fechas para la semana actual
-    const endDate = moment(date);
-    const startDate = moment(date).subtract(6, "days").startOf("day");
-    const endCurrentWeek = moment(date).endOf("day"); // Fixed log
+    const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+    const endDate = dt;
+    const startDate = dt.minus({ days: 6 }).startOf("day");
+    const endCurrentWeek = dt.endOf("day");
+    const prevEndDate = dt.minus({ days: 7 });
+    const prevStartDate = dt.minus({ days: 13 }).startOf("day");
 
-    // Calcular fechas para la semana anterior
-    const prevEndDate = moment(date).subtract(7, "days");
-    const prevStartDate = moment(date).subtract(13, "days").startOf("day");
-
-    // Log the dates before querying the database
     console.log("API /api/weekly-defrost-analysis-data - Dates:");
-    console.log("  Selected Date:", endDate.format("YYYY-MM-DD HH:mm:ss"));
-    console.log(
-      "  Current Week Start:",
-      startDate.format("YYYY-MM-DD HH:mm:ss")
-    );
-    console.log(
-      "  Current Week End:",
-      endCurrentWeek.format("YYYY-MM-DD HH:mm:ss")
-    ); // Fixed log
-    console.log(
-      "  Previous Week Start:",
-      prevStartDate.format("YYYY-MM-DD HH:mm:ss")
-    );
-    console.log(
-      "  Previous Week End:",
-      prevEndDate.format("YYYY-MM-DD HH:mm:ss")
-    );
+    console.log("  Selected Date:", endDate.toFormat("yyyy-MM-dd HH:mm:ss"));
+    console.log("  Current Week Start:", startDate.toFormat("yyyy-MM-dd HH:mm:ss"));
+    console.log("  Current Week End:", endCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
+    console.log("  Previous Week Start:", prevStartDate.toFormat("yyyy-MM-dd HH:mm:ss"));
+    console.log("  Previous Week End:", prevEndDate.toFormat("yyyy-MM-dd HH:mm:ss"));
 
     try {
+      // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
+      // channel_id (API ID) → id_canal via subquery en ubi_canal
       const query = `
-        (SELECT 
-          external_temperature as temperature,
-          external_temperature_timestamp as timestamp,
-          'current' as period
-        FROM sensor_readings_ubibot 
-        WHERE channel_id = ? 
-        AND external_temperature_timestamp BETWEEN ? AND ?)
+        (SELECT
+          temperatura_externa AS temperature,
+          fecha_lectura_externa AS timestamp,
+          'current' AS period
+        FROM ubi_lecturas_sensor
+        WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+        AND fecha_lectura_externa BETWEEN ? AND ?)
         UNION ALL
-        (SELECT 
-          external_temperature as temperature,
-          external_temperature_timestamp as timestamp,
-          'previous' as period
-        FROM sensor_readings_ubibot 
-        WHERE channel_id = ? 
-        AND external_temperature_timestamp BETWEEN ? AND ?)
+        (SELECT
+          temperatura_externa AS temperature,
+          fecha_lectura_externa AS timestamp,
+          'previous' AS period
+        FROM ubi_lecturas_sensor
+        WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+        AND fecha_lectura_externa BETWEEN ? AND ?)
         ORDER BY timestamp ASC
       `;
 
       const [results] = await databaseService.pool.query(query, [
         channelId,
-        startDate.format("YYYY-MM-DD HH:mm:ss"),
-        endCurrentWeek.format("YYYY-MM-DD HH:mm:ss"),
+        startDate.toFormat("yyyy-MM-dd HH:mm:ss"),
+        endCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
         channelId,
-        prevStartDate.format("YYYY-MM-DD HH:mm:ss"),
-        prevEndDate.format("YYYY-MM-DD HH:mm:ss"),
+        prevStartDate.toFormat("yyyy-MM-dd HH:mm:ss"),
+        prevEndDate.toFormat("yyyy-MM-dd HH:mm:ss"),
       ]);
 
       const currentData = results.filter((r) => r.period === "current");
       const previousData = results.filter((r) => r.period === "previous");
-      // Log the number of records returned
       console.log("API /api/weekly-defrost-analysis-data - Results:");
       console.log("  Current Data Length:", currentData.length);
       console.log("  Previous Data Length:", previousData.length);
       if (currentData && currentData.length > 0) {
         console.log("First current record:", currentData[0].timestamp);
-        console.log(
-          "Last current record:",
-          currentData[currentData.length - 1].timestamp
-        );
+        console.log("Last current record:", currentData[currentData.length - 1].timestamp);
       }
       if (previousData && previousData.length > 0) {
         console.log("First previous record:", previousData[0].timestamp);
-        console.log(
-          "Last previous record:",
-          previousData[previousData.length - 1].timestamp
-        );
+        console.log("Last previous record:", previousData[previousData.length - 1].timestamp);
       }
 
       res.json({
@@ -797,12 +764,12 @@ class UbibotController {
         previousData,
         periods: {
           current: {
-            start: startDate.format("YYYY-MM-DD"),
-            end: endDate.format("YYYY-MM-DD"),
+            start: startDate.toFormat("yyyy-MM-dd"),
+            end: endDate.toFormat("yyyy-MM-dd"),
           },
           previous: {
-            start: prevStartDate.format("YYYY-MM-DD"),
-            end: prevEndDate.format("YYYY-MM-DD"),
+            start: prevStartDate.toFormat("yyyy-MM-dd"),
+            end: prevEndDate.toFormat("yyyy-MM-dd"),
           },
         },
       });
@@ -816,27 +783,26 @@ class UbibotController {
     try {
       const { channelId, date } = req.body;
 
-      // Get camera name
+      // Get camera name — migrado: channels_ubibot → ubi_canal
       const [cameraInfo] = await databaseService.pool.query(
-        "SELECT name FROM channels_ubibot WHERE channel_id = ?",
+        "SELECT nombre AS name FROM ubi_canal WHERE canal_id = ?",
         [channelId]
       );
       const cameraName = cameraInfo[0]?.name || "Unknown";
 
       // Get data for current date and 7 days before
-      const selectedDate = moment(date);
-      const previousDate = moment(date).subtract(7, "days");
+      const selectedDate = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+      const previousDate = selectedDate.minus({ days: 7 });
 
-      // Get current and previous data
       const { results: currentData } = await this.getDefrostData(
         channelId,
-        selectedDate.format("YYYY-MM-DD"),
+        selectedDate.toFormat("yyyy-MM-dd"),
         cameraName
       );
 
       const { results: previousData, fileName } = await this.getDefrostData(
         channelId,
-        previousDate.format("YYYY-MM-DD"),
+        previousDate.toFormat("yyyy-MM-dd"),
         cameraName
       );
 
@@ -874,63 +840,49 @@ class UbibotController {
     const { channelId, date } = req.body;
 
     try {
+      // Migrado: channels_ubibot → ubi_canal
       const [cameraInfo] = await databaseService.pool.query(
-        "SELECT name FROM channels_ubibot WHERE channel_id = ?",
+        "SELECT nombre AS name FROM ubi_canal WHERE canal_id = ?",
         [channelId]
       );
       const cameraName = cameraInfo[0]?.name || "Unknown";
 
-      // Obtener fechas para la semana actual y anterior
-      const selectedDate = moment(date);
-      const startOfCurrentWeek = moment(date).subtract(6, "days");
-      const endOfCurrentWeek = moment(date).endOf("day"); // Fixed log
-      const startOfPreviousWeek = moment(date).subtract(13, "days");
-      const endOfPreviousWeek = moment(date).subtract(7, "days").endOf("day"); // Fixed log
+      const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+      const selectedDate = dt;
+      const startOfCurrentWeek = dt.minus({ days: 6 });
+      const endOfCurrentWeek = dt.endOf("day");
+      const startOfPreviousWeek = dt.minus({ days: 13 });
+      const endOfPreviousWeek = dt.minus({ days: 7 }).endOf("day");
 
-      // Log the dates before querying the database
       console.log("API /api/generate-weekly-defrost-report - Dates:");
-      console.log(
-        "  Selected Date:",
-        selectedDate.format("YYYY-MM-DD HH:mm:ss")
-      );
-      console.log(
-        "  Current Week Start:",
-        startOfCurrentWeek.format("YYYY-MM-DD HH:mm:ss")
-      );
-      console.log(
-        "  Current Week End:",
-        endOfCurrentWeek.format("YYYY-MM-DD HH:mm:ss")
-      );
-      console.log(
-        "  Previous Week Start:",
-        startOfPreviousWeek.format("YYYY-MM-DD HH:mm:ss")
-      );
-      console.log(
-        "   Previous Week End:",
-        endOfPreviousWeek.format("YYYY-MM-DD HH:mm:ss")
-      ); // Fixed log
+      console.log("  Selected Date:", selectedDate.toFormat("yyyy-MM-dd HH:mm:ss"));
+      console.log("  Current Week Start:", startOfCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
+      console.log("  Current Week End:", endOfCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
+      console.log("  Previous Week Start:", startOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
+      console.log("   Previous Week End:", endOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"));
 
+      // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
       // Obtener datos de temperatura para ambas semanas
       const query = `
-      SELECT 
-        external_temperature as temperature,
-        external_temperature_timestamp as timestamp
-      FROM sensor_readings_ubibot 
-      WHERE channel_id = ? 
-      AND external_temperature_timestamp >= ? AND external_temperature_timestamp <= ?
-      ORDER BY external_temperature_timestamp ASC
+      SELECT
+        temperatura_externa AS temperature,
+        fecha_lectura_externa AS timestamp
+      FROM ubi_lecturas_sensor
+      WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+      AND fecha_lectura_externa >= ? AND fecha_lectura_externa <= ?
+      ORDER BY fecha_lectura_externa ASC
     `;
 
       const [currentWeekData] = await databaseService.pool.query(query, [
         channelId,
-        startOfCurrentWeek.format("YYYY-MM-DD HH:mm:ss"),
-        endOfCurrentWeek.format("YYYY-MM-DD HH:mm:ss"), // Fixed log
+        startOfCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
+        endOfCurrentWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
       ]);
 
       const [previousWeekData] = await databaseService.pool.query(query, [
         channelId,
-        startOfPreviousWeek.format("YYYY-MM-DD HH:mm:ss"),
-        endOfPreviousWeek.format("YYYY-MM-DD HH:mm:ss"), // Fixed log
+        startOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
+        endOfPreviousWeek.toFormat("yyyy-MM-dd HH:mm:ss"),
       ]);
 
       if (!currentWeekData || currentWeekData.length === 0) {
@@ -975,9 +927,7 @@ class UbibotController {
 
       // Crear nombre del archivo
       const sanitizedCameraName = cameraName.replace(/\s+/g, "_").trim();
-      const fileName = `Weekly_Temperature_Analysis_${sanitizedCameraName}_${moment(
-        date
-      ).format("DD-MM-YYYY")}.pdf`;
+      const fileName = `Weekly_Temperature_Analysis_${sanitizedCameraName}_${DateTime.fromFormat(date, "yyyy-MM-dd").toFormat("dd-MM-yyyy")}.pdf`;
 
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader(
@@ -1010,24 +960,24 @@ class UbibotController {
         return res.status(400).json({ error: "Se requiere channelId" });
       }
 
+      // Migrado: channels_ubibot → ubi_canal; parametrizaciones → ubi_presets_temperatura
+      // SUPUESTO #3: ubi_canal no tiene threshold_min/max individuales; se retorna el umbral del preset del grupo.
+      // threshold_updated_at/by retornan NULL hasta que se definan columnas individuales en ubi_canal.
       const query = `
         SELECT
-          c.channel_id,
-          c.name,
-          COALESCE(c.threshold_min, p.minimo) as threshold_min,
-          COALESCE(c.threshold_max, p.maximo) as threshold_max,
-          c.threshold_updated_at,
-          c.threshold_updated_by,
-          CASE
-            WHEN c.threshold_min IS NOT NULL THEN 'individual'
-            ELSE 'group'
-          END as threshold_type,
-          c.id_parametrizacion as legacy_param_id,
-          p.minimo as group_threshold_min,
-          p.maximo as group_threshold_max
-        FROM channels_ubibot c
-        LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
-        WHERE c.channel_id = ?
+          c.canal_id AS channel_id,
+          c.nombre AS name,
+          p.temperatura_minima AS threshold_min,
+          p.temperatura_maxima AS threshold_max,
+          NULL AS threshold_updated_at,
+          NULL AS threshold_updated_by,
+          'group' AS threshold_type,
+          c.id_preset AS legacy_param_id,
+          p.temperatura_minima AS group_threshold_min,
+          p.temperatura_maxima AS group_threshold_max
+        FROM ubi_canal c
+        LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+        WHERE c.canal_id = ?
       `;
 
       const results = await databaseService.query(query, [channelId]);
@@ -1123,15 +1073,17 @@ class UbibotController {
           reason || 'Actualización manual desde API'
         ]);
       } else {
-        // Actualización directa
+        // Migrado: channels_ubibot → ubi_canal; channel_id → canal_id
+        // SUPUESTO #3: ubi_canal no tiene columnas threshold_min, threshold_max, threshold_updated_at, threshold_updated_by.
+        // Este UPDATE fallará en runtime con "Unknown column" hasta que dichas columnas se agreguen a ubi_canal.
         const updateQuery = `
-          UPDATE channels_ubibot
+          UPDATE ubi_canal
           SET
             threshold_min = ?,
             threshold_max = ?,
             threshold_updated_at = CURRENT_TIMESTAMP,
             threshold_updated_by = ?
-          WHERE channel_id = ?
+          WHERE canal_id = ?
         `;
 
         const result = await databaseService.query(updateQuery, [
@@ -1212,10 +1164,11 @@ class UbibotController {
 
       console.log(`[UbibotController] updateChannelOperativa: Actualizando canal ${channelId} a esOperativa=${operativaValue}`);
 
+      // Migrado: channels_ubibot → ubi_canal; esOperativa → activo; channel_id → canal_id
       const updateQuery = `
-        UPDATE channels_ubibot
-        SET esOperativa = ?
-        WHERE channel_id = ?
+        UPDATE ubi_canal
+        SET activo = ?
+        WHERE canal_id = ?
       `;
 
       const result = await databaseService.query(updateQuery, [operativaValue, channelId]);
@@ -1251,41 +1204,41 @@ class UbibotController {
     console.log("[UbibotController] getAllChannelsThresholds: Solicitud recibida.");
 
     try {
+      // Migrado: channels_ubibot → ubi_canal; parametrizaciones → ubi_presets_temperatura;
+      // sensor_readings_ubibot → ubi_lecturas_sensor
+      // SUPUESTO #3: umbrales siempre del preset del grupo; threshold_type siempre 'group'
       const query = `
         SELECT
-          c.channel_id,
-          c.name,
-          c.esOperativa,
-          COALESCE(c.threshold_min, p.minimo) as threshold_min,
-          COALESCE(c.threshold_max, p.maximo) as threshold_max,
-          c.threshold_updated_at,
-          c.threshold_updated_by,
-          CASE
-            WHEN c.threshold_min IS NOT NULL THEN 'individual'
-            ELSE 'group'
-          END as threshold_type,
-          c.id_parametrizacion as legacy_param_id,
+          c.canal_id AS channel_id,
+          c.nombre AS name,
+          c.activo AS esOperativa,
+          p.temperatura_minima AS threshold_min,
+          p.temperatura_maxima AS threshold_max,
+          NULL AS threshold_updated_at,
+          NULL AS threshold_updated_by,
+          'group' AS threshold_type,
+          c.id_preset AS legacy_param_id,
           -- Última lectura de temperatura
-          lr.external_temperature as current_temperature,
-          lr.external_temperature_timestamp as last_reading,
-          -- Estado de temperatura
+          lr.temperatura_externa AS current_temperature,
+          lr.fecha_lectura_externa AS last_reading,
+          -- Estado de temperatura respecto a umbrales del preset
           CASE
-            WHEN lr.external_temperature IS NULL THEN 'NO_DATA'
-            WHEN lr.external_temperature < COALESCE(c.threshold_min, p.minimo) THEN 'BELOW_MIN'
-            WHEN lr.external_temperature > COALESCE(c.threshold_max, p.maximo) THEN 'ABOVE_MAX'
+            WHEN lr.temperatura_externa IS NULL THEN 'NO_DATA'
+            WHEN lr.temperatura_externa < p.temperatura_minima THEN 'BELOW_MIN'
+            WHEN lr.temperatura_externa > p.temperatura_maxima THEN 'ABOVE_MAX'
             ELSE 'IN_RANGE'
-          END as temperature_status
-        FROM channels_ubibot c
-        LEFT JOIN parametrizaciones p ON c.id_parametrizacion = p.param_id
+          END AS temperature_status
+        FROM ubi_canal c
+        LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
         LEFT JOIN (
           SELECT
-            channel_id,
-            external_temperature,
-            external_temperature_timestamp,
-            ROW_NUMBER() OVER (PARTITION BY channel_id ORDER BY external_temperature_timestamp DESC) as rn
-          FROM sensor_readings_ubibot
-        ) lr ON c.channel_id = lr.channel_id AND lr.rn = 1
-        ORDER BY c.name
+            id_canal,
+            temperatura_externa,
+            fecha_lectura_externa,
+            ROW_NUMBER() OVER (PARTITION BY id_canal ORDER BY fecha_lectura_externa DESC) AS rn
+          FROM ubi_lecturas_sensor
+        ) lr ON c.id_canal = lr.id_canal AND lr.rn = 1
+        ORDER BY c.nombre
       `;
 
       const results = await databaseService.query(query);
@@ -1333,24 +1286,25 @@ class UbibotController {
   }
 
   async getDefrostData(channelId, date, cameraName) {
-    const startOfDay = moment(date)
-      .startOf("day")
-      .format("YYYY-MM-DD HH:mm:ss");
-    const endOfDay = moment(date).endOf("day").format("YYYY-MM-DD HH:mm:ss");
-    const formattedDate = moment(date).format("DD-MM-YYYY");
+    const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
+    const startOfDay = dt.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+    const endOfDay = dt.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+    const formattedDate = dt.toFormat("dd-MM-yyyy");
 
     // Create filename
     const sanitizedCameraName = cameraName.replace(/\s+/g, "_").trim();
     const fileName = `Defrost_Analysis_${sanitizedCameraName}_${formattedDate}.pdf`;
 
+    // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor
+    // channel_id (API ID) → id_canal via subquery en ubi_canal
     const query = `
-    SELECT 
-      external_temperature as temperature,
-      external_temperature_timestamp as timestamp
-    FROM sensor_readings_ubibot 
-    WHERE channel_id = ? 
-    AND external_temperature_timestamp BETWEEN ? AND ?
-    ORDER BY external_temperature_timestamp ASC
+    SELECT
+      temperatura_externa AS temperature,
+      fecha_lectura_externa AS timestamp
+    FROM ubi_lecturas_sensor
+    WHERE id_canal = (SELECT id_canal FROM ubi_canal WHERE canal_id = ?)
+    AND fecha_lectura_externa BETWEEN ? AND ?
+    ORDER BY fecha_lectura_externa ASC
   `;
 
     const [results] = await databaseService.pool.query(query, [

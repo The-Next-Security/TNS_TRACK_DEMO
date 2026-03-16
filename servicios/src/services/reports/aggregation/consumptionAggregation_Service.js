@@ -16,7 +16,7 @@
 
 const mysql = require('mysql2/promise');
 const configLoader = require('../../../config/js_files/configLoader_Config');
-const moment = require('moment-timezone');
+const { DateTime } = require('luxon');
 
 let _dbConfig = null;
 function getDbConfig() {
@@ -78,10 +78,10 @@ async function calculateKPIs(deviceIds, startDate, endDate, tariffs = DEFAULT_TA
     // Placeholders for device IDs
     const placeholders = deviceIds.map(() => '?').join(',');
 
-    // Calculate date range in days
-    const start = moment.tz(startDate, TIMEZONE);
-    const end = moment.tz(endDate, TIMEZONE);
-    const daysDiff = end.diff(start, 'days') + 1;
+    // Calculate date range in days (America/Santiago per Decisiones_Tecnicas §6)
+    const start = DateTime.fromFormat(startDate, 'yyyy-MM-dd', { zone: TIMEZONE });
+    const end = DateTime.fromFormat(endDate, 'yyyy-MM-dd', { zone: TIMEZONE });
+    const daysDiff = Math.floor(end.diff(start, 'days').days) + 1;
 
     // Query to calculate comprehensive consumption KPIs
     // Using sem_mediciones table with formula: (potencia_activa * intervalo_segundos) / (3600 * 1000)
@@ -212,13 +212,13 @@ async function getDeviceStatistics(deviceIds, startDate, endDate, tariffs = DEFA
         
       FROM sem_dispositivos sd
       INNER JOIN sem_mediciones m ON sd.shelly_id = m.shelly_id
-      LEFT JOIN catalogo_ubicaciones_reales cur ON sd.ubicacion = cur.idcatalogo_ubicaciones_reales
+      LEFT JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
       WHERE sd.shelly_id IN (${placeholders})
         AND m.fase = 'TOTAL'
         AND DATE(m.timestamp_local) BETWEEN ? AND ?
         AND m.potencia_activa IS NOT NULL
         AND m.calidad_lectura IN ('NORMAL', 'INTERPOLADA')
-      GROUP BY sd.shelly_id, sd.nombre, cur.nombre_ubicacion
+      GROUP BY sd.shelly_id, sd.nombre, cur.nombre
       ORDER BY totalKWh DESC
     `;
 
@@ -384,7 +384,7 @@ async function getDailyConsumption(deviceIds, startDate, endDate) {
       const avgDemandKW = Number(row.avgDemandKW) || 0;
       
       return {
-        date: moment(row.date).format('YYYY-MM-DD'),
+        date: DateTime.fromJSDate(row.date).toFormat('yyyy-MM-dd'),
         totalKWh: parseFloat(totalKWh.toFixed(2)),
         maxDemandKW: parseFloat(maxDemandKW.toFixed(3)),
         avgLoadFactor: calculateLoadFactor(avgDemandKW, maxDemandKW)

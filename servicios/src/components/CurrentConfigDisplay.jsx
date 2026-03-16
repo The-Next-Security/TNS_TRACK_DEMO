@@ -7,7 +7,7 @@
  */
 
 import React from 'react';
-import moment from 'moment-timezone';
+import { DateTime } from 'luxon';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -35,7 +35,8 @@ const CurrentConfigDisplay = ({ config, loading }) => {
   // Format timestamp for display
   const formatTimestamp = (timestamp) => {
     if (!timestamp) return 'No disponible';
-    return moment(timestamp).tz('America/Santiago').format('DD/MM/YYYY HH:mm:ss');
+    const dt = timestamp instanceof Date ? DateTime.fromJSDate(timestamp) : DateTime.fromISO(timestamp);
+    return dt.setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm:ss');
   };
 
   // Determine if Sunday is "always send"

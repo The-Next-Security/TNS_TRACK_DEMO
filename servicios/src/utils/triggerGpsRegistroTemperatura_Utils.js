@@ -42,7 +42,8 @@ async function triggerGPSRegistroTemperatura(newData) {
       const temperatura = jsonElement.temperature;
 
       if (temperatura !== null && temperatura !== undefined) {
-        await connection.execute('INSERT INTO process_log(message) VALUES(?)', [`Temperatura encontrada: ${temperatura}`]);
+        // Migrado: process_log → log_general (origen NOT NULL sin DEFAULT)
+        await connection.execute('INSERT INTO log_general (origen, mensaje) VALUES (?, ?)', ['TriggerGpsTemperatura', `Temperatura encontrada: ${temperatura}`]);
 
         let macAddress = jsonElement['mac.address'];
         let beaconId, esTemperatura;
@@ -56,8 +57,8 @@ async function triggerGPSRegistroTemperatura(newData) {
             beaconId = rows[0].id;
             esTemperatura = rows[0].esTemperatura;
           }
-          await connection.execute('INSERT INTO process_log(message) VALUES(?)', 
-            [`Beacon encontrado: ${macAddress}, esTemperatura: ${esTemperatura}`]);
+          await connection.execute('INSERT INTO log_general (origen, mensaje) VALUES (?, ?)',
+            ['TriggerGpsTemperatura', `Beacon encontrado: ${macAddress}, esTemperatura: ${esTemperatura}`]);
         } else {
           beaconId = jsonElement.id;
           if (beaconId) {
@@ -68,8 +69,8 @@ async function triggerGPSRegistroTemperatura(newData) {
             if (rows.length > 0) {
               esTemperatura = rows[0].esTemperatura;
             }
-            await connection.execute('INSERT INTO process_log(message) VALUES(?)', 
-              [`Beacon encontrado por ID: ${beaconId}, esTemperatura: ${esTemperatura}`]);
+            await connection.execute('INSERT INTO log_general (origen, mensaje) VALUES (?, ?)',
+              ['TriggerGpsTemperatura', `Beacon encontrado por ID: ${beaconId}, esTemperatura: ${esTemperatura}`]);
           } else {
             console.warn('Beacon sin ID ni MAC address encontrado:', jsonElement);
             continue;
@@ -82,19 +83,19 @@ async function triggerGPSRegistroTemperatura(newData) {
             'INSERT INTO registro_temperaturas(beacon_id, timestamp, temperatura) VALUES (?, ?, ?)',
             [beaconId, timestamp, temperatura]
           );
-          await connection.execute('INSERT INTO process_log(message) VALUES(?)', 
-            [`Temperatura registrada: beacon_id=${beaconId}, timestamp=${timestamp}, temperatura=${temperatura}`]);
+          await connection.execute('INSERT INTO log_general (origen, mensaje) VALUES (?, ?)',
+            ['TriggerGpsTemperatura', `Temperatura registrada: beacon_id=${beaconId}, timestamp=${timestamp}, temperatura=${temperatura}`]);
         }
       }
     }
 
-    await connection.execute('INSERT INTO process_log(message) VALUES(?)', 
-      ['Proceso de registro de temperaturas completado']);
+    await connection.execute('INSERT INTO log_general (origen, mensaje) VALUES (?, ?)',
+      ['TriggerGpsTemperatura', 'Proceso de registro de temperaturas completado']);
 
   } catch (error) {
     console.error('Error en triggerGPSRegistroTemperatura:', error);
-    await connection.execute('INSERT INTO process_log(message) VALUES(?)', 
-      [`Error en triggerGPSRegistroTemperatura: ${error.message}`]);
+    await connection.execute('INSERT INTO log_general (origen, mensaje) VALUES (?, ?)',
+      ['TriggerGpsTemperatura', `Error en triggerGPSRegistroTemperatura: ${error.message}`]);
   } finally {
     if (connection) {
       await connection.release();

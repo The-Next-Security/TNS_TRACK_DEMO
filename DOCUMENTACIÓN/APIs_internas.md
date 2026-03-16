@@ -4,6 +4,31 @@
 
 ---
 
+## Inventario de endpoints montados (post-Issue #11)
+
+| Dominio | Ruta base | Rutas/Archivo | Controlador |
+|---------|-----------|---------------|-------------|
+| Dispositivos | /api/devices | device_Routes | device_Controller |
+| Config | /api/config | config_Routes | tariffConfigController |
+| Totales | /api/totals | totales_Routes | totales_Controller |
+| Usuarios | /api/usuarios | usuarios_Routes | usuarios_Controller |
+| Personal | /api/personal | personal_Routes | personal_Controller |
+| Power Analysis | /api/powerAnalysis | powerAnalysis_Routes | powerAnalysis_Controller |
+| GPS | /api/gps | gps_Routes | gps_Controller |
+| Ubibot | /api/ubibot | ubibot_Routes | ubibot_Controller |
+| Blindspot | /api/blindspot | blindSpot_Routes | blindSpot_Controller |
+| Auth | /api/auth | auth_Routes | auth_Controller |
+| Consumo | /api/consumo | consumoCategoria_Routes | consumoCategoria_Controller |
+| Push | /api/push | pushNotification_Routes | pushNotification_Controller |
+| Alertas | /api/alerts | alertTracking_Routes | alertTracking_Controller |
+| Presets | /api/presets | presets_Routes | presets_Controller |
+| Reportes | /api/reports | reports_Routes | report_Controller |
+| IA Análisis | /api/ia/analisis | aiAnalysis_Routes | aiAnalysis_Controller |
+
+**Dominios reservados (no montados):** /api/sectores, /api/beacons — ver Issue #26.
+
+---
+
 ## Configuración (client-safe)
 
 Endpoints que exponen valores de configuración permitidos para el cliente. Los datos provienen del configLoader (base de datos); no hay archivos de config adicionales en el frontend.

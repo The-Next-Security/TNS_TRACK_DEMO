@@ -4,7 +4,7 @@ const mysql = require("mysql2/promise");
 const configLoader = require("../../config/js_files/configLoader_Config");
 const notificationController = require("../../controllers/notification_Controller");
 const { convertToMySQLDateTime } = require("../../utils/transform_Utils");
-const moment = require("moment-timezone");
+const { DateTime } = require('luxon');
 
 // Variable para el pool, se inicializará después de cargar la config
 let pool = null;
@@ -74,10 +74,10 @@ class UbibotService {
     /**
      * Convierte una fecha/hora UTC a la zona horaria configurada.
      * @param {string|Date} utcTime
-     * @returns {moment.Moment}
+     * @returns {DateTime}
      */
     getLocalTime(utcTime) {
-        return moment.utc(utcTime).tz(this.timeZone);
+        return DateTime.fromISO(String(utcTime), { zone: 'utc' }).setZone(this.timeZone);
     }
 
     /**
@@ -139,17 +139,15 @@ class UbibotService {
             };
 
             if (!existingChannel) {
-                // Canal nuevo: insertar con valores por defecto para campos de negocio
+                // Canal nuevo: insertar con id_preset=1 (Opción A: umbrales vía preset)
                 console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} es nuevo. Insertando en ubi_canal...`);
                 const newChannel = {
                     ...basicInfo,
-                    canal_id:                    channelData.channel_id,
-                    id_ubicacion_real:            1,      // Sin asignar — el operador deberá configurarlo
-                    temperatura_minima_umbral:    -25.00, // Umbral por defecto para refrigeración
-                    temperatura_maxima_umbral:    -10.00,
-                    usuario_actualizacion_umbral: 'sistema',
-                    fuera_linea_desde:            isOnline ? null : currentTime,
-                    activo:                       1,
+                    canal_id:          channelData.channel_id,
+                    id_ubicacion_real: 1,   // Sin asignar — el operador deberá configurarlo
+                    id_preset:         1,   // Preset por defecto (ej. Grupo 1 - Ultra Congelado)
+                    fuera_linea_desde: isOnline ? null : currentTime,
+                    activo:            1,
                 };
                 await connection.query("INSERT INTO ubi_canal SET ?", newChannel);
                 console.log(`[UbibotService] processChannelData: Canal ${channelData.channel_id} insertado en ubi_canal.`);
@@ -320,8 +318,8 @@ class UbibotService {
             }
 
             // Timestamp principal: field1 (temperatura ambiente)
-            const utcTimestamp = moment.utc(lastValues.field1.created_at);
-            if (!utcTimestamp.isValid()) {
+            const utcTimestamp = DateTime.fromISO(String(lastValues.field1.created_at), { zone: 'utc' });
+            if (!utcTimestamp.isValid) {
                 console.error(`[UbibotService] processSensorReadings: Timestamp inválido en field1 para canal ${canalId}: ${lastValues.field1.created_at}`);
                 return false;
             }
@@ -341,7 +339,7 @@ class UbibotService {
                 fecha_lectura_externa: field8CreatedAt,
                 wifi_rssi:            lastValues.field5?.value !== undefined ? parseInt(lastValues.field5.value, 10) : null,
                 en_linea_lectura:     channelNet !== null ? (channelNet === '1' || channelNet === 1 ? 1 : 0) : null,
-                fecha_lectura:        utcTimestamp.toDate(),
+                fecha_lectura:        utcTimestamp.toJSDate(),
             };
 
             // Limpiar NaN por si algún parseFloat/parseInt falló
@@ -350,7 +348,7 @@ class UbibotService {
             }
 
             await connection.query("INSERT INTO ubi_lecturas_sensor SET ?", dataToInsert);
-            console.log(`[UbibotService] processSensorReadings: Lectura insertada para canal ${canalId} (id_canal=${id_canal}, fecha_lectura=${utcTimestamp.format()})`);
+            console.log(`[UbibotService] processSensorReadings: Lectura insertada para canal ${canalId} (id_canal=${id_canal}, fecha_lectura=${utcTimestamp.toISO()})`);
 
             return true;
 
