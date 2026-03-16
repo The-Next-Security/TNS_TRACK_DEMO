@@ -33,15 +33,20 @@ import ReportHistoryPageView from "./reports/ReportHistoryPage_View";
 import "core-js/stable";
 import "regenerator-runtime/runtime";
 
-// ✅ Nuevo PrivateRoute basado en validación de cookies httpOnly
+// ✅ PrivateRoute basado en validación con Authorization header
 const PrivateRoute = ({ children, userPermissions }) => {
   const [isAuthenticated, setIsAuthenticated] = React.useState(null);
   const location = useLocation();
 
   React.useEffect(() => {
-    // Validar autenticación con el backend (las cookies se envían automáticamente)
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      setIsAuthenticated(false);
+      return;
+    }
+    // Validar autenticación con el backend (token en Authorization header via interceptor axios)
     fetch('/api/auth/validate', {
-      credentials: 'include' // ✅ Importante para enviar cookies
+      headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => {
         if (res.ok) {
@@ -90,8 +95,11 @@ function AppContent() {
   const location = useLocation();
 
   useEffect(() => {
-    // ✅ Obtener permisos desde el endpoint de validación en vez de localStorage
-    fetch('/api/auth/validate', { credentials: 'include' })
+    // ✅ Obtener permisos desde el endpoint de validación
+    const token = localStorage.getItem('accessToken');
+    fetch('/api/auth/validate', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {}
+    })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data && data.user && data.user.permissions) {
