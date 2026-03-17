@@ -75,38 +75,21 @@ class tel_ConfigController {
   }
 
   async getConfigTemperaturaUmbral(req, res, next) {
-    try {
-      console.log("Accediendo a getConfigTemperaturaUmbral"); // Log para debug
-      const [results] = await databaseService.pool.query(
-        // TODO: Migrar a ubi_presets_temperatura — pendiente definir id_preset equivalente a param_id=7,8 (ver Issue #32)
-        "SELECT * FROM parametrizaciones WHERE param_id IN (7, 8)"
-      );
-      console.log("Resultados:", results); // Log para debug
-      return res.status(200).json(results);
-    } catch (error) {
-      console.error("Error fetching temperature thresholds:", error);
-      return res.status(500).json({
-        error: "Error fetching temperature thresholds",
-        details: error.message,
-      });
-    }
+    // TODO: Implementar con tabla tel_* para umbrales Teltonika BLE (ver Issue #32)
+    // Requiere diseño de schema con prefijo tel_ antes de implementar
+    return res.status(501).json({
+      error: "Not Implemented",
+      message: "Endpoint deshabilitado temporalmente. Pendiente migración con schema tel_* (Issue #32).",
+    });
   }
 
   async setConfigTemperaturaUmbral(req, res, next) {
-    const params = req.body;
-    try {
-      for (const param of params) {
-        await databaseService.pool.query(
-          // TODO: Migrar a ubi_presets_temperatura — pendiente definir id_preset (ver Issue #32)
-          "UPDATE parametrizaciones SET minimo = ?, maximo = ? WHERE param_id = ?",
-          [param.minimo, param.maximo, param.param_id]
-        );
-      }
-      res.sendStatus(200);
-    } catch (error) {
-      console.error("Error updating temperature thresholds:", error);
-      res.status(500).send("Server Error");
-    }
+    // TODO: Implementar con tabla tel_* para umbrales Teltonika BLE (ver Issue #32)
+    // Requiere diseño de schema con prefijo tel_ antes de implementar
+    return res.status(501).json({
+      error: "Not Implemented",
+      message: "Endpoint deshabilitado temporalmente. Pendiente migración con schema tel_* (Issue #32).",
+    });
   }
 
   async getConfigUmbrales(req, res, next) {
