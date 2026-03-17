@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-17 — @dependabot[bot] ([#47](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/47))
+- **chore** `back-end, dependencies, npm, security` | bump the development-dependencies group in /servicios with 2 updates
+
+
 ### 2026-03-16 — @Bufigol ([#13](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/13))
 - **chore** `documentation, SQL - BBDD, back-end, analytics, front-end` | [FASE 0] Planificación y Fundamentos — Actualización de documentación (Closes #9)
 
