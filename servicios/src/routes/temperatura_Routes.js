@@ -13,7 +13,6 @@ router.get('/dashboard', ubibotController.getTemperatureDashboardData.bind(ubibo
 router.get('/camaras', ubibotController.getTemperatureCamarasData.bind(ubibotController));
 router.get('/rango', ubibotController.getTemperatureRangeData.bind(ubibotController));
 router.get('/dispositivos', ubibotController.getTemperatureDevices.bind(ubibotController));
-router.get('/estado', ubibotController.getUbibotStatus.bind(ubibotController));
 
 // --- Canales ---
 // Literales ANTES de paramétricos
