@@ -430,7 +430,7 @@ CREATE INDEX `idx_ubi_canal_id_ubicacion_real-activo`
 CREATE INDEX `idx_ubi_canal_activo-en_linea-id_ubicacion_real`
     ON `ubi_canal` (`activo`, `en_linea`, `id_ubicacion_real`);
 
--- Para búsqueda de canales por preset (Opción A: umbrales via ubi_presets_temperatura)
+-- Para búsqueda de canales por preset (umbrales via ubi_grupo)
 CREATE INDEX `idx_ubi_canal_id_preset-activo`
     ON `ubi_canal` (`id_preset`, `activo`);
 
@@ -473,25 +473,25 @@ CREATE INDEX `idx_ubi_contador_ciclos_numero_ciclos-fecha_ciclos`
 
 
 -- ----------------------------------------------------------
--- ubi_presets_temperatura
--- Catálogo de presets. Patrones de acceso simples.
+-- ubi_grupo
+-- Catálogo de grupos de temperatura. Patrones de acceso simples.
 -- ----------------------------------------------------------
 
--- Para búsqueda del preset predeterminado activo
-CREATE INDEX `idx_ubi_presets_temperatura_activo-es_predeterminado`
-    ON `ubi_presets_temperatura` (`activo`, `es_predeterminado`);
+-- Para búsqueda del grupo predeterminado activo
+CREATE INDEX `idx_ubi_grupo_activo-es_predeterminado`
+    ON `ubi_grupo` (`activo`, `es_predeterminado`);
 
--- Para búsqueda de presets dentro de un rango de temperatura mínima
-CREATE INDEX `idx_ubi_presets_temperatura_activo-temperatura_minima`
-    ON `ubi_presets_temperatura` (`activo`, `temperatura_minima`);
+-- Para búsqueda de grupos dentro de un rango de temperatura mínima
+CREATE INDEX `idx_ubi_grupo_activo-temperatura_minima`
+    ON `ubi_grupo` (`activo`, `temperatura_minima`);
 
--- Para búsqueda de presets dentro de un rango de temperatura máxima
-CREATE INDEX `idx_ubi_presets_temperatura_activo-temperatura_maxima`
-    ON `ubi_presets_temperatura` (`activo`, `temperatura_maxima`);
+-- Para búsqueda de grupos dentro de un rango de temperatura máxima
+CREATE INDEX `idx_ubi_grupo_activo-temperatura_maxima`
+    ON `ubi_grupo` (`activo`, `temperatura_maxima`);
 
--- Para compound de rangos de temperatura (matching de umbrales a presets)
-CREATE INDEX `idx_ubi_presets_temperatura_activo-temp_minima-temp_maxima`
-    ON `ubi_presets_temperatura` (`activo`, `temperatura_minima`, `temperatura_maxima`);
+-- Para compound de rangos de temperatura (matching de umbrales a grupos)
+CREATE INDEX `idx_ubi_grupo_activo-temp_minima-temp_maxima`
+    ON `ubi_grupo` (`activo`, `temperatura_minima`, `temperatura_maxima`);
 
 
 -- ==============================================================================
