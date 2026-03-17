@@ -30,6 +30,7 @@ ChartJS.register(
   Tooltip,
   Legend
 );
+/* MÓDULO FUTURO - Teltonika/Beacons: pendiente de desarrollo */
 
 const Temperatura = () => {
   const [data, setData] = useState([]);

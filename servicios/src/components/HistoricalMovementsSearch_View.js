@@ -27,6 +27,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import HeaderV2 from "./Header_View";
 import markerIcon from "../assets/images/pinazul.png";
 import "../utils/backButtonHandler_Utils";
+/* MÓDULO FUTURO - Teltonika/Beacons: pendiente de desarrollo */
 
 /**
  * HistoricalMovementsSearchV2 Component
@@ -79,7 +80,7 @@ const HistoricalMovementsSearchV2 = () => {
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const result = await axios.get("/api/devices/devices");
+        const result = await axios.get("/api/energia/dispositivos/legacy");
         console.log("Fetched devices:", result.data);
         setDevices(result.data);
       } catch (error) {
