@@ -74,6 +74,12 @@ const ConfigurationV2 = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   /**
+   * Estado: Indica si el endpoint de umbrales de temperatura está deshabilitado (501)
+   * @type {boolean}
+   */
+  const [umbralesDeshabilitados, setUmbralesDeshabilitados] = useState(false);
+
+  /**
    * Estado: Mensaje de feedback al usuario
    * @type {{type: 'success'|'error'|null, message: string}}
    */
@@ -94,10 +100,7 @@ const ConfigurationV2 = () => {
 
     const fetchConfiguration = async () => {
       try {
-        const [configResponse, tempResponse] = await Promise.all([
-          axios.get('/api/config/teltonica/parametros'),
-          axios.get('/api/config/teltonica/temperatura-umbrales')
-        ]);
+        const configResponse = await axios.get('/api/config/teltonica/parametros');
 
         const configData = configResponse.data.reduce((acc, cur) => {
           acc[`beacon_${cur.beacon_id}_minTiempoPermanencia`] = cur.min_tiempo_permanencia;
@@ -108,9 +111,20 @@ const ConfigurationV2 = () => {
           return acc;
         }, {});
 
-        const tempData = tempResponse.data;
-        configData.umbralTemperaturaMinimo = tempData.minimo;
-        configData.umbralTemperaturaMaximo = tempData.maximo;
+        // Cargar umbrales de temperatura de forma independiente — puede retornar 501 (Issue #32)
+        try {
+          const tempResponse = await axios.get('/api/config/teltonica/temperatura-umbrales');
+          const tempData = tempResponse.data;
+          configData.umbralTemperaturaMinimo = tempData.minimo;
+          configData.umbralTemperaturaMaximo = tempData.maximo;
+        } catch (tempError) {
+          if (tempError.response?.status === 501) {
+            setUmbralesDeshabilitados(true);
+            console.info('[Configuration] Umbrales de temperatura deshabilitados temporalmente (Issue #32)');
+          } else {
+            throw tempError;
+          }
+        }
 
         setConfig(configData);
       } catch (error) {
@@ -166,10 +180,12 @@ const ConfigurationV2 = () => {
     };
 
     try {
-      await Promise.all([
-        axios.post('/api/config/teltonica/parametros', configuraciones),
-        axios.post('/api/config/teltonica/temperatura-umbrales', temperaturaUmbrales)
-      ]);
+      const requests = [axios.post('/api/config/teltonica/parametros', configuraciones)];
+      // Omitir POST de temperatura si el endpoint está deshabilitado (Issue #32)
+      if (!umbralesDeshabilitados) {
+        requests.push(axios.post('/api/config/teltonica/temperatura-umbrales', temperaturaUmbrales));
+      }
+      await Promise.all(requests);
       setFeedback({
         type: 'success',
         message: 'Configuración guardada exitosamente.'
@@ -344,47 +360,53 @@ const ConfigurationV2 = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="umbralTemperaturaMinimo">
-                    Temperatura Mínima (°C)
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500">
-                      ❄️
-                    </span>
-                    <Input
-                      id="umbralTemperaturaMinimo"
-                      type="number"
-                      name="umbralTemperaturaMinimo"
-                      value={config.umbralTemperaturaMinimo}
-                      onChange={handleChange}
-                      placeholder="0"
-                      className="pl-10"
-                    />
+              {umbralesDeshabilitados ? (
+                <p className="text-sm text-muted-foreground italic">
+                  Configuración de temperatura temporalmente no disponible. Pendiente actualización del sistema (Issue #32).
+                </p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="umbralTemperaturaMinimo">
+                      Temperatura Mínima (°C)
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-500">
+                        ❄️
+                      </span>
+                      <Input
+                        id="umbralTemperaturaMinimo"
+                        type="number"
+                        name="umbralTemperaturaMinimo"
+                        value={config.umbralTemperaturaMinimo}
+                        onChange={handleChange}
+                        placeholder="0"
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
-                </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="umbralTemperaturaMaximo">
-                    Temperatura Máxima (°C)
-                  </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-red-500">
-                      🔥
-                    </span>
-                    <Input
-                      id="umbralTemperaturaMaximo"
-                      type="number"
-                      name="umbralTemperaturaMaximo"
-                      value={config.umbralTemperaturaMaximo}
-                      onChange={handleChange}
-                      placeholder="0"
-                      className="pl-10"
-                    />
+                  <div className="space-y-2">
+                    <Label htmlFor="umbralTemperaturaMaximo">
+                      Temperatura Máxima (°C)
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-red-500">
+                        🔥
+                      </span>
+                      <Input
+                        id="umbralTemperaturaMaximo"
+                        type="number"
+                        name="umbralTemperaturaMaximo"
+                        value={config.umbralTemperaturaMaximo}
+                        onChange={handleChange}
+                        placeholder="0"
+                        className="pl-10"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
 
