@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-17 — @dependabot[bot] ([#51](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/51))
+- **chore** `back-end, dependencies, npm, security` | bump cron-parser from 4.9.0 to 5.5.0 in /servicios
+
+
 ### 2026-03-17 — @dependabot[bot] ([#50](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/50))
 - **chore** `back-end, dependencies, npm, security` | bump tailwindcss from 3.4.19 to 4.2.1 in /servicios
 
