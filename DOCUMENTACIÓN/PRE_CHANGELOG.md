@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-17 — @dependabot[bot] ([#50](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/50))
+- **chore** `back-end, dependencies, npm, security` | bump tailwindcss from 3.4.19 to 4.2.1 in /servicios
+
+
 ### 2026-03-17 — @dependabot[bot] ([#49](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/49))
 - **chore** `back-end, dependencies, npm, security` | bump webpack-cli from 6.0.1 to 7.0.2 in /servicios
 
