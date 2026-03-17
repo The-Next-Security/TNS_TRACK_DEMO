@@ -80,7 +80,7 @@ SOURCE 03_Triggers/03_16_trig_sem_dispositivos.sql
 //
 SOURCE 03_Triggers/03_17_trig_ubi_canal.sql
 //
-SOURCE 03_Triggers/03_18_trig_ubi_presets_temperatura.sql
+SOURCE 03_Triggers/03_18_trig_ubi_grupo.sql
 //
 SOURCE 03_Triggers/03_20_trig_ale_suscripciones_notificacion_after_insert.sql
 //
