@@ -17,6 +17,26 @@
 
 ## Unreleased
 
+### 2026-03-17 — @dependabot[bot] ([#51](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/51))
+- **chore** `back-end, dependencies, npm, security` | bump cron-parser from 4.9.0 to 5.5.0 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#50](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/50))
+- **chore** `back-end, dependencies, npm, security` | bump tailwindcss from 3.4.19 to 4.2.1 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#49](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/49))
+- **chore** `back-end, dependencies, npm, security` | bump webpack-cli from 6.0.1 to 7.0.2 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#48](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/48))
+- **chore** `back-end, dependencies, npm, security` | bump node-fetch from 2.7.0 to 3.3.2 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#47](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/47))
+- **chore** `back-end, dependencies, npm, security` | bump the development-dependencies group in /servicios with 2 updates
+
+
 ### 2026-03-16 — @dependabot[bot] ([#45](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/45))
 - **chore** `back-end, dependencies, npm, security` | bump babel-loader from 10.0.0 to 10.1.1 in /servicios
 
@@ -55,6 +75,10 @@
 
 ### 2026-03-16 — @dependabot[bot] ([#36](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/36))
 - **chore** `dependencies` | bump actions/labeler from 5 to 6
+
+
+### 2026-03-16 — @Bufigol ([#13](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/13))
+- **chore** `documentation, SQL - BBDD, back-end, analytics, front-end` | [FASE 0] Planificación y Fundamentos — Actualización de documentación (Closes #9)
 
 
 ### 2026-03-13 — @andresTNS ([#18](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/18))
