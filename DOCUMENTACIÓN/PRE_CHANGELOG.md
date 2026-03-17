@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-17 — @dependabot[bot] ([#48](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/48))
+- **chore** `back-end, dependencies, npm, security` | bump node-fetch from 2.7.0 to 3.3.2 in /servicios
+
+
 ### 2026-03-17 — @dependabot[bot] ([#47](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/47))
 - **chore** `back-end, dependencies, npm, security` | bump the development-dependencies group in /servicios with 2 updates
 
