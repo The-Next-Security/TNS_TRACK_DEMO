@@ -730,7 +730,7 @@ CREATE TABLE `ale_seguimiento` (
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ale_seguimiento_id_origen_tipo_gen_tipos_origen_id_tipo_origen`
+  CONSTRAINT `fk_seguimiento_id_origen_tipo_tipos_origen_id_tipo_origen`
     FOREIGN KEY (`id_origen_tipo`)
     REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
     ON DELETE RESTRICT
@@ -801,17 +801,17 @@ CREATE TABLE `ale_suscripciones_notificacion` (
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_suscripcion_notificacion`),
   UNIQUE KEY `uk_ale_suscripciones_notificacion_regla` (`id_usuario`, `id_tipo_alerta`, `id_origen_tipo`, `canal`),
-  CONSTRAINT `fk_ale_suscripciones_notificacion_id_usuario_gen_usuario_id_usuario`
+  CONSTRAINT `fk_suscripciones_notif_id_usuario_usuario_id_usuario`
     FOREIGN KEY (`id_usuario`)
     REFERENCES `gen_usuario`(`id_usuario`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ale_suscripciones_notificacion_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+  CONSTRAINT `fk_suscripciones_notif_id_tipo_alerta_tipo_alerta_id_tipo_alerta`
     FOREIGN KEY (`id_tipo_alerta`)
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ale_suscripciones_notificacion_id_origen_tipo_gen_tipos_origen_id_tipo_origen`
+  CONSTRAINT `fk_suscripciones_notif_id_origen_tipo_tipos_origen_id_tipo_origen`
     FOREIGN KEY (`id_origen_tipo`)
     REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
     ON DELETE RESTRICT
@@ -833,7 +833,7 @@ CREATE TABLE `ale_horarios_alerta_canal` (
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_horario_alerta_canal`),
   UNIQUE KEY `uk_ale_horarios_alerta_canal_tipo_canal_dia` (`id_tipo_alerta`, `canal`, `dia_semana`),
-  CONSTRAINT `fk_ale_horarios_alerta_canal_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+  CONSTRAINT `fk_horarios_alerta_canal_id_tipo_alerta_tipo_alerta_id_tipo_alerta`
     FOREIGN KEY (`id_tipo_alerta`)
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
@@ -861,7 +861,7 @@ CREATE TABLE `ale_horarios_usuario` (
     REFERENCES `gen_usuario`(`id_usuario`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ale_horarios_usuario_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+  CONSTRAINT `fk_horarios_usuario_id_tipo_alerta_tipo_alerta_id_tipo_alerta`
     FOREIGN KEY (`id_tipo_alerta`)
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
