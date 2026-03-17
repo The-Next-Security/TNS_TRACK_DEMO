@@ -103,8 +103,14 @@ export function setupAxiosInterceptor() {
         }
       }
 
-      // 401 en endpoints de auth o requests que ya se reintentaron
-      if (error.response?.status === 401 && isAuthEndpoint) {
+      // 401 en refresh o logout: sesión inválida → disparar evento de cierre
+      // Login NO dispara el evento: un 401 ahí significa credenciales incorrectas,
+      // no sesión expirada. El componente de login maneja ese error localmente.
+      const isSessionEndpoint =
+        original?.url?.includes('/api/auth/refresh') ||
+        original?.url?.includes('/api/auth/logout');
+
+      if (error.response?.status === 401 && isSessionEndpoint) {
         _dispatchUnauthorized(original?.url);
       }
 
