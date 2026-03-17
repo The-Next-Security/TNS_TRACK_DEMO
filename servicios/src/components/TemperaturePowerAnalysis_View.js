@@ -99,7 +99,7 @@ const TemperaturePowerAnalysisV2 = () => {
    */
   const fetchLocations = useCallback(async () => {
     try {
-      const response = await axios.get('/api/powerAnalysis/temperature-power-locations');
+      const response = await axios.get('/api/analisis/temperatura-potencia/ubicaciones');
       setLocations(response.data);
     } catch (error) {
       console.error('Error fetching locations:', error);
@@ -165,7 +165,7 @@ const TemperaturePowerAnalysisV2 = () => {
       const formattedDate = DateTime.fromISO(selectedDate).toFormat('yyyy-MM-dd');
 
       const response = await axios.get(
-        `/api/powerAnalysis/temperature-power-analysis/${formattedDate}`,
+        `/api/analisis/temperatura-potencia/${formattedDate}`,
         {
           params: {
             ubicacion: selectedLocation,

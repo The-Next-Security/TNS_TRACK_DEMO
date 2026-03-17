@@ -55,7 +55,7 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
     try {
       setLoadingChambers(true);
       const _tok = localStorage.getItem('accessToken');
-      const response = await fetch('/api/ia/analisis/chambers', {
+      const response = await fetch('/api/ia/camaras', {
         headers: _tok ? { Authorization: `Bearer ${_tok}` } : {}
       });
 
@@ -114,7 +114,7 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
       console.log('[AIAnalysis] Enviando query:', requestBody);
 
       const _tok2 = localStorage.getItem('accessToken');
-      const response = await fetch('/api/ia/analisis/query', {
+      const response = await fetch('/api/ia/consulta', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

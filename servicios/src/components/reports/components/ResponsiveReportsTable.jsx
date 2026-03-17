@@ -194,7 +194,7 @@ const ResponsiveReportsTable = ({
     if (onDownload) {
       onDownload(report);
     } else {
-      window.open(`/api/reports/download/${report.id}`, '_blank');
+      window.open(`/api/reportes/descargar/${report.id}`, '_blank');
     }
   };
 
