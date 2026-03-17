@@ -1259,6 +1259,84 @@ class UbibotController {
     }
   }
 
+  /**
+   * Actualiza los umbrales de temperatura de múltiples canales en una sola operación
+   * PUT /api/temperatura/canales/umbrales/bulk
+   * Body: { channels: [{ channelId, threshold_min, threshold_max }] }
+   */
+  async bulkUpdateChannelThresholds(req, res) {
+    console.log("[UbibotController] bulkUpdateChannelThresholds: Solicitud recibida.");
+
+    const { channels } = req.body;
+
+    if (!Array.isArray(channels) || channels.length === 0) {
+      return res.status(400).json({ error: "Se requiere un array 'channels' no vacío" });
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (const item of channels) {
+      const { channelId, threshold_min, threshold_max } = item;
+
+      if (!channelId) {
+        errors.push({ channelId, error: "channelId requerido" });
+        continue;
+      }
+
+      if (threshold_min === undefined || threshold_max === undefined) {
+        errors.push({ channelId, error: "threshold_min y threshold_max requeridos" });
+        continue;
+      }
+
+      const min = parseFloat(threshold_min);
+      const max = parseFloat(threshold_max);
+
+      if (isNaN(min) || isNaN(max)) {
+        errors.push({ channelId, error: "Los umbrales deben ser números válidos" });
+        continue;
+      }
+
+      if (min >= max) {
+        errors.push({ channelId, error: "El umbral mínimo debe ser menor que el máximo" });
+        continue;
+      }
+
+      if (min < -40 || max > 50) {
+        errors.push({ channelId, error: "Los umbrales deben estar entre -40°C y 50°C" });
+        continue;
+      }
+
+      try {
+        const updateQuery = `
+          UPDATE ubi_canal
+          SET umbral_min = ?, umbral_max = ?
+          WHERE canal_id = ?
+        `;
+        const result = await databaseService.query(updateQuery, [min, max, channelId]);
+
+        if (result.affectedRows === 0) {
+          errors.push({ channelId, error: `Canal ${channelId} no encontrado` });
+        } else {
+          results.push({ channelId, threshold_min: min, threshold_max: max });
+        }
+      } catch (err) {
+        console.error(`❌ Error actualizando canal ${channelId}:`, err.message);
+        errors.push({ channelId, error: "Error interno al actualizar" });
+      }
+    }
+
+    console.log(`[UbibotController] bulkUpdateChannelThresholds: ${results.length} actualizados, ${errors.length} errores.`);
+
+    res.json({
+      success: errors.length === 0,
+      updated: results.length,
+      failed: errors.length,
+      results,
+      errors
+    });
+  }
+
   async getDefrostData(channelId, date, cameraName) {
     const dt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TZ_UBI });
     const startOfDay = dt.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
