@@ -15,22 +15,26 @@ const databaseService = require("./src/services/database_Service");
 const energyAveragesService = require("./src/services/energyAverages_Service");
 const totalEnergyService = require("./src/services/totalEnergy_Service");
 
-// Importar Rutas
-const deviceRoutes = require("./src/routes/device_Routes");
-const configRoutes = require("./src/routes/config_Routes");
-const totalesRoutes = require("./src/routes/totales_Routes");
-const usuariosRoutes = require("./src/routes/usuarios_Routes");
-const personalRoutes = require("./src/routes/personal_Routes");
-const powerAnalysisRoutes = require("./src/routes/powerAnalysis_Routes");
-const gpsRoutes = require("./src/routes/gps_Routes");
-const ubibotRoutes = require("./src/routes/ubibot_Routes");
-const blindSpotRoutes = require("./src/routes/blindSpot_Routes");
-const consumoCategoriaRoutes = require('./src/routes/consumoCategoria_Routes');
+// Importar Rutas — Arquitectura de dominios de negocio (Issue #11)
+const energiaRoutes = require('./src/routes/energia_Routes');
+const temperaturaRoutes = require('./src/routes/temperatura_Routes');
+const reportesRoutes = require('./src/routes/reportes_Routes');
+const analisisRoutes = require('./src/routes/analisis_Routes');
+const iaRoutes = require('./src/routes/ia_Routes');
+const alertasRoutes = require('./src/routes/alertas_Routes');
+const semConfigRoutes = require('./src/routes/semConfig_Routes');
+const telConfigRoutes = require('./src/routes/telConfig_Routes');
+const alertConfigRoutes = require('./src/routes/alertConfig_Routes');
+const notifConfigRoutes = require('./src/routes/notifConfig_Routes');
+const tariffConfigRoutes = require('./src/routes/tariffConfig_Routes');
+const beaconsRoutes = require('./src/routes/beacons_Routes');
+const sectoresRoutes = require('./src/routes/sectores_Routes');
+// Rutas sin cambio de dominio
+const usuariosRoutes = require('./src/routes/usuarios_Routes');
+const personalRoutes = require('./src/routes/personal_Routes');
+const gpsRoutes = require('./src/routes/gps_Routes');
+const blindSpotRoutes = require('./src/routes/blindSpot_Routes');
 const pushNotificationRoutes = require('./src/routes/pushNotification_Routes');
-const alertTrackingRoutes = require('./src/routes/alertTracking_Routes');
-const presetsRoutes = require('./src/routes/presets_Routes');
-const reportsRoutes = require('./src/routes/reports_Routes');
-const aiAnalysisRoutes = require('./src/routes/aiAnalysis_Routes');
 
 // Importar Config Loader (¡Importante!)
 const configLoader = require('./src/config/js_files/configLoader_Config');
@@ -151,25 +155,30 @@ class Server {
       this.app.use(`/TNSTrack${path}`, router); // También bajo /TNSTrack para producción
     };
 
-    // Montar rutas de la API (en ambos paths)
-    mountApiRoute("/api/devices", deviceRoutes);
-    mountApiRoute("/api/config", configRoutes);
-    mountApiRoute("/api/totals", totalesRoutes);
-    mountApiRoute("/api/usuarios", usuariosRoutes);
-    mountApiRoute("/api/personal", personalRoutes);
-    mountApiRoute("/api/powerAnalysis", powerAnalysisRoutes);
-    mountApiRoute("/api/gps", gpsRoutes);
-    mountApiRoute("/api/ubibot", ubibotRoutes);
-    mountApiRoute("/api/blindspot", blindSpotRoutes);
-    
-    const authRoutes = require("./src/routes/auth_Routes");
-    mountApiRoute("/api/auth", authRoutes);
-    mountApiRoute('/api/consumo', consumoCategoriaRoutes); // paraa las categorias de consumo electrico
-    mountApiRoute('/api/push', pushNotificationRoutes); // Push Notifications PWA
-    mountApiRoute('/api/alerts', alertTrackingRoutes); // Sistema de gestión de alertas
-    mountApiRoute('/api', presetsRoutes); // Sistema de gestión de presets de temperatura
-    mountApiRoute('/api/reports', reportsRoutes); // Sistema de generación de reportes (Feature 004)
-    mountApiRoute('/api/ia/analisis', aiAnalysisRoutes); // AI Cold Chamber Analysis (Feature 005)
+    // Dominios de negocio — nueva arquitectura (Issue #11)
+    mountApiRoute('/api/energia', energiaRoutes);
+    mountApiRoute('/api/temperatura', temperaturaRoutes);
+    mountApiRoute('/api/reportes', reportesRoutes);
+    mountApiRoute('/api/analisis', analisisRoutes);
+    mountApiRoute('/api/ia', iaRoutes);
+    mountApiRoute('/api/alertas', alertasRoutes);
+    // Configuración: 5 routers bajo el mismo prefijo /api/config
+    mountApiRoute('/api/config', semConfigRoutes);
+    mountApiRoute('/api/config', telConfigRoutes);
+    mountApiRoute('/api/config', alertConfigRoutes);
+    mountApiRoute('/api/config', notifConfigRoutes);
+    mountApiRoute('/api/config', tariffConfigRoutes);
+    // Módulos futuros Teltonika (stub 501)
+    mountApiRoute('/api/beacons', beaconsRoutes);
+    mountApiRoute('/api/sectores', sectoresRoutes);
+    // Rutas sin cambio de dominio
+    mountApiRoute('/api/usuarios', usuariosRoutes);
+    mountApiRoute('/api/personal', personalRoutes);
+    mountApiRoute('/api/gps', gpsRoutes);
+    mountApiRoute('/api/blindspot', blindSpotRoutes);
+    mountApiRoute('/api/push', pushNotificationRoutes);
+    const authRoutes = require('./src/routes/auth_Routes');
+    mountApiRoute('/api/auth', authRoutes);
 
     console.log("[Server] setupRoutes: Rutas API montadas (en / y /TNSTrack).");
 
