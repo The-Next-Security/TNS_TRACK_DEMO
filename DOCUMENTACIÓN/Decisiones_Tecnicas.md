@@ -326,13 +326,30 @@ Plan de alineación de todos los endpoints con el esquema de BD definido en SQL_
 
 ### Decisiones aplicadas
 
-- **ubi_canal ↔ ubi_presets_temperatura (Opción A):** Se añadió FK `id_preset` en ubi_canal; se eliminaron `temperatura_minima_umbral`, `temperatura_maxima_umbral`, `fecha_actualizacion_umbral`, `usuario_actualizacion_umbral`. Los umbrales se obtienen siempre por JOIN con ubi_presets_temperatura. Al cambiar un preset, todos los canales que lo usan se actualizan implícitamente.
+- **ubi_canal ↔ ubi_grupo (antes ubi_presets_temperatura):** Se añadió FK `id_preset` en ubi_canal; se eliminaron `temperatura_minima_umbral`, `temperatura_maxima_umbral`, `fecha_actualizacion_umbral`, `usuario_actualizacion_umbral`. Los umbrales se obtienen siempre por JOIN con ubi_grupo. Al cambiar un preset, todos los canales que lo usan se actualizan implícitamente.
 - **Reportería:** Se añadieron columnas a rep_plantillas (max_dispositivos, max_dias, admite_comparativo, tiempo_estimado_segundos) y rep_reportes_generados (id_usuario, fecha_inicio_periodo, fecha_fin_periodo, ids_dispositivos, config_reporte, tiempo_generacion_segundos, mensaje_error_generacion).
-- **Presets:** presets_Controller migrado de temperature_presets a ubi_presets_temperatura. SP stpr_apply_preset_to_cameras actualizado para usar UPDATE id_preset.
+- **Presets:** presets_Controller migrado de temperature_presets a ubi_grupo. SP stpr_apply_preset_to_cameras actualizado para usar UPDATE id_preset.
 - **GPS/blindspot/sectores/beacons:** Sin cambios en esquema; dominios reservados (Issue #26 para sectores/beacons).
 
 ### Estado Actual
 ✅ Parcialmente implementado — Esquema SQL, SP, triggers, ubibot_Service, presets_Controller, Base_de_Datos.md, inventario en APIs_internas.md.
+
+---
+
+## 13. Rename ubi_presets_temperatura → ubi_grupo + modelo dual de umbrales (Issues #32 y #33)
+
+### Contexto
+Issue #32: Los endpoints `GET/POST /api/config/teltonica/temperatura-umbrales` referencian la tabla `parametrizaciones` que no existe en el nuevo schema. Issue #33: `updateChannelThresholds` fallaba en runtime con "Unknown column" porque `ubi_canal` no tenía columnas `threshold_min`/`threshold_max`.
+
+### Decisiones aplicadas
+
+- **Rename `ubi_presets_temperatura` → `ubi_grupo`:** Nombre genérico que refleja mejor el rol de la tabla (grupo de configuración), no acoplado al dominio de temperatura. Afecta tabla, log, trigger, SPs, controllers y services.
+- **Modelo dual de umbrales:** Se agregan columnas `umbral_min`/`umbral_max` en `ubi_canal` como override individual (NULL por defecto). Lógica de resolución: `COALESCE(c.umbral_min, g.temperatura_minima)` — el override individual tiene prioridad; si es NULL, se usa el default del grupo.
+- **Issue #32 → HTTP 501:** Los endpoints Teltonika de temperatura-umbrales retornan 501 Not Implemented hasta que se planifique la migración con prefijo `tel_` en BD. `Configuration_View.js` maneja el 501 de forma graceful sin crashear el resto del formulario.
+- **Sin migration script:** BD se crea desde cero; solo se actualizaron SQL_FILES.
+
+### Estado Actual
+✅ Implementado — SQL_FILES, controllers (presets, ubibot, aiAnalysis), services (notification, aiData, ubibot_Adapter, temperatureAggregation), frontend (DashboardTemperatura_View, Configuration_View), documentación.
 
 ---
 
