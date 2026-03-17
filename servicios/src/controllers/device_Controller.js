@@ -138,22 +138,15 @@ class DeviceController {
     }
   }
 
+  // MÓDULO FUTURO - Teltonika legacy devices
+  // Tabla 'devices' no existe en schema actual tns_cool_track
   async handleDeviceSearch(req, res) {
-    try {
-      // Execute a SQL query to select all records from the 'devices' table
-      const [results] = await databaseService.pool.query(
-        "SELECT * FROM devices"
-      );
-
-      // Send the query results as a JSON response
-      res.json(results);
-    } catch (error) {
-      // Log any errors that occur during the query execution
-      console.error("Error fetching devices:", error);
-
-      // Send a 500 Internal Server Error response with a message
-      res.status(500).send("Server Error");
-    }
+    return res.status(501).json({
+      success: false,
+      message: 'Módulo dispositivos legacy (Teltonika) no disponible en esta versión.',
+      module: 'devices-legacy',
+      futureIssue: 'Pendiente de desarrollo en releases posteriores'
+    });
   }
 
   // =================== NUEVOS MÉTODOS PARA SELECCIÓN DE DISPOSITIVOS ===================

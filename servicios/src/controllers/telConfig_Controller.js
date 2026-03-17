@@ -52,26 +52,15 @@ class tel_ConfigController {
     }
   }
 
+  // MÓDULO FUTURO - Teltonika Beacons
+  // Configuración de beacons individuales requiere schema tel_* (no implementado)
   async configurarBeacon(req, res, next) {
-    try {
-      // Obtener el beaconID de los parámetros de la URL
-      const { beaconID } = req.params;
-
-      // Ejecutar una consulta SQL para seleccionar los registros de la tabla 'configuracion' donde el beaconID coincida
-      const [results] = await databaseService.pool.query(
-        "SELECT * FROM configuracion WHERE beacon_id = ?",
-        [beaconID]
-      );
-
-      // Enviar los resultados de la consulta como una respuesta JSON
-      res.json(results);
-    } catch (error) {
-      // Registrar cualquier error que ocurra durante la ejecución de la consulta
-      console.error("Error fetching configuration:", error);
-
-      // Enviar una respuesta de error 500 (Internal Server Error) con un mensaje de error
-      res.status(500).send("Server Error");
-    }
+    return res.status(501).json({
+      success: false,
+      message: 'Configuración de Beacon no disponible en esta versión.',
+      module: 'beacons',
+      futureIssue: 'Pendiente de desarrollo en releases posteriores'
+    });
   }
 
   async getConfigTemperaturaUmbral(req, res, next) {
