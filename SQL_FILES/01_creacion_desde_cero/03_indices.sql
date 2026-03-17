@@ -520,28 +520,28 @@ CREATE INDEX `idx_ale_seguimiento_estado-fecha_resolucion`
     ON `ale_seguimiento` (`estado`, `fecha_resolucion`);
 
 -- Para reports de alertas por tipo en períodos (stpr_generate_daily_metrics)
-CREATE INDEX `idx_ale_seguimiento_tipo_alerta-fecha_alerta`
-    ON `ale_seguimiento` (`tipo_alerta`, `fecha_alerta`);
+CREATE INDEX `idx_ale_seguimiento_id_tipo_alerta-fecha_alerta`
+    ON `ale_seguimiento` (`id_tipo_alerta`, `fecha_alerta`);
 
--- Para cálculo del canal con más alertas (TOP canal en stpr_calculate_hourly_metrics)
-CREATE INDEX `idx_ale_seguimiento_id_canal-tipo_alerta-fecha_alerta`
-    ON `ale_seguimiento` (`id_canal`, `tipo_alerta`, `fecha_alerta`);
+-- Para cálculo del canal con más alertas (TOP canal en stpr_calculate_hourly_metrics) — origen_id = id dispositivo (ej. id_canal)
+CREATE INDEX `idx_ale_seguimiento_origen_id-id_tipo_alerta-fecha_alerta`
+    ON `ale_seguimiento` (`origen_id`, `id_tipo_alerta`, `fecha_alerta`);
 
--- Para queries por estado de alerta en canal específico
-CREATE INDEX `idx_ale_seguimiento_id_canal-estado-fecha_alerta`
-    ON `ale_seguimiento` (`id_canal`, `estado`, `fecha_alerta`);
+-- Para queries por estado de alerta en dispositivo de origen
+CREATE INDEX `idx_ale_seguimiento_origen_id-estado-fecha_alerta`
+    ON `ale_seguimiento` (`origen_id`, `estado`, `fecha_alerta`);
 
 -- Para monitoreo de alertas por nivel de severidad
 CREATE INDEX `idx_ale_seguimiento_severidad-estado-fecha_alerta`
     ON `ale_seguimiento` (`severidad`, `estado`, `fecha_alerta`);
 
 -- Para reportes combinados tipo + estado + período
-CREATE INDEX `idx_ale_seguimiento_tipo_alerta-estado-fecha_alerta`
-    ON `ale_seguimiento` (`tipo_alerta`, `estado`, `fecha_alerta`);
+CREATE INDEX `idx_ale_seguimiento_id_tipo_alerta-estado-fecha_alerta`
+    ON `ale_seguimiento` (`id_tipo_alerta`, `estado`, `fecha_alerta`);
 
--- Para análisis de alertas críticas por canal
-CREATE INDEX `idx_ale_seguimiento_id_canal-severidad-fecha_alerta`
-    ON `ale_seguimiento` (`id_canal`, `severidad`, `fecha_alerta`);
+-- Para análisis de alertas críticas por dispositivo de origen
+CREATE INDEX `idx_ale_seguimiento_origen_id-severidad-fecha_alerta`
+    ON `ale_seguimiento` (`origen_id`, `severidad`, `fecha_alerta`);
 
 -- Para reports de tiempo de confirmación (KPI de respuesta)
 CREATE INDEX `idx_ale_seguimiento_fecha_confirmacion`
@@ -552,16 +552,16 @@ CREATE INDEX `idx_ale_seguimiento_notificado_push-estado-fecha_alerta`
     ON `ale_seguimiento` (`notificado_push`, `estado`, `fecha_alerta`);
 
 -- Para análisis de falsas alarmas por tipo y período
-CREATE INDEX `idx_ale_seguimiento_es_falsa_alarma-tipo_alerta-fecha_alerta`
-    ON `ale_seguimiento` (`es_falsa_alarma`, `tipo_alerta`, `fecha_alerta`);
+CREATE INDEX `idx_ale_seguimiento_es_falsa_alarma-id_tipo_alerta-fecha_alerta`
+    ON `ale_seguimiento` (`es_falsa_alarma`, `id_tipo_alerta`, `fecha_alerta`);
 
 -- Para reports completos de estado: tipo + severidad + estado + fecha
-CREATE INDEX `idx_ale_seguimiento_tipo_alerta-severidad-estado-fecha_alerta`
-    ON `ale_seguimiento` (`tipo_alerta`, `severidad`, `estado`, `fecha_alerta`);
+CREATE INDEX `idx_ale_seguimiento_id_tipo_alerta-severidad-estado-fecha_alerta`
+    ON `ale_seguimiento` (`id_tipo_alerta`, `severidad`, `estado`, `fecha_alerta`);
 
--- Para análisis de valor de temperatura que disparó la alerta
-CREATE INDEX `idx_ale_seguimiento_id_canal-valor_temperatura-fecha_alerta`
-    ON `ale_seguimiento` (`id_canal`, `valor_temperatura`, `fecha_alerta`);
+-- Para análisis por dispositivo de origen y período (valor_temperatura está en ale_datos_temperatura)
+CREATE INDEX `idx_ale_seguimiento_origen_id-fecha_alerta`
+    ON `ale_seguimiento` (`origen_id`, `fecha_alerta`);
 
 
 -- ----------------------------------------------------------
