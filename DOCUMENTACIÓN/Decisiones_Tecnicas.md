@@ -353,12 +353,49 @@ Issue #32: Los endpoints `GET/POST /api/config/teltonica/temperatura-umbrales` r
 
 ---
 
+## 14. Reorganización completa de endpoints por dominios de negocio (Issue #11 — Fase final)
+
+### Contexto
+Tras la limpieza inicial de rutas legacy (Decisión #11), el backend mantenía una organización inconsistente: dominios de negocio mezclados en archivos de rutas distintos, prefijos de URL acoplados a detalles de implementación (`/api/ubibot`, `/api/alerts`, `/api/reports`), controladores duplicados o sin montar, y módulos Teltonika futuros causando errores 500 en producción. El Issue #11 declaró la reorganización como completada pero la segunda fase quedó pendiente.
+
+### Decisión
+
+**Estructura de dominios adoptada:**
+| Prefijo | Dominio | Reemplaza |
+|---------|---------|-----------|
+| `/api/energia` | Energía eléctrica (Shelly) | `/api/devices`, `/api/totals`, `/api/consumo` |
+| `/api/temperatura` | Temperatura (Ubibot) + presets | `/api/ubibot`, `/api/presets` |
+| `/api/reportes` | Todos los reportes + descongelamiento | `/api/reports` + endpoints defrost de `/api/ubibot` |
+| `/api/analisis` | Análisis cruzado temperatura+potencia | `/api/powerAnalysis` |
+| `/api/ia` | Inteligencia Artificial | `/api/ia/analisis` |
+| `/api/alertas` | Tracking de alertas | `/api/alerts` |
+| `/api/config` | Configuración (5 archivos separados) | `/api/config` (monolítico) |
+| `/api/beacons` | FUTURO Teltonika — stub 501 | — |
+| `/api/sectores` | FUTURO Teltonika — stub 501 | — |
+
+**Acciones aplicadas:**
+- Eliminados 4 controladores muertos: `config_Controller` (copia exacta de `semConfig_Controller`), `analysis_Controller` (versión obsoleta con bug hardcodeado `'Reefer A'`), `system_Controller` y `group_Controller` (no montados, métodos `databaseService` inexistentes).
+- Eliminados 11 archivos de rutas obsoletos reemplazados por los 13 nuevos dominio-específicos.
+- Implementado método real `bulkUpdateChannelThresholds` en `ubibot_Controller` (faltaba; el frontend lo llamaba produciendo 404).
+- Módulos futuros Teltonika (GPS, BlindSpot, Personal, Beacons, Sectores) → responden HTTP 501 en todos sus métodos.
+- Frontend (28 componentes) sincronizado con los nuevos paths; cero referencias a URLs antiguas en código activo.
+
+### Alternativas Consideradas
+- **Mantener prefijos originales con aliases**: Descartado — perpetúa la deuda técnica y no resuelve la incoherencia de dominio.
+- **Reorganización incremental por dominio**: Descartado — mayor riesgo de inconsistencias parciales; la reorganización completa en un único PR es más segura.
+
+### Estado Actual
+✅ Implementado — 13 nuevos archivos de rutas, `server.js` actualizado, 28 componentes frontend sincronizados, controladores muertos eliminados.
+
+---
+
 ## 📝 Historial de Cambios
 
 > **Nota**: Para historial detallado de cambios del proyecto, ver [CHANGELOG.md](./CHANGELOG.md)
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-03-17 | Reorganización completa de endpoints por dominios de negocio (Issue #11 — Fase final): 13 dominios, 28 componentes sincronizados, 4 controladores muertos eliminados | andresTNS, Bufigol |
 | 2026-03-12 | Alineación endpoints con BD: ubi_canal+id_preset (Opción A), rep_plantillas/rep_reportes_generados, presets | andresTNS, Bufigol |
 | 2026-03-11 | Modelo unificado de notificaciones: ale_suscripciones_notificacion, horarios base/custom, servicio único de decisión; eliminación ale_suscripciones_email | Plan Notificaciones unificadas |
 | 2026-03-11 | Estandarización de fechas: Luxon como única librería (Issue #5) | andresTNS, Bufigol |
@@ -378,4 +415,4 @@ Issue #32: Los endpoints `GET/POST /api/config/teltonica/temperatura-umbrales` r
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-03-11
+**Última revisión**: 2026-03-17
