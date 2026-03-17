@@ -20,7 +20,7 @@ BEGIN
     -- Obtener valores del preset
     SELECT temperatura_minima, temperatura_maxima, nombre_preset
     INTO v_temp_minima, v_temp_maxima, v_nombre_preset
-    FROM ubi_presets_temperatura
+    FROM ubi_grupo
     WHERE id_preset = p_id_preset AND activo = 1;
 
     -- Validar que el preset existe
