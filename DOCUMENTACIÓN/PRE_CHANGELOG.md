@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-18 — @dependabot[bot] ([#56](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/56))
+- **chore** `back-end, dependencies, npm, security` | bump puppeteer from 24.33.0 to 24.39.1 in /servicios
+
+
 ### 2026-03-18 — @dependabot[bot] ([#55](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/55))
 - **chore** `back-end, dependencies, npm, security` | bump recharts from 2.15.4 to 3.8.0 in /servicios
 
