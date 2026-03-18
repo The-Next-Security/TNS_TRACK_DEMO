@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-18 — @dependabot[bot] ([#53](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/53))
+- **chore** `back-end, dependencies, npm, security` | bump core-js from 3.48.0 to 3.49.0 in /servicios
+
+
 ### 2026-03-18 — @dependabot[bot] ([#52](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/52))
 - **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.307.1 to 1.361.1 in /servicios
 
