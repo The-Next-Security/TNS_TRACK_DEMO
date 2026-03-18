@@ -1,8 +1,8 @@
 // collectors/shelly-collector.js
 
-const fetch = require("node-fetch");
-const configLoader = require("../src/config/js_files/config-loader");
-const databaseService = require("../src/services/database-service");
+// fetch disponible de forma nativa en Node.js v18+, no requiere node-fetch
+const configLoader = require("../src/config/js_files/configLoader_Config");
+const databaseService = require("../src/services/database_Service");
 
 class ShellyCollector {
     constructor() {
@@ -45,7 +45,9 @@ class ShellyCollector {
 
             // Extraer y validar las secciones necesarias
             const apiConfig = loadedConfig.api?.shelly_cloud;
-            const collectionConfig = loadedConfig.collection;
+            const collectionConfig = {
+                interval: loadedConfig.api?.shelly_cloud?.collection_interval
+            };
 
             // Validación estricta de la configuración requerida
             if (!apiConfig || !apiConfig.url || !apiConfig.device_id || !apiConfig.auth_key) {

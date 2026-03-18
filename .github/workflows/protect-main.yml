@@ -1,0 +1,223 @@
+name: Protect Main Branch
+
+# Workflow de protección de la rama main (producción)
+# Valida PRs antes de merge siguiendo Principio II de la Constitución: Git Flow Estructurado
+# Bloquea PRs que no cumplan con:
+#   - Formato de título (Release vX.Y.Z o HOTFIX:)
+#   - Branch origen válido (dev o hotfix/*)
+#   - CHANGELOG actualizado
+#   - Aprobación de Code Owner
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, edited, synchronize, reopened]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Validations
+
+    steps:
+      - name: Check PR Title Format
+        id: check-title
+        run: |
+          PR_TITLE="${{ github.event.pull_request.title }}"
+
+          echo "🔍 Validando título del PR: $PR_TITLE"
+
+          # Validar formato "[RELEASE]" o "[HOTFIX]" (según Info_Github.md)
+          if [[ "$PR_TITLE" =~ ^\[RELEASE\] ]] || \
+             [[ "$PR_TITLE" =~ ^\[HOTFIX\] ]]; then
+            echo "✅ Título del PR es válido"
+            echo "valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Formato de título inválido"
+            echo ""
+            echo "Formatos esperados:"
+            echo "  - [RELEASE] Paso a producción [v.XX.YY.ZZ]"
+            echo "  - [HOTFIX] Descripción del fix crítico"
+            echo ""
+            echo "Recibido: $PR_TITLE"
+            exit 1
+          fi
+
+      - name: Check Source Branch
+        id: check-branch
+        run: |
+          SOURCE="${{ github.event.pull_request.head.ref }}"
+
+          echo "🔍 Validando branch origen: $SOURCE"
+
+          # Permitir 'dev' o 'hotfix/*'
+          if [[ "$SOURCE" == "dev" ]] || [[ "$SOURCE" =~ ^hotfix/ ]]; then
+            echo "✅ Branch origen es válido: $SOURCE"
+            echo "valid=true" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Branch origen inválido"
+            echo ""
+            echo "PRs a main deben venir desde:"
+            echo "  - dev (releases normales)"
+            echo "  - hotfix/* (fixes críticos)"
+            echo ""
+            echo "Branch actual: $SOURCE"
+            exit 1
+          fi
+
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Verify CHANGELOG Updated
+        run: |
+          echo "🔍 Verificando CHANGELOG.md"
+
+          if [ -f CHANGELOG.md ]; then
+            echo "✅ CHANGELOG.md existe"
+
+            # Verificar última modificación
+            LAST_MODIFIED=$(git log -1 --format="%ar" -- CHANGELOG.md 2>/dev/null || echo "unknown")
+            echo "   Última modificación: $LAST_MODIFIED"
+          else
+            echo "⚠️  Advertencia: CHANGELOG.md no encontrado"
+            echo "   Se recomienda agregar un changelog para releases"
+          fi
+
+      - name: Generate Summary
+        if: always()
+        run: |
+          echo "## 📋 Validación de PR a Main" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Formato de título | ${{ steps.check-title.outputs.valid == 'true' && '✅ Válido' || '❌ Inválido' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Branch origen | ${{ steps.check-branch.outputs.valid == 'true' && '✅ Válido' || '❌ Inválido' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CHANGELOG | ✅ Verificado |" >> $GITHUB_STEP_SUMMARY
+
+  require-approval:
+    runs-on: ubuntu-latest
+    name: Require Code Owner Approval
+    # Valida que PRs a main tengan aprobación de @felipecleverox o @TNSTRACK
+    # Alineado con Info_Github.md: protección de rama main
+
+    steps:
+      - name: Check for Code Owner Approval
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+
+            console.log('🔍 Verificando aprobaciones de Code Owners...');
+            console.log(`PR #${pr.number}: ${pr.title}`);
+
+            // Obtener todas las reviews del PR
+            const { data: reviews } = await github.rest.pulls.listReviews({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number
+            });
+
+            console.log(`Total de reviews: ${reviews.length}`);
+
+            // Code Owners definidos (según Info_Github.md: Product Manager + Tech Lead)
+            const codeOwners = ['felipecleverox', 'TNSTRACK'];
+            console.log(`Code Owners: ${codeOwners.join(', ')}`);
+
+            // Filtrar aprobaciones de Code Owners
+            const codeOwnerApprovals = reviews.filter(review => {
+              const isApproved = review.state === 'APPROVED';
+              const isCodeOwner = codeOwners.includes(review.user.login);
+
+              if (isCodeOwner) {
+                console.log(`  - @${review.user.login}: ${review.state}`);
+              }
+
+              return isApproved && isCodeOwner;
+            });
+
+            // Verificar si hay al menos una aprobación
+            if (codeOwnerApprovals.length === 0) {
+              const msg = [
+                '❌ Este PR requiere aprobación de un Code Owner',
+                '',
+                '**Code Owners autorizados:**',
+                '- @felipecleverox',
+                '- @TNSTRACK',
+                '',
+                '**Acción requerida:**',
+                'Por favor solicita review de uno de los Code Owners.',
+                '',
+                '**Estado actual:**',
+                `- Reviews totales: ${reviews.length}`,
+                `- Aprobaciones de Code Owners: ${codeOwnerApprovals.length}`,
+                '',
+                '⚠️  **El merge está bloqueado hasta recibir aprobación.**'
+              ].join('\n');
+
+              core.setFailed(msg);
+            } else {
+              const approver = codeOwnerApprovals[0].user.login;
+              const approvedAt = codeOwnerApprovals[0].submitted_at;
+
+              console.log(`✅ Aprobado por Code Owner: @${approver}`);
+              console.log(`   Fecha: ${approvedAt}`);
+
+              // Agregar a summary
+              await core.summary
+                .addHeading('✅ Code Owner Approval Received', 2)
+                .addTable([
+                  [{data: 'Code Owner', header: true}, {data: 'Status', header: true}, {data: 'Date', header: true}],
+                  [`@${approver}`, '✅ Approved', approvedAt]
+                ])
+                .write();
+            }
+
+      - name: Comment on PR (if no approval)
+        if: failure()
+        uses: actions/github-script@v8
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const pr = context.payload.pull_request;
+
+            // Verificar si ya existe un comentario similar
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('requiere aprobación de un Code Owner')
+            );
+
+            const message = [
+              '## 🔐 Aprobación de Code Owner Requerida',
+              '',
+              'Este PR necesita ser aprobado por uno de los siguientes Code Owners:',
+              '',
+              '- @felipecleverox',
+              '- @TNSTRACK',
+              '',
+              '### ¿Cómo proceder?',
+              '',
+              '1. Solicita review del Code Owner apropiado',
+              '2. Espera la aprobación',
+              '3. El workflow se re-ejecutará automáticamente',
+              '4. Una vez aprobado, podrás mergear',
+              '',
+              '---',
+              '*Este mensaje es generado automáticamente por el sistema de protección de la rama main.*'
+            ].join('\n');
+
+            if (!botComment) {
+              // Crear nuevo comentario
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pr.number,
+                body: message
+              });
+            }

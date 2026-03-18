@@ -1,0 +1,246 @@
+name: Issue Quality Analyzer
+
+# Workflow de análisis de calidad de issues
+# Valida que issues sigan las mejores prácticas de documentación
+# Alineado con Principio III de la Constitución: Gestión GitHub-First
+
+on:
+  issues:
+    types: [opened, edited]
+  workflow_dispatch:
+
+jobs:
+  analyze-issue:
+    runs-on: ubuntu-latest
+    name: Analizar Calidad del Issue
+
+    steps:
+      - name: Analizar labels del issue
+        id: check-labels
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            console.log('🔍 Analizando labels del issue #' + issue.number);
+
+            const hasLabels = issue.labels && issue.labels.length > 0;
+            const labelNames = hasLabels ? issue.labels.map(l => l.name) : [];
+
+            console.log('Labels actuales: ' + (hasLabels ? labelNames.join(', ') : 'ninguno'));
+
+            // Verificar labels recomendados (según DOCUMENTACIÓN/Info_Github.md)
+            const recommendedLabels = {
+              tipo: ['bug', 'enhancement', 'technical-debt', 'documentation', 'architecture', 'refactoring'],
+              area: ['back-end', 'front-end', 'SQL - BBDD', 'analytics']
+            };
+
+            let hasTipo = labelNames.some(l => recommendedLabels.tipo.includes(l));
+            let hasArea = labelNames.some(l => recommendedLabels.area.includes(l));
+
+            core.setOutput('has_labels', hasLabels);
+            core.setOutput('has_tipo', hasTipo);
+            core.setOutput('has_area', hasArea);
+
+            if (!hasLabels) {
+              console.log('⚠️  Issue no tiene labels');
+            } else {
+              if (!hasTipo) console.log('⚠️  Falta label de tipo (bug, enhancement, etc.)');
+              if (!hasArea) console.log('⚠️  Falta label de área (back-end, front-end, SQL - BBDD, analytics)');
+            }
+
+      - name: Verificar assignees
+        id: check-assignees
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            console.log('🔍 Verificando assignees del issue #' + issue.number);
+
+            const hasAssignees = issue.assignees && issue.assignees.length > 0;
+            const assigneeNames = hasAssignees ? issue.assignees.map(a => '@' + a.login).join(', ') : 'ninguno';
+
+            console.log('Assignees actuales: ' + assigneeNames);
+
+            core.setOutput('has_assignees', hasAssignees);
+            core.setOutput('assignee_count', hasAssignees ? issue.assignees.length : 0);
+
+            if (!hasAssignees) {
+              console.log('⚠️  Issue no tiene assignees');
+            } else {
+              console.log('✅ Issue asignado a: ' + assigneeNames);
+            }
+
+      - name: Analizar contenido del issue
+        id: check-content
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            console.log('🔍 Analizando contenido del issue #' + issue.number);
+
+            const body = issue.body || '';
+            const title = issue.title || '';
+
+            // Verificar elementos del template
+            const hasDescripcion = body.includes('## 📋 Descripción') || body.includes('## Descripción');
+            const hasObjetivo = body.includes('## 🎯 Objetivo') || body.includes('## Objetivo');
+            const hasCriterios = body.includes('## ✅ Criterios de Aceptación') || body.includes('Criterios de Aceptación');
+
+            console.log('Tiene Descripción: ' + hasDescripcion);
+            console.log('Tiene Objetivo: ' + hasObjetivo);
+            console.log('Tiene Criterios: ' + hasCriterios);
+
+            const titleLength = title.length;
+            const bodyLength = body.length;
+
+            core.setOutput('has_descripcion', hasDescripcion);
+            core.setOutput('has_objetivo', hasObjetivo);
+            core.setOutput('has_criterios', hasCriterios);
+            core.setOutput('body_length', bodyLength);
+
+            if (bodyLength < 50) {
+              console.log('⚠️  Descripción muy breve (menos de 50 caracteres)');
+            }
+
+      - name: Generar recomendaciones
+        if: always()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const issue = context.payload.issue;
+
+            const hasLabels = '${{ steps.check-labels.outputs.has_labels }}' === 'true';
+            const hasTipo = '${{ steps.check-labels.outputs.has_tipo }}' === 'true';
+            const hasArea = '${{ steps.check-labels.outputs.has_area }}' === 'true';
+            const hasAssignees = '${{ steps.check-assignees.outputs.has_assignees }}' === 'true';
+            const hasDescripcion = '${{ steps.check-content.outputs.has_descripcion }}' === 'true';
+            const hasObjetivo = '${{ steps.check-content.outputs.has_objetivo }}' === 'true';
+            const hasCriterios = '${{ steps.check-content.outputs.has_criterios }}' === 'true';
+            const bodyLength = parseInt('${{ steps.check-content.outputs.body_length }}');
+
+            let suggestions = [];
+
+            // Generar sugerencias basadas en análisis (labels según DOCUMENTACIÓN/Info_Github.md)
+            if (!hasLabels) {
+              suggestions.push({
+                emoji: '🏷️',
+                title: 'Agregar Labels',
+                description: 'Este issue no tiene labels. Considera agregar:',
+                items: [
+                  '**Tipo**: `bug`, `enhancement`, `technical-debt`, `documentation`, `refactoring`, `architecture`',
+                  '**Área**: `back-end`, `front-end`, `SQL - BBDD`, `analytics`',
+                  '**Prioridad máxima**: `IMPORTANT` (solo si requiere atención inmediata)'
+                ]
+              });
+            } else {
+              if (!hasTipo) {
+                suggestions.push({
+                  emoji: '📝',
+                  title: 'Label de Tipo',
+                  description: 'Falta label de tipo. Opciones disponibles:',
+                  items: ['`bug`, `enhancement`, `technical-debt`, `documentation`, `refactoring`, `architecture`']
+                });
+              }
+              if (!hasArea) {
+                suggestions.push({
+                  emoji: '🗂️',
+                  title: 'Label de Área',
+                  description: 'Falta label de área técnica. Opciones disponibles:',
+                  items: ['`back-end`, `front-end`, `SQL - BBDD`, `analytics`']
+                });
+              }
+            }
+
+            if (!hasAssignees) {
+              suggestions.push({
+                emoji: '👤',
+                title: 'Asignar Responsables',
+                description: 'Este issue no tiene assignees. Considera asignar a:',
+                items: ['@Bufigol (primary)', '@andresTNS (secondary)']
+              });
+            }
+
+            if (bodyLength < 50) {
+              suggestions.push({
+                emoji: '📄',
+                title: 'Expandir Descripción',
+                description: 'La descripción es muy breve. Considera usar el template estándar:',
+                items: [
+                  '## 📋 Descripción',
+                  '## 🎯 Objetivo',
+                  '## 📊 Especificaciones Técnicas',
+                  '## ✅ Criterios de Aceptación'
+                ]
+              });
+            } else if (!hasDescripcion || !hasObjetivo || !hasCriterios) {
+              const missing = [];
+              if (!hasDescripcion) missing.push('Descripción');
+              if (!hasObjetivo) missing.push('Objetivo');
+              if (!hasCriterios) missing.push('Criterios de Aceptación');
+
+              suggestions.push({
+                emoji: '📋',
+                title: 'Completar Template',
+                description: `Faltan secciones del template: ${missing.join(', ')}`,
+                items: ['Ver templates disponibles en `.github/ISSUE_TEMPLATE/`']
+              });
+            }
+
+            // Solo comentar si hay sugerencias
+            if (suggestions.length === 0) {
+              console.log('✅ Issue cumple con todos los estándares');
+              return;
+            }
+
+            // Construir mensaje
+            let message = '## 💡 Sugerencias para Mejorar este Issue\n\n';
+            message += '*Estas sugerencias se basan en las [Convenciones del Proyecto](DOCUMENTACIÓN/Info_Github.md)*\n\n';
+
+            suggestions.forEach(s => {
+              message += `### ${s.emoji} ${s.title}\n\n`;
+              message += `${s.description}\n`;
+              if (s.items && s.items.length > 0) {
+                message += s.items.map(item => `- ${item}`).join('\n');
+                message += '\n';
+              }
+              message += '\n';
+            });
+
+            message += '---\n';
+            message += '💡 **Nota**: Estas son sugerencias **opcionales** para mejorar la documentación del issue.\n\n';
+            message += '📖 **Referencia**: [Convenciones de Issues](DOCUMENTACIÓN/Info_Github.md)\n';
+
+            // Verificar si ya existe comentario
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number
+            });
+
+            const botComment = comments.find(c =>
+              c.user.type === 'Bot' &&
+              c.body.includes('Sugerencias para Mejorar este Issue')
+            );
+
+            if (botComment) {
+              // Actualizar comentario existente
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: message
+              });
+              console.log('✅ Comentario de sugerencias actualizado');
+            } else {
+              // Crear nuevo comentario
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: message
+              });
+              console.log('✅ Comentario de sugerencias creado');
+            }

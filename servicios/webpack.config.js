@@ -6,6 +6,13 @@ const CopyWebpackPlugin = require("copy-webpack-plugin");
 module.exports = {
   mode: "development", // O 'production' al desplegar
   entry: path.resolve(__dirname, "src", "index.js"),
+  // Suprimir warning de require() dinámico en react-datepicker (issue conocido del paquete)
+  ignoreWarnings: [
+    {
+      module: /react-datepicker/,
+      message: /Critical dependency/,
+    },
+  ],
   plugins: [
     new HtmlWebpackPlugin({
       template: path.resolve(__dirname, "src", "index.html"),
@@ -14,6 +21,8 @@ module.exports = {
       process: "process/browser",
       Buffer: ["buffer", "Buffer"],
     }),
+    // Limita los locales de date-fns al español — evita require() dinámico de react-datepicker
+    new webpack.ContextReplacementPlugin(/date-fns\/locale/, /es/),
     // Plugin para copiar archivos PWA
     new CopyWebpackPlugin({
       patterns: [
@@ -81,7 +90,7 @@ module.exports = {
     extensions: [".js", ".jsx"],
     fallback: {
       buffer: require.resolve("buffer/"),
-      crypto: require.resolve("crypto-browserify"),
+      crypto: false, // sin polyfill — ningún componente browser usa crypto directamente
       vm: require.resolve("vm-browserify"),
       stream: require.resolve("stream-browserify"),
       util: require.resolve("util/"),

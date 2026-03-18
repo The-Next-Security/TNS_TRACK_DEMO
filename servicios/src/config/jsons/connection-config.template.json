@@ -1,0 +1,25 @@
+{
+    "_comentario": "Archivo template para la conexion con la base de datos. Se dbe crear con los datos de la base de datos reales para poder conectarse correctamente",
+    "environment": 0,
+    "development": {
+      "host": "[IP de desarrollo/localhost]",
+      "port": "[puerto de desarrollo]",
+      "username": "[nombre de usuario de desarrollo/root]",
+      "password": "[contraseña de desarrollo]",
+      "database": "[nombre de la base de datos de desarrollo]",
+      "pool": {
+        "max_size": 10
+      }
+    },
+    "production": {
+      "host": "[IP de producción]",
+      "port": "[puerto de producción]",
+      "username": "[nombre de usuario de producción/root]",
+      "password": "[contraseña de producción]",
+      "database": "[nombre de la base de datos de producción]",
+      "pool": {
+        "max_size": 20
+      }
+    }
+  }
+  

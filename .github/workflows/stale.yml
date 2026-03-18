@@ -1,0 +1,60 @@
+name: Stale Issues y PRs
+
+# Gestión automática de issues y PRs sin actividad
+# - 90 días sin actividad → marca como stale con aviso
+# - 7 días adicionales sin respuesta → cierre automático
+# - Issues con label IMPORTANT están exentos
+
+on:
+  schedule:
+    - cron: '0 12 * * *'  # 12:00 UTC = 09:00 Chile (UTC-3 en verano)
+  workflow_dispatch:
+
+jobs:
+  stale:
+    runs-on: ubuntu-latest
+    name: Gestionar Issues y PRs Inactivos
+    permissions:
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Marcar y cerrar issues/PRs inactivos
+        uses: actions/stale@v10
+        with:
+          # Issues
+          stale-issue-label: 'stale'
+          stale-issue-message: |
+            👋 Este issue lleva **90 días sin actividad**.
+
+            Si sigue siendo relevante, agrega un comentario para mantenerlo abierto.
+            En **7 días** se cerrará automáticamente si no hay actividad.
+
+            Si ya fue resuelto o no aplica, puedes cerrarlo manualmente.
+          close-issue-message: |
+            🔒 Este issue fue cerrado automáticamente por inactividad (90 + 7 días).
+
+            Si el problema persiste, puedes reabrirlo o crear uno nuevo con más contexto.
+
+          # PRs
+          stale-pr-label: 'stale'
+          stale-pr-message: |
+            👋 Este PR lleva **90 días sin actividad**.
+
+            Si sigue siendo relevante, agrega un comentario o actualiza el código para mantenerlo abierto.
+            En **7 días** se cerrará automáticamente si no hay actividad.
+          close-pr-message: |
+            🔒 Este PR fue cerrado automáticamente por inactividad (90 + 7 días).
+
+            Si el trabajo sigue siendo válido, puedes reabrirlo o crear un nuevo PR.
+
+          # Tiempos
+          days-before-stale: 90
+          days-before-close: 7
+
+          # Exenciones — issues/PRs con estos labels nunca se marcan como stale
+          exempt-issue-labels: 'IMPORTANT'
+          exempt-pr-labels: 'IMPORTANT'
+
+          # No marcar como stale si están asignados a alguien
+          exempt-all-assignees: true

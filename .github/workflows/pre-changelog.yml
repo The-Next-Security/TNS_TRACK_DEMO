@@ -1,0 +1,106 @@
+name: Pre-Changelog Automático
+
+# Actualiza DOCUMENTACIÓN/PRE_CHANGELOG.md con cada PR mergeado a dev
+# Sirve como borrador estructurado para la próxima entrada del CHANGELOG.md
+# Se activa SOLO en merges reales (no en push directos a dev)
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - dev
+
+jobs:
+  update-pre-changelog:
+    # Solo ejecutar si el PR fue mergeado (no solo cerrado)
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    name: Actualizar Pre-Changelog
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - name: Checkout repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generar entrada de changelog
+        id: generate-entry
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_AUTHOR: ${{ github.event.pull_request.user.login }}
+          PR_LABELS: ${{ join(github.event.pull_request.labels.*.name, ', ') }}
+        run: |
+          # Fecha en zona horaria Chile
+          ENTRY_DATE=$(TZ=America/Santiago date +"%Y-%m-%d")
+
+          # Extraer tipo desde título (formato: tipo(módulo): descripción)
+          PR_TYPE=$(echo "$PR_TITLE" | grep -oP '^(feat|fix|docs|chore|refactor|test|perf|style|build|ci|revert)' || echo "chore")
+
+          # Limpiar título: quitar el prefijo tipo(módulo): para dejar solo la descripción
+          PR_DESC=$(echo "$PR_TITLE" | sed 's/^[a-z]*([^)]*): //' | sed 's/^[a-z]*: //')
+
+          # Construir línea de labels (si hay)
+          if [ -n "$PR_LABELS" ]; then
+            LABELS_STR=" \`${PR_LABELS}\`"
+          else
+            LABELS_STR=""
+          fi
+
+          # Generar entrada
+          ENTRY="### ${ENTRY_DATE} — @${PR_AUTHOR} ([#${PR_NUMBER}](${PR_URL}))\n- **${PR_TYPE}**${LABELS_STR} | ${PR_DESC}"
+
+          echo "entry=${ENTRY}" >> $GITHUB_OUTPUT
+          echo "date=${ENTRY_DATE}" >> $GITHUB_OUTPUT
+
+      - name: Insertar entrada en PRE_CHANGELOG.md
+        env:
+          ENTRY: ${{ steps.generate-entry.outputs.entry }}
+        run: |
+          python3 - <<'PYEOF'
+          import os
+
+          filepath = "DOCUMENTACIÓN/PRE_CHANGELOG.md"
+          entry = os.environ.get("ENTRY", "").replace("\\n", "\n")
+          placeholder = "_No hay cambios registrados aún. Los cambios aparecerán automáticamente con cada merge a `dev`._"
+          marker = "## Unreleased"
+
+          with open(filepath, "r", encoding="utf-8") as f:
+              content = f.read()
+
+          if placeholder in content:
+              # Primera entrada: reemplazar placeholder
+              new_content = content.replace(placeholder, entry + "\n")
+          else:
+              # Entradas posteriores: insertar al inicio de la sección Unreleased
+              new_content = content.replace(
+                  marker + "\n",
+                  marker + "\n\n" + entry + "\n\n"
+              )
+
+          with open(filepath, "w", encoding="utf-8") as f:
+              f.write(new_content)
+
+          print("✅ Pre-changelog actualizado correctamente")
+          PYEOF
+
+      - name: Commit y push del pre-changelog
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+          git add DOCUMENTACIÓN/PRE_CHANGELOG.md
+
+          # Solo commitear si hay cambios reales
+          if git diff --staged --quiet; then
+            echo "ℹ️  Sin cambios en pre-changelog"
+          else
+            git commit -m "chore(changelog): registrar merge PR #${{ github.event.pull_request.number }} [skip ci]"
+            git push
+            echo "✅ Pre-changelog actualizado y pusheado"
+          fi

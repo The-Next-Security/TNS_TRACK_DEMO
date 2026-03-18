@@ -174,12 +174,12 @@ const EmailModal = ({ isOpen, onClose, report, onSuccess }) => {
     setIsSending(true);
 
     try {
-      const response = await fetch('/api/reports/send-email', {
+      const response = await fetch('/api/reportes/enviar-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`
         },
-        credentials: 'include',
         body: JSON.stringify({
           reportId: report.id,
           recipients: recipients,

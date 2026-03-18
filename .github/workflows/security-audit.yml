@@ -1,0 +1,148 @@
+name: Security Audit
+
+# Workflow de auditoría de seguridad para TNS Track (Bitumix)
+# Ejecuta npm audit diariamente y en cada push a ramas principales
+# Alineado con Principio VI de la Constitución: Dependencias Actualizadas
+# Bloquea PRs a main con vulnerabilidades HIGH/CRITICAL
+# Genera warnings para vulnerabilidades MODERATE/LOW/INFO
+
+on:
+  # Ejecución programada diaria a las 09:00 hora de Chile
+  schedule:
+    - cron: '0 12 * * *'  # 12:00 UTC = 09:00 Chile (UTC-3 en verano)
+
+  # Ejecución en push a ramas principales
+  push:
+    branches:
+      - main
+      - dev
+
+  # Ejecución manual desde GitHub UI
+  workflow_dispatch:
+
+jobs:
+  security-audit:
+    name: NPM Security Audit
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./servicios
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: './servicios/package-lock.json'
+
+      - name: Instalar dependencias
+        run: npm ci
+        continue-on-error: false
+
+      - name: Ejecutar npm audit (solo producción)
+        id: audit-prod
+        run: |
+          echo "=== Auditoría de dependencias de PRODUCCIÓN ==="
+          npm audit --audit-level=high --only=prod || exit 0
+        continue-on-error: true
+
+      - name: Ejecutar npm audit (completo)
+        id: audit-all
+        run: |
+          echo "=== Auditoría COMPLETA (prod + dev) ==="
+          npm audit --audit-level=moderate || exit 0
+        continue-on-error: true
+
+      - name: Verificar vulnerabilidades críticas
+        id: check-critical
+        run: |
+          echo "=== Verificando vulnerabilidades CRÍTICAS y ALTAS ==="
+          AUDIT_RESULT=$(npm audit --audit-level=high --json || echo '{}')
+
+          # Filtrar SOLO high y critical (ignorar moderate, low, info)
+          HIGH_CRITICAL=$(echo "$AUDIT_RESULT" | jq -r '
+            .metadata.vulnerabilities |
+            {high: .high, critical: .critical} |
+            to_entries[] |
+            select(.value > 0) |
+            "\(.key): \(.value)"
+          ' || echo "none")
+
+          # Obtener información de TODOS los niveles para contexto
+          CRITICAL=$(echo "$AUDIT_RESULT" | jq -r '.metadata.vulnerabilities.critical // 0')
+          HIGH=$(echo "$AUDIT_RESULT" | jq -r '.metadata.vulnerabilities.high // 0')
+          MODERATE=$(echo "$AUDIT_RESULT" | jq -r '.metadata.vulnerabilities.moderate // 0')
+          LOW=$(echo "$AUDIT_RESULT" | jq -r '.metadata.vulnerabilities.low // 0')
+          INFO=$(echo "$AUDIT_RESULT" | jq -r '.metadata.vulnerabilities.info // 0')
+
+          # Guardar datos para usar en comentarios posteriores
+          echo "high_critical=$HIGH_CRITICAL" >> $GITHUB_OUTPUT
+          echo "critical=$CRITICAL" >> $GITHUB_OUTPUT
+          echo "high=$HIGH" >> $GITHUB_OUTPUT
+          echo "moderate=$MODERATE" >> $GITHUB_OUTPUT
+          echo "low=$LOW" >> $GITHUB_OUTPUT
+          echo "info=$INFO" >> $GITHUB_OUTPUT
+
+          if [ "$HIGH_CRITICAL" != "none" ] && [ ! -z "$HIGH_CRITICAL" ]; then
+            echo "::error::¡Vulnerabilidades CRÍTICAS o ALTAS detectadas!"
+            echo "::error::$HIGH_CRITICAL"
+            exit 1
+          else
+            echo "::notice::✅ No se encontraron vulnerabilidades críticas o altas"
+
+            # Mostrar moderate/low/info como warnings (no fallan el job)
+            if [ "$MODERATE" -gt 0 ]; then
+              echo "::warning::ℹ️ Se encontraron $MODERATE vulnerabilidades MODERATE (no bloquean el build)"
+            fi
+            if [ "$LOW" -gt 0 ]; then
+              echo "::warning::ℹ️ Se encontraron $LOW vulnerabilidades LOW"
+            fi
+            if [ "$INFO" -gt 0 ]; then
+              echo "::notice::ℹ️ Se encontraron $INFO vulnerabilidades INFO"
+            fi
+          fi
+
+      - name: Generar reporte de auditoría
+        if: always()
+        run: |
+          echo "=== REPORTE DE AUDITORÍA DE SEGURIDAD ==="
+          echo "Fecha: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
+          echo "Rama: ${GITHUB_REF#refs/heads/}"
+          echo "Commit: $GITHUB_SHA"
+          echo ""
+          npm audit --json > audit-report.json || true
+
+          if [ -f audit-report.json ]; then
+            echo "Total de dependencias:"
+            jq -r '.metadata.dependencies' audit-report.json || echo "N/A"
+            echo ""
+            echo "Vulnerabilidades por severidad:"
+            jq -r '.metadata.vulnerabilities' audit-report.json || echo "N/A"
+          fi
+
+      - name: Subir reporte como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-audit-report-${{ github.run_number }}
+          path: ./servicios/audit-report.json
+          retention-days: 30
+
+      - name: Comentar en PR con contexto completo
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v8
+        env:
+          CRITICAL: ${{ steps.check-critical.outputs.critical }}
+          HIGH: ${{ steps.check-critical.outputs.high }}
+          MODERATE: ${{ steps.check-critical.outputs.moderate }}
+          LOW: ${{ steps.check-critical.outputs.low }}
+          INFO: ${{ steps.check-critical.outputs.info }}
+        with:
+          script: |
+            const script = require('./.github/scripts/security-audit-comment.js');
+            await script({github, context});

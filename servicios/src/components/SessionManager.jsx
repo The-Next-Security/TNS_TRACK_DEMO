@@ -3,24 +3,40 @@
 // Feature: 003-fix-session-expiry-handling
 
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { SessionExpiryWarning } from './SessionExpiryWarning';
-import { LogoutReason } from '../constants/LogoutReason';
-import { setLogoutReason } from '../utils/sessionUtils';
-import { broadcastLogout } from '../utils/crossTabSync';
-import { useCrossTabLogout } from '../hooks/useCrossTabLogout';
-import analyticsService from '../services/analyticsService';
+import { LogoutReason } from '../constants/logoutReason_Constants';
+import { setLogoutReason } from '../utils/session_Utils';
+import { broadcastLogout } from '../utils/crossTabSync_Utils';
+import { useCrossTabLogout } from '../hooks/useCrossTabLogout_Hook';
+import analyticsService from '../services/analytics_Service';
+import { useAuth } from '../context/AuthContext';
 
 // Warning threshold: show warning 5 minutes before expiry
 const WARNING_THRESHOLD_SECONDS = 300;
 
+function _performLogout(reason) {
+  const refreshToken = localStorage.getItem('refreshToken');
+  localStorage.removeItem('accessToken');
+  localStorage.removeItem('refreshToken');
+
+  // Llamar logout endpoint para revocar refresh en servidor (fire and forget)
+  axios.post('/api/auth/logout', refreshToken ? { refreshToken } : {})
+    .catch((error) => {
+      console.error('[SessionManager] Error calling /logout:', error);
+    });
+
+  broadcastLogout(reason);
+  window.location.href = '/TNSTrack/';
+}
+
 /**
  * SessionManager Component
- * Monitors session expiration and shows warning when threshold is reached
- *
- * @param {Object} props
- * @param {boolean} props.isAuthenticated - Whether user is authenticated
+ * Monitors session expiration and shows warning when threshold is reached.
+ * Obtiene isAuthenticated desde AuthContext (fuente única de verdad).
  */
-export function SessionManager({ isAuthenticated, children }) {
+export function SessionManager({ children }) {
+  const { isAuthenticated } = useAuth();
   const [sessionData, setSessionData] = useState(null);
   const [showWarning, setShowWarning] = useState(false);
 
@@ -35,78 +51,25 @@ export function SessionManager({ isAuthenticated, children }) {
       return;
     }
 
-    // Poll /api/auth/validate every 30 seconds to get session metadata
+    // Poll /api/auth/validate every 30 seconds para obtener metadata de sesión
     const pollSession = async () => {
       try {
-        const response = await fetch('/api/auth/validate', {
-          credentials: 'include',
-          cache: 'no-store' // Force no-cache from client side too
-        });
-
-        if (!response.ok) {
-          // If 401, treat as session expired
-          if (response.status === 401) {
-            // Store logout reason SYNCHRONOUSLY
-            try {
-              localStorage.setItem('tns_logout_reason', 'session_expired');
-            } catch (err) {
-              console.error('[SessionManager] Failed to store logout reason:', err);
-            }
-
-            // Broadcast to other tabs
-            broadcastLogout(LogoutReason.SESSION_EXPIRED);
-
-            // Track in analytics
-            analyticsService.trackEvent('session_auto_expired', {
-              timestamp: Date.now()
-            });
-
-            // Call logout endpoint (fire and forget)
-            fetch('/api/auth/logout', {
-              method: 'POST',
-              credentials: 'include'
-            }).catch((error) => {
-              console.error('[SessionManager] Error calling /logout:', error);
-            });
-
-            // Redirect immediately (localStorage is already written synchronously)
-            window.location.href = '/TNSTrack/';
-          }
-          return;
-        }
-
-        const data = await response.json();
+        const response = await axios.get('/api/auth/validate');
+        const data = response.data;
 
         if (data.session) {
           setSessionData(data.session);
 
           // AUTO-LOGOUT: If session expired (timeRemaining === 0)
           if (data.session.timeRemaining === 0) {
-            // Store logout reason SYNCHRONOUSLY
             try {
               localStorage.setItem('tns_logout_reason', 'session_expired');
             } catch (err) {
               console.error('[SessionManager] Failed to store logout reason:', err);
             }
 
-            // Broadcast to other tabs
-            broadcastLogout(LogoutReason.SESSION_EXPIRED);
-
-            // Track in analytics
-            analyticsService.trackEvent('session_auto_expired', {
-              timestamp: Date.now()
-            });
-
-            // Call logout endpoint (fire and forget)
-            fetch('/api/auth/logout', {
-              method: 'POST',
-              credentials: 'include'
-            }).catch((error) => {
-              console.error('[SessionManager] Error calling /logout:', error);
-            });
-
-            // Redirect immediately (localStorage is already written synchronously)
-            window.location.href = '/TNSTrack/';
+            analyticsService.trackEvent('session_auto_expired', { timestamp: Date.now() });
+            _performLogout(LogoutReason.SESSION_EXPIRED);
             return;
           }
 
@@ -116,14 +79,16 @@ export function SessionManager({ isAuthenticated, children }) {
               setShowWarning(true);
             }
           } else {
-            // Hide warning if user extended session
             if (showWarning) {
               setShowWarning(false);
             }
           }
         }
       } catch (error) {
-        console.error('[SessionManager] Error polling session:', error);
+        // axios interceptor ya maneja 401 → auto-refresh o auth:unauthorized
+        if (error.response?.status !== 401) {
+          console.error('[SessionManager] Error polling session:', error);
+        }
       }
     };
 
@@ -141,41 +106,31 @@ export function SessionManager({ isAuthenticated, children }) {
   const handleLogoutClick = async () => {
     console.log('[SessionManager] User initiated logout from warning');
 
-    // Store logout reason
     setLogoutReason(LogoutReason.USER_INITIATED_FROM_WARNING);
 
-    // Broadcast to other tabs
-    broadcastLogout(LogoutReason.USER_INITIATED_FROM_WARNING);
-
-    // Track in analytics
     analyticsService.trackEvent('logout_from_warning', {
       timeRemaining: sessionData?.timeRemaining,
       timestamp: Date.now()
     });
 
-    // Call logout endpoint
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include'
-      });
-    } catch (error) {
-      console.error('[SessionManager] Error calling /logout:', error);
-    }
+      localStorage.setItem('tns_logout_reason', LogoutReason.USER_INITIATED_FROM_WARNING);
+    } catch (err) { /* ignore */ }
 
-    // Redirect to login
-    window.location.href = '/TNSTrack/';
+    _performLogout(LogoutReason.USER_INITIATED_FROM_WARNING);
   };
 
   const handleSessionExtended = (result) => {
-    // Update session data
+    // Actualizar tokens en localStorage tras extend-session
+    if (result.accessToken) localStorage.setItem('accessToken', result.accessToken);
+    if (result.refreshToken) localStorage.setItem('refreshToken', result.refreshToken);
+
     setSessionData({
       expiresAt: result.expiresAt,
       expiresIn: result.expiresIn,
       timeRemaining: result.expiresIn
     });
 
-    // Hide warning
     setShowWarning(false);
   };
 

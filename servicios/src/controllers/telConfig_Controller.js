@@ -1,0 +1,124 @@
+const databaseService = require("../services/database_Service");
+const { ValidationError } = require("../utils/errors_Utils");
+
+class tel_ConfigController {
+  async getSystemParameters(req, res, next) {
+    try {
+      // Ejecutar una consulta SQL para seleccionar todos los registros de la tabla 'configuracion'
+      const [results] = await databaseService.pool.query("SELECT * FROM configuracion");
+
+      // Enviar los resultados de la consulta como una respuesta JSON
+      res.json(results);
+    } catch (error) {
+      // Registrar cualquier error que ocurra durante la ejecución de la consulta
+      console.error("Error fetching configuration:", error);
+
+      // Enviar una respuesta de error 500 (Internal Server Error) con un mensaje de error
+      res.status(500).send("Server Error");
+    }
+  }
+
+  async updateSystemParameters(req, res, next) {
+    // Obtener las configuraciones del cuerpo de la solicitud
+    const configuraciones = req.body;
+
+    try {
+      // Vaciar la tabla 'configuracion' antes de insertar nuevas configuraciones
+      await databaseService.pool.query("TRUNCATE TABLE configuracion");
+
+      // Insertar cada configuración en la tabla 'configuracion'
+      for (const config of configuraciones) {
+        await databaseService.pool.query(
+          "INSERT INTO configuracion (beacon_id, min_tiempo_permanencia, max_tiempo_permanencia, umbral_verde, umbral_amarillo, umbral_rojo) VALUES (?, ?, ?, ?, ?, ?)",
+          [
+            config.beacon_id,
+            config.min_tiempo_permanencia,
+            config.max_tiempo_permanencia,
+            config.umbral_verde,
+            config.umbral_amarillo,
+            config.umbral_rojo,
+          ]
+        );
+      }
+
+      // Enviar una respuesta de éxito
+      res.sendStatus(200);
+    } catch (error) {
+      // Registrar cualquier error que ocurra durante la actualización de la configuración
+      console.error("Error updating configuration:", error);
+
+      // Enviar una respuesta de error 500 (Internal Server Error) con un mensaje de error
+      res.status(500).send("Server Error");
+    }
+  }
+
+  // MÓDULO FUTURO - Teltonika Beacons
+  // Configuración de beacons individuales requiere schema tel_* (no implementado)
+  async configurarBeacon(req, res, next) {
+    return res.status(501).json({
+      success: false,
+      message: 'Configuración de Beacon no disponible en esta versión.',
+      module: 'beacons',
+      futureIssue: 'Pendiente de desarrollo en releases posteriores'
+    });
+  }
+
+  async getConfigTemperaturaUmbral(req, res, next) {
+    // TODO: Implementar con tabla tel_* para umbrales Teltonika BLE (ver Issue #32)
+    // Requiere diseño de schema con prefijo tel_ antes de implementar
+    return res.status(501).json({
+      error: "Not Implemented",
+      message: "Endpoint deshabilitado temporalmente. Pendiente migración con schema tel_* (Issue #32).",
+    });
+  }
+
+  async setConfigTemperaturaUmbral(req, res, next) {
+    // TODO: Implementar con tabla tel_* para umbrales Teltonika BLE (ver Issue #32)
+    // Requiere diseño de schema con prefijo tel_ antes de implementar
+    return res.status(501).json({
+      error: "Not Implemented",
+      message: "Endpoint deshabilitado temporalmente. Pendiente migración con schema tel_* (Issue #32).",
+    });
+  }
+
+  async getConfigUmbrales(req, res, next) {
+    try {
+      // Ejecutar una consulta SQL para seleccionar el primer registro de la tabla 'umbrales'
+      const [results] = await databaseService.pool.query("SELECT * FROM configuracion LIMIT 1");
+
+      // Enviar el primer resultado de la consulta como una respuesta JSON
+      res.json(results[0]);
+    } catch (error) {
+      // Registrar cualquier error que ocurra durante la ejecución de la consulta
+      console.error("Error fetching thresholds:", error);
+
+      // Enviar una respuesta de error 500 (Internal Server Error) con un mensaje de error
+      res.status(500).send("Server Error");
+    }
+  }
+
+  async setConfigUmbrales(req, res, next) {
+    // Extraer los umbrales del cuerpo de la solicitud
+    const { umbral_verde, umbral_amarillo, umbral_rojo } = req.body;
+    try {
+      // Vaciar la tabla 'umbrales' antes de insertar nuevos umbrales
+      await databaseService.pool.query("TRUNCATE TABLE configuracion");
+
+      // Insertar los nuevos umbrales en la tabla 'umbrales'
+      await databaseService.pool.query(
+        "INSERT INTO umbrales (umbral_verde, umbral_amarillo, umbral_rojo) VALUES (?, ?, ?)",
+        [umbral_verde, umbral_amarillo, umbral_rojo]
+      );
+
+      // Enviar una respuesta de éxito
+      res.sendStatus(200);
+    } catch (error) {
+      // Registrar cualquier error que ocurra durante la actualización de los umbrales
+      console.error("Error updating thresholds:", error);
+
+      // Enviar una respuesta de error 500 (Internal Server Error) con un mensaje de error
+      res.status(500).send("Server Error");
+    }
+  }
+}
+module.exports = new tel_ConfigController();
