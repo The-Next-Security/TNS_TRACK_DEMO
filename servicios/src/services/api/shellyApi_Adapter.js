@@ -17,13 +17,18 @@ class ShellyApiAdapter {
      */
     init() {
         const appConfig = config.getConfig();
+        const shellyCloud = appConfig.api?.shelly_cloud || {};
         this.config = {
-            baseUrl: appConfig.api.shelly_cloud.url,
-            deviceId: appConfig.api.shelly_cloud.device_id,
-            authKey: appConfig.api.shelly_cloud.auth_key,
+            baseUrl: shellyCloud.url || null,
+            deviceId: shellyCloud.device_id || null,
+            authKey: shellyCloud.auth_key || null,
             timeout: 10000
         };
-        console.log('ShellyApiAdapter inicializado');
+        if (!this.config.baseUrl || !this.config.deviceId || !this.config.authKey) {
+            console.warn('[ShellyApiAdapter] ⚠️  Credenciales Shelly Cloud incompletas (id=29,30,31). Adapter sin inicializar completamente.');
+        } else {
+            console.log('ShellyApiAdapter inicializado');
+        }
     }
 
     /**

@@ -52,6 +52,8 @@ import {
   SelectValue
 } from "@/components/ui/select";
 
+/* MÓDULO FUTURO - Teltonika/Beacons: pendiente de desarrollo */
+
 MapboxGL.accessToken = process.env.REACT_APP_MAPBOX_ACCESS_TOKEN;
 
 const defaultPosition = { lat: -33.4489, lng: -70.6693 };
@@ -95,7 +97,7 @@ function LastKnownPositionV2({ showHeader = true }) {
   useEffect(() => {
     const fetchDevices = async () => {
       try {
-        const response = await axios.get("/api/devices/devices");
+        const response = await axios.get("/api/energia/dispositivos/legacy");
         console.log("Fetched devices:", response.data);
         setDevices(response.data);
       } catch (error) {

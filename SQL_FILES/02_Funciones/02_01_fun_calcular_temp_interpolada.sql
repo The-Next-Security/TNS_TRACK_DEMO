@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` FUNCTION `tns_cool_track`.`fun_calcular_temp_interpolada`(
+CREATE FUNCTION `tns_cool_track`.`fun_calcular_temp_interpolada`(
     p_registro_id INT,
     p_id_canal INT,
     p_timestamp DATETIME

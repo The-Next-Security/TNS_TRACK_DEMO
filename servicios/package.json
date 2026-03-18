@@ -98,6 +98,7 @@
     "@babel/plugin-transform-runtime": "^7.29.0",
     "@babel/preset-env": "^7.29.2",
     "@babel/preset-react": "^7.27.1",
+    "@tailwindcss/postcss": "^4.2.1",
     "autoprefixer": "^10.4.27",
     "babel-loader": "^10.1.1",
     "baseline-browser-mapping": "^2.9.7",

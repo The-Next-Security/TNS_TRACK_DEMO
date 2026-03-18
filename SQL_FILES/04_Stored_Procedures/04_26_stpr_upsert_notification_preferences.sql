@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_upsert_notification_preferences`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_upsert_notification_preferences`(
     IN p_id_suscripcion INT,
     IN p_dnd_habilitado BOOLEAN,
     IN p_hora_inicio_dnd TIME,

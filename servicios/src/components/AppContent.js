@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useAuth } from "../context/AuthContext";
 import { Route, Routes, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import DashboardElectrico from "./DashboardElectrico_View";
@@ -30,33 +31,23 @@ import AIAnalysisView from "./AIAnalysis_View";
 import ReportGeneratorView from "./reports/ReportGenerator_View";
 import ReportSchedulerView from "./reports/ReportScheduler_View";
 import ReportHistoryPageView from "./reports/ReportHistoryPage_View";
+import Dashboard from "./Dashboard_View";
+import BlindSpotIntrusions from "./BlindSpotIntrusions_View";
+import UbicacionTiempoRealInterior from "./UbicacionTiempoRealInterior_View";
+import DoorStatusMatrix from "./DoorStatusMatrix_View";
+import Presencia from "./Presencia_View";
+import SmsData from "./SmsData_View";
+import Temperatura from "./Temperatura_View";
 import "core-js/stable";
 import "regenerator-runtime/runtime";
 
-// ✅ Nuevo PrivateRoute basado en validación de cookies httpOnly
+// ✅ PrivateRoute — consume AuthContext como fuente única de verdad
 const PrivateRoute = ({ children, userPermissions }) => {
-  const [isAuthenticated, setIsAuthenticated] = React.useState(null);
+  const { isAuthenticated, isLoading } = useAuth();
   const location = useLocation();
 
-  React.useEffect(() => {
-    // Validar autenticación con el backend (las cookies se envían automáticamente)
-    fetch('/api/auth/validate', {
-      credentials: 'include' // ✅ Importante para enviar cookies
-    })
-      .then(res => {
-        if (res.ok) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-        }
-      })
-      .catch(() => {
-        setIsAuthenticated(false);
-      });
-  }, []);
-
-  // Mostrar loading mientras verifica
-  if (isAuthenticated === null) {
+  // Mostrar loading mientras AuthProvider verifica la sesión inicial
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -67,16 +58,13 @@ const PrivateRoute = ({ children, userPermissions }) => {
     );
   }
 
-  // Si no está autenticado, guardar URL y redirigir al login
+  // Si no está autenticado, guardar URL con parámetros de alerta y redirigir
   if (!isAuthenticated) {
-    // ✅ NUEVO: Guardar URL completa (pathname + search params) para redirigir después del login
-    // Solo guardar si tiene parámetros de alerta para evitar loops innecesarios
     const fullPath = location.pathname + location.search;
     if (location.search.includes('alertId') || location.search.includes('channelId')) {
       sessionStorage.setItem('redirectAfterLogin', fullPath);
       console.log('[PrivateRoute] URL guardada para redirect después del login:', fullPath);
     }
-
     return <Navigate to="/" replace />;
   }
 
@@ -84,27 +72,12 @@ const PrivateRoute = ({ children, userPermissions }) => {
 };
 
 function AppContent() {
-  const [userPermissions, setUserPermissions] = useState([]);
+  const { userPermissions } = useAuth();
   const [isNavExpanded, setIsNavExpanded] = useState(false);
   const [backgroundColor, setBackgroundColor] = useState("#E1E9F2");
   const location = useLocation();
 
   useEffect(() => {
-    // ✅ Obtener permisos desde el endpoint de validación en vez de localStorage
-    fetch('/api/auth/validate', { credentials: 'include' })
-      .then(res => res.ok ? res.json() : null)
-      .then(data => {
-        if (data && data.user && data.user.permissions) {
-          const perms = typeof data.user.permissions === 'string'
-            ? data.user.permissions.split(",")
-            : data.user.permissions;
-          setUserPermissions(perms);
-        }
-      })
-      .catch(error => {
-        console.error("Error fetching user permissions:", error);
-      });
-
     const savedColor = localStorage.getItem("appBackgroundColor");
     if (savedColor) {
       setBackgroundColor(savedColor);
@@ -298,6 +271,78 @@ function AppContent() {
           element={
             <PrivateRoute userPermissions={userPermissions}>
               <AIAnalysisView userPermissions={userPermissions} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/blind-spot-intrusions"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <BlindSpotIntrusions />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ubicaciones-interior"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <UbicacionTiempoRealInterior />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/door-status-matrix"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <DoorStatusMatrix />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/presencia"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <Presencia />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/sms-data"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <SmsData />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/temperatura"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <Temperatura />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/configuracion"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <Configuration />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/inteligencia-de-datos"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <IntelligenciaDatosTemperatura />
             </PrivateRoute>
           }
         />

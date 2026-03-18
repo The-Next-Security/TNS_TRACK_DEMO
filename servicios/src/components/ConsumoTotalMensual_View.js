@@ -139,7 +139,7 @@ const ConsumoTotalMensualV2 = () => {
 
     try {
       const formattedDate = DateTime.fromJSDate(dateToFetch).toFormat("yyyy-MM-dd");
-      const response = await axios.get(`/api/totals/monthly/${formattedDate}`, {
+      const response = await axios.get(`/api/energia/totales/mensual/${formattedDate}`, {
         params: { deviceId: deviceToFetch.shelly_id },
       });
 

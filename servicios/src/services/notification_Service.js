@@ -290,14 +290,18 @@ class NotificationService {
             const nonOperativeCount = nonOperativeResult[0]?.count || 0;
 
             // Obtener canales operativos
-            // Migrado: channels_ubibot → ubi_canal, parametrizaciones → ubi_presets_temperatura
+            // Migrado: channels_ubibot → ubi_canal, parametrizaciones → ubi_grupo
+            // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
             // Aliases preservan nombres de variables JS downstream (channel_id, channelName, minThreshold, maxThreshold, id_parametrizacion)
             const [channels] = await connection.query(
                 `SELECT c.canal_id AS channel_id, c.nombre AS channelName,
-                        p.temperatura_minima AS minThreshold, p.temperatura_maxima AS maxThreshold,
+                        COALESCE(c.umbral_min, g.temperatura_minima) AS minThreshold,
+                        COALESCE(c.umbral_max, g.temperatura_maxima) AS maxThreshold,
                         c.id_preset AS id_parametrizacion
-                 FROM ubi_canal c JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
-                 WHERE c.activo = 1 AND p.temperatura_minima IS NOT NULL AND p.temperatura_maxima IS NOT NULL`
+                 FROM ubi_canal c JOIN ubi_grupo g ON c.id_preset = g.id_preset
+                 WHERE c.activo = 1
+                   AND COALESCE(c.umbral_min, g.temperatura_minima) IS NOT NULL
+                   AND COALESCE(c.umbral_max, g.temperatura_maxima) IS NOT NULL`
             );
             console.log(`[NotificationService] ${channels.length} canales operativos encontrados (${nonOperativeCount} canales no operativos omitidos, ${totalChannels} total).`);
 

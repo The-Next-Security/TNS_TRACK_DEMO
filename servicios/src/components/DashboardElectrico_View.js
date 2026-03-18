@@ -129,9 +129,9 @@ const DashboardElectricoV2 = () => {
     try {
       console.log('[DashboardElectrico] 🔄 Iniciando fetchDeviceData...');
       setLoading(true);
-      const response = await axios.get('/api/devices/latest-measurements');
+      const response = await axios.get('/api/energia/dispositivos/ultimas-mediciones');
 
-      console.log('[DashboardElectrico] 📦 Response from /api/devices/latest-measurements:', {
+      console.log('[DashboardElectrico] 📦 Response from /api/energia/dispositivos/ultimas-mediciones:', {
         status: response.status,
         success: response.data.success,
         dataLength: Array.isArray(response.data.data) ? response.data.data.length : 0,
@@ -176,7 +176,7 @@ const DashboardElectricoV2 = () => {
 
         try {
           console.log(`[DashboardElectrico] 🔄 Obteniendo categoría para ${device.deviceId} (${device.location}) con potencia ${device.activePower}W`);
-          const response = await axios.get('/api/consumo/categoria', {
+          const response = await axios.get('/api/energia/consumo/categorias', {
             params: {
               valor: device.activePower,
               deviceId: device.deviceId

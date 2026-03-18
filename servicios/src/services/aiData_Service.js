@@ -36,8 +36,8 @@ class AIDataService {
     const placeholders = chamberIds.map(() => '?').join(',');
     
     // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal;
-    // parametrizaciones → ubi_presets_temperatura
-    // SUPUESTO #3: threshold_min/max provienen del preset del grupo (ubi_presets_temperatura)
+    // parametrizaciones → ubi_grupo
+    // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
     // chamberIds son API IDs (canal_id) → resueltos via subquery a id_canal
     const query = `
       SELECT
@@ -46,13 +46,13 @@ class AIDataService {
         sr.temperatura_externa AS temperature,
         sr.fecha_lectura_externa AS timestamp,
         c.nombre AS chamber_name,
-        p.temperatura_minima AS threshold_min,
-        p.temperatura_maxima AS threshold_max,
-        'group' AS threshold_type,
+        COALESCE(c.umbral_min, g.temperatura_minima) AS threshold_min,
+        COALESCE(c.umbral_max, g.temperatura_maxima) AS threshold_max,
+        CASE WHEN c.umbral_min IS NOT NULL THEN 'individual' ELSE 'group' END AS threshold_type,
         'ubibot' AS sensor_type
       FROM ubi_lecturas_sensor sr
       JOIN ubi_canal c ON sr.id_canal = c.id_canal
-      LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+      LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
       WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
         AND sr.fecha_lectura_externa BETWEEN ? AND ?
         AND sr.temperatura_externa IS NOT NULL
@@ -75,8 +75,8 @@ class AIDataService {
     const placeholders = chamberIds.map(() => '?').join(',');
     
     // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal;
-    // parametrizaciones → ubi_presets_temperatura
-    // SUPUESTO #3: threshold_min/max del preset del grupo
+    // parametrizaciones → ubi_grupo
+    // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
     const query = `
       SELECT
         DATE(sr.fecha_lectura_externa) AS date,
@@ -87,23 +87,23 @@ class AIDataService {
         MAX(sr.temperatura_externa) AS max_temp,
         STDDEV(sr.temperatura_externa) AS std_dev,
         COUNT(*) AS reading_count,
-        p.temperatura_minima AS threshold_min,
-        p.temperatura_maxima AS threshold_max,
+        COALESCE(c.umbral_min, g.temperatura_minima) AS threshold_min,
+        COALESCE(c.umbral_max, g.temperatura_maxima) AS threshold_max,
         SUM(CASE
-          WHEN sr.temperatura_externa < p.temperatura_minima
-            OR sr.temperatura_externa > p.temperatura_maxima
+          WHEN sr.temperatura_externa < COALESCE(c.umbral_min, g.temperatura_minima)
+            OR sr.temperatura_externa > COALESCE(c.umbral_max, g.temperatura_maxima)
           THEN 1 ELSE 0
         END) AS breach_count,
-        'group' AS threshold_type,
+        CASE WHEN c.umbral_min IS NOT NULL THEN 'individual' ELSE 'group' END AS threshold_type,
         'ubibot' AS sensor_type
       FROM ubi_lecturas_sensor sr
       JOIN ubi_canal c ON sr.id_canal = c.id_canal
-      LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+      LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
       WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
         AND sr.fecha_lectura_externa BETWEEN ? AND ?
         AND sr.temperatura_externa IS NOT NULL
       GROUP BY DATE(sr.fecha_lectura_externa), c.canal_id, c.nombre,
-               p.temperatura_minima, p.temperatura_maxima
+               c.umbral_min, c.umbral_max, g.temperatura_minima, g.temperatura_maxima
       ORDER BY c.canal_id, date ASC
     `;
 

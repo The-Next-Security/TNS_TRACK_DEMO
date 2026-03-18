@@ -372,10 +372,10 @@ const AlertMetricsDashboardV2 = () => {
 
       // Realizar todas las peticiones en paralelo
       const [metricsRes, dailyRes, byTypeRes, byChannelRes] = await Promise.all([
-        axios.get("/api/alerts/metrics/summary", { params }),
-        axios.get("/api/alerts/metrics/chart-data", { params: { ...chartParams, type: "daily" } }),
-        axios.get("/api/alerts/metrics/chart-data", { params: { ...chartParams, type: "by_type" } }),
-        axios.get("/api/alerts/metrics/chart-data", { params: { ...chartParams, type: "by_channel" } })
+        axios.get("/api/alertas/metricas/resumen", { params }),
+        axios.get("/api/alertas/metricas/grafico", { params: { ...chartParams, type: "daily" } }),
+        axios.get("/api/alertas/metricas/grafico", { params: { ...chartParams, type: "by_type" } }),
+        axios.get("/api/alertas/metricas/grafico", { params: { ...chartParams, type: "by_channel" } })
       ]);
 
       // Procesar respuestas

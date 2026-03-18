@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` FUNCTION `tns_cool_track`.`fun_should_send_notification`(
+CREATE FUNCTION `tns_cool_track`.`fun_should_send_notification`(
     p_id_suscripcion INT,
     p_alert_type VARCHAR(20),
     p_is_critical BOOLEAN

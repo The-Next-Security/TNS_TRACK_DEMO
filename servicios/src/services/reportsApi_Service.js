@@ -8,6 +8,12 @@
 
 const API_BASE = '/api/reports';
 
+// Helper para incluir Authorization header en cada request
+const _authHeaders = () => {
+  const token = localStorage.getItem('accessToken');
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
+
 /**
  * Manejo centralizado de errores HTTP
  * @param {Response} response - Response object de fetch
@@ -50,9 +56,9 @@ const reportsApiService = {
    */
   async getTemplates() {
     const response = await fetch(`${API_BASE}/templates`, {
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       }
     });
 
@@ -85,9 +91,9 @@ const reportsApiService = {
 
     const response = await fetch(`${API_BASE}/generate`, {
       method: 'POST',
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       },
       body: JSON.stringify(payload)
     });
@@ -119,9 +125,9 @@ const reportsApiService = {
     if (filters.sortOrder) queryParams.append('sortOrder', filters.sortOrder);
 
     const response = await fetch(`${API_BASE}/history?${queryParams}`, {
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       }
     });
 
@@ -135,7 +141,7 @@ const reportsApiService = {
    */
   async downloadReport(reportId) {
     const response = await fetch(`${API_BASE}/download/${reportId}`, {
-      credentials: 'include'
+      headers: { ..._authHeaders() }
     });
 
     if (!response.ok) {
@@ -188,9 +194,9 @@ const reportsApiService = {
   async sendEmail(data) {
     const response = await fetch(`${API_BASE}/send-email`, {
       method: 'POST',
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       },
       body: JSON.stringify(data)
     });
@@ -204,9 +210,9 @@ const reportsApiService = {
    */
   async getSchedules() {
     const response = await fetch(`${API_BASE}/scheduled`, {
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       }
     });
 
@@ -221,9 +227,9 @@ const reportsApiService = {
   async createSchedule(schedule) {
     const response = await fetch(`${API_BASE}/scheduled`, {
       method: 'POST',
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       },
       body: JSON.stringify(schedule)
     });
@@ -240,9 +246,9 @@ const reportsApiService = {
   async updateSchedule(scheduleId, updates) {
     const response = await fetch(`${API_BASE}/scheduled/${scheduleId}`, {
       method: 'PUT',
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       },
       body: JSON.stringify(updates)
     });
@@ -258,9 +264,9 @@ const reportsApiService = {
   async deleteSchedule(scheduleId) {
     const response = await fetch(`${API_BASE}/scheduled/${scheduleId}`, {
       method: 'DELETE',
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       }
     });
 
@@ -273,9 +279,9 @@ const reportsApiService = {
    */
   async getElectricDevices() {
     const response = await fetch('/api/devices/active', {
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       }
     });
 
@@ -288,9 +294,9 @@ const reportsApiService = {
    */
   async getTariffConfig() {
     const response = await fetch('/api/config/tariffs', {
-      credentials: 'include',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        ..._authHeaders()
       }
     });
 

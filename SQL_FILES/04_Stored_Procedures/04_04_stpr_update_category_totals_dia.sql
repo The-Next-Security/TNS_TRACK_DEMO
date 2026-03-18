@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_update_category_totals_dia`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_update_category_totals_dia`(
     p_inicio DATE,
     p_fin DATE
 )

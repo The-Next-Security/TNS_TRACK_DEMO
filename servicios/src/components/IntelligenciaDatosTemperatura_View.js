@@ -116,7 +116,7 @@ const IntelligenciaDatosTemperaturaV2 = () => {
    */
   const fetchDevices = async () => {
     try {
-      const response = await axios.get("/api/ubibot/temperature-devices");
+      const response = await axios.get("/api/temperatura/dispositivos");
       setDevices(response.data);
     } catch (error) {
       console.error("Error fetching devices:", error);
@@ -186,7 +186,7 @@ const IntelligenciaDatosTemperaturaV2 = () => {
         "and device:",
         selectedDevice
       );
-      const response = await axios.get("/api/ubibot/temperature-range-data", {
+      const response = await axios.get("/api/temperatura/rango", {
         params: {
           startDate: startFormatted,
           endDate: endFormatted,

@@ -93,7 +93,7 @@ const TemperaturaCamarasV2 = () => {
     try {
       const formattedDate = DateTime.fromJSDate(date).toFormat("yyyy-MM-dd");
       console.log("Fetching data for date:", formattedDate);
-      const response = await axios.get("/api/ubibot/temperature-camaras-data", {
+      const response = await axios.get("/api/temperatura/camaras", {
         params: { date: formattedDate },
       });
       console.log("Datos recibidos:", response.data);

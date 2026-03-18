@@ -107,7 +107,7 @@ class MetricsAggregationJob {
 
                 // Llamar al stored procedure
                 const [results] = await connection.query(
-                    'CALL sp_calculate_hourly_metrics(?, ?)',
+                    'CALL stpr_calculate_hourly_metrics(?, ?)',
                     [targetDate, targetHour]
                 );
 

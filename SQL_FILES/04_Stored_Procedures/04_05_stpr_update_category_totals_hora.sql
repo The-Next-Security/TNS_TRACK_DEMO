@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_update_category_totals_hora`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_update_category_totals_hora`(
     p_inicio TIMESTAMP,
     p_fin TIMESTAMP
 )

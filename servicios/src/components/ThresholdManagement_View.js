@@ -90,7 +90,7 @@ const ThresholdManagementV2 = () => {
   const fetchCamerasWithThresholds = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/ubibot/channels/thresholds');
+      const response = await axios.get('/api/temperatura/canales/umbrales');
 
       // Mock data for development
       const mockData = [
@@ -170,7 +170,7 @@ const ThresholdManagementV2 = () => {
   const handleSaveThreshold = async (channelId, thresholds) => {
     setSavingIds(prev => [...prev, channelId]);
     try {
-      await axios.put(`/api/ubibot/channel/${channelId}/thresholds`, thresholds);
+      await axios.put(`/api/temperatura/canales/${channelId}/umbrales`, thresholds);
 
       setCameras(prev => prev.map(cam =>
         cam.channel_id === channelId
@@ -205,7 +205,7 @@ const ThresholdManagementV2 = () => {
 
     try {
       // If backend supports bulk update
-      await axios.put('/api/ubibot/channels/bulk-thresholds', {
+      await axios.put('/api/temperatura/canales/umbrales/bulk', {
         channelIds: selectedChannelIds,
         thresholds
       });

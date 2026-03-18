@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_update_category_totals_mes`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_update_category_totals_mes`(
     p_inicio_anio INT,
     p_inicio_mes INT,
     p_fin_anio INT,

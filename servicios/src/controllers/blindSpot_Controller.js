@@ -1,60 +1,15 @@
-//controllers/blindSpotController.js
-const databaseService = require("../services/database_Service");
-const { ValidationError } = require("../utils/errors_Utils");
-const date_Utils = require("../utils/date_Utils");
-const { DateTime } = require("luxon");
-
-const TIMEZONE = "America/Santiago";
+// MÓDULO FUTURO - Teltonika BlindSpot
+// Pendiente de desarrollo en releases posteriores cuando se integre el hardware Teltonika.
+// Tablas requeridas: historico_llamadas_blindspot, devices, beacons (no existen en schema actual)
 
 class blindSpotController {
-  /**
-   * Maneja la consulta de intrusiones en la zona de blindspot para una fecha dada.
-   * La fecha se proporciona como par metro de consulta "date" en el formato "YYYY-MM-DD".
-   * La respuesta se devuelve en formato JSON y contiene los siguientes campos:
-   *
-   * - dispositivo (string): id del dispositivo que detect  la intrusi n
-   * - mac_address (string): direcci n MAC del dispositivo que detect  la intrusi n
-   * - timestamp (string): fecha y hora de la intrusi n en formato "YYYY-MM-DD HH:mm:ss"
-   * - device_asignado (string): nombre del dispositivo asignado a la zona de blindspot
-   * - ubicacion (string): ubicaci n de la zona de blindspot
-   *
-   * @param {import("express").Request} req
-   * @param {import("express").Response} res
-   */
   async handleBlindSpotIntrusions(req, res) {
-    try {
-      const { date } = req.query;
-
-      // Fecha en zona America/Santiago (Decisiones_Tecnicas §6)
-      const startDt = DateTime.fromFormat(date, "yyyy-MM-dd", { zone: TIMEZONE }).startOf("day");
-      const endDt = startDt.endOf("day");
-
-      const query = `
-          SELECT hc.dispositivo, hc.mac_address, hc.timestamp,
-                 d.device_asignado, b.ubicacion
-          FROM historico_llamadas_blindspot hc
-          LEFT JOIN devices d ON hc.dispositivo = d.id
-          LEFT JOIN beacons b ON hc.mac_address = b.mac
-          WHERE hc.timestamp BETWEEN ? AND ?
-          ORDER BY hc.timestamp ASC
-        `;
-
-      const [rows] = await databaseService.pool.query(query, [
-        startDt.toJSDate(),
-        endDt.toJSDate(),
-      ]);
-
-      // Formato estándar yyyy-MM-dd HH:mm:ss en America/Santiago (§10)
-      const formattedRows = rows.map((row) => ({
-        ...row,
-        timestamp: date_Utils.utcToLocalFormatted(row.timestamp, "yyyy-MM-dd HH:mm:ss", TIMEZONE),
-      }));
-
-      res.json(formattedRows);
-    } catch (error) {
-      console.error("Error fetching blind spot intrusions:", error);
-      res.status(500).send("Server Error");
-    }
+    return res.status(501).json({
+      success: false,
+      message: 'Módulo BlindSpot no disponible en esta versión.',
+      module: 'blindspot',
+      futureIssue: 'Pendiente de desarrollo en releases posteriores'
+    });
   }
 }
 

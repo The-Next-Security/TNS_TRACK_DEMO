@@ -1,9 +1,9 @@
--- Triggers para ubi_presets_temperatura → log_ubi_presets_temperatura
-CREATE TRIGGER `trig_ubi_presets_temperatura_after_insert`
-AFTER INSERT ON `ubi_presets_temperatura`
+-- Triggers para ubi_grupo → log_ubi_grupo
+CREATE TRIGGER `trig_ubi_grupo_after_insert`
+AFTER INSERT ON `ubi_grupo`
 FOR EACH ROW
 BEGIN
-    INSERT INTO `log_ubi_presets_temperatura` (tipo_operacion, id_registro, datos_nuevos, cambiado_por)
+    INSERT INTO `log_ubi_grupo` (tipo_operacion, id_registro, datos_nuevos, cambiado_por)
     VALUES (
         'INSERT',
         NEW.id_preset,
@@ -21,11 +21,11 @@ BEGIN
     );
 END;
 
-CREATE TRIGGER `trig_ubi_presets_temperatura_after_update`
-AFTER UPDATE ON `ubi_presets_temperatura`
+CREATE TRIGGER `trig_ubi_grupo_after_update`
+AFTER UPDATE ON `ubi_grupo`
 FOR EACH ROW
 BEGIN
-    INSERT INTO `log_ubi_presets_temperatura` (tipo_operacion, id_registro, datos_anteriores, datos_nuevos, cambiado_por)
+    INSERT INTO `log_ubi_grupo` (tipo_operacion, id_registro, datos_anteriores, datos_nuevos, cambiado_por)
     VALUES (
         'UPDATE',
         NEW.id_preset,
@@ -53,11 +53,11 @@ BEGIN
     );
 END;
 
-CREATE TRIGGER `trig_ubi_presets_temperatura_after_delete`
-AFTER DELETE ON `ubi_presets_temperatura`
+CREATE TRIGGER `trig_ubi_grupo_after_delete`
+AFTER DELETE ON `ubi_grupo`
 FOR EACH ROW
 BEGIN
-    INSERT INTO `log_ubi_presets_temperatura` (tipo_operacion, id_registro, datos_anteriores, cambiado_por)
+    INSERT INTO `log_ubi_grupo` (tipo_operacion, id_registro, datos_anteriores, cambiado_por)
     VALUES (
         'DELETE',
         OLD.id_preset,

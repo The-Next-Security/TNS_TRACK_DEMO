@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_calcular_cuartiles_consumo`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_calcular_cuartiles_consumo`(
     IN p_primera_ejecucion BOOLEAN
 )
 BEGIN

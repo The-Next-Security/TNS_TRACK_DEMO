@@ -10,7 +10,7 @@
 --   4. sem_tipos_parametros
 --   5. sem_configuracion
 --   6. sem_dispositivos
---   7. ubi_presets_temperatura
+--   7. ubi_grupo
 --   8. ubi_canal
 --   9. gen_tipos_parametros → gen_cofiguracion_grupos
 --      → gen_cofiguracion_parametros → gen_cofiguracion_valores
@@ -234,11 +234,11 @@ INSERT INTO `sem_dispositivos` (`shelly_id`, `nombre`, `tipo`, `id_ubicacion_rea
 
 
 -- ==============================================================================
--- 6. ubi_presets_temperatura
+-- 6. ubi_grupo
 --    Fuente: temperature_presets (teltonika)
 -- ==============================================================================
 
-INSERT INTO `ubi_presets_temperatura` (`id_preset`, `nombre_preset`, `temperatura_minima`, `temperatura_maxima`, `es_predeterminado`, `activo`, `creado_por`, `actualizado_por`) VALUES
+INSERT INTO `ubi_grupo` (`id_preset`, `nombre_preset`, `temperatura_minima`, `temperatura_maxima`, `es_predeterminado`, `activo`, `creado_por`, `actualizado_por`) VALUES
 (1, 'Grupo 1 - Ultra Congelado', -22.00, -13.00, 1, 1, 'SYSTEM', 'SYSTEM'),
 (2, 'Grupo 2 - Refrigerado',      -5.00,   5.00, 1, 1, 'SYSTEM', 'WEB_APP');
 
@@ -251,7 +251,7 @@ INSERT INTO `ubi_presets_temperatura` (`id_preset`, `nombre_preset`, `temperatur
 --    id_dispositivo: device_id original (VARCHAR hex único por canal)
 -- ==============================================================================
 
--- Opción A: umbrales via id_preset (ubi_presets_temperatura). 1=Ultra Congelado (-22/-13), 2=Refrigerado (-5/5). Reefer E con -2/5 → preset 2 (rango cercano).
+-- umbrales via id_preset (ubi_grupo). 1=Ultra Congelado (-22/-13), 2=Refrigerado (-5/5). Reefer E con -2/5 → preset 2 (rango cercano).
 INSERT INTO `ubi_canal` (
     `id_ubicacion_real`, `canal_id`, `nombre`,
     `id_producto`, `id_dispositivo`,
@@ -387,7 +387,7 @@ INSERT INTO `gen_cofiguracion_parametros`
 (29, 9, 1, 'api.shelly_cloud.url',                     'url',                  3, 'api.shelly_cloud',          0, 'URL base de la API Shelly Cloud',                                                  '[CONFIGURAR]', 1, 1),
 (30, 9, 1, 'api.shelly_cloud.device_id',               'device_id',            3, 'api.shelly_cloud',          1, 'ID del dispositivo Shelly Cloud (identificador único)',                            '[CONFIGURAR]', 1, 1),
 (31, 9, 1, 'api.shelly_cloud.auth_key',                'auth_key',             3, 'api.shelly_cloud',          1, 'Clave de autenticación de la API Shelly Cloud',                                    '[CONFIGURAR]', 1, 1),
-(32, 9, 7, 'api.shelly_cloud.collection_interval',     'collection_interval',  3, 'api.shelly_cloud',          0, 'Intervalo de recolección de datos Shelly en milisegundos',                         '10000',        0, 1),
+(32, 9, 7, 'api.shelly_cloud.collection_interval',     'collection_interval',  3, 'api.shelly_cloud',          0, 'Intervalo de recolección de datos Shelly en milisegundos',                         '60000',        0, 1),
 
 -- ── Grupo ubibot (id_grupo=10) → ids 33-36 ───────────────────────────────────
 (33, 10, 1, 'ubibot.account_key',                      'account_key',          2, 'ubibot',                    1, 'Account Key Ubibot para autenticación con la API (32 chars hex)',                   '[CONFIGURAR]',              1, 1),

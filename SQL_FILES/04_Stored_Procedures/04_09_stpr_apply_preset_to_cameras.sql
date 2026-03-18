@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_apply_preset_to_cameras`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_apply_preset_to_cameras`(
     IN p_id_preset INT,
     IN p_ids_canales TEXT, -- IDs de canales separados por coma
     IN p_aplicado_por VARCHAR(100)
@@ -20,7 +20,7 @@ BEGIN
     -- Obtener valores del preset
     SELECT temperatura_minima, temperatura_maxima, nombre_preset
     INTO v_temp_minima, v_temp_maxima, v_nombre_preset
-    FROM ubi_presets_temperatura
+    FROM ubi_grupo
     WHERE id_preset = p_id_preset AND activo = 1;
 
     -- Validar que el preset existe

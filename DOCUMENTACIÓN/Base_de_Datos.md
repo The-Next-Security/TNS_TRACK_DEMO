@@ -410,7 +410,9 @@ fk_[tabla origen]_[columna origen]_[tabla destino]_[columna destino]
 | `latitud` / `longitud` | DECIMAL | NO | Coordenadas del sensor |
 | `firmware` / `mac_address` | VARCHAR | NO | Datos de hardware |
 | `en_linea` | TINYINT(1) | NO | DEFAULT 1 |
-| `id_preset` | INT UNSIGNED | SÍ | FK → `ubi_presets_temperatura` — umbrales via preset (Opción A) |
+| `id_preset` | INT UNSIGNED | SÍ | FK → `ubi_grupo` — preset de grupo asignado |
+| `umbral_min` | DECIMAL(5,2) | SÍ | Override individual de temp. mínima. NULL = usa `temperatura_minima` de `ubi_grupo` |
+| `umbral_max` | DECIMAL(5,2) | SÍ | Override individual de temp. máxima. NULL = usa `temperatura_maxima` de `ubi_grupo` |
 | `ultima_alerta_enviada` | DATETIME | SÍ | |
 | `fuera_linea_desde` | DATETIME | SÍ | NULL = actualmente en línea |
 | `serial` | VARCHAR(20) | SÍ | `full_serial` de Ubibot |
@@ -444,8 +446,10 @@ fk_[tabla origen]_[columna origen]_[tabla destino]_[columna destino]
 
 ---
 
-#### `ubi_presets_temperatura`
-> Presets reutilizables de umbrales de temperatura para canales Ubibot.
+#### `ubi_grupo`
+> Presets reutilizables de umbrales de temperatura para canales Ubibot (grupo base).
+> Los valores de `temperatura_minima`/`temperatura_maxima` actúan como defaults; cada canal puede sobreescribirlos individualmente via `ubi_canal.umbral_min`/`umbral_max`.
+> Lógica de resolución: `COALESCE(c.umbral_min, g.temperatura_minima)` — override individual tiene prioridad sobre el grupo.
 
 | Columna | Tipo | Nullable | Descripción |
 |---------|------|----------|-------------|
@@ -850,7 +854,7 @@ Siguen el patrón `log_[tabla]` con columnas uniformes: `id_log_* BIGINT UNSIGNE
 | `log_sem_configuracion` | `sem_configuracion` |
 | `log_sem_dispositivos` | `sem_dispositivos` |
 | `log_ubi_canal` | `ubi_canal` |
-| `log_ubi_presets_temperatura` | `ubi_presets_temperatura` |
+| `log_ubi_grupo` | `ubi_grupo` |
 | `log_ale_suscripciones_notificacion` | `ale_suscripciones_notificacion` |
 
 ---

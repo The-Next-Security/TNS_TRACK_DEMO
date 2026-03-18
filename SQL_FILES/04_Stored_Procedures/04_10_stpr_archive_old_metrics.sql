@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_archive_old_metrics`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_archive_old_metrics`(
     IN p_meses_retencion INT,
     OUT p_filas_eliminadas INT
 )
