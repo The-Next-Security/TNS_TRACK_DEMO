@@ -39,3 +39,9 @@ migracion/
 servicios/public/bundle.jsservicios/.nvm/
 .cache/
 servicios/.npm/
+# ============================================
+# CONTEXTO DE MIGRACIÓN SPRING BOOT
+# ============================================
+# Mega-prompt con análisis completo del proyecto
+# Solo para uso local - no commitear al repositorio
+SPRINGBOOT_MIGRATION_CONTEXT.md
