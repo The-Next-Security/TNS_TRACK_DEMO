@@ -34,6 +34,19 @@ export function setupAxiosInterceptor() {
   // ─── Interceptor REQUEST: añadir token a cada llamada ───────────────────────
   axios.interceptors.request.use(
     (config) => {
+      // ✅ Solución robusta y dinámica:
+      // Si estamos en producción (no localhost) y bajo /TNSTrack, anteponemos el prefijo a la API.
+      // Esto soluciona el problema de direccionamiento en entornos con subdirectorios.
+      if (typeof window !== 'undefined' && 
+          window.location.hostname !== 'localhost' && 
+          window.location.hostname !== '127.0.0.1' &&
+          window.location.pathname.startsWith('/TNSTrack') && 
+          config.url && 
+          config.url.startsWith('/api') && 
+          !config.url.startsWith('/TNSTrack')) {
+        config.url = `/TNSTrack${config.url}`;
+      }
+
       const token = localStorage.getItem('accessToken');
       if (token) {
         config.headers = config.headers || {};

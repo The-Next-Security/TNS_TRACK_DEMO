@@ -618,17 +618,25 @@ class usuariosController {
         resetTokenExpiry
       );
 
-      // ✅ URL con prefijo /storage para React Router
-      const resetUrl = `/TNSTrack/reset-password/${plainToken}`; // Enviar token plano por email
+      // ✅ URL con prefijo /TNSTrack para React Router (basename)
+      const resetPath = `/TNSTrack/reset-password/${plainToken}`;
 
-      // Determinar URL del frontend según entorno
-      const appConfig = config.getConfig();
-      const currentEnvIndex = appConfig.environment.current;
-      const isProduction = currentEnvIndex === 1; // 0=development, 1=production
+      // Determinar URL base según el índice de entorno de la configuración
+      const env = config.getCurrentEnvironment(); // { current: number, name: string }
+      
+      let baseUrl = '';
+      if (env.current === 1) {
+        // Producción: Usar dominio oficial
+        baseUrl = 'https://tns.thenextsecurity.cl';
+      } else {
+        // Desarrollo: Usar localhost o el host de la petición
+        const protocol = req.protocol;
+        const host = req.get('host');
+        baseUrl = `${protocol}://${host}`;
+      }
 
-      const baseUrl = isProduction
-        ? 'https://tns.thenextsecurity.cl'  // Producción
-        : 'http://localhost:3000';           // Desarrollo
+      console.log(`[PasswordReset] Generando enlace para entorno: ${env.name} (Índice: ${env.current})`);
+      const fullResetUrl = `${baseUrl}${resetPath}`;
 
       // ✅ Respuesta genérica para no revelar si el email existe
       res.send("Si el email está registrado, recibirás instrucciones de recuperación");
@@ -637,8 +645,8 @@ class usuariosController {
       if (resetData && resetData.email) {
         emailService.sendPasswordResetEmail(
           resetData.email,
-          plainToken, // ✅ Enviar token plano por email
-          `${baseUrl}${resetUrl}`
+          plainToken,
+          fullResetUrl
         ).catch(error => {
           // Loguear error del envío de email pero no afectar la respuesta al usuario
           console.error(
