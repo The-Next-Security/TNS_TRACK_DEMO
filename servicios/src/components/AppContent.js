@@ -31,6 +31,13 @@ import AIAnalysisView from "./AIAnalysis_View";
 import ReportGeneratorView from "./reports/ReportGenerator_View";
 import ReportSchedulerView from "./reports/ReportScheduler_View";
 import ReportHistoryPageView from "./reports/ReportHistoryPage_View";
+import Dashboard from "./Dashboard_View";
+import BlindSpotIntrusions from "./BlindSpotIntrusions_View";
+import UbicacionTiempoRealInterior from "./UbicacionTiempoRealInterior_View";
+import DoorStatusMatrix from "./DoorStatusMatrix_View";
+import Presencia from "./Presencia_View";
+import SmsData from "./SmsData_View";
+import Temperatura from "./Temperatura_View";
 import "core-js/stable";
 import "regenerator-runtime/runtime";
 
@@ -264,6 +271,78 @@ function AppContent() {
           element={
             <PrivateRoute userPermissions={userPermissions}>
               <AIAnalysisView userPermissions={userPermissions} />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <Dashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/blind-spot-intrusions"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <BlindSpotIntrusions />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/ubicaciones-interior"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <UbicacionTiempoRealInterior />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/door-status-matrix"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <DoorStatusMatrix />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/presencia"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <Presencia />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/sms-data"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <SmsData />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/temperatura"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <Temperatura />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/configuracion"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <Configuration />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/inteligencia-de-datos"
+          element={
+            <PrivateRoute userPermissions={userPermissions}>
+              <IntelligenciaDatosTemperatura />
             </PrivateRoute>
           }
         />
