@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-18 — @dependabot[bot] ([#54](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/54))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.27.0 to 6.32.0 in /servicios
+
+
 ### 2026-03-18 — @dependabot[bot] ([#53](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/53))
 - **chore** `back-end, dependencies, npm, security` | bump core-js from 3.48.0 to 3.49.0 in /servicios
 
