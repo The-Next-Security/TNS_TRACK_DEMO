@@ -291,9 +291,9 @@ class Server {
       }
 
       // 6. Inicializar Collectors (pueden depender de config o servicios)
-      // console.log("  [Server] Iniciando ShellyCollector...");
-      // await this.shellyCollector.start();
-      // console.log("  [Server] ShellyCollector iniciado.");
+      console.log("  [Server] Iniciando ShellyCollector...");
+      await this.shellyCollector.start();
+      console.log("  [Server] ShellyCollector iniciado.");
 
       console.log("  [Server] Iniciando UbibotCollector...");
       this.ubibotCollector.init();
