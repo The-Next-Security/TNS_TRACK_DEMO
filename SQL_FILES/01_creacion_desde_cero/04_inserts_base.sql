@@ -387,7 +387,7 @@ INSERT INTO `gen_cofiguracion_parametros`
 (29, 9, 1, 'api.shelly_cloud.url',                     'url',                  3, 'api.shelly_cloud',          0, 'URL base de la API Shelly Cloud',                                                  '[CONFIGURAR]', 1, 1),
 (30, 9, 1, 'api.shelly_cloud.device_id',               'device_id',            3, 'api.shelly_cloud',          1, 'ID del dispositivo Shelly Cloud (identificador único)',                            '[CONFIGURAR]', 1, 1),
 (31, 9, 1, 'api.shelly_cloud.auth_key',                'auth_key',             3, 'api.shelly_cloud',          1, 'Clave de autenticación de la API Shelly Cloud',                                    '[CONFIGURAR]', 1, 1),
-(32, 9, 7, 'api.shelly_cloud.collection_interval',     'collection_interval',  3, 'api.shelly_cloud',          0, 'Intervalo de recolección de datos Shelly en milisegundos',                         '10000',        0, 1),
+(32, 9, 7, 'api.shelly_cloud.collection_interval',     'collection_interval',  3, 'api.shelly_cloud',          0, 'Intervalo de recolección de datos Shelly en milisegundos',                         '60000',        0, 1),
 
 -- ── Grupo ubibot (id_grupo=10) → ids 33-36 ───────────────────────────────────
 (33, 10, 1, 'ubibot.account_key',                      'account_key',          2, 'ubibot',                    1, 'Account Key Ubibot para autenticación con la API (32 chars hex)',                   '[CONFIGURAR]',              1, 1),
