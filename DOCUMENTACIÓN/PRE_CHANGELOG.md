@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-18 — @dependabot[bot] ([#52](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/52))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.307.1 to 1.361.1 in /servicios
+
+
 ### 2026-03-17 — @dependabot[bot] ([#51](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/51))
 - **chore** `back-end, dependencies, npm, security` | bump cron-parser from 4.9.0 to 5.5.0 in /servicios
 
