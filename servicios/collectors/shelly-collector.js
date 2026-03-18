@@ -1,6 +1,6 @@
 // collectors/shelly-collector.js
 
-const fetch = require("node-fetch");
+// fetch disponible de forma nativa en Node.js v18+, no requiere node-fetch
 const configLoader = require("../src/config/js_files/configLoader_Config");
 const databaseService = require("../src/services/database_Service");
 
