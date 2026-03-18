@@ -16,8 +16,7 @@ import "chartjs-adapter-luxon";
 import { es } from "date-fns/locale";
 import DatePicker, { registerLocale } from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "../assets/css/Temperatura.css";
-import Header from "./Header";
+import HeaderV2 from "./Header_View";
 
 registerLocale("es", es);
 
@@ -79,23 +78,23 @@ const Temperatura = () => {
   };
 
   if (loading) {
-    return <div>Cargando datos...</div>;
+    return <div className="p-4">Cargando datos...</div>;
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <div className="p-4">{error}</div>;
   }
 
   if (data.length === 0) {
     return (
-      <div className="temperatura">
-        <Header />
+      <div className="min-h-screen bg-gray-50 p-4">
+        <HeaderV2 title="Temperatura" />
         <h1>Temperatura</h1>
         <DatePicker
           selected={selectedDate}
           onChange={handleDateChange}
           dateFormat="dd-MM-yyyy"
-          className="date-picker"
+          className="border border-gray-300 rounded px-3 py-1 text-sm mb-4"
           locale="es"
           maxDate={today.current}
         />
@@ -193,18 +192,18 @@ const Temperatura = () => {
   };
 
   return (
-    <div className="temperatura">
-      <Header />
+    <div className="min-h-screen bg-gray-50 p-4">
+      <HeaderV2 title="Temperatura" />
       <h1>Temperatura</h1>
       <DatePicker
         selected={selectedDate}
         onChange={handleDateChange}
         dateFormat="dd-MM-yyyy"
-        className="date-picker"
+        className="border border-gray-300 rounded px-3 py-1 text-sm mb-4"
         locale="es"
         maxDate={today.current}
       />
-      <div className="charts-grid">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
         {data.map((beaconData) => {
           const validData = beaconData.temperatures
             .map((temp, index) => ({
@@ -230,14 +229,14 @@ const Temperatura = () => {
           };
 
           return (
-            <div key={beaconData.beacon_id} className="chart-box">
-              <div className="chart-container">
+            <div key={beaconData.beacon_id}>
+              <div className="bg-white rounded-lg shadow p-4">
                 <h3>{`Cámara de Frío: ${beaconData.location} - ${beaconData.ubicacion}`}</h3>
-                <div className="temp-legend">
-                  <span className="max-temp">Máx: {maxTemp.toFixed(1)}°C</span>
-                  <span className="min-temp">Mín: {minTemp.toFixed(1)}°C</span>
+                <div className="flex gap-4 text-sm mb-2">
+                  <span className="text-red-600 font-medium">Máx: {maxTemp.toFixed(1)}°C</span>
+                  <span className="text-blue-600 font-medium">Mín: {minTemp.toFixed(1)}°C</span>
                 </div>
-                <div className="chart-wrapper">
+                <div className="h-64">
                   <Line data={chartData} options={chartOptions} />
                 </div>
               </div>
