@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_process_all_daily_totals`()
+CREATE PROCEDURE `tns_cool_track`.`stpr_process_all_daily_totals`()
 BEGIN
     DECLARE v_start_date DATE;
     DECLARE v_current_date DATE;

@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_verificar_consistencia_evento`()
+CREATE PROCEDURE `tns_cool_track`.`stpr_verificar_consistencia_evento`()
     COMMENT 'Verifica la consistencia de datos procesados por el evento'
 BEGIN
     -- Verificar fechas en ubi_contador_ciclos

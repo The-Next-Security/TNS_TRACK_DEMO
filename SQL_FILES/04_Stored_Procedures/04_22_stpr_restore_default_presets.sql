@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_restore_default_presets`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_restore_default_presets`(
     IN p_restored_by VARCHAR(100)
 )
 BEGIN

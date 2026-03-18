@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_apply_preset_to_cameras`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_apply_preset_to_cameras`(
     IN p_id_preset INT,
     IN p_ids_canales TEXT, -- IDs de canales separados por coma
     IN p_aplicado_por VARCHAR(100)

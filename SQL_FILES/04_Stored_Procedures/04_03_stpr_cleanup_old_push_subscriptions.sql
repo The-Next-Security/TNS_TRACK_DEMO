@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_cleanup_old_push_subscriptions`(IN p_dias_inactivo INT)
+CREATE PROCEDURE `tns_cool_track`.`stpr_cleanup_old_push_subscriptions`(IN p_dias_inactivo INT)
 BEGIN
     UPDATE ale_push_suscripciones
     SET activo = FALSE

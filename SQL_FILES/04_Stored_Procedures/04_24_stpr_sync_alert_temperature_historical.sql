@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_sync_alert_temperature_historical`(IN p_sobreescribir_existentes BOOLEAN)
+CREATE PROCEDURE `tns_cool_track`.`stpr_sync_alert_temperature_historical`(IN p_sobreescribir_existentes BOOLEAN)
 BEGIN
   DECLARE v_processed INT DEFAULT 0;
 

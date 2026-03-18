@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_get_daily_summary`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_get_daily_summary`(
     IN p_fecha DATE
 )
 BEGIN

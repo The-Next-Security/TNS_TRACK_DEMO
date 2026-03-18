@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_procesar_channels_faltantes`()
+CREATE PROCEDURE `tns_cool_track`.`stpr_procesar_channels_faltantes`()
 BEGIN
     -- Variables para channels
     DECLARE v_id_canal INT;

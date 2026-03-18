@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_generate_daily_metrics`(IN p_fecha_objetivo DATE)
+CREATE PROCEDURE `tns_cool_track`.`stpr_generate_daily_metrics`(IN p_fecha_objetivo DATE)
 BEGIN
     -- Limpiar métricas existentes para esta fecha
     DELETE FROM ale_metricas_resumen WHERE fecha = p_fecha_objetivo;

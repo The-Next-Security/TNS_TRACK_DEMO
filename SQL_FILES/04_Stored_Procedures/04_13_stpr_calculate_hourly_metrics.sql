@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_calculate_hourly_metrics`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_calculate_hourly_metrics`(
     IN p_fecha_objetivo DATE,
     IN p_hora_objetivo TINYINT
 )

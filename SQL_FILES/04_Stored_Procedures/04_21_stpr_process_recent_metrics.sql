@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_process_recent_metrics`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_process_recent_metrics`(
     IN p_hours_back INT
 )
 BEGIN

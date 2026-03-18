@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_cleanup_old_alerts`(IN p_dias_a_mantener INT)
+CREATE PROCEDURE `tns_cool_track`.`stpr_cleanup_old_alerts`(IN p_dias_a_mantener INT)
 BEGIN
     DECLARE v_eliminados INT DEFAULT 0;
 
