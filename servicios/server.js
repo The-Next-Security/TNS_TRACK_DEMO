@@ -108,9 +108,8 @@ class Server {
       next();
     });
 
-    // Header Content-Type para rutas API (ya se hace en setupRoutes implícitamente con express.json,
-    // pero mantener si hay alguna razón específica)
-    this.app.use("/api", (req, res, next) => {
+    // Header Content-Type para rutas API (unificar con y sin prefijo de producción)
+    this.app.use(["/api", "/TNSTrack/api"], (req, res, next) => {
       res.header("Content-Type", "application/json");
       next();
     });
