@@ -45,7 +45,9 @@ class ShellyCollector {
 
             // Extraer y validar las secciones necesarias
             const apiConfig = loadedConfig.api?.shelly_cloud;
-            const collectionConfig = loadedConfig.collection;
+            const collectionConfig = {
+                interval: loadedConfig.api?.shelly_cloud?.collection_interval
+            };
 
             // Validación estricta de la configuración requerida
             if (!apiConfig || !apiConfig.url || !apiConfig.device_id || !apiConfig.auth_key) {
