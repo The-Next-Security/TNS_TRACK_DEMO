@@ -44,7 +44,10 @@ export function setupAxiosInterceptor() {
           config.url && 
           config.url.startsWith('/api') && 
           !config.url.startsWith('/TNSTrack')) {
-        config.url = `/TNSTrack${config.url}`;
+        // ✅ Solución robusta: Evitar doble slash al concatenar (ej: /TNSTrack//api -> /TNSTrack/api)
+        // Usamos una expresión regular para colapsar slashes múltiples en uno solo
+        const rawUrl = `/TNSTrack/${config.url}`;
+        config.url = rawUrl.replace(/\/+/g, '/');
       }
 
       const token = localStorage.getItem('accessToken');
