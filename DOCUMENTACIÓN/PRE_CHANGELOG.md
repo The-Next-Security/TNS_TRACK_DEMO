@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-19 — @dependabot[bot] ([#59](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/59))
+- **chore** `back-end, dependencies, npm, security` | bump mapbox-gl from 3.17.0 to 3.20.0 in /servicios
+
+
 ### 2026-03-19 — @dependabot[bot] ([#60](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/60))
 - **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.361.1 to 1.362.0 in /servicios
 
