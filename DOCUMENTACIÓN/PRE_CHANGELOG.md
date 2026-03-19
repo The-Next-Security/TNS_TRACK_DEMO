@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-19 — @dependabot[bot] ([#57](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/57))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 3 updates
+
+
 ### 2026-03-18 — @dependabot[bot] ([#56](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/56))
 - **chore** `back-end, dependencies, npm, security` | bump puppeteer from 24.33.0 to 24.39.1 in /servicios
 
