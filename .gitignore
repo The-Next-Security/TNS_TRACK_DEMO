@@ -44,4 +44,27 @@ servicios/.npm/
 # ============================================
 # Mega-prompt con análisis completo del proyecto
 # Solo para uso local - no commitear al repositorio
+
+
 SPRINGBOOT_MIGRATION_CONTEXT.md
+
+# ============================================
+# JSONS CON CONDIFURACIÓN SENSIBLE
+# ============================================
+servicios/src/config/jsons/ai-pricing.json
+servicios/src/config/jsons/api-credentials.json
+servicios/src/config/jsons/config.json
+servicios/src/config/jsons/database.json
+servicios/src/config/jsons/ddbb_produccion.json
+servicios/src/config/jsons/destinatariosSmsUbibot.json
+servicios/src/config/jsons/jwt-config.json
+servicios/src/config/jsons/jwt.json
+servicios/src/config/jsons/posthog-config.json
+servicios/src/config/jsons/precios_energia.json
+servicios/src/config/jsons/sgMailConfig.json
+servicios/src/config/jsons/smsConfig.json
+servicios/src/config/jsons/smsConfig.json.backup
+servicios/src/config/jsons/smsServiceConfig.json
+servicios/src/config/jsons/twilio.json
+servicios/src/config/jsons/ubibot_account_info.json
+servicios/src/config/jsons/unified-config.json
