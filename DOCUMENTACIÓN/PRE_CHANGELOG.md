@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-19 — @dependabot[bot] ([#58](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/58))
+- **chore** `back-end, dependencies, npm, security` | bump framer-motion from 12.23.26 to 12.38.0 in /servicios
+
+
 ### 2026-03-19 — @dependabot[bot] ([#59](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/59))
 - **chore** `back-end, dependencies, npm, security` | bump mapbox-gl from 3.17.0 to 3.20.0 in /servicios
 
