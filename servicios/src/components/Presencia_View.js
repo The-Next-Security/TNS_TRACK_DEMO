@@ -2,13 +2,13 @@ import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import "../assets/css/Presencia.css";
-import Header from "./Header";
+import HeaderV2 from "./Header_View";
 import { DateTime } from "luxon";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
+/* MÓDULO FUTURO - Teltonika/Beacons: pendiente de desarrollo */
 
 const Presencia = () => {
   const [data, setData] = useState([]);
@@ -168,16 +168,11 @@ const Presencia = () => {
 
   const getColorClass = (status) => {
     switch (status) {
-      case "Verde":
-        return "green";
-      case "Rojo":
-        return "red";
-      case "Amarillo":
-        return "yellow";
-      case "Negro":
-        return "black";
-      default:
-        return "transparent";
+      case "Verde":    return "w-full h-4 rounded bg-green-500";
+      case "Rojo":     return "w-full h-4 rounded bg-red-500";
+      case "Amarillo": return "w-full h-4 rounded bg-yellow-400";
+      case "Negro":    return "w-full h-4 rounded bg-gray-900";
+      default:         return "w-full h-4 rounded bg-transparent";
     }
   };
 
@@ -210,20 +205,20 @@ const Presencia = () => {
   };
 
   return (
-    <div className="presencia">
-      <Header />
+    <div className="min-h-screen bg-gray-50 p-4">
+      <HeaderV2 title="Status de Presencia" />
       <h1>Status de Presencia</h1>
       <DatePicker
         selected={selectedDate}
         onChange={handleDateChange}
         dateFormat="yyyy-MM-dd"
-        className="date-picker"
+        className="border border-gray-300 rounded px-3 py-1 text-sm mb-4"
         maxDate={today.current}
       />
       {summaryPieChartData && (
-        <div className="summary-pie-chart">
+        <div className="mb-6">
           <h2>Resumen General</h2>
-          <div className="chart-container">
+          <div className="h-64 mx-auto max-w-sm">
             <Pie
               data={summaryPieChartData}
               options={{
@@ -240,11 +235,11 @@ const Presencia = () => {
           </div>
         </div>
       )}
-      <div className="pie-charts-container">
+      <div className="flex flex-wrap gap-4 justify-center">
         {Object.entries(pieChartData).map(([sector, chartData]) => (
-          <div key={sector} className="pie-chart">
+          <div key={sector} className="w-full sm:w-[45%] lg:w-[30%]">
             <h2>{getChartTitle(sector)}</h2>
-            <div className="chart-container">
+            <div className="h-52">
               <Pie
                 data={chartData}
                 options={{
@@ -262,29 +257,29 @@ const Presencia = () => {
           </div>
         ))}
       </div>
-      <div className="color-legend">
+      <div className="flex flex-wrap gap-4 my-4 text-sm">
         <div>
-          <span className="color-box black"></span> No hubo presencia
+          <span className="w-4 h-4 inline-block mr-1 rounded-sm bg-gray-900"></span> No hubo presencia
         </div>
         <div>
-          <span className="color-box red"></span> Presencia menor al esperado
+          <span className="w-4 h-4 inline-block mr-1 rounded-sm bg-red-500"></span> Presencia menor al esperado
         </div>
         <div>
-          <span className="color-box yellow"></span> Presencia baja
+          <span className="w-4 h-4 inline-block mr-1 rounded-sm bg-yellow-400"></span> Presencia baja
         </div>
         <div>
-          <span className="color-box green"></span> Presencia OK
+          <span className="w-4 h-4 inline-block mr-1 rounded-sm bg-green-500"></span> Presencia OK
         </div>
       </div>
-      <div className="table-wrapper">
+      <div className="overflow-x-auto mt-4">
         <table>
           <thead>
             <tr>
-              <th className="col-sector">Sector</th>
+              <th className="min-w-32 text-left p-2">Sector</th>
               {data.length > 0 &&
                 data.map((entry, index) => (
-                  <th key={index} className="col-width">
-                    <span className="rotate">
+                  <th key={index} className="w-8 p-1">
+                    <span className="-rotate-90 block text-xs">
                       {new Date(entry.status_timestamp).toLocaleTimeString([], {
                         hour: "2-digit",
                         minute: "2-digit",
@@ -300,13 +295,13 @@ const Presencia = () => {
                 <td>{beacon.ubicacion}</td>
                 {data.map((entry, index) => (
                   <td key={index}>
-                    <div className="status-bar-wrapper">
+                    <div className="relative">
                       <div
-                        className={`status-bar ${getColorClass(
+                        className={getColorClass(
                           entry[`Sector_${beacon.lugar.split(" ")[1]}`]
-                        )}`}
+                        )}
                       ></div>
-                      <div className="tooltip">
+                      <div className="relative group">
                         <span className="tooltiptext">
                           {entry.status_timestamp}
                         </span>

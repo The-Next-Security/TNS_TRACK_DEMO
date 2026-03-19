@@ -203,25 +203,23 @@ class AIAnalysisController {
   async getChambers(req, res) {
     try {
       // Migrado: channels_ubibot → ubi_canal; sensor_readings_ubibot → ubi_lecturas_sensor;
-      // parametrizaciones → ubi_presets_temperatura
-      // SUPUESTO #3: threshold_min/max provienen del preset del grupo (ubi_presets_temperatura),
-      //   ya que ubi_canal no tiene umbrales individuales por canal.
-      // SUPUESTO #5: ubi_presets_temperatura no tiene columna nombre_parametro;
-      //   se retorna NULL como group_name hasta definir campo equivalente en nuevo schema.
+      // parametrizaciones → ubi_grupo
+      // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
+      // group_name: ubi_grupo no tiene columna nombre_parametro; se retorna g.nombre_preset como group_name.
       const query = `
         SELECT
           c.canal_id AS id,
           c.nombre AS name,
-          p.temperatura_minima AS threshold_min,
-          p.temperatura_maxima AS threshold_max,
+          COALESCE(c.umbral_min, g.temperatura_minima) AS threshold_min,
+          COALESCE(c.umbral_max, g.temperatura_maxima) AS threshold_max,
           c.id_preset,
-          NULL AS group_name,
+          g.nombre_preset AS group_name,
           COUNT(DISTINCT DATE(sr.fecha_lectura_externa)) as days_with_data
         FROM ubi_canal c
-        LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+        LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
         LEFT JOIN ubi_lecturas_sensor sr ON c.id_canal = sr.id_canal
           AND sr.fecha_lectura_externa >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        GROUP BY c.canal_id, c.nombre, p.temperatura_minima, p.temperatura_maxima, c.id_preset
+        GROUP BY c.canal_id, c.nombre, c.umbral_min, c.umbral_max, g.temperatura_minima, g.temperatura_maxima, c.id_preset, g.nombre_preset
         HAVING days_with_data > 0
         ORDER BY c.nombre
       `;

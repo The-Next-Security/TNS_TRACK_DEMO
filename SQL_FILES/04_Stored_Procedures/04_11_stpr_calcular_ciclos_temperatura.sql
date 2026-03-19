@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_calcular_ciclos_temperatura`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_calcular_ciclos_temperatura`(
     IN p_fecha_objetivo DATE
 )
 BEGIN

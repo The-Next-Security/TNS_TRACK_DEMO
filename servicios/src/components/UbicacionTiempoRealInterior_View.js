@@ -30,6 +30,7 @@ import planoBase from '../assets/images/PLANO_STORAGE.jpg';
 import personal1Icon from '../assets/images/forklift_orange_1.png';
 import personal2Icon from '../assets/images/forklift_Blue_2.png';
 import personal3Icon from '../assets/images/forklift_red_3.png';
+/* MÓDULO FUTURO - Teltonika/Beacons: pendiente de desarrollo */
 
 /**
  * Componente principal para el seguimiento de ubicación en tiempo real en interiores

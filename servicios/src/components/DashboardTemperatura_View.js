@@ -57,7 +57,7 @@ const SevenSegmentDisplay = ({ value, isOutOfRange = false }) => {
         }
 
         // VERDE: Temperatura dentro del rango permitido (minimo <= temp <= maximo)
-        // Aplica para todas las cámaras según su preset de grupo (ubi_presets_temperatura)
+        // Aplica usando umbrales efectivos: override individual (ubi_canal) o preset del grupo (ubi_grupo)
         return {
             text: "text-green-400",
             glow: "drop-shadow-[0_0_8px_rgba(34,197,94,0.7)]",
@@ -128,7 +128,7 @@ const DashboardTemperaturaV2 = () => {
     const fetchTemperatureData = async() => {
         try {
             setError(null);
-            const response = await axios.get("/api/ubibot/temperature-dashboard-data");
+            const response = await axios.get("/api/temperatura/dashboard");
             if (Array.isArray(response.data) && response.data.length > 0) {
                 // Formatear los datos de temperatura
                 const formattedData = response.data.map((item) => {
@@ -181,7 +181,7 @@ const DashboardTemperaturaV2 = () => {
     const fetchCategoriasPorNombre = async(devices) => {
         try {
             // Conseguir primero los datos eléctricos para obtener el shelly_id
-            const electricData = await axios.get('/api/devices/latest-measurements');
+            const electricData = await axios.get('/api/energia/dispositivos/ultimas-mediciones');
 
             if (!electricData.data.success || !Array.isArray(electricData.data.data)) {
                 console.warn('No se pudieron obtener datos eléctricos para las categorías');
@@ -220,7 +220,7 @@ const DashboardTemperaturaV2 = () => {
 
                 // Consultar la API para obtener la categoría
                 try {
-                    const response = await axios.get('/api/consumo/categoria', {
+                    const response = await axios.get('/api/energia/consumo/categorias', {
                         params: {
                             valor: electricDevice.activePower,
                             deviceId: electricDevice.deviceId

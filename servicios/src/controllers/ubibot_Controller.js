@@ -349,10 +349,8 @@ class UbibotController {
   async getTemperatureDashboardData(req, res) {
 
     try {
-      // Query migrada al nuevo schema (ubi_canal, ubi_lecturas_sensor, ubi_presets_temperatura)
-      // SUPUESTO #3: ubi_canal no tiene columnas threshold_min/threshold_max individuales por canal.
-      // Se usan siempre los umbrales del preset del grupo (ubi_presets_temperatura).
-      // threshold_type siempre retorna 'group'; threshold_updated_at/by retornan NULL.
+      // Query migrada al nuevo schema (ubi_canal, ubi_lecturas_sensor, ubi_grupo)
+      // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
       const query = `
          SELECT
            c.canal_id AS channel_id,
@@ -361,16 +359,16 @@ class UbibotController {
            s.fecha_lectura_externa AS external_temperature_timestamp,
            -- is_currently_out_of_range: en nuevo schema se infiere de fuera_linea_desde
            (c.fuera_linea_desde IS NOT NULL) AS is_currently_out_of_range,
-           p.temperatura_minima AS minimo,
-           p.temperatura_maxima AS maximo,
+           COALESCE(c.umbral_min, g.temperatura_minima) AS minimo,
+           COALESCE(c.umbral_max, g.temperatura_maxima) AS maximo,
            NULL AS threshold_updated_at,
            NULL AS threshold_updated_by,
-           p.id_preset AS param_id,
-           'group' AS threshold_type,
-           -- Calcular si la temperatura está fuera de los umbrales del preset
+           g.id_preset AS param_id,
+           CASE WHEN c.umbral_min IS NOT NULL THEN 'individual' ELSE 'group' END AS threshold_type,
+           -- Calcular si la temperatura está fuera de los umbrales efectivos
            CASE
-             WHEN s.temperatura_externa < p.temperatura_minima THEN 1
-             WHEN s.temperatura_externa > p.temperatura_maxima THEN 1
+             WHEN s.temperatura_externa < COALESCE(c.umbral_min, g.temperatura_minima) THEN 1
+             WHEN s.temperatura_externa > COALESCE(c.umbral_max, g.temperatura_maxima) THEN 1
              ELSE 0
            END AS is_temperature_out_of_range
          FROM ubi_canal c
@@ -379,7 +377,7 @@ class UbibotController {
                   ROW_NUMBER() OVER (PARTITION BY id_canal ORDER BY fecha_lectura_externa DESC) AS rn
            FROM ubi_lecturas_sensor
          ) s ON c.id_canal = s.id_canal
-         LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+         LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
          WHERE s.rn = 1
          ORDER BY c.nombre;
        `;
@@ -454,8 +452,8 @@ class UbibotController {
 
       console.log(`[UbibotController] getTemperatureCamarasData: Querying entre ${start} y ${end}`);
 
-      // Query migrada al nuevo schema (ubi_lecturas_sensor, ubi_canal, ubi_presets_temperatura)
-      // SUPUESTO #3: umbrales siempre del preset del grupo; threshold_type siempre 'group'
+      // Query migrada al nuevo schema (ubi_lecturas_sensor, ubi_canal, ubi_grupo)
+      // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
       const query = `
          SELECT
            sr.id_lectura_sensor AS id,
@@ -463,12 +461,12 @@ class UbibotController {
            sr.temperatura_externa AS external_temperature,
            sr.fecha_lectura_externa AS external_temperature_timestamp,
            c.nombre AS name,
-           p.temperatura_minima AS minimo,
-           p.temperatura_maxima AS maximo,
-           'group' AS threshold_type
+           COALESCE(c.umbral_min, g.temperatura_minima) AS minimo,
+           COALESCE(c.umbral_max, g.temperatura_maxima) AS maximo,
+           CASE WHEN c.umbral_min IS NOT NULL THEN 'individual' ELSE 'group' END AS threshold_type
          FROM ubi_lecturas_sensor sr
          JOIN ubi_canal c ON sr.id_canal = c.id_canal
-         LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+         LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
          WHERE sr.fecha_lectura_externa BETWEEN ? AND ?
          ORDER BY c.nombre, sr.fecha_lectura_externa ASC;
        `;
@@ -960,23 +958,22 @@ class UbibotController {
         return res.status(400).json({ error: "Se requiere channelId" });
       }
 
-      // Migrado: channels_ubibot → ubi_canal; parametrizaciones → ubi_presets_temperatura
-      // SUPUESTO #3: ubi_canal no tiene threshold_min/max individuales; se retorna el umbral del preset del grupo.
-      // threshold_updated_at/by retornan NULL hasta que se definan columnas individuales en ubi_canal.
+      // Migrado: channels_ubibot → ubi_canal; parametrizaciones → ubi_grupo
+      // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
       const query = `
         SELECT
           c.canal_id AS channel_id,
           c.nombre AS name,
-          p.temperatura_minima AS threshold_min,
-          p.temperatura_maxima AS threshold_max,
+          COALESCE(c.umbral_min, g.temperatura_minima) AS threshold_min,
+          COALESCE(c.umbral_max, g.temperatura_maxima) AS threshold_max,
           NULL AS threshold_updated_at,
           NULL AS threshold_updated_by,
-          'group' AS threshold_type,
+          CASE WHEN c.umbral_min IS NOT NULL THEN 'individual' ELSE 'group' END AS threshold_type,
           c.id_preset AS legacy_param_id,
-          p.temperatura_minima AS group_threshold_min,
-          p.temperatura_maxima AS group_threshold_max
+          g.temperatura_minima AS group_threshold_min,
+          g.temperatura_maxima AS group_threshold_max
         FROM ubi_canal c
-        LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+        LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
         WHERE c.canal_id = ?
       `;
 
@@ -1073,48 +1070,25 @@ class UbibotController {
           reason || 'Actualización manual desde API'
         ]);
       } else {
-        // Migrado: channels_ubibot → ubi_canal; channel_id → canal_id
-        // SUPUESTO #3: ubi_canal no tiene columnas threshold_min, threshold_max, threshold_updated_at, threshold_updated_by.
-        // Este UPDATE fallará en runtime con "Unknown column" hasta que dichas columnas se agreguen a ubi_canal.
+        // Actualiza los overrides individuales de umbral en ubi_canal.
+        // fecha_actualizacion se actualiza automáticamente vía ON UPDATE CURRENT_TIMESTAMP.
         const updateQuery = `
           UPDATE ubi_canal
           SET
-            threshold_min = ?,
-            threshold_max = ?,
-            threshold_updated_at = CURRENT_TIMESTAMP,
-            threshold_updated_by = ?
+            umbral_min = ?,
+            umbral_max = ?
           WHERE canal_id = ?
         `;
 
         const result = await databaseService.query(updateQuery, [
           min,
           max,
-          updated_by || 'API',
           channelId
         ]);
 
         if (result.affectedRows === 0) {
           console.warn(`[UbibotController] updateChannelThresholds: Canal ${channelId} no encontrado`);
           return res.status(404).json({ error: `Canal ${channelId} no encontrado` });
-        }
-
-        // Opcional: Insertar en histórico si la tabla existe
-        try {
-          const historyQuery = `
-            INSERT INTO channel_threshold_history
-            (channel_id, new_threshold_min, new_threshold_max, changed_by, change_reason)
-            VALUES (?, ?, ?, ?, ?)
-          `;
-          await databaseService.query(historyQuery, [
-            channelId,
-            min,
-            max,
-            updated_by || 'API',
-            reason || 'Actualización manual desde API'
-          ]);
-        } catch (historyError) {
-          // Silenciar error si la tabla de histórico no existe
-          console.log("[UbibotController] Tabla de histórico no disponible, continuando...");
         }
       }
 
@@ -1204,32 +1178,32 @@ class UbibotController {
     console.log("[UbibotController] getAllChannelsThresholds: Solicitud recibida.");
 
     try {
-      // Migrado: channels_ubibot → ubi_canal; parametrizaciones → ubi_presets_temperatura;
+      // Migrado: channels_ubibot → ubi_canal; parametrizaciones → ubi_grupo;
       // sensor_readings_ubibot → ubi_lecturas_sensor
-      // SUPUESTO #3: umbrales siempre del preset del grupo; threshold_type siempre 'group'
+      // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
       const query = `
         SELECT
           c.canal_id AS channel_id,
           c.nombre AS name,
           c.activo AS esOperativa,
-          p.temperatura_minima AS threshold_min,
-          p.temperatura_maxima AS threshold_max,
+          COALESCE(c.umbral_min, g.temperatura_minima) AS threshold_min,
+          COALESCE(c.umbral_max, g.temperatura_maxima) AS threshold_max,
           NULL AS threshold_updated_at,
           NULL AS threshold_updated_by,
-          'group' AS threshold_type,
+          CASE WHEN c.umbral_min IS NOT NULL THEN 'individual' ELSE 'group' END AS threshold_type,
           c.id_preset AS legacy_param_id,
           -- Última lectura de temperatura
           lr.temperatura_externa AS current_temperature,
           lr.fecha_lectura_externa AS last_reading,
-          -- Estado de temperatura respecto a umbrales del preset
+          -- Estado de temperatura respecto a umbrales efectivos
           CASE
             WHEN lr.temperatura_externa IS NULL THEN 'NO_DATA'
-            WHEN lr.temperatura_externa < p.temperatura_minima THEN 'BELOW_MIN'
-            WHEN lr.temperatura_externa > p.temperatura_maxima THEN 'ABOVE_MAX'
+            WHEN lr.temperatura_externa < COALESCE(c.umbral_min, g.temperatura_minima) THEN 'BELOW_MIN'
+            WHEN lr.temperatura_externa > COALESCE(c.umbral_max, g.temperatura_maxima) THEN 'ABOVE_MAX'
             ELSE 'IN_RANGE'
           END AS temperature_status
         FROM ubi_canal c
-        LEFT JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset
+        LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
         LEFT JOIN (
           SELECT
             id_canal,
@@ -1283,6 +1257,84 @@ class UbibotController {
       console.error("❌ Error obteniendo umbrales de todos los canales:", error.message);
       res.status(500).json({ error: "Error del servidor al obtener umbrales" });
     }
+  }
+
+  /**
+   * Actualiza los umbrales de temperatura de múltiples canales en una sola operación
+   * PUT /api/temperatura/canales/umbrales/bulk
+   * Body: { channels: [{ channelId, threshold_min, threshold_max }] }
+   */
+  async bulkUpdateChannelThresholds(req, res) {
+    console.log("[UbibotController] bulkUpdateChannelThresholds: Solicitud recibida.");
+
+    const { channels } = req.body;
+
+    if (!Array.isArray(channels) || channels.length === 0) {
+      return res.status(400).json({ error: "Se requiere un array 'channels' no vacío" });
+    }
+
+    const results = [];
+    const errors = [];
+
+    for (const item of channels) {
+      const { channelId, threshold_min, threshold_max } = item;
+
+      if (!channelId) {
+        errors.push({ channelId, error: "channelId requerido" });
+        continue;
+      }
+
+      if (threshold_min === undefined || threshold_max === undefined) {
+        errors.push({ channelId, error: "threshold_min y threshold_max requeridos" });
+        continue;
+      }
+
+      const min = parseFloat(threshold_min);
+      const max = parseFloat(threshold_max);
+
+      if (isNaN(min) || isNaN(max)) {
+        errors.push({ channelId, error: "Los umbrales deben ser números válidos" });
+        continue;
+      }
+
+      if (min >= max) {
+        errors.push({ channelId, error: "El umbral mínimo debe ser menor que el máximo" });
+        continue;
+      }
+
+      if (min < -40 || max > 50) {
+        errors.push({ channelId, error: "Los umbrales deben estar entre -40°C y 50°C" });
+        continue;
+      }
+
+      try {
+        const updateQuery = `
+          UPDATE ubi_canal
+          SET umbral_min = ?, umbral_max = ?
+          WHERE canal_id = ?
+        `;
+        const result = await databaseService.query(updateQuery, [min, max, channelId]);
+
+        if (result.affectedRows === 0) {
+          errors.push({ channelId, error: `Canal ${channelId} no encontrado` });
+        } else {
+          results.push({ channelId, threshold_min: min, threshold_max: max });
+        }
+      } catch (err) {
+        console.error(`❌ Error actualizando canal ${channelId}:`, err.message);
+        errors.push({ channelId, error: "Error interno al actualizar" });
+      }
+    }
+
+    console.log(`[UbibotController] bulkUpdateChannelThresholds: ${results.length} actualizados, ${errors.length} errores.`);
+
+    res.json({
+      success: errors.length === 0,
+      updated: results.length,
+      failed: errors.length,
+      results,
+      errors
+    });
   }
 
   async getDefrostData(channelId, date, cameraName) {

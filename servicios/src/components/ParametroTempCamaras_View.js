@@ -203,7 +203,7 @@ const ParametroTempCamarasV2 = () => {
       setLoading(true);
       const token = localStorage.getItem("token");
 
-      const response = await axios.get("/api/ubibot/channels/thresholds", {
+      const response = await axios.get("/api/temperatura/canales/umbrales", {
         headers: {
           Accept: "application/json",
           "Content-Type": "application/json",
@@ -341,7 +341,7 @@ const ParametroTempCamarasV2 = () => {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        `/api/ubibot/channel/${camera.channel_id}/thresholds`,
+        `/api/temperatura/canales/${camera.channel_id}/umbrales`,
         {
           threshold_min: camera.threshold_min,
           threshold_max: camera.threshold_max,
@@ -424,7 +424,7 @@ const ParametroTempCamarasV2 = () => {
       const token = localStorage.getItem("token");
 
       await axios.put(
-        `/api/ubibot/channel/${channelId}/operativa`,
+        `/api/temperatura/canales/${channelId}/operativa`,
         { esOperativa: isOperativa },
         {
           headers: {

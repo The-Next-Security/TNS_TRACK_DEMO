@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_test_evento_manual`(IN p_fecha_test DATE)
+CREATE PROCEDURE `tns_cool_track`.`stpr_test_evento_manual`(IN p_fecha_test DATE)
     COMMENT 'Ejecuta manualmente la lógica del evento para testing con validaciones'
 BEGIN
     DECLARE v_fecha_test DATE DEFAULT COALESCE(p_fecha_test, DATE_SUB(CURDATE(), INTERVAL 1 DAY));

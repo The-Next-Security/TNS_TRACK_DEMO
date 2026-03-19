@@ -47,46 +47,67 @@ DELIMITER ;
 DELIMITER //
 
 SOURCE 03_Triggers/03_01_trig_update_response_time.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_02_trig_gen_usuario.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_03_trig_gen_permiso.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_04_trig_gen_usuario_permisos.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_05_trig_gen_feriados_cl.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_06_trig_gen_ubicaciones_reales.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_07_trig_gen_tipos_parametros.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_08_trig_gen_cofiguracion_grupos.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_09_trig_gen_cofiguracion_parametros.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_10_trig_gen_cofiguracion_valores.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_11_trig_rep_tipo_reporte.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_12_trig_rep_plantillas.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_13_trig_sem_grupos.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_14_trig_sem_tipos_parametros.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_15_trig_sem_configuracion.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_16_trig_sem_dispositivos.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_17_trig_ubi_canal.sql
+DELIMITER //
 //
-SOURCE 03_Triggers/03_18_trig_ubi_presets_temperatura.sql
+SOURCE 03_Triggers/03_18_trig_ubi_grupo.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_20_trig_ale_suscripciones_notificacion_after_insert.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_21_trig_ale_suscripciones_notificacion_after_update.sql
+DELIMITER //
 //
 SOURCE 03_Triggers/03_22_trig_ale_suscripciones_notificacion_after_delete.sql
+DELIMITER //
 //
 
 DELIMITER ;

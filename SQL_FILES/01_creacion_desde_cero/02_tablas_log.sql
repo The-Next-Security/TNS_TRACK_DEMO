@@ -169,19 +169,19 @@ CREATE TABLE `log_ale_suscripciones_notificacion` (
 -- La referencia queda preservada en datos_anteriores/datos_nuevos.
 -- ============================================
 
-CREATE TABLE `log_ubi_presets_temperatura` (
-  `id_log_ubi_presets_temperatura` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+CREATE TABLE `log_ubi_grupo` (
+  `id_log_ubi_grupo` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
   `tipo_operacion` ENUM('INSERT','UPDATE','DELETE') NOT NULL,
-  `id_registro` INT UNSIGNED NULL COMMENT 'id_preset del registro afectado en ubi_presets_temperatura',
+  `id_registro` INT UNSIGNED NULL COMMENT 'id_preset del registro afectado en ubi_grupo',
   `datos_anteriores` JSON NULL COMMENT 'Valores antes del cambio (NULL en INSERT)',
   `datos_nuevos` JSON NULL COMMENT 'Valores después del cambio (NULL en DELETE)',
   `cambiado_por` VARCHAR(100) NOT NULL DEFAULT 'SYSTEM' COMMENT 'Usuario o proceso que realizó el cambio',
   `fecha_creacion` DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
-  PRIMARY KEY (`id_log_ubi_presets_temperatura`),
-  INDEX `idx_log_ubi_presets_temperatura_tipo_operacion` (`tipo_operacion`),
-  INDEX `idx_log_ubi_presets_temperatura_id_registro` (`id_registro`),
-  INDEX `idx_log_ubi_presets_temperatura_fecha_creacion` (`fecha_creacion`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de cambios en ubi_presets_temperatura';
+  PRIMARY KEY (`id_log_ubi_grupo`),
+  INDEX `idx_log_ubi_grupo_tipo_operacion` (`tipo_operacion`),
+  INDEX `idx_log_ubi_grupo_id_registro` (`id_registro`),
+  INDEX `idx_log_ubi_grupo_fecha_creacion` (`fecha_creacion`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de cambios en ubi_grupo';
 
 CREATE TABLE `log_gen_usuario` (
   `id_log_gen_usuario` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,

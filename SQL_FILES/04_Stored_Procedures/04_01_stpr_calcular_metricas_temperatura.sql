@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_calcular_metricas_temperatura`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_calcular_metricas_temperatura`(
     IN p_id_canal INT,
     IN p_fecha_inicio DATETIME,
     IN p_fecha_fin DATETIME,

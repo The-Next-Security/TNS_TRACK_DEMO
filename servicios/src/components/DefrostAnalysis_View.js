@@ -129,7 +129,7 @@ const DefrostAnalysisV2 = () => {
    */
   const fetchCameras = async () => {
     try {
-      const response = await axios.get("/api/ubibot/temperature-devices");
+      const response = await axios.get("/api/temperatura/dispositivos");
       setCameras(response.data);
     } catch (error) {
       console.error("Error fetching cameras:", error);
@@ -162,7 +162,7 @@ const DefrostAnalysisV2 = () => {
       );
 
       // Análisis diario (domingo)
-      const responseDaily = await axios.get("/api/ubibot/defrost-analysis-data", {
+      const responseDaily = await axios.get("/api/reportes/descongelamiento/analisis", {
         params: {
           channelId: selectedCamera,
           date: formattedDate,
@@ -216,7 +216,7 @@ const DefrostAnalysisV2 = () => {
 
       // Análisis semanal
       const responseWeekly = await axios.get(
-        "/api/ubibot/weekly-defrost-analysis-data",
+        "/api/reportes/descongelamiento/analisis-semanal",
         {
           params: {
             channelId: selectedCamera,
@@ -293,7 +293,7 @@ const DefrostAnalysisV2 = () => {
       )}_${formattedDate}.pdf`;
 
       const response = await axios.post(
-        "/api/ubibot/generate-defrost-report",
+        "/api/reportes/descongelamiento/generar",
         {
           channelId: selectedCamera,
           date: DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd"),
@@ -346,7 +346,7 @@ const DefrostAnalysisV2 = () => {
         "Fecha enviada a la API para analisis semanal:",
         formattedDate
       );
-      const response = await axios.get("/api/ubibot/weekly-defrost-analysis-data", {
+      const response = await axios.get("/api/reportes/descongelamiento/analisis-semanal", {
         params: {
           channelId: selectedCamera,
           date: formattedDate,
@@ -416,7 +416,7 @@ const DefrostAnalysisV2 = () => {
         "_"
       )}_${formattedDate}.pdf`;
       const response = await axios.post(
-        "/api/ubibot/generate-weekly-defrost-report",
+        "/api/reportes/descongelamiento/generar-semanal",
         {
           channelId: selectedCamera,
           date: DateTime.fromJSDate(selectedDate).toFormat("yyyy-MM-dd"),

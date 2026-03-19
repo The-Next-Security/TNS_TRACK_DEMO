@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_disable_dnd`(
+CREATE PROCEDURE `tns_cool_track`.`stpr_disable_dnd`(
     IN p_id_suscripcion INT
 )
 BEGIN

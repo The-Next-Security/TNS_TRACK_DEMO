@@ -4,28 +4,31 @@
 
 ---
 
-## Inventario de endpoints montados (post-Issue #11)
+## Inventario de endpoints montados (reorganización final Issue #11 — 2026-03-17)
 
-| Dominio | Ruta base | Rutas/Archivo | Controlador |
-|---------|-----------|---------------|-------------|
-| Dispositivos | /api/devices | device_Routes | device_Controller |
-| Config | /api/config | config_Routes | tariffConfigController |
-| Totales | /api/totals | totales_Routes | totales_Controller |
+| Dominio | Ruta base | Archivo de rutas | Controladores |
+|---------|-----------|-----------------|---------------|
+| Energía eléctrica | /api/energia | energia_Routes | device_Controller, energy_Controller, totales_Controller, consumoCategoria_Controller |
+| Temperatura (Ubibot) | /api/temperatura | temperatura_Routes | ubibot_Controller, presets_Controller |
+| Reportes | /api/reportes | reportes_Routes | report_Controller, reportScheduler_Controller, ubibot_Controller (defrost) |
+| Análisis cruzado | /api/analisis | analisis_Routes | powerAnalysis_Controller |
+| Inteligencia Artificial | /api/ia | ia_Routes | aiAnalysis_Controller |
+| Alertas | /api/alertas | alertas_Routes | alertTracking_Controller |
+| Config SEM | /api/config | semConfig_Routes | sem_ConfigController |
+| Config Teltonika | /api/config | telConfig_Routes | tel_ConfigController |
+| Config Alertas | /api/config | alertConfig_Routes | alertSchedule_Controller |
+| Config Notificaciones | /api/config | notifConfig_Routes | notificationHorarios_Controller |
+| Config Tarifas/Mapbox | /api/config | tariffConfig_Routes | tariffConfig_Controller |
 | Usuarios | /api/usuarios | usuarios_Routes | usuarios_Controller |
-| Personal | /api/personal | personal_Routes | personal_Controller |
-| Power Analysis | /api/powerAnalysis | powerAnalysis_Routes | powerAnalysis_Controller |
-| GPS | /api/gps | gps_Routes | gps_Controller |
-| Ubibot | /api/ubibot | ubibot_Routes | ubibot_Controller |
-| Blindspot | /api/blindspot | blindSpot_Routes | blindSpot_Controller |
-| Auth | /api/auth | auth_Routes | auth_Controller |
-| Consumo | /api/consumo | consumoCategoria_Routes | consumoCategoria_Controller |
-| Push | /api/push | pushNotification_Routes | pushNotification_Controller |
-| Alertas | /api/alerts | alertTracking_Routes | alertTracking_Controller |
-| Presets | /api/presets | presets_Routes | presets_Controller |
-| Reportes | /api/reports | reports_Routes | report_Controller |
-| IA Análisis | /api/ia/analisis | aiAnalysis_Routes | aiAnalysis_Controller |
+| Autenticación | /api/auth | auth_Routes | auth_Controller |
+| Push Notifications | /api/push | pushNotification_Routes | pushNotification_Controller |
+| GPS *(futuro)* | /api/gps | gps_Routes | gps_Controller → 501 |
+| BlindSpot *(futuro)* | /api/blindspot | blindSpot_Routes | blindSpot_Controller → 501 |
+| Personal *(futuro)* | /api/personal | personal_Routes | personal_Controller → 501 |
+| Beacons *(futuro)* | /api/beacons | beacons_Routes | beacons_Controller → 501 |
+| Sectores *(futuro)* | /api/sectores | sectores_Routes | sectores_Controller → 501 |
 
-**Dominios reservados (no montados):** /api/sectores, /api/beacons — ver Issue #26.
+**Módulos futuros (Teltonika/BLE):** GPS, BlindSpot, Personal, Beacons y Sectores responden HTTP 501 en todos sus endpoints hasta que se planifique la integración hardware.
 
 ---
 
@@ -55,4 +58,4 @@ Endpoints que exponen valores de configuración permitidos para el cliente. Los 
 
 **Origen de datos:** configLoader (tablas `gen_cofiguracion_*`), rutas `mapbox.access_token` y `mapbox.style_url`. Ver `DOCUMENTACIÓN/Configuracion.md` (grupo `mapbox`).
 
-**Implementación:** Controlador `tariffConfigController.getMapboxConfig` (rutas en `configRoutes.js`).
+**Implementación:** Controlador `tariffConfigController.getMapboxConfig` (rutas en `tariffConfig_Routes.js`).

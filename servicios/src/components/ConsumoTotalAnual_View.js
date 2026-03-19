@@ -148,7 +148,7 @@ const ConsumoTotalAnualV2 = () => {
     setError(null);
 
     try {
-      const response = await axios.get(`/api/totals/yearly/${yearToFetch}`, {
+      const response = await axios.get(`/api/energia/totales/anual/${yearToFetch}`, {
         params: { deviceId: deviceToFetch.shelly_id },
       });
 

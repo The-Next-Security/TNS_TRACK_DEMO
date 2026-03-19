@@ -131,7 +131,7 @@ const ConsumoElectricoV2 = () => {
     setShowCharts(true);
     try {
       const formattedDate = DateTime.fromJSDate(date).toFormat('yyyy-MM-dd');
-      const response = await axios.get(`/api/devices/consumption/${formattedDate}`);
+      const response = await axios.get(`/api/energia/consumo/${formattedDate}`);
       setData(response.data.data);
       setLoading(false);
       setError(null);
@@ -165,7 +165,7 @@ const ConsumoElectricoV2 = () => {
   const handleDownload = async (shellyId, deviceName) => {
     try {
       const formattedDate = DateTime.fromJSDate(selectedDate).toFormat('yyyy-MM-dd');
-      const response = await axios.get(`/api/devices/download/${shellyId}/${formattedDate}`, {
+      const response = await axios.get(`/api/energia/consumo/descarga/${shellyId}/${formattedDate}`, {
         responseType: 'blob'
       });
 

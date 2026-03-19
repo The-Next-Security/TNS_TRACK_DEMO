@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` TRIGGER `trig_update_response_time`
+CREATE TRIGGER `trig_update_response_time`
 BEFORE UPDATE ON `ale_seguimiento`
 FOR EACH ROW
 BEGIN

@@ -64,8 +64,8 @@ const ReportDashboardV2 = ({ userPermissions = [] }) => {
 
   const fetchActiveSchedulesCount = async () => {
     try {
-      const response = await fetch('/api/reports/scheduled/count', {
-        credentials: 'include'
+      const response = await fetch('/api/reportes/programados/conteo', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
       });
 
       if (!response.ok) {
@@ -86,8 +86,8 @@ const ReportDashboardV2 = ({ userPermissions = [] }) => {
 
   const fetchReportTemplates = async () => {
     try {
-      const response = await fetch('/api/reports/templates', {
-        credentials: 'include'
+      const response = await fetch('/api/reportes/plantillas', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
       });
 
       if (!response.ok) {
@@ -104,8 +104,8 @@ const ReportDashboardV2 = ({ userPermissions = [] }) => {
 
   const fetchRecentReports = async () => {
     try {
-      const response = await fetch('/api/reports/history?limit=5', {
-        credentials: 'include'
+      const response = await fetch('/api/reportes/historial?limit=5', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
       });
 
       if (!response.ok) {

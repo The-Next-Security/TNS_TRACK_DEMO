@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { DateTime } from "luxon";
-import Header from "./Header";
-import pinIcon from "./assets/images/pngkit.png";
+import HeaderV2 from "./Header_View";
+import pinIcon from "../assets/images/pngkit.png";
 import MapModal from "./MapModal";
 
 const SmsData = () => {
@@ -64,8 +64,8 @@ const SmsData = () => {
 
   return (
     <div>
-      <Header title="Base de Mensajes Recibidos" />
-      <div className="content">
+      <HeaderV2 title="Base de Mensajes Recibidos" />
+      <div className="p-4">
         <h1>SMS Data</h1>
         <table>
           <thead>

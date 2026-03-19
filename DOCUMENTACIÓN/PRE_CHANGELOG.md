@@ -17,6 +17,106 @@
 
 ## Unreleased
 
+### 2026-03-19 — @dependabot[bot] ([#58](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/58))
+- **chore** `back-end, dependencies, npm, security` | bump framer-motion from 12.23.26 to 12.38.0 in /servicios
+
+
+### 2026-03-19 — @dependabot[bot] ([#59](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/59))
+- **chore** `back-end, dependencies, npm, security` | bump mapbox-gl from 3.17.0 to 3.20.0 in /servicios
+
+
+### 2026-03-19 — @dependabot[bot] ([#60](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/60))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.361.1 to 1.362.0 in /servicios
+
+
+### 2026-03-19 — @dependabot[bot] ([#61](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/61))
+- **chore** `back-end, dependencies, npm, security` | bump baseline-browser-mapping from 2.9.8 to 2.10.8 in /servicios
+
+
+### 2026-03-19 — @dependabot[bot] ([#57](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/57))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 3 updates
+
+
+### 2026-03-18 — @dependabot[bot] ([#56](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/56))
+- **chore** `back-end, dependencies, npm, security` | bump puppeteer from 24.33.0 to 24.39.1 in /servicios
+
+
+### 2026-03-18 — @dependabot[bot] ([#55](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/55))
+- **chore** `back-end, dependencies, npm, security` | bump recharts from 2.15.4 to 3.8.0 in /servicios
+
+
+### 2026-03-18 — @dependabot[bot] ([#54](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/54))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.27.0 to 6.32.0 in /servicios
+
+
+### 2026-03-18 — @dependabot[bot] ([#53](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/53))
+- **chore** `back-end, dependencies, npm, security` | bump core-js from 3.48.0 to 3.49.0 in /servicios
+
+
+### 2026-03-18 — @dependabot[bot] ([#52](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/52))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.307.1 to 1.361.1 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#51](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/51))
+- **chore** `back-end, dependencies, npm, security` | bump cron-parser from 4.9.0 to 5.5.0 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#50](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/50))
+- **chore** `back-end, dependencies, npm, security` | bump tailwindcss from 3.4.19 to 4.2.1 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#49](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/49))
+- **chore** `back-end, dependencies, npm, security` | bump webpack-cli from 6.0.1 to 7.0.2 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#48](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/48))
+- **chore** `back-end, dependencies, npm, security` | bump node-fetch from 2.7.0 to 3.3.2 in /servicios
+
+
+### 2026-03-17 — @dependabot[bot] ([#47](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/47))
+- **chore** `back-end, dependencies, npm, security` | bump the development-dependencies group in /servicios with 2 updates
+
+
+### 2026-03-16 — @dependabot[bot] ([#45](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/45))
+- **chore** `back-end, dependencies, npm, security` | bump babel-loader from 10.0.0 to 10.1.1 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#44](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/44))
+- **chore** `back-end, dependencies, npm, security` | bump lucide-react from 0.544.0 to 0.577.0 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#43](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/43))
+- **chore** `back-end, dependencies, npm, security` | bump react-router from 7.12.0 to 7.13.1 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#42](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/42))
+- **chore** `back-end, dependencies, npm, security` | bump joi from 17.13.3 to 18.0.2 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#41](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/41))
+- **chore** `back-end, dependencies, npm, security` | bump mysql2 from 3.19.1 to 3.20.0 in /servicios
+
+
+### 2026-03-16 — @dependabot[bot] ([#40](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/40))
+- **chore** `dependencies` | bump actions/stale from 9 to 10
+
+
+### 2026-03-16 — @dependabot[bot] ([#39](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/39))
+- **chore** `dependencies` | bump actions/setup-node from 4 to 6
+
+
+### 2026-03-16 — @dependabot[bot] ([#38](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/38))
+- **chore** `dependencies` | bump actions/setup-python from 5 to 6
+
+
+### 2026-03-16 — @dependabot[bot] ([#37](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/37))
+- **chore** `dependencies` | bump actions/github-script from 7 to 8
+
+
+### 2026-03-16 — @dependabot[bot] ([#36](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/36))
+- **chore** `dependencies` | bump actions/labeler from 5 to 6
+
+
 ### 2026-03-16 — @Bufigol ([#13](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/13))
 - **chore** `documentation, SQL - BBDD, back-end, analytics, front-end` | [FASE 0] Planificación y Fundamentos — Actualización de documentación (Closes #9)
 

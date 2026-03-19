@@ -164,7 +164,7 @@ const DoorStatusMatrixV2 = () => {
 
       console.log("[DoorStatusMatrix] Fetching temperature data:", params);
 
-      const response = await axios.get("/api/ubibot/temperature-range-data", {
+      const response = await axios.get("/api/temperatura/rango", {
         params,
       });
 

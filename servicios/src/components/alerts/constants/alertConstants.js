@@ -180,12 +180,12 @@ export const TIMELINE_EVENT_TYPES = {
  * @description Centralized API endpoint definitions
  */
 export const API_ENDPOINTS = {
-  getAlertDetail: (alertId) => `/api/alerts/${alertId}`,
-  listAlerts: '/api/alerts/list',
-  acknowledgeAlert: '/api/alerts/acknowledge',
-  resolveAlert: '/api/alerts/resolve',
-  markFalseAlarm: '/api/alerts/false-alarm',
-  addObservation: '/api/alerts/observation'
+  getAlertDetail: (alertId) => `/api/alertas/${alertId}`,
+  listAlerts: '/api/alertas/lista',
+  acknowledgeAlert: '/api/alertas/reconocer',
+  resolveAlert: '/api/alertas/resolver',
+  markFalseAlarm: '/api/alertas/falsa-alarma',
+  addObservation: '/api/alertas/observacion'
 };
 
 /**

@@ -326,13 +326,66 @@ Plan de alineación de todos los endpoints con el esquema de BD definido en SQL_
 
 ### Decisiones aplicadas
 
-- **ubi_canal ↔ ubi_presets_temperatura (Opción A):** Se añadió FK `id_preset` en ubi_canal; se eliminaron `temperatura_minima_umbral`, `temperatura_maxima_umbral`, `fecha_actualizacion_umbral`, `usuario_actualizacion_umbral`. Los umbrales se obtienen siempre por JOIN con ubi_presets_temperatura. Al cambiar un preset, todos los canales que lo usan se actualizan implícitamente.
+- **ubi_canal ↔ ubi_grupo (antes ubi_presets_temperatura):** Se añadió FK `id_preset` en ubi_canal; se eliminaron `temperatura_minima_umbral`, `temperatura_maxima_umbral`, `fecha_actualizacion_umbral`, `usuario_actualizacion_umbral`. Los umbrales se obtienen siempre por JOIN con ubi_grupo. Al cambiar un preset, todos los canales que lo usan se actualizan implícitamente.
 - **Reportería:** Se añadieron columnas a rep_plantillas (max_dispositivos, max_dias, admite_comparativo, tiempo_estimado_segundos) y rep_reportes_generados (id_usuario, fecha_inicio_periodo, fecha_fin_periodo, ids_dispositivos, config_reporte, tiempo_generacion_segundos, mensaje_error_generacion).
-- **Presets:** presets_Controller migrado de temperature_presets a ubi_presets_temperatura. SP stpr_apply_preset_to_cameras actualizado para usar UPDATE id_preset.
+- **Presets:** presets_Controller migrado de temperature_presets a ubi_grupo. SP stpr_apply_preset_to_cameras actualizado para usar UPDATE id_preset.
 - **GPS/blindspot/sectores/beacons:** Sin cambios en esquema; dominios reservados (Issue #26 para sectores/beacons).
 
 ### Estado Actual
 ✅ Parcialmente implementado — Esquema SQL, SP, triggers, ubibot_Service, presets_Controller, Base_de_Datos.md, inventario en APIs_internas.md.
+
+---
+
+## 13. Rename ubi_presets_temperatura → ubi_grupo + modelo dual de umbrales (Issues #32 y #33)
+
+### Contexto
+Issue #32: Los endpoints `GET/POST /api/config/teltonica/temperatura-umbrales` referencian la tabla `parametrizaciones` que no existe en el nuevo schema. Issue #33: `updateChannelThresholds` fallaba en runtime con "Unknown column" porque `ubi_canal` no tenía columnas `threshold_min`/`threshold_max`.
+
+### Decisiones aplicadas
+
+- **Rename `ubi_presets_temperatura` → `ubi_grupo`:** Nombre genérico que refleja mejor el rol de la tabla (grupo de configuración), no acoplado al dominio de temperatura. Afecta tabla, log, trigger, SPs, controllers y services.
+- **Modelo dual de umbrales:** Se agregan columnas `umbral_min`/`umbral_max` en `ubi_canal` como override individual (NULL por defecto). Lógica de resolución: `COALESCE(c.umbral_min, g.temperatura_minima)` — el override individual tiene prioridad; si es NULL, se usa el default del grupo.
+- **Issue #32 → HTTP 501:** Los endpoints Teltonika de temperatura-umbrales retornan 501 Not Implemented hasta que se planifique la migración con prefijo `tel_` en BD. `Configuration_View.js` maneja el 501 de forma graceful sin crashear el resto del formulario.
+- **Sin migration script:** BD se crea desde cero; solo se actualizaron SQL_FILES.
+
+### Estado Actual
+✅ Implementado — SQL_FILES, controllers (presets, ubibot, aiAnalysis), services (notification, aiData, ubibot_Adapter, temperatureAggregation), frontend (DashboardTemperatura_View, Configuration_View), documentación.
+
+---
+
+## 14. Reorganización completa de endpoints por dominios de negocio (Issue #11 — Fase final)
+
+### Contexto
+Tras la limpieza inicial de rutas legacy (Decisión #11), el backend mantenía una organización inconsistente: dominios de negocio mezclados en archivos de rutas distintos, prefijos de URL acoplados a detalles de implementación (`/api/ubibot`, `/api/alerts`, `/api/reports`), controladores duplicados o sin montar, y módulos Teltonika futuros causando errores 500 en producción. El Issue #11 declaró la reorganización como completada pero la segunda fase quedó pendiente.
+
+### Decisión
+
+**Estructura de dominios adoptada:**
+| Prefijo | Dominio | Reemplaza |
+|---------|---------|-----------|
+| `/api/energia` | Energía eléctrica (Shelly) | `/api/devices`, `/api/totals`, `/api/consumo` |
+| `/api/temperatura` | Temperatura (Ubibot) + presets | `/api/ubibot`, `/api/presets` |
+| `/api/reportes` | Todos los reportes + descongelamiento | `/api/reports` + endpoints defrost de `/api/ubibot` |
+| `/api/analisis` | Análisis cruzado temperatura+potencia | `/api/powerAnalysis` |
+| `/api/ia` | Inteligencia Artificial | `/api/ia/analisis` |
+| `/api/alertas` | Tracking de alertas | `/api/alerts` |
+| `/api/config` | Configuración (5 archivos separados) | `/api/config` (monolítico) |
+| `/api/beacons` | FUTURO Teltonika — stub 501 | — |
+| `/api/sectores` | FUTURO Teltonika — stub 501 | — |
+
+**Acciones aplicadas:**
+- Eliminados 4 controladores muertos: `config_Controller` (copia exacta de `semConfig_Controller`), `analysis_Controller` (versión obsoleta con bug hardcodeado `'Reefer A'`), `system_Controller` y `group_Controller` (no montados, métodos `databaseService` inexistentes).
+- Eliminados 11 archivos de rutas obsoletos reemplazados por los 13 nuevos dominio-específicos.
+- Implementado método real `bulkUpdateChannelThresholds` en `ubibot_Controller` (faltaba; el frontend lo llamaba produciendo 404).
+- Módulos futuros Teltonika (GPS, BlindSpot, Personal, Beacons, Sectores) → responden HTTP 501 en todos sus métodos.
+- Frontend (28 componentes) sincronizado con los nuevos paths; cero referencias a URLs antiguas en código activo.
+
+### Alternativas Consideradas
+- **Mantener prefijos originales con aliases**: Descartado — perpetúa la deuda técnica y no resuelve la incoherencia de dominio.
+- **Reorganización incremental por dominio**: Descartado — mayor riesgo de inconsistencias parciales; la reorganización completa en un único PR es más segura.
+
+### Estado Actual
+✅ Implementado — 13 nuevos archivos de rutas, `server.js` actualizado, 28 componentes frontend sincronizados, controladores muertos eliminados.
 
 ---
 
@@ -342,6 +395,7 @@ Plan de alineación de todos los endpoints con el esquema de BD definido en SQL_
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-03-17 | Reorganización completa de endpoints por dominios de negocio (Issue #11 — Fase final): 13 dominios, 28 componentes sincronizados, 4 controladores muertos eliminados | andresTNS, Bufigol |
 | 2026-03-12 | Alineación endpoints con BD: ubi_canal+id_preset (Opción A), rep_plantillas/rep_reportes_generados, presets | andresTNS, Bufigol |
 | 2026-03-11 | Modelo unificado de notificaciones: ale_suscripciones_notificacion, horarios base/custom, servicio único de decisión; eliminación ale_suscripciones_email | Plan Notificaciones unificadas |
 | 2026-03-11 | Estandarización de fechas: Luxon como única librería (Issue #5) | andresTNS, Bufigol |
@@ -361,4 +415,4 @@ Plan de alineación de todos los endpoints con el esquema de BD definido en SQL_
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-03-11
+**Última revisión**: 2026-03-17

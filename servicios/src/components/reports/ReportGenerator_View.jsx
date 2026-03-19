@@ -113,7 +113,7 @@ const ReportGeneratorV2 = ({ userPermissions = [] }) => {
       // Fetch different devices based on report type (T100)
       if (templateKey === 'executive_consumption') {
         // Get Shelly devices for consumption reports
-        const response = await axios.get('/api/devices/active', {
+        const response = await axios.get('/api/energia/dispositivos/activos', {
           withCredentials: true
         });
         
@@ -127,10 +127,10 @@ const ReportGeneratorV2 = ({ userPermissions = [] }) => {
         }));
       } else {
         // Get Ubibot temperature devices for other report types
-        const response = await axios.get('/api/ubibot/temperature-devices', {
+        const response = await axios.get('/api/temperatura/dispositivos', {
           withCredentials: true
         });
-        
+
         // El endpoint retorna un array directo de { channel_id, name }
         devices = (response.data || []).map(device => ({
           id: device.channel_id,

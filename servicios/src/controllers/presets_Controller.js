@@ -32,7 +32,7 @@ class PresetsController {
           creado_por as created_by,
           fecha_actualizacion as updated_at,
           actualizado_por as updated_by
-        FROM ubi_presets_temperatura
+        FROM ubi_grupo
         WHERE activo = 1
         ORDER BY es_predeterminado DESC, nombre_preset ASC
       `;
@@ -99,7 +99,7 @@ class PresetsController {
           creado_por as created_by,
           fecha_actualizacion as updated_at,
           actualizado_por as updated_by
-        FROM ubi_presets_temperatura
+        FROM ubi_grupo
         WHERE id_preset = ?
       `;
 
@@ -202,7 +202,7 @@ class PresetsController {
       // Verificar nombre único
       const checkQuery = `
         SELECT COUNT(*) as count
-        FROM ubi_presets_temperatura
+        FROM ubi_grupo
         WHERE nombre_preset = ? AND activo = 1
       `;
       const checkResult = await databaseService.query(checkQuery, [name.trim()]);
@@ -214,9 +214,9 @@ class PresetsController {
         });
       }
 
-      // Insertar nuevo preset (ubi_presets_temperatura)
+      // Insertar nuevo preset (ubi_grupo)
       const insertQuery = `
-        INSERT INTO ubi_presets_temperatura (
+        INSERT INTO ubi_grupo (
           nombre_preset,
           temperatura_minima,
           temperatura_maxima,
@@ -245,7 +245,7 @@ class PresetsController {
           es_predeterminado as is_default,
           fecha_creacion as created_at,
           creado_por as created_by
-        FROM ubi_presets_temperatura
+        FROM ubi_grupo
         WHERE id_preset = ?
       `;
 
@@ -308,7 +308,7 @@ class PresetsController {
       // Verificar que el preset existe
       const checkQuery = `
         SELECT id_preset, es_predeterminado as is_default
-        FROM ubi_presets_temperatura
+        FROM ubi_grupo
         WHERE id_preset = ?
       `;
       const checkResult = await databaseService.query(checkQuery, [id]);
@@ -365,7 +365,7 @@ class PresetsController {
       if (name) {
         const uniqueCheckQuery = `
           SELECT COUNT(*) as count
-          FROM ubi_presets_temperatura
+          FROM ubi_grupo
           WHERE nombre_preset = ? AND id_preset != ? AND activo = 1
         `;
         const uniqueResult = await databaseService.query(uniqueCheckQuery, [name.trim(), id]);
@@ -401,7 +401,7 @@ class PresetsController {
       values.push(id);
 
       const updateQuery = `
-        UPDATE ubi_presets_temperatura
+        UPDATE ubi_grupo
         SET ${updates.join(', ')}
         WHERE id_preset = ?
       `;
@@ -420,7 +420,7 @@ class PresetsController {
           es_predeterminado as is_default,
           fecha_actualizacion as updated_at,
           actualizado_por as updated_by
-        FROM ubi_presets_temperatura
+        FROM ubi_grupo
         WHERE id_preset = ?
       `;
 
@@ -481,7 +481,7 @@ class PresetsController {
 
       // Intentar eliminar (triggers validarán si está en uso o es default)
       const deleteQuery = `
-        DELETE FROM ubi_presets_temperatura
+        DELETE FROM ubi_grupo
         WHERE id_preset = ?
       `;
 
@@ -631,7 +631,7 @@ class PresetsController {
           p.es_predeterminado AS is_default,
           COUNT(c.id_canal) AS cameras_using,
           GROUP_CONCAT(c.nombre ORDER BY c.nombre) AS camera_names
-        FROM ubi_presets_temperatura p
+        FROM ubi_grupo p
         LEFT JOIN ubi_canal c ON c.id_preset = p.id_preset AND c.activo = 1
         WHERE p.activo = 1
         GROUP BY p.id_preset

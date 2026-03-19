@@ -3,7 +3,7 @@
  * Feature: 004-reportes-base-core (T012)
  *
  * Calculates temperature KPIs and statistics for report generation
- * Migrado a nuevo schema: ubi_lecturas_sensor, ubi_canal, ubi_presets_temperatura
+ * Migrado a nuevo schema: ubi_lecturas_sensor, ubi_canal, ubi_grupo
  * (Reemplaza: sensor_readings_ubibot, channels_ubibot, parametrizaciones)
  */
 
@@ -143,9 +143,9 @@ async function getDeviceStatistics(channelIds, startDate, endDate) {
     const placeholders = channelIds.map(() => '?').join(',');
 
     // Migrado: sensor_readings_ubibot → ubi_lecturas_sensor; channels_ubibot → ubi_canal;
-    // parametrizaciones (threshold_min/max) → ubi_presets_temperatura;
+    // parametrizaciones (threshold_min/max) → ubi_grupo;
     // catalogo_ubicaciones_reales → gen_ubicaciones_reales (columna nombre en lugar de nombre_ubicacion)
-    // SUPUESTO #3: threshold_min/max provienen del preset del grupo (ubi_presets_temperatura)
+    // Lógica dual: COALESCE(ch.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
     const query = `
       SELECT
         ch.canal_id AS channel_id,
@@ -157,17 +157,17 @@ async function getDeviceStatistics(channelIds, startDate, endDate) {
         STDDEV(sr.temperatura_externa) AS stddev_temp,
         COUNT(*) AS total_readings,
         SUM(CASE
-          WHEN sr.temperatura_externa < p.temperatura_minima
-            OR sr.temperatura_externa > p.temperatura_maxima
+          WHEN sr.temperatura_externa < COALESCE(ch.umbral_min, g.temperatura_minima)
+            OR sr.temperatura_externa > COALESCE(ch.umbral_max, g.temperatura_maxima)
           THEN 1
           ELSE 0
         END) AS readings_out_of_range,
-        p.temperatura_minima AS threshold_min,
-        p.temperatura_maxima AS threshold_max
+        COALESCE(ch.umbral_min, g.temperatura_minima) AS threshold_min,
+        COALESCE(ch.umbral_max, g.temperatura_maxima) AS threshold_max
       FROM ubi_lecturas_sensor sr
       INNER JOIN ubi_canal ch ON sr.id_canal = ch.id_canal
       LEFT JOIN gen_ubicaciones_reales loc ON ch.id_ubicacion_real = loc.id_ubicacion_real
-      LEFT JOIN ubi_presets_temperatura p ON ch.id_preset = p.id_preset
+      LEFT JOIN ubi_grupo g ON ch.id_preset = g.id_preset
       WHERE sr.id_canal IN (SELECT id_canal FROM ubi_canal WHERE canal_id IN (${placeholders}))
         AND DATE(sr.fecha_lectura) BETWEEN ? AND ?
         AND sr.temperatura_externa IS NOT NULL
@@ -176,8 +176,10 @@ async function getDeviceStatistics(channelIds, startDate, endDate) {
         ch.canal_id,
         ch.nombre,
         loc.nombre,
-        p.temperatura_minima,
-        p.temperatura_maxima
+        ch.umbral_min,
+        ch.umbral_max,
+        g.temperatura_minima,
+        g.temperatura_maxima
       ORDER BY ch.nombre ASC, ch.canal_id ASC
     `;
 

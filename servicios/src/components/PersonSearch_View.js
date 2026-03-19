@@ -53,6 +53,7 @@ import personal1Icon from "../assets/images/forklift_orange_1.png";
 import personal2Icon from "../assets/images/forklift_Blue_2.png";
 import personal3Icon from "../assets/images/forklift_red_3.png";
 import planoSectores from "../assets/images/PLANO_STORAGE_Zonas.jpg";
+/* MÓDULO FUTURO - Teltonika/Beacons: pendiente de desarrollo */
 
 /**
  * Componente principal de búsqueda histórica de personal
@@ -82,7 +83,7 @@ function PersonSearchV2() {
   useEffect(() => {
     const fetchThresholds = async () => {
       try {
-        const response = await axios.get("/api/config/umbrales");
+        const response = await axios.get("/api/config/teltonica/umbrales");
         setUmbrales(response.data);
       } catch (error) {
         console.error("Error fetching thresholds:", error);
@@ -92,7 +93,7 @@ function PersonSearchV2() {
 
     const fetchDevices = async () => {
       try {
-        const response = await axios.get("/api/devices/devices");
+        const response = await axios.get("/api/energia/dispositivos/legacy");
         setDevices(response.data);
       } catch (error) {
         console.error("Error fetching devices:", error);

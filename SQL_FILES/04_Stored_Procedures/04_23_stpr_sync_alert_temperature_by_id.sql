@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` PROCEDURE `tns_cool_track`.`stpr_sync_alert_temperature_by_id`(IN p_id_alerta INT)
+CREATE PROCEDURE `tns_cool_track`.`stpr_sync_alert_temperature_by_id`(IN p_id_alerta INT)
 BEGIN
   DECLARE v_avg DECIMAL(5,2);
   DECLARE v_min DECIMAL(5,2);

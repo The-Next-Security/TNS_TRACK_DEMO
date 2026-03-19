@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` FUNCTION `tns_cool_track`.`fun_process_totales_hora`(
+CREATE FUNCTION `tns_cool_track`.`fun_process_totales_hora`(
     p_hora_local TIMESTAMP
 ) RETURNS tinyint(1)
     DETERMINISTIC

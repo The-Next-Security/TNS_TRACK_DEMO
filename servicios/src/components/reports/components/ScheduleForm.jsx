@@ -88,7 +88,7 @@ const ScheduleForm = ({ initialData = null, onSave, onCancel }) => {
 
   const fetchAvailableDevices = async () => {
     try {
-      const response = await axios.get('/api/ubibot/temperature-devices', {
+      const response = await axios.get('/api/temperatura/dispositivos', {
         withCredentials: true
       });
 

@@ -524,8 +524,8 @@ const ReportDashboardV2Enhanced = ({ userPermissions = [] }) => {
 
   const fetchActiveSchedulesCount = async () => {
     try {
-      const response = await fetch('/api/reports/scheduled/count', {
-        credentials: 'include'
+      const response = await fetch('/api/reportes/programados/conteo', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
       });
 
       if (!response.ok) {
@@ -545,8 +545,8 @@ const ReportDashboardV2Enhanced = ({ userPermissions = [] }) => {
 
   const fetchReportTemplates = async () => {
     try {
-      const response = await fetch('/api/reports/templates', {
-        credentials: 'include'
+      const response = await fetch('/api/reportes/plantillas', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
       });
 
       if (!response.ok) {
@@ -563,8 +563,8 @@ const ReportDashboardV2Enhanced = ({ userPermissions = [] }) => {
 
   const fetchRecentReports = async () => {
     try {
-      const response = await fetch('/api/reports/history?limit=10', {
-        credentials: 'include'
+      const response = await fetch('/api/reportes/historial?limit=10', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
       });
 
       if (!response.ok) {
@@ -623,7 +623,7 @@ const ReportDashboardV2Enhanced = ({ userPermissions = [] }) => {
   const handleDownload = useCallback((report) => {
     // Mark as downloading
     const link = document.createElement('a');
-    link.href = `/api/reports/download/${report.id}`;
+    link.href = `/api/reportes/descargar/${report.id}`;
     link.target = '_blank';
     link.download = `${report.report_name}.pdf`;
     document.body.appendChild(link);

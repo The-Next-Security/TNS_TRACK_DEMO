@@ -1,4 +1,4 @@
-CREATE DEFINER=`root`@`%` FUNCTION `tns_cool_track`.`fun_get_consumption_thresholds`(
+CREATE FUNCTION `tns_cool_track`.`fun_get_consumption_thresholds`(
     p_grupo_id INT,
     p_fecha TIMESTAMP
 ) RETURNS json

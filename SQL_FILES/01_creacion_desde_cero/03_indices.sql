@@ -430,7 +430,7 @@ CREATE INDEX `idx_ubi_canal_id_ubicacion_real-activo`
 CREATE INDEX `idx_ubi_canal_activo-en_linea-id_ubicacion_real`
     ON `ubi_canal` (`activo`, `en_linea`, `id_ubicacion_real`);
 
--- Para búsqueda de canales por preset (Opción A: umbrales via ubi_presets_temperatura)
+-- Para búsqueda de canales por preset (umbrales via ubi_grupo)
 CREATE INDEX `idx_ubi_canal_id_preset-activo`
     ON `ubi_canal` (`id_preset`, `activo`);
 
@@ -473,25 +473,25 @@ CREATE INDEX `idx_ubi_contador_ciclos_numero_ciclos-fecha_ciclos`
 
 
 -- ----------------------------------------------------------
--- ubi_presets_temperatura
--- Catálogo de presets. Patrones de acceso simples.
+-- ubi_grupo
+-- Catálogo de grupos de temperatura. Patrones de acceso simples.
 -- ----------------------------------------------------------
 
--- Para búsqueda del preset predeterminado activo
-CREATE INDEX `idx_ubi_presets_temperatura_activo-es_predeterminado`
-    ON `ubi_presets_temperatura` (`activo`, `es_predeterminado`);
+-- Para búsqueda del grupo predeterminado activo
+CREATE INDEX `idx_ubi_grupo_activo-es_predeterminado`
+    ON `ubi_grupo` (`activo`, `es_predeterminado`);
 
--- Para búsqueda de presets dentro de un rango de temperatura mínima
-CREATE INDEX `idx_ubi_presets_temperatura_activo-temperatura_minima`
-    ON `ubi_presets_temperatura` (`activo`, `temperatura_minima`);
+-- Para búsqueda de grupos dentro de un rango de temperatura mínima
+CREATE INDEX `idx_ubi_grupo_activo-temperatura_minima`
+    ON `ubi_grupo` (`activo`, `temperatura_minima`);
 
--- Para búsqueda de presets dentro de un rango de temperatura máxima
-CREATE INDEX `idx_ubi_presets_temperatura_activo-temperatura_maxima`
-    ON `ubi_presets_temperatura` (`activo`, `temperatura_maxima`);
+-- Para búsqueda de grupos dentro de un rango de temperatura máxima
+CREATE INDEX `idx_ubi_grupo_activo-temperatura_maxima`
+    ON `ubi_grupo` (`activo`, `temperatura_maxima`);
 
--- Para compound de rangos de temperatura (matching de umbrales a presets)
-CREATE INDEX `idx_ubi_presets_temperatura_activo-temp_minima-temp_maxima`
-    ON `ubi_presets_temperatura` (`activo`, `temperatura_minima`, `temperatura_maxima`);
+-- Para compound de rangos de temperatura (matching de umbrales a grupos)
+CREATE INDEX `idx_ubi_grupo_activo-temp_minima-temp_maxima`
+    ON `ubi_grupo` (`activo`, `temperatura_minima`, `temperatura_maxima`);
 
 
 -- ==============================================================================
@@ -520,28 +520,28 @@ CREATE INDEX `idx_ale_seguimiento_estado-fecha_resolucion`
     ON `ale_seguimiento` (`estado`, `fecha_resolucion`);
 
 -- Para reports de alertas por tipo en períodos (stpr_generate_daily_metrics)
-CREATE INDEX `idx_ale_seguimiento_tipo_alerta-fecha_alerta`
-    ON `ale_seguimiento` (`tipo_alerta`, `fecha_alerta`);
+CREATE INDEX `idx_ale_seguimiento_id_tipo_alerta-fecha_alerta`
+    ON `ale_seguimiento` (`id_tipo_alerta`, `fecha_alerta`);
 
--- Para cálculo del canal con más alertas (TOP canal en stpr_calculate_hourly_metrics)
-CREATE INDEX `idx_ale_seguimiento_id_canal-tipo_alerta-fecha_alerta`
-    ON `ale_seguimiento` (`id_canal`, `tipo_alerta`, `fecha_alerta`);
+-- Para cálculo del canal con más alertas (TOP canal en stpr_calculate_hourly_metrics) — origen_id = id dispositivo (ej. id_canal)
+CREATE INDEX `idx_ale_seguimiento_origen_id-id_tipo_alerta-fecha_alerta`
+    ON `ale_seguimiento` (`origen_id`, `id_tipo_alerta`, `fecha_alerta`);
 
--- Para queries por estado de alerta en canal específico
-CREATE INDEX `idx_ale_seguimiento_id_canal-estado-fecha_alerta`
-    ON `ale_seguimiento` (`id_canal`, `estado`, `fecha_alerta`);
+-- Para queries por estado de alerta en dispositivo de origen
+CREATE INDEX `idx_ale_seguimiento_origen_id-estado-fecha_alerta`
+    ON `ale_seguimiento` (`origen_id`, `estado`, `fecha_alerta`);
 
 -- Para monitoreo de alertas por nivel de severidad
 CREATE INDEX `idx_ale_seguimiento_severidad-estado-fecha_alerta`
     ON `ale_seguimiento` (`severidad`, `estado`, `fecha_alerta`);
 
 -- Para reportes combinados tipo + estado + período
-CREATE INDEX `idx_ale_seguimiento_tipo_alerta-estado-fecha_alerta`
-    ON `ale_seguimiento` (`tipo_alerta`, `estado`, `fecha_alerta`);
+CREATE INDEX `idx_ale_seguimiento_id_tipo_alerta-estado-fecha_alerta`
+    ON `ale_seguimiento` (`id_tipo_alerta`, `estado`, `fecha_alerta`);
 
--- Para análisis de alertas críticas por canal
-CREATE INDEX `idx_ale_seguimiento_id_canal-severidad-fecha_alerta`
-    ON `ale_seguimiento` (`id_canal`, `severidad`, `fecha_alerta`);
+-- Para análisis de alertas críticas por dispositivo de origen
+CREATE INDEX `idx_ale_seguimiento_origen_id-severidad-fecha_alerta`
+    ON `ale_seguimiento` (`origen_id`, `severidad`, `fecha_alerta`);
 
 -- Para reports de tiempo de confirmación (KPI de respuesta)
 CREATE INDEX `idx_ale_seguimiento_fecha_confirmacion`
@@ -552,16 +552,16 @@ CREATE INDEX `idx_ale_seguimiento_notificado_push-estado-fecha_alerta`
     ON `ale_seguimiento` (`notificado_push`, `estado`, `fecha_alerta`);
 
 -- Para análisis de falsas alarmas por tipo y período
-CREATE INDEX `idx_ale_seguimiento_es_falsa_alarma-tipo_alerta-fecha_alerta`
-    ON `ale_seguimiento` (`es_falsa_alarma`, `tipo_alerta`, `fecha_alerta`);
+CREATE INDEX `idx_ale_seguimiento_es_falsa_alarma-id_tipo_alerta-fecha_alerta`
+    ON `ale_seguimiento` (`es_falsa_alarma`, `id_tipo_alerta`, `fecha_alerta`);
 
 -- Para reports completos de estado: tipo + severidad + estado + fecha
-CREATE INDEX `idx_ale_seguimiento_tipo_alerta-severidad-estado-fecha_alerta`
-    ON `ale_seguimiento` (`tipo_alerta`, `severidad`, `estado`, `fecha_alerta`);
+CREATE INDEX `idx_ale_seguimiento_id_tipo_alerta-severidad-estado-fecha_alerta`
+    ON `ale_seguimiento` (`id_tipo_alerta`, `severidad`, `estado`, `fecha_alerta`);
 
--- Para análisis de valor de temperatura que disparó la alerta
-CREATE INDEX `idx_ale_seguimiento_id_canal-valor_temperatura-fecha_alerta`
-    ON `ale_seguimiento` (`id_canal`, `valor_temperatura`, `fecha_alerta`);
+-- Para análisis por dispositivo de origen y período (valor_temperatura está en ale_datos_temperatura)
+CREATE INDEX `idx_ale_seguimiento_origen_id-fecha_alerta`
+    ON `ale_seguimiento` (`origen_id`, `fecha_alerta`);
 
 
 -- ----------------------------------------------------------

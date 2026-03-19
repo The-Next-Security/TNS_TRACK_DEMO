@@ -388,12 +388,15 @@ class UbibotServiceAdapter {
             connection = await this.pool.getConnection();
 
             // Obtener información del canal
-            // Migrado: channels_ubibot → ubi_canal, parametrizaciones → ubi_presets_temperatura
+            // Migrado: channels_ubibot → ubi_canal, parametrizaciones → ubi_grupo
+            // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
             // Aliases preservan nombres de variables JS downstream (channelName, isOperational)
             const [channelInfo] = await connection.query(
-                "SELECT c.nombre AS name, c.activo AS esOperativa, p.temperatura_minima AS minima_temp_camara, p.temperatura_maxima AS maxima_temp_camara " +
+                "SELECT c.nombre AS name, c.activo AS esOperativa, " +
+                "COALESCE(c.umbral_min, g.temperatura_minima) AS minima_temp_camara, " +
+                "COALESCE(c.umbral_max, g.temperatura_maxima) AS maxima_temp_camara " +
                 "FROM ubi_canal c " +
-                "JOIN ubi_presets_temperatura p ON c.id_preset = p.id_preset " +
+                "JOIN ubi_grupo g ON c.id_preset = g.id_preset " +
                 "WHERE c.canal_id = ?",
                 [channelId]
             );

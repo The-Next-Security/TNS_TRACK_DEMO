@@ -13,6 +13,7 @@ import tnsLogo from '../assets/images/tns_logo_blanco.png';
 import theNextLogo from '../assets/images/thenextlogo.png';
 import storageImage from '../assets/images/storage-logo.png';
 import thermometerIcon from '../assets/images/thermometer.png';
+import axios from 'axios';
 import analyticsService from '../services/analytics_Service';
 import { Eye, EyeOff } from 'lucide-react';
 import { getLogoutReason, clearLogoutReason } from '../utils/session_Utils';
@@ -59,26 +60,14 @@ const LandingPageV2 = () => {
     setError('');
 
     try {
-      const response = await fetch('/api/usuarios/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ email, password }),
-      });
+      const response = await axios.post('/api/usuarios/login', { email, password });
+      const data = response.data;
 
-      if (!response.ok) {
-        throw new Error('Login failed');
-      }
-
-      const data = await response.json();
-
-      // ✅ Las cookies httpOnly se manejan automáticamente por el navegador
-      // No es necesario guardar tokens en localStorage (vulnerable a XSS)
-      console.log('[Frontend] Login exitoso, cookies configuradas automáticamente');
-
-      // ✅ Guardar email del usuario en localStorage para uso en la app
+      // ✅ Guardar tokens en localStorage para uso en Authorization header
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('userEmail', email);
-      console.log('[Frontend] Email del usuario guardado en localStorage:', email);
+      console.log('[Frontend] Login exitoso, tokens guardados en localStorage');
 
       // 🆕 ANALYTICS: Trackear login exitoso
       try {
@@ -97,7 +86,7 @@ const LandingPageV2 = () => {
       // ✅ FEATURE: 003-fix-session-expiry-handling
       // Dispatch login success event to trigger SessionManager
       window.dispatchEvent(new CustomEvent('auth:login_success', {
-        detail: { userId: data.userId || data.id_Usuario || email }
+        detail: { userId: data.userId || data.id_Usuario || email, user: data.user }
       }));
 
       // ✅ NUEVO: Verificar si hay una URL guardada para redirigir (ej: desde notificación push)

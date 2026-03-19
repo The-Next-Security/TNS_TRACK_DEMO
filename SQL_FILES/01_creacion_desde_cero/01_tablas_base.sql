@@ -321,33 +321,33 @@ CREATE TABLE `rep_reportes_generados` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Reportes generados';
 
 -- ============================================
--- TABLAS UBIBOT - PRESETS DE TEMPERATURA (ubi_)
+-- TABLAS UBIBOT - GRUPOS DE TEMPERATURA (ubi_)
 -- Debe ir antes de ubi_canal por FK id_preset
 -- ============================================
 
--- Presets de temperatura para umbrales de alerta
-CREATE TABLE `ubi_presets_temperatura` (
+-- Grupos de temperatura para umbrales de alerta
+CREATE TABLE `ubi_grupo` (
   `id_preset` INT UNSIGNED NOT NULL AUTO_INCREMENT,
-  `nombre_preset` VARCHAR(100) NOT NULL COMMENT 'Nombre descriptivo del preset',
-  `temperatura_minima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura mínima del umbral',
-  `temperatura_maxima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura máxima del umbral',
-  `es_predeterminado` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = preset predeterminado del sistema',
+  `nombre_preset` VARCHAR(100) NOT NULL COMMENT 'Nombre descriptivo del grupo',
+  `temperatura_minima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura mínima del umbral (valor por defecto del grupo)',
+  `temperatura_maxima` DECIMAL(5,2) NOT NULL COMMENT 'Temperatura máxima del umbral (valor por defecto del grupo)',
+  `es_predeterminado` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '1 = grupo predeterminado del sistema',
   `activo` TINYINT(1) NOT NULL DEFAULT 1,
-  `creado_por` VARCHAR(100) NOT NULL COMMENT 'Usuario que creó el preset',
-  `actualizado_por` VARCHAR(100) NOT NULL COMMENT 'Último usuario que actualizó el preset',
+  `creado_por` VARCHAR(100) NOT NULL COMMENT 'Usuario que creó el grupo',
+  `actualizado_por` VARCHAR(100) NOT NULL COMMENT 'Último usuario que actualizó el grupo',
   `fecha_creacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_preset`),
-  UNIQUE KEY `uk_ubi_presets_temperatura_nombre_preset` (`nombre_preset`),
-  INDEX `idx_ubi_presets_temperatura_activo` (`activo`),
-  INDEX `idx_ubi_presets_temperatura_es_predeterminado` (`es_predeterminado`),
-  CONSTRAINT `chk_ubi_presets_temperatura_minima`
+  UNIQUE KEY `uk_ubi_grupo_nombre_preset` (`nombre_preset`),
+  INDEX `idx_ubi_grupo_activo` (`activo`),
+  INDEX `idx_ubi_grupo_es_predeterminado` (`es_predeterminado`),
+  CONSTRAINT `chk_ubi_grupo_minima`
     CHECK (`temperatura_minima` >= -50 AND `temperatura_minima` <= 150),
-  CONSTRAINT `chk_ubi_presets_temperatura_maxima`
+  CONSTRAINT `chk_ubi_grupo_maxima`
     CHECK (`temperatura_maxima` >= -50 AND `temperatura_maxima` <= 150),
-  CONSTRAINT `chk_ubi_presets_temperatura_rango`
+  CONSTRAINT `chk_ubi_grupo_rango`
     CHECK (`temperatura_minima` < `temperatura_maxima`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Presets de temperatura para umbrales de alerta de canales Ubibot';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Grupos de temperatura para umbrales de alerta de canales Ubibot';
 
 -- ============================================
 -- TABLAS UBIBOT (ubi_)
@@ -366,7 +366,9 @@ CREATE TABLE `ubi_canal` (
   `firmware` VARCHAR(100) NOT NULL COMMENT 'Versión de firmware del sensor',
   `mac_address` VARCHAR(100) NOT NULL COMMENT 'Dirección MAC del sensor',
   `en_linea` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'Indica si el canal está en línea',
-  `id_preset` INT UNSIGNED NULL COMMENT 'FK a ubi_presets_temperatura - umbrales via preset (Opción A)',
+  `id_preset` INT UNSIGNED NULL COMMENT 'FK a ubi_grupo — umbrales base del grupo al que pertenece el canal',
+  `umbral_min` DECIMAL(5,2) NULL COMMENT 'Override individual de temperatura mínima. NULL = usa temperatura_minima del grupo',
+  `umbral_max` DECIMAL(5,2) NULL COMMENT 'Override individual de temperatura máxima. NULL = usa temperatura_maxima del grupo',
   `ultima_alerta_enviada` DATETIME NULL DEFAULT NULL COMMENT 'Fecha de última alerta enviada',
   `fuera_linea_desde` DATETIME NULL DEFAULT NULL COMMENT 'Fecha desde la cual el canal está sin conexión (NULL = actualmente en línea)',
   `serial` VARCHAR(20) NULL DEFAULT NULL COMMENT 'Número de serie físico del dispositivo (full_serial de Ubibot)',
@@ -385,11 +387,14 @@ CREATE TABLE `ubi_canal` (
     REFERENCES `gen_ubicaciones_reales`(`id_ubicacion_real`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ubi_canal_id_preset_ubi_presets_temperatura_id_preset`
+  CONSTRAINT `fk_ubi_canal_id_preset_ubi_grupo_id_preset`
     FOREIGN KEY (`id_preset`)
-    REFERENCES `ubi_presets_temperatura`(`id_preset`)
+    REFERENCES `ubi_grupo`(`id_preset`)
     ON DELETE SET NULL
-    ON UPDATE CASCADE
+    ON UPDATE CASCADE,
+  CONSTRAINT `chk_ubi_canal_umbral_min` CHECK (`umbral_min` IS NULL OR (`umbral_min` >= -50 AND `umbral_min` <= 150)),
+  CONSTRAINT `chk_ubi_canal_umbral_max` CHECK (`umbral_max` IS NULL OR (`umbral_max` >= -50 AND `umbral_max` <= 150)),
+  CONSTRAINT `chk_ubi_canal_umbral_rango` CHECK (`umbral_min` IS NULL OR `umbral_max` IS NULL OR `umbral_min` < `umbral_max`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Canales de sensores Ubibot';
 
 -- Tabla de lecturas de sensores Ubibot
@@ -725,7 +730,7 @@ CREATE TABLE `ale_seguimiento` (
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ale_seguimiento_id_origen_tipo_gen_tipos_origen_id_tipo_origen`
+  CONSTRAINT `fk_seguimiento_id_origen_tipo_tipos_origen_id_tipo_origen`
     FOREIGN KEY (`id_origen_tipo`)
     REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
     ON DELETE RESTRICT
@@ -796,17 +801,17 @@ CREATE TABLE `ale_suscripciones_notificacion` (
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_suscripcion_notificacion`),
   UNIQUE KEY `uk_ale_suscripciones_notificacion_regla` (`id_usuario`, `id_tipo_alerta`, `id_origen_tipo`, `canal`),
-  CONSTRAINT `fk_ale_suscripciones_notificacion_id_usuario_gen_usuario_id_usuario`
+  CONSTRAINT `fk_suscripciones_notif_id_usuario_usuario_id_usuario`
     FOREIGN KEY (`id_usuario`)
     REFERENCES `gen_usuario`(`id_usuario`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ale_suscripciones_notificacion_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+  CONSTRAINT `fk_suscripciones_notif_id_tipo_alerta_tipo_alerta_id_tipo_alerta`
     FOREIGN KEY (`id_tipo_alerta`)
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ale_suscripciones_notificacion_id_origen_tipo_gen_tipos_origen_id_tipo_origen`
+  CONSTRAINT `fk_suscripciones_notif_id_origen_tipo_tipos_origen_id_tipo_origen`
     FOREIGN KEY (`id_origen_tipo`)
     REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
     ON DELETE RESTRICT
@@ -828,7 +833,7 @@ CREATE TABLE `ale_horarios_alerta_canal` (
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_horario_alerta_canal`),
   UNIQUE KEY `uk_ale_horarios_alerta_canal_tipo_canal_dia` (`id_tipo_alerta`, `canal`, `dia_semana`),
-  CONSTRAINT `fk_ale_horarios_alerta_canal_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+  CONSTRAINT `fk_horarios_alerta_canal_id_tipo_alerta_tipo_alerta_id_tipo_alerta`
     FOREIGN KEY (`id_tipo_alerta`)
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
@@ -856,7 +861,7 @@ CREATE TABLE `ale_horarios_usuario` (
     REFERENCES `gen_usuario`(`id_usuario`)
     ON DELETE CASCADE
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_ale_horarios_usuario_id_tipo_alerta_ale_tipo_alerta_id_tipo_alerta`
+  CONSTRAINT `fk_horarios_usuario_id_tipo_alerta_tipo_alerta_id_tipo_alerta`
     FOREIGN KEY (`id_tipo_alerta`)
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
