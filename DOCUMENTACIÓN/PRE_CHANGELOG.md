@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-19 — @dependabot[bot] ([#60](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/60))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.361.1 to 1.362.0 in /servicios
+
+
 ### 2026-03-19 — @dependabot[bot] ([#61](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/61))
 - **chore** `back-end, dependencies, npm, security` | bump baseline-browser-mapping from 2.9.8 to 2.10.8 in /servicios
 
