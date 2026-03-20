@@ -61,7 +61,7 @@ class OpenAIService {
             content: `Consulta: ${query}\n\nDatos históricos (agregados por día):\n${JSON.stringify(formattedData)}`
           }
         ],
-        max_completion_tokens: this.maxTokens,
+        max_tokens: this.maxTokens,
         temperature: 0.7
       };
 
