@@ -132,41 +132,41 @@ class AIAnalysisController {
       const { limit = 20, offset = 0, startDate, endDate } = req.query;
 
       let query = `
-        SELECT 
-          id,
-          user_id as userId,
-          session_start as sessionStart,
-          session_end as sessionEnd,
-          model_used as modelUsed,
-          total_cost_usd as totalCostUsd,
-          query_count as queryCount,
-          chambers_queried as chambersQueried,
-          success
-        FROM ai_session_costs
-        WHERE user_id = ?
+        SELECT
+          id_sesion as id,
+          id_usuario as userId,
+          fecha_inicio as sessionStart,
+          fecha_fin as sessionEnd,
+          modelo_utilizado as modelUsed,
+          costo_total_usd as totalCostUsd,
+          cantidad_consultas as queryCount,
+          camaras_consultadas as chambersQueried,
+          exitoso as success
+        FROM ai_costos_sesion
+        WHERE id_usuario = ?
       `;
 
       const params = [userId];
 
       if (startDate && endDate) {
-        query += ' AND session_start BETWEEN ? AND ?';
+        query += ' AND fecha_inicio BETWEEN ? AND ?';
         params.push(startDate, endDate);
       }
 
-      query += ' ORDER BY session_start DESC LIMIT ? OFFSET ?';
+      query += ' ORDER BY fecha_inicio DESC LIMIT ? OFFSET ?';
       params.push(parseInt(limit), parseInt(offset));
 
       const sessions = await databaseService.query(query, params);
 
       // Get total count
       let countQuery = `
-        SELECT COUNT(*) as total 
-        FROM ai_session_costs 
-        WHERE user_id = ?
+        SELECT COUNT(*) as total
+        FROM ai_costos_sesion
+        WHERE id_usuario = ?
       `;
       const countParams = [userId];
       if (startDate && endDate) {
-        countQuery += ' AND session_start BETWEEN ? AND ?';
+        countQuery += ' AND fecha_inicio BETWEEN ? AND ?';
         countParams.push(startDate, endDate);
       }
       const [{ total }] = await databaseService.query(countQuery, countParams);
