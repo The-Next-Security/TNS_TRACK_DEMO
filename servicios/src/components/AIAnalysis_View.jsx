@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import HeaderV2 from "./Header_View";
@@ -506,13 +507,13 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
               </CardHeader>
               <CardContent>
                 <div className="prose dark:prose-invert max-w-none">
-                  <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                  <ReactMarkdown className="text-gray-700 dark:text-gray-300">
                     {typeof analysis === 'object' && analysis !== null && analysis.summary
                       ? analysis.summary
                       : typeof analysis === 'string'
                         ? analysis
                         : 'Sin respuesta del modelo de IA. Por favor, intenta con una pregunta más específica.'}
-                  </p>
+                  </ReactMarkdown>
                 </div>
               </CardContent>
             </Card>
