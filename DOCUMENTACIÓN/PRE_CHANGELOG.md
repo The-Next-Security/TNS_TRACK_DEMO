@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-20 — @felipecleverox ([#69](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/69))
+- **chore** `back-end, front-end` | [BUG] Corrección de bugs bloqueantes en módulo de análisis IA
+
+
 ### 2026-03-20 — @dependabot[bot] ([#67](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/67))
 - **chore** `back-end, dependencies, npm, security` | bump pdfkit from 0.16.0 to 0.18.0 in /servicios
 
