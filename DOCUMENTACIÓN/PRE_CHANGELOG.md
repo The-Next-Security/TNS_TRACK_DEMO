@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-20 — @dependabot[bot] ([#66](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/66))
+- **chore** `back-end, dependencies, npm, security` | bump react-router-dom from 7.12.0 to 7.13.1 in /servicios
+
+
 ### 2026-03-20 — @dependabot[bot] ([#65](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/65))
 - **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.362.0 to 1.363.0 in /servicios
 
