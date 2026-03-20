@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-20 — @dependabot[bot] ([#64](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/64))
+- **chore** `back-end, dependencies, npm, security` | bump puppeteer from 24.39.1 to 24.40.0 in /servicios
+
+
 ### 2026-03-20 — @dependabot[bot] ([#63](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/63))
 - **chore** `back-end, dependencies, npm, security` | bump baseline-browser-mapping from 2.10.8 to 2.10.9 in /servicios in the security-updates group
 
