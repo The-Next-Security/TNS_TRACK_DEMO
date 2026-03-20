@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-20 — @dependabot[bot] ([#67](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/67))
+- **chore** `back-end, dependencies, npm, security` | bump pdfkit from 0.16.0 to 0.18.0 in /servicios
+
+
 ### 2026-03-20 — @dependabot[bot] ([#66](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/66))
 - **chore** `back-end, dependencies, npm, security` | bump react-router-dom from 7.12.0 to 7.13.1 in /servicios
 
