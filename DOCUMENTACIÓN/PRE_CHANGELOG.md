@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-20 — @dependabot[bot] ([#63](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/63))
+- **chore** `back-end, dependencies, npm, security` | bump baseline-browser-mapping from 2.10.8 to 2.10.9 in /servicios in the security-updates group
+
+
 ### 2026-03-19 — @dependabot[bot] ([#58](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/58))
 - **chore** `back-end, dependencies, npm, security` | bump framer-motion from 12.23.26 to 12.38.0 in /servicios
 
