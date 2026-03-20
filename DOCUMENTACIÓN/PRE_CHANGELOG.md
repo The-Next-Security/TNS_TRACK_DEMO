@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-03-20 — @dependabot[bot] ([#65](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/65))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.362.0 to 1.363.0 in /servicios
+
+
 ### 2026-03-20 — @dependabot[bot] ([#64](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/64))
 - **chore** `back-end, dependencies, npm, security` | bump puppeteer from 24.39.1 to 24.40.0 in /servicios
 
