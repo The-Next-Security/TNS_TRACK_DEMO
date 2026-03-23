@@ -3,11 +3,14 @@ const configLoader = require('../config/js_files/configLoader_Config');
 const aiToolsService = require('./aiTools_Service');
 const { TOOL_DEFINITIONS } = require('./aiTools_Service');
 const { DateTime } = require('../utils/date_Utils');
+const { SCHEMA_CONTEXT } = require('./aiSchema_Service');
+
+const _debugEnabled = () => process.env.NODE_ENV !== 'production' || process.env.AI_DEBUG === 'true';
 
 class AIAgentOrchestrator {
   constructor() {
     this.client = null;
-    this.model = 'gemini-2.0-flash';
+    this.model = 'gemini-pro-latest';
     this.maxTokens = 2000;
     this.maxIterations = 5;
     this.maxInputTokens = 50000;
@@ -17,7 +20,7 @@ class AIAgentOrchestrator {
 
   init() {
     const config = configLoader.getConfig();
-    this.model = config.Gemini_API?.GEMINI_MODEL || 'gemini-2.0-flash';
+    this.model = config.Gemini_API?.GEMINI_MODEL || 'gemini-pro-latest';
     this.maxTokens = parseInt(config.Gemini_API?.GEMINI_MAX_TOKENS) || 2000;
     this.maxIterations = parseInt(config.Gemini_API?.GEMINI_MAX_ITERATIONS) || 5;
     this.maxInputTokens = parseInt(config.Gemini_API?.GEMINI_MAX_INPUT_TOKENS) || 50000;
@@ -52,7 +55,16 @@ class AIAgentOrchestrator {
   async _callWithRetry(requestParams) {
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
       try {
-        return await this.client.chat.completions.create(requestParams);
+        if (_debugEnabled() && attempt > 1) {
+          console.log(`[AIAgentOrchestrator] 🔁 Retry attempt ${attempt}/${this.maxRetries}`);
+        }
+        const startMs = Date.now();
+        const result = await this.client.chat.completions.create(requestParams);
+        const elapsed = Date.now() - startMs;
+        if (_debugEnabled()) {
+          console.log(`[AIAgentOrchestrator] ⏱️ Gemini API call took ${elapsed}ms (attempt ${attempt})`);
+        }
+        return result;
       } catch (error) {
         if (error.status === 429 && attempt < this.maxRetries) {
           const waitMs = Math.pow(2, attempt) * 1000;
@@ -82,11 +94,20 @@ class AIAgentOrchestrator {
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     let iterations = 0;
+    const runStartMs = Date.now();
 
-    console.log(`[AIAgentOrchestrator] Starting agent loop for user ${userId}: "${query.substring(0, 80)}..."`);
+    if (_debugEnabled()) {
+      console.log(`[AIAgentOrchestrator] 🚀 RUN START: query="${query.substring(0, 100)}" userId=${userId}`);
+    } else {
+      console.log(`[AIAgentOrchestrator] Starting agent loop for user ${userId}: "${query.substring(0, 80)}..."`);
+    }
 
     while (iterations < this.maxIterations) {
       iterations++;
+
+      if (_debugEnabled()) {
+        console.log(`[AIAgentOrchestrator] 🔄 Iteration ${iterations}/${this.maxIterations}: Calling Gemini...`);
+      }
 
       // Llamar a Gemini con tools (retry automático para 429)
       let response;
@@ -110,6 +131,10 @@ class AIAgentOrchestrator {
         totalOutputTokens += response.usage.completion_tokens || 0;
       }
 
+      if (_debugEnabled() && response.usage) {
+        console.log(`[AIAgentOrchestrator] 📊 Iteration ${iterations} tokens: input=${response.usage.prompt_tokens || 0}, output=${response.usage.completion_tokens || 0} | Accumulated: input=${totalInputTokens}, output=${totalOutputTokens}`);
+      }
+
       const choice = response.choices[0];
       const assistantMessage = choice.message;
 
@@ -118,7 +143,11 @@ class AIAgentOrchestrator {
 
       // Si no hay tool_calls y finish_reason es "stop" → respuesta final
       if (choice.finish_reason === 'stop' && (!assistantMessage.tool_calls || assistantMessage.tool_calls.length === 0)) {
-        console.log(`[AIAgentOrchestrator] Agent finished at iteration ${iterations} (stop)`);
+        if (_debugEnabled()) {
+          console.log(`[AIAgentOrchestrator] ✅ Final response received (length: ${(assistantMessage.content || '').length} chars)`);
+        } else {
+          console.log(`[AIAgentOrchestrator] Agent finished at iteration ${iterations} (stop)`);
+        }
         break;
       }
 
@@ -133,7 +162,11 @@ class AIAgentOrchestrator {
             console.warn(`[AIAgentOrchestrator] Failed to parse args for ${toolName}:`, parseErr.message);
           }
 
-          console.log(`[AIAgentOrchestrator] Iteration ${iterations}: Calling tool ${toolName} with args:`, JSON.stringify(toolArgs));
+          if (_debugEnabled()) {
+            console.log(`[AIAgentOrchestrator] 🔧 Tool call: ${toolName}(${JSON.stringify(toolArgs)})`);
+          } else {
+            console.log(`[AIAgentOrchestrator] Iteration ${iterations}: Calling tool ${toolName} with args:`, JSON.stringify(toolArgs));
+          }
 
           if (!toolsUsed.includes(toolName)) {
             toolsUsed.push(toolName);
@@ -141,6 +174,11 @@ class AIAgentOrchestrator {
 
           // Ejecutar la tool
           const result = await aiToolsService.execute(toolName, toolArgs);
+
+          if (_debugEnabled()) {
+            const resultStr = JSON.stringify(result);
+            console.log(`[AIAgentOrchestrator] 📊 Tool result (preview): ${resultStr.substring(0, 200)}${resultStr.length > 200 ? '...' : ''}`);
+          }
 
           // Agregar resultado al historial
           messages.push({
@@ -215,7 +253,12 @@ class AIAgentOrchestrator {
       console.warn(`[AIAgentOrchestrator] Cost warning: estimated $${estimatedCost.toFixed(4)} USD exceeds threshold $${this.costWarningUsd}`);
     }
 
-    console.log(`[AIAgentOrchestrator] Completed: ${iterations} iterations, ${toolsUsed.length} tools used, ${totalInputTokens}+${totalOutputTokens} tokens`);
+    const totalTimeMs = Date.now() - runStartMs;
+    if (_debugEnabled()) {
+      console.log(`[AIAgentOrchestrator] 📈 RUN COMPLETE: iterations=${iterations}, tokens={input:${totalInputTokens},output:${totalOutputTokens}}, tools=[${toolsUsed.join(',')}], cost=$${estimatedCost.toFixed(4)}, time=${totalTimeMs}ms`);
+    } else {
+      console.log(`[AIAgentOrchestrator] Completed: ${iterations} iterations, ${toolsUsed.length} tools used, ${totalInputTokens}+${totalOutputTokens} tokens`);
+    }
 
     return {
       response: responseText,
@@ -248,7 +291,16 @@ INSTRUCCIONES:
 - Usa formato Markdown para estructurar la respuesta.
 - Si los datos disponibles son insuficientes para responder con certeza, indícalo explícitamente.
 - Si una herramienta falla, indícalo en tu respuesta y continúa con los datos disponibles.
-- Solo puedes responder preguntas relacionadas con consumo eléctrico, temperatura de cámaras y operaciones de monitoreo IoT. Para preguntas no relacionadas, responde educadamente que solo puedes ayudar con esos temas.`;
+- Solo puedes responder preguntas relacionadas con consumo eléctrico, temperatura de cámaras y operaciones de monitoreo IoT. Para preguntas no relacionadas, responde educadamente que solo puedes ayudar con esos temas.
+
+TRANSPARENCIA Y CONFIANZA:
+- Cuando calcules correlaciones, proyecciones o estimaciones, indica el nivel de confianza (alta/media/baja) basado en la cantidad y calidad de datos disponibles.
+- Si extrapolas o proyectas datos, indica claramente que es una estimación y menciona los supuestos utilizados.
+- Distingue explícitamente entre DATOS REALES obtenidos de las herramientas y ESTIMACIONES o INFERENCIAS que tú calculas.
+- Nunca inventes datos numéricos. Si no tienes un dato, di que no lo tienes.
+
+─── DATABASE SCHEMA & TOOLS REFERENCE ───
+${SCHEMA_CONTEXT}`;
   }
 }
 
