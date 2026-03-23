@@ -2,6 +2,8 @@ const databaseService = require('./database_Service');
 const aiDataService = require('./aiData_Service');
 const { DateTime } = require('../utils/date_Utils');
 
+const _debugEnabled = () => process.env.NODE_ENV !== 'production' || process.env.AI_DEBUG === 'true';
+
 // Tool definitions en formato function calling para Gemini Flash
 const TOOL_DEFINITIONS = [
   {
@@ -135,27 +137,80 @@ const OPEN_METEO_TIMEOUT = 10000;
 
 class AIToolsService {
 
+  /**
+   * Validates that a SQL string is read-only (SELECT).
+   * Blocks INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE, CREATE.
+   */
+  _validateReadOnly(sql) {
+    const forbidden = /^\s*(INSERT|UPDATE|DELETE|DROP|ALTER|TRUNCATE|CREATE)/i;
+    if (forbidden.test(sql.trim())) {
+      throw new Error('[AIToolsService] SECURITY: Write operation blocked. AI tools are read-only.');
+    }
+  }
+
   async execute(toolName, args) {
+    if (_debugEnabled()) {
+      console.log(`[AIToolsService] 🔧 Executing: ${toolName}(${JSON.stringify(args)})`);
+    }
+    const execStartMs = Date.now();
     try {
+      let result;
       switch (toolName) {
         case 'get_energy_history':
-          return await this.getEnergyHistory(args);
+          result = await this.getEnergyHistory(args);
+          break;
         case 'get_active_devices':
-          return await this.getActiveDevices();
+          result = await this.getActiveDevices();
+          break;
         case 'get_weather_forecast':
-          return await this.getWeatherForecast(args);
+          result = await this.getWeatherForecast(args);
+          break;
         case 'get_historical_weather':
-          return await this.getHistoricalWeather(args);
+          result = await this.getHistoricalWeather(args);
+          break;
         case 'get_energy_stats_summary':
-          return await this.getEnergyStatsSummary(args);
+          result = await this.getEnergyStatsSummary(args);
+          break;
         case 'get_temperature_chamber_data':
-          return await this.getTemperatureChamberData(args);
+          result = await this.getTemperatureChamberData(args);
+          break;
         default:
           return { error: true, message: `Tool no disponible: ${toolName}` };
       }
+      if (_debugEnabled()) {
+        const elapsed = Date.now() - execStartMs;
+        const summary = this._resultSummary(toolName, result);
+        console.log(`[AIToolsService] ⏱️ ${toolName} completed in ${elapsed}ms${summary ? ' (' + summary + ')' : ''}`);
+      }
+      return result;
     } catch (err) {
-      console.error(`[AIToolsService] Error executing tool ${toolName}:`, err.message);
+      const elapsed = Date.now() - execStartMs;
+      console.error(`[AIToolsService] Error executing tool ${toolName} after ${elapsed}ms:`, err.message);
       return { error: true, message: err.message, tool: toolName };
+    }
+  }
+
+  /**
+   * Returns a human-readable summary of the tool result for logging.
+   */
+  _resultSummary(toolName, result) {
+    if (!result) return null;
+    if (result.error) return `error: ${result.message}`;
+    switch (toolName) {
+      case 'get_energy_history':
+        return `${(result.resumen_diario || []).length} daily rows, ${(result.detalle_dispositivo || []).length} detail rows`;
+      case 'get_active_devices':
+        return `${(result.dispositivos || []).length} devices`;
+      case 'get_weather_forecast':
+        return `${(result.pronostico || []).length} forecast days`;
+      case 'get_historical_weather':
+        return `${(result.historico || []).length} historical days`;
+      case 'get_energy_stats_summary':
+        return `${(result.resumen_semanal || []).length} weeks, trend: ${result.tendencia_reciente || 'N/A'}`;
+      case 'get_temperature_chamber_data':
+        return `${(result.datos || []).length} data points, ${(result.camaras || []).length} chambers`;
+      default:
+        return null;
     }
   }
 
@@ -185,6 +240,7 @@ class AIToolsService {
       GROUP BY td.fecha_local
       ORDER BY td.fecha_local ASC
     `;
+    this._validateReadOnly(globalQuery);
     const globalRows = await databaseService.query(globalQuery, params);
 
     // Detalle por dispositivo
@@ -193,7 +249,7 @@ class AIToolsService {
         td.fecha_local AS fecha,
         td.shelly_id,
         d.nombre AS dispositivo,
-        u.nombre_ubicacion AS ubicacion,
+        u.nombre AS ubicacion,
         td.energia_activa_total AS kwh,
         td.costo_total AS costo
       FROM sem_totales_dia td
@@ -203,6 +259,7 @@ class AIToolsService {
         ${deviceFilter}
       ORDER BY td.fecha_local ASC, d.nombre
     `;
+    this._validateReadOnly(detailQuery);
     const detailRows = await databaseService.query(detailQuery, params);
 
     return {
@@ -218,12 +275,13 @@ class AIToolsService {
       SELECT
         d.shelly_id,
         d.nombre,
-        u.nombre_ubicacion AS ubicacion
+        u.nombre AS ubicacion
       FROM sem_dispositivos d
       LEFT JOIN gen_ubicaciones_reales u ON d.id_ubicacion_real = u.id_ubicacion_real
       WHERE d.activo = 1
       ORDER BY d.nombre
     `;
+    this._validateReadOnly(query);
     const rows = await databaseService.query(query);
     return { dispositivos: rows };
   }
@@ -294,6 +352,7 @@ class AIToolsService {
       GROUP BY YEARWEEK(td.fecha_local, 1)
       ORDER BY semana ASC
     `;
+    this._validateReadOnly(query);
     const rows = await databaseService.query(query, [startDate]);
 
     // Calcular tendencia (% variación entre última y penúltima semana)
