@@ -89,7 +89,7 @@ WHERE  p.ruta_completa = 'Gemini_API.GEMINI_API_KEY';
 
 UPDATE gen_cofiguracion_valores v
 JOIN   gen_cofiguracion_parametros p ON v.id_cofiguracion_parametros = p.id_cofiguracion_parametros
-SET    v.valor = 'gemini-2.0-flash'
+SET    v.valor = 'gemini-2.0-flash-lite'
 WHERE  p.ruta_completa = 'Gemini_API.GEMINI_MODEL';
 
 UPDATE gen_cofiguracion_valores v
