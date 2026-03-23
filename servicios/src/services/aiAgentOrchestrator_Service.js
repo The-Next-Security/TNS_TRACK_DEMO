@@ -12,6 +12,7 @@ class AIAgentOrchestrator {
     this.maxIterations = 5;
     this.maxInputTokens = 50000;
     this.costWarningUsd = 0.15;
+    this.maxRetries = 3;
   }
 
   init() {
@@ -44,6 +45,26 @@ class AIAgentOrchestrator {
     return this.client !== null;
   }
 
+  /**
+   * Retry con backoff exponencial para manejar 429 (rate limit)
+   * Espera: 2s, 4s, 8s entre reintentos
+   */
+  async _callWithRetry(requestParams) {
+    for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
+      try {
+        return await this.client.chat.completions.create(requestParams);
+      } catch (error) {
+        if (error.status === 429 && attempt < this.maxRetries) {
+          const waitMs = Math.pow(2, attempt) * 1000;
+          console.warn(`[AIAgentOrchestrator] Rate limit (429). Retry ${attempt}/${this.maxRetries} in ${waitMs / 1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, waitMs));
+          continue;
+        }
+        throw error;
+      }
+    }
+  }
+
   async run(query, userId) {
     if (!this.client) {
       throw new Error('Gemini client not initialized. Please set GEMINI_API_KEY in configuration.');
@@ -67,10 +88,10 @@ class AIAgentOrchestrator {
     while (iterations < this.maxIterations) {
       iterations++;
 
-      // Llamar a Gemini con tools
+      // Llamar a Gemini con tools (retry automático para 429)
       let response;
       try {
-        response = await this.client.chat.completions.create({
+        response = await this._callWithRetry({
           model: this.model,
           messages,
           tools: TOOL_DEFINITIONS,
@@ -80,24 +101,7 @@ class AIAgentOrchestrator {
         });
       } catch (error) {
         console.error(`[AIAgentOrchestrator] Gemini API error at iteration ${iterations}:`, error.message);
-        // Si es la primera iteración, reintentar una vez
-        if (iterations === 1) {
-          console.log('[AIAgentOrchestrator] Retrying first iteration...');
-          try {
-            response = await this.client.chat.completions.create({
-              model: this.model,
-              messages,
-              tools: TOOL_DEFINITIONS,
-              tool_choice: 'auto',
-              max_tokens: this.maxTokens,
-              temperature: 0.3
-            });
-          } catch (retryError) {
-            throw new Error(`Gemini API error after retry: ${retryError.message}`);
-          }
-        } else {
-          throw new Error(`Gemini API error at iteration ${iterations}: ${error.message}`);
-        }
+        throw new Error(`Gemini API error at iteration ${iterations}: ${error.message}`);
       }
 
       // Acumular tokens
@@ -162,7 +166,7 @@ class AIAgentOrchestrator {
           content: 'Has alcanzado el límite de datos consultados. Resume tu respuesta con los datos obtenidos hasta ahora.'
         });
         // Forzar una respuesta final sin tools
-        const finalResponse = await this.client.chat.completions.create({
+        const finalResponse = await this._callWithRetry({
           model: this.model,
           messages,
           max_tokens: this.maxTokens,
@@ -187,7 +191,7 @@ class AIAgentOrchestrator {
           role: 'user',
           content: 'Resume con los datos obtenidos hasta ahora. Indica si faltó información para completar el análisis.'
         });
-        const finalResponse = await this.client.chat.completions.create({
+        const finalResponse = await this._callWithRetry({
           model: this.model,
           messages,
           max_tokens: this.maxTokens,
