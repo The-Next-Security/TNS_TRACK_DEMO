@@ -1,11 +1,12 @@
-const OpenAI = require('openai');
+const OpenAI = require('openai'); // SDK compatible con API de Gemini
 const configLoader = require('../config/js_files/configLoader_Config');
 
-class OpenAIService {
+class GeminiService {
   constructor() {
     this.client = null;
     this.model = 'gemini-2.0-flash';
     this.maxTokens = 2000;
+    this.maxRetries = 3;
   }
 
   /**
@@ -17,7 +18,7 @@ class OpenAIService {
     this.maxTokens = parseInt(config.Gemini_API?.GEMINI_MAX_TOKENS) || 2000;
     const apiKey = config.Gemini_API?.GEMINI_API_KEY;
     if (!apiKey) {
-      console.warn('[OpenAIService] WARNING: GEMINI_API_KEY not set in configuration');
+      console.warn('[GeminiService] WARNING: GEMINI_API_KEY not set in configuration');
       return;
     }
     try {
@@ -25,10 +26,30 @@ class OpenAIService {
         apiKey: apiKey,
         baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai'
       });
-      console.log(`[OpenAIService] Initialized with Gemini model: ${this.model} (max_tokens: ${this.maxTokens})`);
+      console.log(`[GeminiService] Initialized with Gemini model: ${this.model} (max_tokens: ${this.maxTokens})`);
     } catch (error) {
-      console.error('[OpenAIService] Error initializing Gemini client:', error.message);
+      console.error('[GeminiService] Error initializing Gemini client:', error.message);
       this.client = null;
+    }
+  }
+
+  /**
+   * Retry con backoff exponencial para manejar 429 (rate limit)
+   * Espera: 2s, 4s, 8s entre reintentos
+   */
+  async _callWithRetry(requestParams, maxRetries = this.maxRetries) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await this.client.chat.completions.create(requestParams);
+      } catch (error) {
+        if (error.status === 429 && attempt < maxRetries) {
+          const waitMs = Math.pow(2, attempt) * 1000;
+          console.warn(`[GeminiService] Rate limit (429). Retry ${attempt}/${maxRetries} in ${waitMs / 1000}s...`);
+          await new Promise(resolve => setTimeout(resolve, waitMs));
+          continue;
+        }
+        throw error;
+      }
     }
   }
 
@@ -65,14 +86,14 @@ class OpenAIService {
         temperature: 0.7
       };
 
-      const response = await this.client.chat.completions.create(requestParams);
+      const response = await this._callWithRetry(requestParams);
 
       // Log only if response is empty or truncated
       if (!response.choices[0].message.content || response.choices[0].finish_reason === 'length') {
-        console.warn('[OpenAIService] Empty or truncated response!');
-        console.warn('[OpenAIService] finish_reason:', response.choices[0].finish_reason);
-        console.warn('[OpenAIService] usage:', JSON.stringify(response.usage, null, 2));
-        console.warn('[OpenAIService] content length:', response.choices[0].message.content?.length || 0);
+        console.warn('[GeminiService] Empty or truncated response!');
+        console.warn('[GeminiService] finish_reason:', response.choices[0].finish_reason);
+        console.warn('[GeminiService] usage:', JSON.stringify(response.usage, null, 2));
+        console.warn('[GeminiService] content length:', response.choices[0].message.content?.length || 0);
       }
 
       return {
@@ -81,10 +102,10 @@ class OpenAIService {
         model: response.model
       };
     } catch (error) {
-      console.error('[OpenAIService] Error analyzing chamber data:', error);
+      console.error('[GeminiService] Error analyzing chamber data:', error);
       throw new Error(`Gemini API error: ${error.message}`);
     }
   }
 }
 
-module.exports = new OpenAIService();
+module.exports = new GeminiService();
