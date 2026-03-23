@@ -4,37 +4,37 @@ const configLoader = require('../config/js_files/configLoader_Config');
 class OpenAIService {
   constructor() {
     this.client = null;
-    this.model = 'deepseek-chat';
+    this.model = 'gemini-2.0-flash';
     this.maxTokens = 2000;
   }
 
   /**
-   * Carga config y crea el cliente. Llamar desde boot() tras configLoader.initialize().
+   * Carga config y crea el cliente Gemini. Llamar desde boot() tras configLoader.initialize().
    */
   init() {
     const config = configLoader.getConfig();
-    this.model = config.OpenAI_API?.OPENAI_MODEL || 'deepseek-chat';
-    this.maxTokens = parseInt(config.OpenAI_API?.OPENAI_MAX_TOKENS) || 2000;
-    const apiKey = config.OpenAI_API?.OPENAI_API_KEY;
+    this.model = config.Gemini_API?.GEMINI_MODEL || 'gemini-2.0-flash';
+    this.maxTokens = parseInt(config.Gemini_API?.GEMINI_MAX_TOKENS) || 2000;
+    const apiKey = config.Gemini_API?.GEMINI_API_KEY;
     if (!apiKey) {
-      console.warn('[OpenAIService] WARNING: OPENAI_API_KEY not set in configuration');
+      console.warn('[OpenAIService] WARNING: GEMINI_API_KEY not set in configuration');
       return;
     }
     try {
       this.client = new OpenAI({
         apiKey: apiKey,
-        baseURL: 'https://api.deepseek.com'
+        baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai'
       });
-      console.log(`[OpenAIService] ✅ Initialized with DeepSeek model: ${this.model} (max_tokens: ${this.maxTokens})`);
+      console.log(`[OpenAIService] Initialized with Gemini model: ${this.model} (max_tokens: ${this.maxTokens})`);
     } catch (error) {
-      console.error('[OpenAIService] Error initializing DeepSeek client:', error.message);
+      console.error('[OpenAIService] Error initializing Gemini client:', error.message);
       this.client = null;
     }
   }
 
   async analyzeChamberData(query, historicalData) {
     if (!this.client) {
-      throw new Error('DeepSeek client not initialized. Please set OPENAI_API_KEY in configuration.');
+      throw new Error('Gemini client not initialized. Please set GEMINI_API_KEY in configuration.');
     }
 
     try {
@@ -66,10 +66,10 @@ class OpenAIService {
       };
 
       const response = await this.client.chat.completions.create(requestParams);
-      
+
       // Log only if response is empty or truncated
       if (!response.choices[0].message.content || response.choices[0].finish_reason === 'length') {
-        console.warn('[OpenAIService] ⚠️ Empty or truncated response!');
+        console.warn('[OpenAIService] Empty or truncated response!');
         console.warn('[OpenAIService] finish_reason:', response.choices[0].finish_reason);
         console.warn('[OpenAIService] usage:', JSON.stringify(response.usage, null, 2));
         console.warn('[OpenAIService] content length:', response.choices[0].message.content?.length || 0);
@@ -82,10 +82,9 @@ class OpenAIService {
       };
     } catch (error) {
       console.error('[OpenAIService] Error analyzing chamber data:', error);
-      throw new Error(`DeepSeek API error: ${error.message}`);
+      throw new Error(`Gemini API error: ${error.message}`);
     }
   }
 }
 
 module.exports = new OpenAIService();
-
