@@ -49,6 +49,7 @@ const ubibotService = require("./src/services/ubibot/ubibot_Service");
 const shellyApiAdapter = require("./src/services/api/shellyApi_Adapter");
 const mapboxApiAdapter = require("./src/services/api/mapboxApi_Adapter");
 const openaiService = require("./src/services/openai_Service");
+const agentOrchestrator = require("./src/services/aiAgentOrchestrator_Service");
 const ubibotServiceAdapter = require("./src/services/ubibot/ubibot_Adapter");
 const usuariosController = require("./src/controllers/usuarios_Controller");
 const authMiddleware = require("./src/middlewares/auth_Middleware");
@@ -456,6 +457,7 @@ async function boot() {
   shellyApiAdapter.init();
   mapboxApiAdapter.init();
   openaiService.init();
+  agentOrchestrator.init();
   await ubibotServiceAdapter.init();
   reportCleanupJob.init();
   usuariosController.init();
