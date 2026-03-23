@@ -27,7 +27,10 @@ import {
   CheckCircle2,
   Clock,
   Thermometer,
-  Sparkles
+  Sparkles,
+  Wrench,
+  DollarSign,
+  RotateCw
 } from "lucide-react";
 
 /**
@@ -103,19 +106,13 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
     setAnalysis(null);
 
     try {
-      const requestBody = {
-        query: finalQuery,
-        chambers: finalChambers,
-        dateRange: customDateRange || {
-          start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          end: new Date().toISOString().split('T')[0]
-        }
-      };
+      // Endpoint agéntico: solo envía query, el agente decide qué datos buscar
+      const requestBody = { query: finalQuery };
 
-      console.log('[AIAnalysis] Enviando query:', requestBody);
+      console.log('[AIAnalysis] Enviando query avanzada:', requestBody);
 
       const _tok2 = localStorage.getItem('accessToken');
-      const response = await fetch('/api/ia/consulta', {
+      const response = await fetch('/api/ia/consulta-avanzada', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -505,9 +502,38 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
                   )}
                 </div>
               </CardHeader>
+              {/* Agent metadata: tools, iterations, cost */}
+              {sessionInfo && (
+                <div className="px-6 pb-3 flex flex-wrap gap-2">
+                  {analysis?.toolsUsed && analysis.toolsUsed.length > 0 && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <Wrench className="w-3 h-3" />
+                      {analysis.toolsUsed.length} fuente{analysis.toolsUsed.length > 1 ? 's' : ''} consultada{analysis.toolsUsed.length > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                  {analysis?.iterations && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <RotateCw className="w-3 h-3" />
+                      {analysis.iterations} iteracion{analysis.iterations > 1 ? 'es' : ''}
+                    </Badge>
+                  )}
+                  {sessionInfo.cost && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <DollarSign className="w-3 h-3" />
+                      ${sessionInfo.cost.queryCost} USD
+                    </Badge>
+                  )}
+                  {sessionInfo.cost && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <Brain className="w-3 h-3" />
+                      {sessionInfo.cost.inputTokens + sessionInfo.cost.outputTokens} tokens
+                    </Badge>
+                  )}
+                </div>
+              )}
               <CardContent>
-                <div className="prose dark:prose-invert max-w-none">
-                  <ReactMarkdown className="text-gray-700 dark:text-gray-300">
+                <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
+                  <ReactMarkdown>
                     {typeof analysis === 'object' && analysis !== null && analysis.summary
                       ? analysis.summary
                       : typeof analysis === 'string'
