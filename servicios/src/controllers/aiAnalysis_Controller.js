@@ -1,4 +1,4 @@
-const openaiService = require('../services/openai_Service');
+const geminiService = require('../services/gemini_Service');
 const aiDataService = require('../services/aiData_Service');
 const costTracker = require('../services/aiCostTracker_Service');
 const agentOrchestrator = require('../services/aiAgentOrchestrator_Service');
@@ -63,7 +63,7 @@ class AIAnalysisController {
         finalChambers,
         finalDateRange.start,
         finalDateRange.end,
-        true  // Force daily aggregation to stay under OpenAI token limits
+        true  // Force daily aggregation to stay under Gemini token limits
       );
 
       if (!historicalData || historicalData.length === 0) {
@@ -76,7 +76,7 @@ class AIAnalysisController {
 
       // Analyze with AI
       console.log(`[AIAnalysisController] Analyzing ${historicalData.length} data points with AI`);
-      const aiResponse = await openaiService.analyzeChamberData(queryText, historicalData);
+      const aiResponse = await geminiService.analyzeChamberData(queryText, historicalData);
       
       // Log response summary
       console.log(`[AIAnalysisController] ✅ AI Response received (${aiResponse.response?.length || 0} chars)`);
