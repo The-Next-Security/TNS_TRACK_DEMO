@@ -1,11 +1,13 @@
 const OpenAI = require('openai'); // SDK compatible con API de Gemini
 const configLoader = require('../config/js_files/configLoader_Config');
 
+const _debugEnabled = () => process.env.NODE_ENV !== 'production' || process.env.AI_DEBUG === 'true';
+
 class GeminiService {
   constructor() {
     this.client = null;
-    this.model = 'gemini-2.0-flash';
-    this.maxTokens = 2000;
+    this.model = 'gemini-pro-latest';
+    this.maxTokens = 8192;
     this.maxRetries = 3;
   }
 
@@ -14,7 +16,7 @@ class GeminiService {
    */
   init() {
     const config = configLoader.getConfig();
-    this.model = config.Gemini_API?.GEMINI_MODEL || 'gemini-2.0-flash';
+    this.model = config.Gemini_API?.GEMINI_MODEL || 'gemini-pro-latest';
     this.maxTokens = parseInt(config.Gemini_API?.GEMINI_MAX_TOKENS) || 2000;
     const apiKey = config.Gemini_API?.GEMINI_API_KEY;
     if (!apiKey) {
@@ -40,7 +42,16 @@ class GeminiService {
   async _callWithRetry(requestParams, maxRetries = this.maxRetries) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await this.client.chat.completions.create(requestParams);
+        if (_debugEnabled() && attempt > 1) {
+          console.log(`[GeminiService] 🔁 Retry attempt ${attempt}/${maxRetries}`);
+        }
+        const startMs = Date.now();
+        const result = await this.client.chat.completions.create(requestParams);
+        const elapsed = Date.now() - startMs;
+        if (_debugEnabled()) {
+          console.log(`[GeminiService] ⏱️ API call took ${elapsed}ms (attempt ${attempt})`);
+        }
+        return result;
       } catch (error) {
         if (error.status === 429 && attempt < maxRetries) {
           const waitMs = Math.pow(2, attempt) * 1000;
@@ -70,6 +81,8 @@ class GeminiService {
         thresholds: `${d.threshold_min}°C to ${d.threshold_max}°C`
       }));
 
+      const userContent = `Consulta: ${query}\n\nDatos históricos (agregados por día):\n${JSON.stringify(formattedData)}`;
+
       const requestParams = {
         model: this.model,
         messages: [
@@ -79,14 +92,23 @@ class GeminiService {
           },
           {
             role: 'user',
-            content: `Consulta: ${query}\n\nDatos históricos (agregados por día):\n${JSON.stringify(formattedData)}`
+            content: userContent
           }
         ],
         max_tokens: this.maxTokens,
         temperature: 0.7
       };
 
+      if (_debugEnabled()) {
+        console.log(`[GeminiService] ➡️ REQUEST: model=${this.model}, max_tokens=${this.maxTokens}, user_message_length=${userContent.length}, data_points=${formattedData.length}`);
+      }
+
       const response = await this._callWithRetry(requestParams);
+
+      if (_debugEnabled()) {
+        const usage = response.usage || {};
+        console.log(`[GeminiService] ⬅️ RESPONSE: content_length=${response.choices[0].message.content?.length || 0}, finish_reason=${response.choices[0].finish_reason}, usage={prompt:${usage.prompt_tokens || 0}, completion:${usage.completion_tokens || 0}, total:${usage.total_tokens || 0}}`);
+      }
 
       // Log only if response is empty or truncated
       if (!response.choices[0].message.content || response.choices[0].finish_reason === 'length') {
