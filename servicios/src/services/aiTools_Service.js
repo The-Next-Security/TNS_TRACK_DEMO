@@ -2,7 +2,7 @@ const databaseService = require('./database_Service');
 const aiDataService = require('./aiData_Service');
 const { DateTime } = require('../utils/date_Utils');
 
-// Tool definitions en formato OpenAI function calling (compatible con Gemini)
+// Tool definitions en formato function calling para Gemini Flash
 const TOOL_DEFINITIONS = [
   {
     type: 'function',
