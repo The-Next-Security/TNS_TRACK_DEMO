@@ -10,7 +10,7 @@ const TOOL_DEFINITIONS = [
     type: 'function',
     function: {
       name: 'get_energy_history',
-      description: 'Obtiene el historial de consumo eléctrico diario de dispositivos Shelly. Usa esta herramienta cuando necesites datos de consumo eléctrico (kWh), costos de energía, o patrones de consumo históricos para análisis o proyecciones.',
+      description: 'Obtiene el historial de consumo eléctrico diario de dispositivos Shelly. Usa esta herramienta cuando necesites datos de consumo eléctrico (kWh), costos de energía, o patrones de consumo históricos para análisis o proyecciones. IMPORTANTE: Usa los shelly_id proporcionados en el contexto del usuario (ej: "fce8c0d82d08"), NO uses nombres como "Reefer B".',
       parameters: {
         type: 'object',
         properties: {
@@ -23,7 +23,7 @@ const TOOL_DEFINITIONS = [
           shelly_ids: {
             type: 'array',
             items: { type: 'string' },
-            description: 'IDs de dispositivos Shelly específicos. Si no se proporciona, retorna todos los dispositivos activos.'
+            description: 'shelly_id de dispositivos Shelly (ej: ["fce8c0d82d08"]). Usa los shelly_id del contexto del usuario, NO nombres de cámaras.'
           }
         },
         required: ['days']
@@ -109,14 +109,14 @@ const TOOL_DEFINITIONS = [
     type: 'function',
     function: {
       name: 'get_temperature_chamber_data',
-      description: 'Obtiene datos de temperatura de cámaras frigoríficas (promedio, mínimo, máximo, brechas de umbral por día). Usa esta herramienta cuando la pregunta involucra temperatura de cámaras o brechas de umbral.',
+      description: 'Obtiene datos de temperatura de cámaras frigoríficas (promedio, mínimo, máximo, brechas de umbral por día). Usa esta herramienta cuando la pregunta involucra temperatura de cámaras o brechas de umbral. IMPORTANTE: Usa los canal_id numéricos proporcionados en el contexto del usuario (ej: "92521"), NO uses nombres como "Reefer B".',
       parameters: {
         type: 'object',
         properties: {
           chamber_ids: {
             type: 'array',
             items: { type: 'string' },
-            description: 'IDs de canales de cámara (canal_id de Ubibot)'
+            description: 'canal_id numéricos de Ubibot (ej: ["92521", "92498"]). Usa los canal_id del contexto del usuario, NO nombres de cámaras.'
           },
           days: {
             type: 'integer',
@@ -223,9 +223,19 @@ class AIToolsService {
     const params = [startDate, endDate];
 
     if (shelly_ids && shelly_ids.length > 0) {
-      const placeholders = shelly_ids.map(() => '?').join(',');
+      // Resolver nombres de ubicación → shelly_id reales
+      const resolvedIds = await this._resolveShellyIds(shelly_ids);
+      if (resolvedIds.length === 0) {
+        return {
+          periodo: { inicio: startDate, fin: endDate, dias: days },
+          resumen_diario: [],
+          detalle_dispositivo: [],
+          error_detalle: `No se encontraron dispositivos Shelly para: ${shelly_ids.join(', ')}. Usa los shelly_id del contexto (ej: "fce8c0d82d08").`
+        };
+      }
+      const placeholders = resolvedIds.map(() => '?').join(',');
       deviceFilter = `AND td.shelly_id IN (${placeholders})`;
-      params.push(...shelly_ids);
+      params.push(...resolvedIds);
     }
 
     // Resumen global diario
@@ -373,14 +383,149 @@ class AIToolsService {
     const endDate = DateTime.now().setZone('America/Santiago').toFormat('yyyy-MM-dd');
     const startDate = DateTime.now().setZone('America/Santiago').minus({ days }).toFormat('yyyy-MM-dd');
 
-    // Reutilizar lógica existente de aiData_Service
-    const data = await aiDataService.fetchChamberData(chamber_ids, startDate, endDate, true);
+    // Resolver chamber_ids: aceptar canal_id numérico O nombre de ubicación
+    const resolvedIds = await this._resolveChamberIds(chamber_ids);
+
+    if (resolvedIds.length === 0) {
+      return {
+        periodo: { inicio: startDate, fin: endDate, dias: days },
+        camaras: chamber_ids,
+        datos: [],
+        error_detalle: `No se encontraron cámaras para: ${chamber_ids.join(', ')}. Usa los canal_id numéricos del contexto (ej: "92521").`
+      };
+    }
+
+    if (_debugEnabled()) {
+      console.log(`[AIToolsService] 🔍 Resolved chamber_ids: [${chamber_ids.join(',')}] → [${resolvedIds.join(',')}]`);
+    }
+
+    const data = await aiDataService.fetchChamberData(resolvedIds, startDate, endDate, true);
 
     return {
       periodo: { inicio: startDate, fin: endDate, dias: days },
-      camaras: chamber_ids,
+      camaras: resolvedIds,
       datos: data
     };
+  }
+
+  // ─── Resolvers nombre→ID ───
+
+  /**
+   * Resuelve chamber_ids flexibles: acepta canal_id numérico o nombre de ubicación,
+   * y siempre devuelve canal_id numéricos válidos.
+   */
+  async _resolveChamberIds(chamberIds) {
+    if (!chamberIds || chamberIds.length === 0) return [];
+
+    const numeric = [];
+    const names = [];
+
+    for (const id of chamberIds) {
+      if (/^\d+$/.test(String(id).trim())) {
+        numeric.push(String(id).trim());
+      } else {
+        names.push(String(id).trim());
+      }
+    }
+
+    const resolved = [...numeric];
+
+    if (names.length > 0) {
+      // Buscar coincidencia exacta por nombre de ubicación
+      const placeholders = names.map(() => '?').join(',');
+      const exactQuery = `
+        SELECT DISTINCT c.canal_id
+        FROM ubi_canal c
+        JOIN gen_ubicaciones_reales u ON c.id_ubicacion_real = u.id_ubicacion_real
+        WHERE u.nombre IN (${placeholders})
+      `;
+      this._validateReadOnly(exactQuery);
+      const exactRows = await databaseService.query(exactQuery, names);
+
+      if (exactRows.length > 0) {
+        resolved.push(...exactRows.map(r => String(r.canal_id)));
+      } else {
+        // Fallback: buscar coincidencia parcial (LIKE) para cada nombre
+        for (const name of names) {
+          const likeQuery = `
+            SELECT DISTINCT c.canal_id
+            FROM ubi_canal c
+            JOIN gen_ubicaciones_reales u ON c.id_ubicacion_real = u.id_ubicacion_real
+            WHERE u.nombre LIKE ?
+          `;
+          this._validateReadOnly(likeQuery);
+          const likeRows = await databaseService.query(likeQuery, [`%${name}%`]);
+          resolved.push(...likeRows.map(r => String(r.canal_id)));
+        }
+      }
+
+      if (_debugEnabled()) {
+        console.log(`[AIToolsService] 🔍 Chamber name resolution: [${names.join(',')}] → found ${resolved.length - numeric.length} canal_ids`);
+      }
+    }
+
+    return [...new Set(resolved)];
+  }
+
+  /**
+   * Resuelve shelly_ids flexibles: acepta shelly_id real (hex) o nombre de ubicación,
+   * y siempre devuelve shelly_id reales válidos.
+   */
+  async _resolveShellyIds(shellyIds) {
+    if (!shellyIds || shellyIds.length === 0) return [];
+
+    const realIds = [];
+    const names = [];
+
+    for (const id of shellyIds) {
+      const trimmed = String(id).trim();
+      // shelly_id reales son hex (ej: fce8c0d82d08) o contienen patrones de dispositivo
+      if (/^[a-f0-9]{10,}$/i.test(trimmed)) {
+        realIds.push(trimmed);
+      } else {
+        names.push(trimmed);
+      }
+    }
+
+    const resolved = [...realIds];
+
+    if (names.length > 0) {
+      // Buscar coincidencia exacta por nombre de ubicación
+      const placeholders = names.map(() => '?').join(',');
+      const exactQuery = `
+        SELECT DISTINCT d.shelly_id
+        FROM sem_dispositivos d
+        JOIN gen_ubicaciones_reales u ON d.id_ubicacion_real = u.id_ubicacion_real
+        WHERE d.activo = 1 AND d.tipo IS NOT NULL
+          AND u.nombre IN (${placeholders})
+      `;
+      this._validateReadOnly(exactQuery);
+      const exactRows = await databaseService.query(exactQuery, names);
+
+      if (exactRows.length > 0) {
+        resolved.push(...exactRows.map(r => String(r.shelly_id)));
+      } else {
+        // Fallback: buscar coincidencia parcial (LIKE)
+        for (const name of names) {
+          const likeQuery = `
+            SELECT DISTINCT d.shelly_id
+            FROM sem_dispositivos d
+            JOIN gen_ubicaciones_reales u ON d.id_ubicacion_real = u.id_ubicacion_real
+            WHERE d.activo = 1 AND d.tipo IS NOT NULL
+              AND u.nombre LIKE ?
+          `;
+          this._validateReadOnly(likeQuery);
+          const likeRows = await databaseService.query(likeQuery, [`%${name}%`]);
+          resolved.push(...likeRows.map(r => String(r.shelly_id)));
+        }
+      }
+
+      if (_debugEnabled()) {
+        console.log(`[AIToolsService] 🔍 Shelly name resolution: [${names.join(',')}] → found ${resolved.length - realIds.length} shelly_ids`);
+      }
+    }
+
+    return [...new Set(resolved)];
   }
 
   // ─── Helpers privados ───
