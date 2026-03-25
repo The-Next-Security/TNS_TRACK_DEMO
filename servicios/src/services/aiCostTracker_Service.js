@@ -1,8 +1,9 @@
 const databaseService = require('./database_Service');
 const configLoader = require('../config/js_files/configLoader_Config');
 
-// Fallback si no existe ai-pricing.json (DeepSeek por millón de tokens)
+// Pricing por millón de tokens (Gemini Flash + legacy DeepSeek)
 const DEFAULT_PRICING = {
+  'gemini-2.0-flash': { input_per_million: 0.075, output_per_million: 0.30 },
   'deepseek-chat': { input_per_million: 0.14, output_per_million: 0.28 }
 };
 
@@ -14,7 +15,7 @@ class AICostTracker {
   _ensurePricing() {
     if (this._pricingLoaded) return;
     try {
-      const custom = configLoader.getValue('OpenAI_API.pricing') || configLoader.getConfig().ai_pricing;
+      const custom = configLoader.getValue('Gemini_API.pricing') || configLoader.getConfig().ai_pricing;
       if (custom && typeof custom === 'object') this.pricing = { ...DEFAULT_PRICING, ...custom };
     } catch (_) { /* config no lista aún */ }
     this._pricingLoaded = true;
@@ -22,12 +23,12 @@ class AICostTracker {
 
   calculateCost(modelName, inputTokens, outputTokens) {
     this._ensurePricing();
-    const modelPricing = this.pricing[modelName] || this.pricing['deepseek-chat'];
+    const modelPricing = this.pricing[modelName] || this.pricing['gemini-2.0-flash'];
     if (!modelPricing) {
-      console.warn(`[AICostTracker] Unknown model: ${modelName}, using deepseek-chat pricing`);
-      return this.calculateCost('deepseek-chat', inputTokens, outputTokens);
+      console.warn(`[AICostTracker] Unknown model: ${modelName}, using gemini-2.0-flash pricing`);
+      return this.calculateCost('gemini-2.0-flash', inputTokens, outputTokens);
     }
-    
+
     const inputCost = (inputTokens / 1_000_000) * modelPricing.input_per_million;
     const outputCost = (outputTokens / 1_000_000) * modelPricing.output_per_million;
     return inputCost + outputCost;
@@ -41,7 +42,7 @@ class AICostTracker {
       try {
         const [result] = await connection.execute(
           'INSERT INTO ai_costos_sesion (id_usuario, modelo_utilizado) VALUES (?, ?)',
-          [userId, config.OpenAI_API?.OPENAI_MODEL || 'deepseek-chat']
+          [userId, config.Gemini_API?.GEMINI_MODEL || 'gemini-2.0-flash']
         );
 
         const sessionId = result.insertId;
@@ -128,7 +129,7 @@ class AICostTracker {
   async getActiveSession(userId) {
     try {
       const config = configLoader.getConfig();
-      const timeoutMinutes = parseInt(config.OpenAI_API?.AI_SESSION_TIMEOUT_MINUTES) || 30;
+      const timeoutMinutes = parseInt(config.Gemini_API?.AI_SESSION_TIMEOUT_MINUTES) || 30;
 
       // Close expired sessions for this user before looking for an active one
       await databaseService.query(
@@ -160,4 +161,3 @@ class AICostTracker {
 }
 
 module.exports = new AICostTracker();
-

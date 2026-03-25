@@ -16,7 +16,7 @@
 4. [Express 5.1.0 (versión moderna)](#4-express-510-versión-moderna)
 5. [NO uso de Variables de Entorno](#5-no-uso-de-variables-de-entorno)
 6. [Zona Horaria Base: America/Santiago](#6-zona-horaria-base-americasantiago)
-7. [DeepSeek como Provider de IA](#7-deepseek-como-provider-de-ia)
+7. [Google Gemini como Provider de IA](#7-google-gemini-como-provider-de-ia)
 8. [Notificaciones: Email + Push (NO SMS)](#8-notificaciones-email--push-no-sms)
 9. [MySQL como Base de Datos Principal](#9-mysql-como-base-de-datos-principal)
 10. [Estandarización de Librería de Fechas con Luxon](#10-estandarización-de-librería-de-fechas-con-luxon)
@@ -169,22 +169,39 @@ DateTime.now().setZone('America/Santiago');
 
 ---
 
-## 7. DeepSeek como Provider de IA
+## 7. Google Gemini como Provider de IA
 
 ### Contexto
-El sistema requiere capacidades de IA para análisis de datos y generación de insights.
+El sistema requiere capacidades de IA para análisis de datos y generación de insights. Inicialmente se usó DeepSeek (vía compatibilidad OpenAI), pero fue reemplazado por Google Gemini en el Issue #70 para habilitar el agente autónomo ReAct y mejorar la calidad de respuestas.
 
 ### Decisión
-Usar **DeepSeek** como proveedor de servicios de IA.
+Usar **Google Gemini 2.0 Flash** como proveedor de servicios de IA.
+
+### Rationale
+- Costo estimado por consulta compleja: ~$0.008 USD (15x por debajo del límite de negocio $0.20)
+- Compatible con OpenAI function calling API (sin cambio de SDK)
+- Soporte nativo de tool calling para el patrón ReAct
+- Mejor razonamiento autónomo para consultas cruzadas (temperatura + consumo)
 
 ### Implementación
 ```javascript
-// Configuración DeepSeek en base de datos
-aiProvider: 'deepseek'
+// Configuración Gemini leída desde BD vía configLoader
+const config = configLoader.getConfig();
+this.client = new OpenAI({
+  apiKey: config.Gemini_API?.GEMINI_API_KEY,
+  baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai'
+});
+this.model = config.Gemini_API?.GEMINI_MODEL || 'gemini-2.0-flash';
 ```
 
+### Historial del Provider IA
+| Período | Provider | Modelo | Issue |
+|---------|---------|--------|-------|
+| Inicial → 2026-03-23 | DeepSeek | deepseek-chat | — |
+| 2026-03-23 → hoy | Google Gemini | gemini-2.0-flash | #70 |
+
 ### Estado Actual
-✅ **Implementado** - DeepSeek configurado como provider de IA
+✅ **Implementado** - Google Gemini 2.0 Flash configurado como provider de IA (Issue #70)
 
 ---
 
@@ -395,6 +412,7 @@ Tras la limpieza inicial de rutas legacy (Decisión #11), el backend mantenía u
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-03-23 | Migración provider IA: DeepSeek → Google Gemini 2.0 Flash. Agente autónomo ReAct, 9 parámetros en BD, renombrado grupo `OpenAI_API` → `Gemini_API` (Issue #70) | andresTNS, Bufigol |
 | 2026-03-17 | Reorganización completa de endpoints por dominios de negocio (Issue #11 — Fase final): 13 dominios, 28 componentes sincronizados, 4 controladores muertos eliminados | andresTNS, Bufigol |
 | 2026-03-12 | Alineación endpoints con BD: ubi_canal+id_preset (Opción A), rep_plantillas/rep_reportes_generados, presets | andresTNS, Bufigol |
 | 2026-03-11 | Modelo unificado de notificaciones: ale_suscripciones_notificacion, horarios base/custom, servicio único de decisión; eliminación ale_suscripciones_email | Plan Notificaciones unificadas |
@@ -415,4 +433,4 @@ Tras la limpieza inicial de rutas legacy (Decisión #11), el backend mantenía u
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-03-17
+**Última revisión**: 2026-03-23

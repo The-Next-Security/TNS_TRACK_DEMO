@@ -111,11 +111,13 @@
 - **Node.js Library**: https://github.com/sendgrid/sendgrid-nodejs
 - **Versión Utilizada**: 8.1.4
 
-### DeepSeek (IA)
-- **Documentación**: https://platform.deepseek.com/docs
-- **API**: https://platform.deepseek.com/api-docs
-- **Modelos**: https://platform.deepseek.com/models
-- **Uso en Proyecto**: AI Cold Chamber Analysis (Feature 005)
+### Google Gemini API (IA)
+- **Documentación**: https://ai.google.dev/gemini-api/docs
+- **API Reference**: https://ai.google.dev/api/rest
+- **Google AI Studio**: https://aistudio.google.com
+- **Modelos**: https://ai.google.dev/gemini-api/docs/models/gemini
+- **Modo OpenAI-compatible**: https://ai.google.dev/gemini-api/docs/openai
+- **Uso en Proyecto**: Agente IA autónomo ReAct — análisis de energía y temperatura (Issue #70)
 
 ### Google Fonts
 - **Catálogo**: https://fonts.google.com/
@@ -379,7 +381,7 @@
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-01-26
+**Última revisión**: 2026-03-23
 
 ---
 

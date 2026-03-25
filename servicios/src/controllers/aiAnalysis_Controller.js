@@ -1,7 +1,9 @@
-const openaiService = require('../services/openai_Service');
+const geminiService = require('../services/gemini_Service');
 const aiDataService = require('../services/aiData_Service');
 const costTracker = require('../services/aiCostTracker_Service');
+const agentOrchestrator = require('../services/aiAgentOrchestrator_Service');
 const databaseService = require('../services/database_Service');
+const configLoader = require('../config/js_files/configLoader_Config');
 const { DateTime } = require('../utils/date_Utils');
 
 class AIAnalysisController {
@@ -61,7 +63,7 @@ class AIAnalysisController {
         finalChambers,
         finalDateRange.start,
         finalDateRange.end,
-        true  // Force daily aggregation to stay under OpenAI token limits
+        true  // Force daily aggregation to stay under Gemini token limits
       );
 
       if (!historicalData || historicalData.length === 0) {
@@ -74,7 +76,7 @@ class AIAnalysisController {
 
       // Analyze with AI
       console.log(`[AIAnalysisController] Analyzing ${historicalData.length} data points with AI`);
-      const aiResponse = await openaiService.analyzeChamberData(queryText, historicalData);
+      const aiResponse = await geminiService.analyzeChamberData(queryText, historicalData);
       
       // Log response summary
       console.log(`[AIAnalysisController] ✅ AI Response received (${aiResponse.response?.length || 0} chars)`);
@@ -118,6 +120,109 @@ class AIAnalysisController {
         success: false,
         error: 'Internal Server Error',
         message: error.message || 'An error occurred while processing the query'
+      });
+    }
+  }
+
+  /**
+   * Consulta avanzada con agente autónomo (Gemini Flash + ReAct loop)
+   * POST /api/ia/consulta-avanzada
+   */
+  async queryAvanzada(req, res) {
+    const startTime = Date.now();
+
+    try {
+      const { query: queryText, sessionId } = req.body;
+      const userId = req.user.userId || req.user.id_Usuario || req.user.id;
+
+      if (!queryText) {
+        return res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'Query text is required'
+        });
+      }
+
+      // Verificar que el agente esté disponible
+      if (!agentOrchestrator.isAvailable()) {
+        const config = configLoader.getConfig();
+        if (!config.Gemini_API?.GEMINI_API_KEY) {
+          return res.status(503).json({
+            success: false,
+            error: 'Service Unavailable',
+            message: 'GEMINI_API_KEY not configured. Please contact your administrator.'
+          });
+        }
+        // Intentar reinicializar
+        agentOrchestrator.init();
+        if (!agentOrchestrator.isAvailable()) {
+          return res.status(503).json({
+            success: false,
+            error: 'Service Unavailable',
+            message: 'AI Agent could not be initialized. Please try again later.'
+          });
+        }
+      }
+
+      // Create or resume session
+      let activeSessionId = sessionId;
+      if (!activeSessionId) {
+        activeSessionId = await costTracker.getActiveSession(userId);
+        if (!activeSessionId) {
+          activeSessionId = await costTracker.createSession(userId);
+        }
+      }
+
+      // Ejecutar agente autónomo
+      console.log(`[AIAnalysisController] Starting advanced query for user ${userId}`);
+      const agentResult = await agentOrchestrator.run(queryText, userId);
+
+      const executionTimeMs = Date.now() - startTime;
+
+      // Registrar costos (adaptar formato para costTracker)
+      const aiResponse = {
+        model: agentResult.model,
+        usage: {
+          prompt_tokens: agentResult.usage.prompt_tokens,
+          completion_tokens: agentResult.usage.completion_tokens
+        },
+        response: agentResult.response
+      };
+
+      const queryCost = await costTracker.logQuery(
+        activeSessionId,
+        userId,
+        { query: queryText, chambers: [], dateRange: null },
+        aiResponse,
+        executionTimeMs
+      );
+
+      const sessionTotal = await costTracker.getSessionTotal(activeSessionId);
+
+      res.json({
+        success: true,
+        sessionId: activeSessionId,
+        response: {
+          summary: agentResult.response,
+          toolsUsed: agentResult.toolsUsed,
+          iterations: agentResult.iterations
+        },
+        cost: {
+          queryCost: parseFloat(queryCost.toFixed(4)),
+          sessionTotal: parseFloat(sessionTotal.toFixed(4)),
+          inputTokens: agentResult.usage.prompt_tokens,
+          outputTokens: agentResult.usage.completion_tokens,
+          model: agentResult.model
+        },
+        executionTime: executionTimeMs
+      });
+
+    } catch (error) {
+      console.error('[AIAnalysisController] Advanced query error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
+        message: error.message || 'An error occurred while processing the advanced query'
       });
     }
   }
