@@ -10,7 +10,7 @@
 | ⚠️ **CRÍTICA** | [Ubibot](#️-ubibot-api) | Datos temperatura | REST | [Ver detalles](#️-ubibot-api) |
 | 🔶 **ALTA** | [OnPremise TNS](#️-onpremise-api-tns-interna) | API interna (Ubibot) | REST | [Ver detalles](#️-onpremise-api-tns-interna) |
 | 🔶 **ALTA** | [SendGrid](#️-sendgrid-api) | Envío emails | REST/SDK | [Ver detalles](#️-sendgrid-api) |
-| 🟢 **MEDIA** | [DeepSeek](#️-deepseek-api-ia) | Análisis IA | REST | [Ver detalles](#️-deepseek-api-ia) |
+| 🟢 **MEDIA** | [Google Gemini](#️-google-gemini-api-ia) | Análisis IA | REST | [Ver detalles](#️-google-gemini-api-ia) |
 | 🟢 **MEDIA** | [QuickChart](#️-quickchart-api) | Gráficos PDF | REST | [Ver detalles](#️-quickchart-api) |
 | 🟡 **BAJA** | [Mapbox](#️-mapbox-api) | Mapas GPS | REST/GL | [Ver detalles](#️-mapbox-api) |
 | 🟡 **BAJA** | [PostHog](#️-posthog-analytics) | Analytics | SDK | [Ver detalles](#️-posthog-analytics) |
@@ -222,43 +222,52 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
 
 ---
 
-## 5️⃣ DeepSeek API (IA)
+## 5️⃣ Google Gemini API (IA)
 
 ### Información General
-- **Proveedor**: DeepSeek
-- **URL Base**: `https://api.deepseek.com`
-- **Tipo**: REST API (OpenAI compatible)
-- **SDK**: openai ^6.8.1
+- **Proveedor**: Google (Google AI Studio)
+- **URL Base**: `https://generativelanguage.googleapis.com/v1beta/openai`
+- **Tipo**: REST API (modo OpenAI compatible)
+- **SDK**: openai ^6.8.1 (compatible con Gemini vía modo OpenAI)
 - **Autenticación**: API Key
-- **Documentación**: Compatible con OpenAI API
+- **Documentación**: https://ai.google.dev/gemini-api/docs
+- **Migración**: Reemplaza DeepSeek como provider IA (Issue #70, 2026-03-23)
 
 ### Propósito en TNS Track
-- Análisis inteligente de datos de temperatura
-- Predicciones de patrones de consumo
-- Generación de insights y recomendaciones
-- Detección de anomalías
+- Análisis inteligente de datos de temperatura y consumo eléctrico
+- Agente autónomo ReAct que decide dinámicamente qué datos consultar
+- Predicciones y correlaciones cruzadas (temperatura + consumo)
+- Generación de insights y recomendaciones en lenguaje natural
 
 ### Configuración
 
-> **Configuración en BD**: La configuración de DeepSeek (API Key, modelo, parámetros) se gestiona en base de datos. Ver [Configuracion.md](Configuracion.md) y [Base_de_Datos.md](Base_de_Datos.md) para el esquema.
+> **Configuración en BD**: La configuración de Gemini (API Key, modelo, parámetros del agente) se gestiona en base de datos bajo el grupo `Gemini_API`. Ver [Configuracion.md](Configuracion.md) y [Base_de_Datos.md](Base_de_Datos.md) para el esquema.
 
 ```json
 {
-  "ai": {
-    "DEEPSEEK_API_KEY": "sk-xxxxxxxxxxxxxxxx",
-    "model": "deepseek-chat",
-    "temperature": 0.7,
-    "max_tokens": 1000
+  "Gemini_API": {
+    "GEMINI_API_KEY": "[CONFIGURAR]",
+    "GEMINI_MODEL": "gemini-2.0-flash",
+    "GEMINI_MAX_TOKENS": 2000,
+    "GEMINI_MAX_ITERATIONS": 5,
+    "GEMINI_MAX_INPUT_TOKENS": 50000,
+    "GEMINI_COST_WARNING_USD": 0.15
   }
 }
 ```
 
 ### Archivos Involucrados
-- **Service**: `/servicios/src/services/openaiService.js`
-- **Controller**: `/servicios/src/controllers/aiAnalysisController.js`
-- **Routes**: `/servicios/src/routes/aiAnalysisRoutes.js`
-- **Cost Tracker**: `/servicios/src/services/aiCostTracker.js`
-- **Data Service**: `/servicios/src/services/aiDataService.js`
+- **Service (cliente LLM)**: `/servicios/src/services/openai_Service.js` (nombre histórico; usa Gemini)
+- **Orquestador ReAct**: `/servicios/src/services/aiAgentOrchestrator_Service.js`
+- **Tools / Herramientas**: `/servicios/src/services/aiTools_Service.js`
+- **Controller**: `/servicios/src/controllers/aiAnalysis_Controller.js`
+- **Routes**: `/servicios/src/routes/ia_Routes.js`
+- **Cost Tracker**: `/servicios/src/services/aiCostTracker_Service.js`
+- **Data Service**: `/servicios/src/services/aiData_Service.js`
+
+### Endpoints
+- `POST /api/ia/consulta` — Consulta simple (sistema anterior, sin cambios)
+- `POST /api/ia/consulta-avanzada` — Agente autónomo ReAct (Issue #70)
 
 ### Casos de Uso
 1. **Análisis de Temperatura**:
@@ -271,10 +280,16 @@ Recolección de datos de temperatura de cámaras frigoríficas y ambientes contr
    - Proyecciones de consumo futuro
    - Sugerencias de ahorro energético
 
+3. **Consultas cruzadas — Agente ReAct (nuevo)**:
+   - Correlación temperatura exterior vs consumo eléctrico
+   - Pronóstico energético considerando clima futuro
+   - Análisis de múltiples fuentes de datos en una sola consulta
+
 ### Tracking de Costos
-- Servicio: `aiCostTracker.js`
-- Tokens contabilizados: Input + Output
-- Storage en BD
+- Servicio: `aiCostTracker_Service.js`
+- Tokens contabilizados: Input + Output por iteración acumulada
+- Storage en BD (tablas `ai_costos_sesion`, `ai_costos_query`)
+- Umbral de advertencia configurable: `GEMINI_COST_WARNING_USD` (default: $0.15 USD)
 
 ---
 
@@ -457,7 +472,7 @@ Para problemas con API Keys, consultar [Troubleshooting.md](Troubleshooting.md) 
 
 ### APIs OPCIONALES (Sistema funciona con degradación)
 4. ~~**Twilio SMS**~~ → ⚠️ LEGACY - No implementado (notificaciones vía Email + Push)
-5. **DeepSeek IA** → Sin análisis inteligente (solo datos raw)
+5. **Google Gemini IA** → Sin análisis inteligente (solo datos raw)
 6. **QuickChart** → Reportes sin gráficos (solo texto)
 7. **Mapbox** → Sin visualización de mapas (solo datos GPS)
 8. **PostHog** → Sin analytics (no impacta funcionalidad)
@@ -495,5 +510,5 @@ Para troubleshooting detallado de APIs externas, consultar:
 - [Base_de_Datos.md](./Base_de_Datos.md)
 - [Info_Github.md](./Info_Github.md)
 
-**Última actualización**: 2026-01-26
-**Versión**: 2.0.0
+**Última actualización**: 2026-03-23
+**Versión**: 2.1.0
