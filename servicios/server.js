@@ -109,6 +109,15 @@ class Server {
       next();
     });
 
+    // Normalizar doble slash en URLs — protección ante proxy/nginx que pueda insertar slashes extra
+    // req.originalUrl queda intacto (inmutable) para que los logs sigan mostrando la URL original
+    this.app.use((req, res, next) => {
+      if (req.url && req.url.includes('//')) {
+        req.url = req.url.replace(/\/\/+/g, '/');
+      }
+      next();
+    });
+
     // Header Content-Type para rutas API (unificar con y sin prefijo de producción)
     this.app.use(["/api", "/TNSTrack/api"], (req, res, next) => {
       res.header("Content-Type", "application/json");
