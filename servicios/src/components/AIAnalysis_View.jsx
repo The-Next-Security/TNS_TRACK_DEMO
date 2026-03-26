@@ -7,6 +7,7 @@
 
 import React, { useState, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import HeaderV2 from "./Header_View";
@@ -30,7 +31,10 @@ import {
   Sparkles,
   Wrench,
   DollarSign,
-  RotateCw
+  RotateCw,
+  Copy,
+  Check,
+  ShieldAlert
 } from "lucide-react";
 
 /**
@@ -46,6 +50,7 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
   const [error, setError] = useState(null);
   const [sessionInfo, setSessionInfo] = useState(null);
   const [loadingChambers, setLoadingChambers] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   // Cargar cámaras al montar
   useEffect(() => {
@@ -106,8 +111,21 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
     setAnalysis(null);
 
     try {
-      // Endpoint agéntico: solo envía query, el agente decide qué datos buscar
-      const requestBody = { query: finalQuery };
+      // Endpoint agéntico con contexto de cámaras seleccionadas (id + nombre)
+      const selectedChamberInfo = chambers
+        .filter(c => finalChambers.includes(c.id))
+        .map(c => ({
+          id: c.id,
+          name: c.name,
+          ubicacionId: c.ubicacionId,
+          shellyId: c.shellyId || null
+        }));
+
+      const requestBody = {
+        query: finalQuery,
+        chambers: finalChambers,
+        chamberInfo: selectedChamberInfo
+      };
 
       console.log('[AIAnalysis] Enviando query avanzada:', requestBody);
 
@@ -170,6 +188,25 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
     setSelectedChambers([]);
   };
 
+  /**
+   * Copia el markdown crudo al clipboard
+   */
+  const handleCopyMarkdown = async () => {
+    const markdownText = typeof analysis === 'object' && analysis?.summary
+      ? analysis.summary
+      : typeof analysis === 'string' ? analysis : '';
+
+    if (!markdownText) return;
+
+    try {
+      await navigator.clipboard.writeText(markdownText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('[AIAnalysis] Error copiando markdown:', err);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
       <HeaderV2 userPermissions={userPermissions} />
@@ -201,6 +238,14 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
           </Alert>
         )}
 
+
+        {/* Política de uso */}
+        <div className="mb-6 flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            <strong>Política de uso:</strong> Este módulo es exclusivamente para análisis de temperaturas de cámaras de frío, reefers y consumo eléctrico. Las consultas fuera de este ámbito no serán procesadas.
+          </p>
+        </div>
 
         {/* Chamber Selection - Diseño mejorado */}
         <motion.div
@@ -494,12 +539,32 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
                     Resultado del Análisis
                   </CardTitle>
-                  {sessionInfo && sessionInfo.executionTime && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span>{sessionInfo.executionTime}ms</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyMarkdown}
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-green-500" />
+                          Copiado
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          Copiar Markdown
+                        </>
+                      )}
+                    </Button>
+                    {sessionInfo && sessionInfo.executionTime && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <Clock className="w-4 h-4" />
+                        <span>{sessionInfo.executionTime}ms</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
               {/* Agent metadata: tools, iterations, cost */}
@@ -532,8 +597,8 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
                 </div>
               )}
               <CardContent>
-                <div className="prose dark:prose-invert max-w-none text-gray-700 dark:text-gray-300">
-                  <ReactMarkdown>
+                <div className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 prose-headings:text-blue-700 dark:prose-headings:text-blue-400 prose-h2:border-b prose-h2:border-blue-200 dark:prose-h2:border-blue-800 prose-h2:pb-2 prose-h2:mb-4 prose-h3:text-blue-600 dark:prose-h3:text-blue-300 prose-strong:text-gray-900 dark:prose-strong:text-white prose-table:border-collapse prose-th:bg-blue-50 dark:prose-th:bg-blue-950 prose-th:border prose-th:border-blue-200 dark:prose-th:border-blue-800 prose-th:px-3 prose-th:py-2 prose-td:border prose-td:border-gray-200 dark:prose-td:border-gray-700 prose-td:px-3 prose-td:py-2 prose-hr:border-blue-200 dark:prose-hr:border-blue-800">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {typeof analysis === 'object' && analysis !== null && analysis.summary
                       ? analysis.summary
                       : typeof analysis === 'string'

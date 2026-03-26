@@ -132,7 +132,7 @@ class AIAnalysisController {
     const startTime = Date.now();
 
     try {
-      const { query: queryText, sessionId } = req.body;
+      const { query: queryText, sessionId, chambers: chamberIds, chamberInfo } = req.body;
       const userId = req.user.userId || req.user.id_Usuario || req.user.id;
 
       if (!queryText) {
@@ -175,7 +175,10 @@ class AIAnalysisController {
 
       // Ejecutar agente autónomo
       console.log(`[AIAnalysisController] Starting advanced query for user ${userId}`);
-      const agentResult = await agentOrchestrator.run(queryText, userId);
+      const agentResult = await agentOrchestrator.run(queryText, userId, {
+        chambers: chamberIds || [],
+        chamberInfo: chamberInfo || []
+      });
 
       const executionTimeMs = Date.now() - startTime;
 
@@ -192,7 +195,7 @@ class AIAnalysisController {
       const queryCost = await costTracker.logQuery(
         activeSessionId,
         userId,
-        { query: queryText, chambers: [], dateRange: null },
+        { query: queryText, chambers: chamberIds || [], dateRange: null },
         aiResponse,
         executionTimeMs
       );
@@ -307,26 +310,33 @@ class AIAnalysisController {
    */
   async getChambers(req, res) {
     try {
-      // Migrado: channels_ubibot → ubi_canal; sensor_readings_ubibot → ubi_lecturas_sensor;
-      // parametrizaciones → ubi_grupo
+      // Usa gen_ubicaciones_reales como tabla pivote para nombres canónicos.
+      // JOIN ubi_canal para canal_id (temperatura Ubibot).
+      // LEFT JOIN sem_dispositivos para shelly_id (energía) — solo dispositivos reales (tipo IS NOT NULL).
       // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
-      // group_name: ubi_grupo no tiene columna nombre_parametro; se retorna g.nombre_preset como group_name.
       const query = `
         SELECT
+          u.id_ubicacion_real,
+          u.nombre AS name,
           c.canal_id AS id,
-          c.nombre AS name,
           COALESCE(c.umbral_min, g.temperatura_minima) AS threshold_min,
           COALESCE(c.umbral_max, g.temperatura_maxima) AS threshold_max,
-          c.id_preset,
           g.nombre_preset AS group_name,
-          COUNT(DISTINCT DATE(sr.fecha_lectura_externa)) as days_with_data
-        FROM ubi_canal c
+          d.shelly_id,
+          d.tipo AS shelly_tipo,
+          COUNT(DISTINCT DATE(sr.fecha_lectura_externa)) AS days_with_data
+        FROM gen_ubicaciones_reales u
+        JOIN ubi_canal c ON c.id_ubicacion_real = u.id_ubicacion_real
         LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
         LEFT JOIN ubi_lecturas_sensor sr ON c.id_canal = sr.id_canal
           AND sr.fecha_lectura_externa >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        GROUP BY c.canal_id, c.nombre, c.umbral_min, c.umbral_max, g.temperatura_minima, g.temperatura_maxima, c.id_preset, g.nombre_preset
+        LEFT JOIN sem_dispositivos d ON d.id_ubicacion_real = u.id_ubicacion_real
+          AND d.activo = 1 AND d.tipo IS NOT NULL
+        WHERE u.activo = 1
+        GROUP BY u.id_ubicacion_real, u.nombre, c.canal_id, c.umbral_min, c.umbral_max,
+                 g.temperatura_minima, g.temperatura_maxima, g.nombre_preset, d.shelly_id, d.tipo
         HAVING days_with_data > 0
-        ORDER BY c.nombre
+        ORDER BY u.nombre
       `;
 
       const chambers = await databaseService.query(query);
@@ -336,6 +346,9 @@ class AIAnalysisController {
         chambers: chambers.map(ch => ({
           id: ch.id,
           name: ch.name,
+          ubicacionId: ch.id_ubicacion_real,
+          shellyId: ch.shelly_id || null,
+          shellyTipo: ch.shelly_tipo || null,
           thresholdMin: ch.threshold_min,
           thresholdMax: ch.threshold_max,
           groupName: ch.group_name,

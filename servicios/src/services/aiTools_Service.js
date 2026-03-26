@@ -109,14 +109,14 @@ const TOOL_DEFINITIONS = [
     type: 'function',
     function: {
       name: 'get_temperature_chamber_data',
-      description: 'Obtiene datos de temperatura de cámaras frigoríficas (promedio, mínimo, máximo, brechas de umbral por día). Usa esta herramienta cuando la pregunta involucra temperatura de cámaras o brechas de umbral.',
+      description: 'Obtiene datos de temperatura de cámaras frigoríficas (promedio, mínimo, máximo, brechas de umbral por día). Usa esta herramienta cuando la pregunta involucra temperatura de cámaras o brechas de umbral. IMPORTANTE: Usa los canal_id numéricos proporcionados en el contexto del usuario (ej: "92521"), NO uses nombres como "Reefer B".',
       parameters: {
         type: 'object',
         properties: {
           chamber_ids: {
             type: 'array',
             items: { type: 'string' },
-            description: 'IDs de canales de cámara (canal_id de Ubibot)'
+            description: 'canal_id numéricos de Ubibot (ej: ["92521", "92498"]). Usa los canal_id del contexto del usuario, NO nombres de cámaras.'
           },
           days: {
             type: 'integer',
@@ -373,14 +373,94 @@ class AIToolsService {
     const endDate = DateTime.now().setZone('America/Santiago').toFormat('yyyy-MM-dd');
     const startDate = DateTime.now().setZone('America/Santiago').minus({ days }).toFormat('yyyy-MM-dd');
 
-    // Reutilizar lógica existente de aiData_Service
-    const data = await aiDataService.fetchChamberData(chamber_ids, startDate, endDate, true);
+    // Resolver chamber_ids: aceptar canal_id numérico O nombre de ubicación
+    const resolvedIds = await this._resolveChamberIds(chamber_ids);
+
+    if (resolvedIds.length === 0) {
+      return {
+        periodo: { inicio: startDate, fin: endDate, dias: days },
+        camaras: chamber_ids,
+        datos: [],
+        error_detalle: `No se encontraron cámaras para los identificadores: ${chamber_ids.join(', ')}. Usa los canal_id numéricos proporcionados en el contexto (ej: "92521").`
+      };
+    }
+
+    if (_debugEnabled()) {
+      console.log(`[AIToolsService] 🔍 Resolved chamber_ids: [${chamber_ids.join(',')}] → [${resolvedIds.join(',')}]`);
+    }
+
+    const data = await aiDataService.fetchChamberData(resolvedIds, startDate, endDate, true);
 
     return {
       periodo: { inicio: startDate, fin: endDate, dias: days },
-      camaras: chamber_ids,
+      camaras: resolvedIds,
       datos: data
     };
+  }
+
+  /**
+   * Resuelve chamber_ids flexibles: acepta canal_id numérico, nombre de ubicación,
+   * o shelly_id, y siempre devuelve canal_id numéricos válidos.
+   */
+  async _resolveChamberIds(chamberIds) {
+    if (!chamberIds || chamberIds.length === 0) return [];
+
+    const numeric = [];
+    const names = [];
+
+    for (const id of chamberIds) {
+      if (/^\d+$/.test(String(id).trim())) {
+        numeric.push(String(id).trim());
+      } else {
+        names.push(String(id).trim());
+      }
+    }
+
+    const resolved = [...numeric];
+
+    // Resolver nombres de ubicación → canal_id via gen_ubicaciones_reales
+    if (names.length > 0) {
+      const placeholders = names.map(() => '?').join(',');
+      const query = `
+        SELECT c.canal_id
+        FROM ubi_canal c
+        JOIN gen_ubicaciones_reales u ON c.id_ubicacion_real = u.id_ubicacion_real
+        WHERE u.nombre IN (${placeholders})
+          OR u.nombre LIKE CONCAT('%', ?, '%')
+      `;
+      // Buscar coincidencia exacta O parcial para cada nombre
+      const exactQuery = `
+        SELECT DISTINCT c.canal_id
+        FROM ubi_canal c
+        JOIN gen_ubicaciones_reales u ON c.id_ubicacion_real = u.id_ubicacion_real
+        WHERE u.nombre IN (${placeholders})
+      `;
+      this._validateReadOnly(exactQuery);
+      const exactRows = await databaseService.query(exactQuery, names);
+
+      if (exactRows.length > 0) {
+        resolved.push(...exactRows.map(r => String(r.canal_id)));
+      } else {
+        // Fallback: buscar coincidencia parcial (LIKE) para cada nombre
+        for (const name of names) {
+          const likeQuery = `
+            SELECT DISTINCT c.canal_id
+            FROM ubi_canal c
+            JOIN gen_ubicaciones_reales u ON c.id_ubicacion_real = u.id_ubicacion_real
+            WHERE u.nombre LIKE ?
+          `;
+          this._validateReadOnly(likeQuery);
+          const likeRows = await databaseService.query(likeQuery, [`%${name}%`]);
+          resolved.push(...likeRows.map(r => String(r.canal_id)));
+        }
+      }
+
+      if (_debugEnabled() && names.length > 0) {
+        console.log(`[AIToolsService] 🔍 Name resolution: [${names.join(',')}] → found ${resolved.length - numeric.length} canal_ids`);
+      }
+    }
+
+    return [...new Set(resolved)]; // Deduplicate
   }
 
   // ─── Helpers privados ───

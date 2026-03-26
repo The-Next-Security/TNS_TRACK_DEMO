@@ -77,7 +77,7 @@ class AIAgentOrchestrator {
     }
   }
 
-  async run(query, userId) {
+  async run(query, userId, context = {}) {
     if (!this.client) {
       throw new Error('Gemini client not initialized. Please set GEMINI_API_KEY in configuration.');
     }
@@ -85,9 +85,26 @@ class AIAgentOrchestrator {
     const now = DateTime.now().setZone('America/Santiago');
     const systemPrompt = this._buildSystemPrompt(now);
 
+    // Enriquecer query con mapeo nombre→canal_id de cámaras seleccionadas
+    let enrichedQuery = query;
+    if (context.chamberInfo && context.chamberInfo.length > 0) {
+      if (_debugEnabled()) {
+        console.log(`[AIAgentOrchestrator] 📋 chamberInfo received:`, JSON.stringify(context.chamberInfo));
+      }
+      const chamberList = context.chamberInfo
+        .map(c => {
+          const energyInfo = c.shellyId
+            ? `shelly_id: "${c.shellyId}" para energía`
+            : 'sin medidor eléctrico';
+          return `- ${c.name} (canal_id: "${c.id}", ${energyInfo})`;
+        })
+        .join('\n');
+      enrichedQuery += `\n\n[INSTRUCCIÓN OBLIGATORIA - IDENTIFICADORES DE CÁMARAS:\nEl usuario seleccionó las siguientes cámaras para este análisis:\n${chamberList}\n\nREGLAS ESTRICTAS:\n1. Para get_temperature_chamber_data: usa EXACTAMENTE los canal_id numéricos listados arriba como chamber_ids. Ejemplo: chamber_ids: ["92521"], NO ["Reefer B"].\n2. Para get_energy_history: usa EXACTAMENTE los shelly_id listados arriba (solo para cámaras que tengan uno).\n3. NO uses nombres de cámaras como IDs. Los nombres son solo referencia humana.\n4. NO llames a get_active_devices para buscar IDs — ya los tienes aquí arriba.\nEnfoca tu análisis en estas cámaras específicamente.]`;
+    }
+
     const messages = [
       { role: 'system', content: systemPrompt },
-      { role: 'user', content: query }
+      { role: 'user', content: enrichedQuery }
     ];
 
     const toolsUsed = [];
@@ -281,17 +298,29 @@ CONTEXTO DEL SISTEMA:
 - Los sensores Ubibot miden temperatura en cámaras frigoríficas con umbrales configurados
 - Las cámaras tienen ciclos de descongelamiento regulares que causan brechas de temperatura normales
 
+POLÍTICA DE USO ESTRICTA:
+- Este sistema es EXCLUSIVAMENTE para consultas sobre temperaturas de cámaras de frío/reefers, consumo eléctrico y monitoreo IoT.
+- Si la consulta NO es sobre temperaturas, brechas, consumo eléctrico, estado de cámaras o monitoreo IoT, responde ÚNICAMENTE con: "⚠️ **Esta consulta no puede ser procesada.** Este sistema es exclusivamente para análisis de temperaturas de cámaras de frío y consumo eléctrico. Por favor reformula tu pregunta dentro de este ámbito."
+- NO ejecutes herramientas ni busques datos si la consulta no es pertinente al ámbito operativo.
+- Ejemplos de consultas NO válidas: preguntas de cultura general, recetas, código, matemáticas genéricas, etc.
+
 INSTRUCCIONES:
 - Antes de responder, analiza qué datos necesitas. Usa las herramientas disponibles para obtener esos datos. Puedes llamar múltiples herramientas en secuencia.
 - Si necesitas datos de energía Y temperatura, busca ambos.
 - Si la pregunta requiere pronósticos, obtén tanto datos históricos como pronóstico meteorológico.
 - Todos los datos están en zona horaria America/Santiago (Chile). La fecha actual es ${now.toFormat('dd/MM/yyyy HH:mm')}.
 - Responde siempre en español.
-- Estructura tu respuesta con: resumen ejecutivo, datos encontrados, análisis, y recomendaciones si aplica.
-- Usa formato Markdown para estructurar la respuesta.
 - Si los datos disponibles son insuficientes para responder con certeza, indícalo explícitamente.
 - Si una herramienta falla, indícalo en tu respuesta y continúa con los datos disponibles.
-- Solo puedes responder preguntas relacionadas con consumo eléctrico, temperatura de cámaras y operaciones de monitoreo IoT. Para preguntas no relacionadas, responde educadamente que solo puedes ayudar con esos temas.
+- IMPORTANTE: Cuando el usuario proporcione canal_id para sus cámaras, usa EXACTAMENTE esos valores como chamber_ids al llamar a get_temperature_chamber_data.
+
+FORMATO DE RESPUESTA (Markdown rico):
+- Usa ## para secciones principales y ### para subsecciones.
+- Usa tablas Markdown para presentar datos numéricos comparativos.
+- Usa **negrita** para hallazgos clave y valores importantes.
+- Usa listas con viñetas (- o *) para recomendaciones y observaciones.
+- Usa separadores --- entre secciones principales.
+- Estructura obligatoria: ## Resumen Ejecutivo → ## Datos Analizados → ## Análisis Detallado → ## Recomendaciones (si aplica).
 
 TRANSPARENCIA Y CONFIANZA:
 - Cuando calcules correlaciones, proyecciones o estimaciones, indica el nivel de confianza (alta/media/baja) basado en la cantidad y calidad de datos disponibles.
