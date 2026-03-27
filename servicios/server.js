@@ -92,6 +92,11 @@ class Server {
    */
   setupMiddleware() {
     console.log("[Server] setupMiddleware: Configurando middleware...");
+
+    // Confiar en el primer proxy (nginx) para leer la IP real del cliente desde X-Forwarded-For
+    // Necesario para que express-rate-limit identifique usuarios correctamente en producción
+    this.app.set('trust proxy', 1);
+
     const corsOptions = {
       // Ajustar origins según sea necesario para producción
       origin: ["http://localhost:3000", "http://localhost:8080", "https://tns.thenextsecurity.cl" ],
