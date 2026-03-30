@@ -12,7 +12,7 @@
 
 CREATE EVENT IF NOT EXISTS `tns_cool_track`.`evn_recalcular_cuartiles_consumo`
 ON SCHEDULE EVERY 3 MONTH
-STARTS '2026-04-01 03:00:00'
+STARTS (NOW() + INTERVAL 3 DAY)
 ON COMPLETION PRESERVE
 ENABLE
 COMMENT 'Recalcula cuartiles de consumo eléctrico por grupo cada trimestre'
