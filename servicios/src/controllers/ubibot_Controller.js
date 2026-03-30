@@ -376,6 +376,7 @@ class UbibotController {
            SELECT id_canal, temperatura_externa, fecha_lectura_externa,
                   ROW_NUMBER() OVER (PARTITION BY id_canal ORDER BY fecha_lectura_externa DESC) AS rn
            FROM ubi_lecturas_sensor
+           WHERE fecha_lectura_externa >= NOW() - INTERVAL 48 HOUR
          ) s ON c.id_canal = s.id_canal
          LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
          WHERE s.rn = 1
