@@ -396,6 +396,16 @@ CREATE INDEX `idx_ubi_lecturas_sensor_fecha_lectura-temperatura`
 CREATE INDEX `idx_ubi_lecturas_sensor_fecha_creacion`
     ON `ubi_lecturas_sensor` (`fecha_creacion`);
 
+-- Para el dashboard de temperatura: ROW_NUMBER() OVER (ORDER BY fecha_lectura_externa DESC)
+-- sin este índice el motor hace full table scan sobre toda la tabla (alta volumetría)
+CREATE INDEX `idx_ubi_lecturas_sensor_fecha_lectura_externa`
+    ON `ubi_lecturas_sensor` (`fecha_lectura_externa`);
+
+-- Índice compuesto para optimizar el PARTITION BY id_canal ORDER BY fecha_lectura_externa DESC
+-- del dashboard de temperatura con filtro WHERE fecha_lectura_externa >= NOW() - INTERVAL 48 HOUR
+CREATE INDEX `idx_ubi_lecturas_sensor_id_canal-fecha_lectura_externa`
+    ON `ubi_lecturas_sensor` (`id_canal`, `fecha_lectura_externa`);
+
 
 -- ----------------------------------------------------------
 -- ubi_canal
