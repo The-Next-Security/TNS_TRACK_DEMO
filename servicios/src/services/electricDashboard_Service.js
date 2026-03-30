@@ -92,7 +92,7 @@ class ElectricDashboardService {
         d.shelly_id as deviceId,
         d.nombre as deviceName,
         cur.nombre_ubicacion as location,
-        d.grupo_id,
+        d.id_grupo AS grupo_id,
         sg.nombre as groupName,
         COALESCE(latest.potencia_activa, 0) as activePower,
         latest.timestamp_local as lastUpdate,
@@ -105,7 +105,7 @@ class ElectricDashboardService {
         END as status
       FROM sem_dispositivos d
       JOIN gen_ubicaciones_reales cur ON d.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
-      LEFT JOIN sem_grupos sg ON d.grupo_id = sg.id
+      LEFT JOIN sem_grupos sg ON d.id_grupo = sg.id_grupo
       LEFT JOIN (
         SELECT 
           m1.shelly_id,
@@ -178,7 +178,7 @@ class ElectricDashboardService {
           sc.valido_hasta,
           sc.fecha_actualizacion
         FROM sem_configuracion sc
-        JOIN sem_tipos_parametros stp ON sc.tipo_parametro_id = stp.id
+        JOIN sem_tipos_parametros stp ON sc.id_tipo_parametro = stp.id_tipo_parametro
         WHERE sc.activo = 1 
         AND stp.nombre IN ('LIMITE APAGADO', 'CONSUMO BAJO', 'CONSUMO MEDIO', 'CONSUMO ALTO')
         AND sc.valido_desde <= NOW()
@@ -538,7 +538,7 @@ class ElectricDashboardService {
       const query = `
         SELECT MAX(sc.fecha_actualizacion) as ultima_actualizacion
         FROM sem_configuracion sc
-        JOIN sem_tipos_parametros stp ON sc.tipo_parametro_id = stp.id
+        JOIN sem_tipos_parametros stp ON sc.id_tipo_parametro = stp.id_tipo_parametro
         WHERE sc.activo = 1 
         AND stp.nombre IN ('LIMITE APAGADO', 'CONSUMO BAJO', 'CONSUMO MEDIO', 'CONSUMO ALTO')
         AND sc.valido_desde <= NOW()
