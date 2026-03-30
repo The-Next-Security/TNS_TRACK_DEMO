@@ -197,5 +197,7 @@ SOURCE 05_Eventos/05_06_evn_recalculate_daily_metrics.sql
 //
 SOURCE 05_Eventos/05_07_evn_update_consumption_categories.sql
 //
+SOURCE 05_Eventos/05_08_evn_recalcular_cuartiles_consumo.sql
+//
 
 DELIMITER ;
