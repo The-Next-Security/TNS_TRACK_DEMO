@@ -275,10 +275,10 @@ const reportsApiService = {
 
   /**
    * Obtener dispositivos eléctricos (Shelly) para reportes de consumo (Phase 9 - T102)
-   * @returns {Promise<Object>} - { success: true, data: [{ shelly_id, dispositivo_nombre, ubicacion_nombre, ... }] }
+   * @returns {Promise<Object>} - { success: true, data: [{ shelly_id, dispositivo_nombre, nombre, ... }] }
    */
   async getElectricDevices() {
-    const response = await fetch('/api/devices/active', {
+    const response = await fetch('/api/energia/dispositivos/activos', {
       headers: {
         'Content-Type': 'application/json',
         ..._authHeaders()
