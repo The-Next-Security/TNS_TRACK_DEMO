@@ -101,7 +101,6 @@ const DashboardElectricoV2 = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isMobile, setIsMobile] = useState(false);
-  const [categorias, setCategorias] = useState({});
 
   useEffect(() => {
     fetchDeviceData();
@@ -121,7 +120,8 @@ const DashboardElectricoV2 = () => {
   }, []);
 
   /**
-   * Obtiene los datos de consumo eléctrico desde la API
+   * Obtiene los datos de consumo eléctrico unificados desde la API
+   * Incluye mediciones y categorías calculadas en backend
    * @async
    * @returns {Promise<void>}
    */
@@ -131,82 +131,19 @@ const DashboardElectricoV2 = () => {
       setLoading(true);
       const response = await axios.get('/api/energia/dispositivos/ultimas-mediciones');
 
-      console.log('[DashboardElectrico] 📦 Response from /api/energia/dispositivos/ultimas-mediciones:', {
-        status: response.status,
-        success: response.data.success,
-        dataLength: Array.isArray(response.data.data) ? response.data.data.length : 0,
-        data: response.data.data
-      });
-
       if (response.data.success && Array.isArray(response.data.data) && response.data.data.length > 0) {
-        console.log('[DashboardElectrico] ✅ Datos válidos recibidos, actualizando deviceData...');
+        console.log('[DashboardElectrico] ✅ Datos unificados recibidos correctamente');
         setDeviceData(response.data.data);
         setError(null);
-        await fetchCategorias(response.data.data);
       } else {
-        console.warn('[DashboardElectrico] ⚠️ No hay datos disponibles o estructura incorrecta');
+        console.warn('[DashboardElectrico] ⚠️ No hay datos disponibles o la respuesta está vacía');
         setError('No hay datos disponibles');
       }
     } catch (error) {
       console.error('[DashboardElectrico] ❌ Error al cargar los datos:', error);
       setError('Error al cargar los datos');
     } finally {
-      console.log('[DashboardElectrico] 🏁 fetchDeviceData completado, loading=false');
       setLoading(false);
-    }
-  };
-
-  /**
-   * Obtiene las categorías de consumo para cada dispositivo
-   * @async
-   * @param {Array} devices - Lista de dispositivos
-   * @returns {Promise<void>}
-   */
-  const fetchCategorias = async (devices) => {
-    try {
-      console.log('[DashboardElectrico] 🔄 Iniciando fetchCategorias para', devices.length, 'dispositivos');
-      const categoriasTemp = {};
-
-      for (const device of devices) {
-        if (!device.activePower || device.activePower === 0) {
-          console.log(`[DashboardElectrico] ⚪ Dispositivo ${device.deviceId} (${device.location}) apagado, categoria=0`);
-          categoriasTemp[device.deviceId] = 0;
-          continue;
-        }
-
-        try {
-          console.log(`[DashboardElectrico] 🔄 Obteniendo categoría para ${device.deviceId} (${device.location}) con potencia ${device.activePower}W`);
-          const response = await axios.get('/api/energia/consumo/categorias', {
-            params: {
-              valor: device.activePower,
-              deviceId: device.deviceId
-            }
-          });
-
-          console.log(`[DashboardElectrico] 📦 Response categoría para ${device.deviceId}:`, response.data);
-
-          if (response.data && response.data.success && response.data.data) {
-            categoriasTemp[device.deviceId] = response.data.data.categoria;
-            console.log(`[DashboardElectrico] ✅ Categoría ${response.data.data.categoria} asignada a ${device.deviceId}`);
-          } else {
-            categoriasTemp[device.deviceId] = 0;
-            console.warn(`[DashboardElectrico] ⚠️ Response inválida para ${device.deviceId}, usando categoria=0`);
-          }
-        } catch (deviceError) {
-          console.error(`[DashboardElectrico] ❌ Error al obtener categoría para el dispositivo ${device.deviceId}:`, deviceError);
-          categoriasTemp[device.deviceId] = 0;
-        }
-      }
-
-      console.log('[DashboardElectrico] ✅ Categorías finales:', categoriasTemp);
-      setCategorias(categoriasTemp);
-    } catch (error) {
-      console.error('[DashboardElectrico] ❌ Error general obteniendo categorías de consumo:', error);
-      const defaultCategorias = {};
-      devices.forEach(device => {
-        defaultCategorias[device.deviceId] = 0;
-      });
-      setCategorias(defaultCategorias);
     }
   };
 
@@ -226,12 +163,12 @@ const DashboardElectricoV2 = () => {
   };
 
   /**
-   * Obtiene la categoría de consumo de un dispositivo
-   * @param {string} deviceId - ID del dispositivo
+   * Obtiene la categoría de consumo directamente del objeto del dispositivo
+   * @param {Object} item - Objeto del dispositivo
    * @returns {number} Categoría (0-3)
    */
-  const getCategory = (deviceId) => {
-    return categorias[deviceId] !== undefined ? categorias[deviceId] : 0;
+  const getCategory = (item) => {
+    return item.category !== undefined ? item.category : 0;
   };
 
   /**
@@ -281,11 +218,6 @@ const DashboardElectricoV2 = () => {
   }
 
   console.log('[DashboardElectrico] ✅ Renderizando dashboard con', deviceData.length, 'dispositivos');
-  console.log('[DashboardElectrico] 📊 Estado actual:', {
-    deviceDataLength: deviceData.length,
-    categoriasKeys: Object.keys(categorias).length,
-    categorias
-  });
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-gray-50 via-indigo-50/30 to-purple-50/20 sm:p-2.5">
@@ -297,7 +229,7 @@ const DashboardElectricoV2 = () => {
         {/* ============================================ */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-4">
           {deviceData.map((item, index) => {
-            const category = getCategory(item.deviceId);
+            const category = getCategory(item);
             const categoryName = getCategoryName(category);
 
             // Determinar esquema de color basado en categoría de consumo
