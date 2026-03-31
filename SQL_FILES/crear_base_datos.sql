@@ -201,3 +201,13 @@ SOURCE 05_Eventos/05_08_evn_recalcular_cuartiles_consumo.sql
 //
 
 DELIMITER ;
+
+-- ==============================================================================
+-- PASO 6 (OPCIONAL / LEGACY): Migración OpenAI_API -> Gemini_API
+-- ==============================================================================
+-- Usar SOLO en BD antiguas que aún tengan OpenAI_API (sin seeds Gemini nativas).
+-- En instalaciones nuevas (01-04 actuales), NO ejecutar este script porque puede
+-- fallar por claves únicas en inserciones ya existentes.
+--
+-- Descomentar si corresponde a una BD legacy:
+-- SOURCE 01_creacion_desde_cero/05_actualizacion_openai_a_gemini_api.sql;
