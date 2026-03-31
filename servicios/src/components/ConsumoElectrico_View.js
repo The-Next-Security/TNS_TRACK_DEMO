@@ -240,6 +240,7 @@ const ConsumoElectricoV2 = () => {
         adapters: {
           date: {
             locale: 'es',
+            zone: 'America/Santiago',
           },
         },
         grid: {
@@ -423,7 +424,7 @@ const ConsumoElectricoV2 = () => {
                 className={cn(
                   "px-3 py-2 text-base",
                   "bg-transparent",
-                  "border border-gray-300 rounded-lg",
+                  "border-0",
                   "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent",
                   "transition-all duration-200",
                   "cursor-pointer hover:bg-gray-50/50"
@@ -431,6 +432,7 @@ const ConsumoElectricoV2 = () => {
                 locale="es"
                 maxDate={today.current}
                 placeholderText="Seleccione una fecha"
+                portalId="datepicker-portal"
               />
             </div>
           </motion.div>
@@ -552,12 +554,12 @@ const ConsumoElectricoV2 = () => {
                   const stats = calculateStats(deviceData.data);
 
                   const chartData = {
-                    labels: deviceData.data.map(item => (typeof item.timestamp === 'number' ? DateTime.fromMillis(item.timestamp) : DateTime.fromISO(item.timestamp)).toJSDate()),
+                    labels: deviceData.data.map(item => (typeof item.timestamp === 'number' ? DateTime.fromMillis(item.timestamp) : DateTime.fromSQL(item.timestamp, { zone: 'America/Santiago' })).toJSDate()),
                     datasets: [
                       {
                         label: 'Potencia',
                         data: deviceData.data.map(item => ({
-                          x: (typeof item.timestamp === 'number' ? DateTime.fromMillis(item.timestamp) : DateTime.fromISO(item.timestamp)).toJSDate(),
+                          x: (typeof item.timestamp === 'number' ? DateTime.fromMillis(item.timestamp) : DateTime.fromSQL(item.timestamp, { zone: 'America/Santiago' })).toJSDate(),
                           y: parseFloat(item.potencia_kw)
                         })),
                         backgroundColor: (context) => {
@@ -619,7 +621,7 @@ const ConsumoElectricoV2 = () => {
                             <div className="text-right">
                               <div className="flex items-center gap-1 text-xs text-gray-500">
                                 <Clock className="h-3 w-3" />
-                                Último: {(() => { const t = deviceData.data[deviceData.data.length - 1]?.timestamp; return t ? (typeof t === 'number' ? DateTime.fromMillis(t) : DateTime.fromISO(t)).setZone('America/Santiago').toFormat('HH:mm') : '--'; })()}
+                                Último: {(() => { const t = deviceData.data[deviceData.data.length - 1]?.timestamp; return t ? (typeof t === 'number' ? DateTime.fromMillis(t) : DateTime.fromSQL(t, { zone: 'America/Santiago' })).toFormat('HH:mm') : '--'; })()}
                               </div>
                             </div>
                           </div>
