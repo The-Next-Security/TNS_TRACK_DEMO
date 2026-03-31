@@ -252,7 +252,7 @@ const DashboardStatsV2 = ({
       const deviceType =
         deviceInfo.display_subtitle || deviceInfo.dispositivo_nombre || "";
       const locationName =
-        deviceInfo.display_name || deviceInfo.ubicacion_nombre || "Dispositivo";
+        deviceInfo.display_name || deviceInfo.nombre || "Dispositivo";
 
       return {
         name: locationName,
@@ -266,7 +266,7 @@ const DashboardStatsV2 = ({
     if (data && data.length > 0) {
       const firstRecord = data[0];
       return {
-        name: firstRecord.ubicacion_nombre || "Dispositivo",
+        name: firstRecord.nombre || "Dispositivo",
         type: firstRecord.dispositivo_nombre || "",
         group: firstRecord.grupo_nombre || "Sin Grupo",
         status: "Conectado",
