@@ -630,6 +630,71 @@ class UbibotController {
     }
   }
 
+  async getTemperatureRangeByDeviceData(req, res) {
+    console.log("[UbibotController] getTemperatureRangeByDeviceData: Solicitud recibida.");
+    try {
+      const { startDate, endDate, deviceId, tz = TZ_UBI } = req.query;
+
+      const dtStart = DateTime.fromFormat(startDate, "yyyy-MM-dd", { zone: TZ_UBI });
+      const dtEnd = DateTime.fromFormat(endDate, "yyyy-MM-dd", { zone: TZ_UBI });
+      if (!startDate || !endDate || !deviceId || !dtStart.isValid || !dtEnd.isValid) {
+        console.warn("[UbibotController] getTemperatureRangeByDeviceData: Parámetros inválidos:", req.query);
+        return res.status(400).json({
+          error: "Parámetros inválidos. Requeridos: startDate, endDate (YYYY-MM-DD), deviceId",
+        });
+      }
+
+      const start = dtStart.startOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+      const end = dtEnd.endOf("day").toFormat("yyyy-MM-dd HH:mm:ss");
+
+      const query = `
+        SELECT
+          c.canal_id AS device_id,
+          c.nombre AS device_name,
+          sr.fecha_lectura_externa AS timestamp,
+          sr.temperatura_externa AS external_temperature
+        FROM ubi_lecturas_sensor sr
+        JOIN ubi_canal c ON c.id_canal = sr.id_canal
+        WHERE c.canal_id = ?
+          AND sr.fecha_lectura_externa BETWEEN ? AND ?
+        ORDER BY sr.fecha_lectura_externa ASC
+      `;
+
+      const rows = await databaseService.query(query, [deviceId, start, end]);
+
+      // Ensure device exists even when there are no readings in range.
+      const [deviceInfo] = await databaseService.pool.query(
+        "SELECT canal_id AS device_id, nombre AS device_name, activo FROM ubi_canal WHERE canal_id = ?",
+        [deviceId]
+      );
+
+      if (!deviceInfo || deviceInfo.length === 0) {
+        return res.status(404).json({ error: `Dispositivo ${deviceId} no encontrado` });
+      }
+
+      const meta = {
+        deviceId: Number(deviceInfo[0].device_id),
+        deviceName: deviceInfo[0].device_name,
+        timezone: tz,
+        start,
+        end,
+        pointCount: rows.length,
+        source: "ubi_lecturas_sensor",
+      };
+
+      const series = rows.map((item) => ({
+        timestamp: item.timestamp,
+        external_temperature:
+          item.external_temperature !== null ? parseFloat(item.external_temperature) : null,
+      }));
+
+      return res.json({ meta, series });
+    } catch (error) {
+      console.error("❌ Ubibot: Error en getTemperatureRangeByDeviceData:", error.message);
+      return res.status(500).json({ error: "Error del servidor al obtener rango por dispositivo." });
+    }
+  }
+
   // --- Métodos de Reportes ---
   // (Se mantienen sin cambios funcionales relevantes para el error del token,
   //  pero se podrían mejorar validaciones o logs si fuera necesario)
