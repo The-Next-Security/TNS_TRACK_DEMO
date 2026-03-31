@@ -78,7 +78,7 @@ async function deleteHorariosBase(req, res) {
 
 async function getMisHorarios(req, res) {
   try {
-    const idUsuario = req.user?.id_usuario || req.user?.id;
+    const idUsuario = req.user?.userId;
     if (!idUsuario) return res.status(401).json({ success: false, error: { message: 'No autenticado' } });
     const filters = {};
     if (req.query.id_tipo_alerta != null) filters.id_tipo_alerta = parseInt(req.query.id_tipo_alerta, 10);
@@ -93,7 +93,7 @@ async function getMisHorarios(req, res) {
 
 async function postMisHorarios(req, res) {
   try {
-    const idUsuario = req.user?.id_usuario || req.user?.id;
+    const idUsuario = req.user?.userId;
     if (!idUsuario) return res.status(401).json({ success: false, error: { message: 'No autenticado' } });
     const body = req.body || {};
     const record = {
@@ -116,7 +116,7 @@ async function postMisHorarios(req, res) {
 
 async function deleteMisHorarios(req, res) {
   try {
-    const idUsuario = req.user?.id_usuario || req.user?.id;
+    const idUsuario = req.user?.userId;
     if (!idUsuario) return res.status(401).json({ success: false, error: { message: 'No autenticado' } });
     const idHorarioUsuario = parseInt(req.params.id, 10);
     if (!idHorarioUsuario) return res.status(400).json({ success: false, error: { message: 'id requerido' } });
