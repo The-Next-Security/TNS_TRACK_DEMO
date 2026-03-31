@@ -811,7 +811,8 @@ CREATE TABLE `ale_suscripciones_notificacion` (
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
     ON UPDATE CASCADE,
-  CONSTRAINT `fk_suscripciones_notif_id_origen_tipo_tipos_origen_id_tipo_origen`
+  -- Nombre abreviado: el identificador completo supera 64 caracteres (límite MySQL). Ver DOCUMENTACIÓN/Base_de_Datos.md
+  CONSTRAINT `fk_ale_susc_notif_origen_gen_tipos_origen`
     FOREIGN KEY (`id_origen_tipo`)
     REFERENCES `gen_tipos_origen`(`id_tipo_origen`)
     ON DELETE RESTRICT
@@ -833,7 +834,8 @@ CREATE TABLE `ale_horarios_alerta_canal` (
   `fecha_actualizacion` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_horario_alerta_canal`),
   UNIQUE KEY `uk_ale_horarios_alerta_canal_tipo_canal_dia` (`id_tipo_alerta`, `canal`, `dia_semana`),
-  CONSTRAINT `fk_horarios_alerta_canal_id_tipo_alerta_tipo_alerta_id_tipo_alerta`
+  -- Nombre abreviado: el identificador completo supera 64 caracteres (límite MySQL). Ver DOCUMENTACIÓN/Base_de_Datos.md
+  CONSTRAINT `fk_ale_horario_canal_tipo_ale_tipo_alerta`
     FOREIGN KEY (`id_tipo_alerta`)
     REFERENCES `ale_tipo_alerta`(`id_tipo_alerta`)
     ON DELETE RESTRICT
