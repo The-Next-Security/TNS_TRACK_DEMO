@@ -41,7 +41,7 @@
 ---
 
 ### Scripts SQL
-- **`/SQL_FILES/01_creacion_desde_cero/`** - Scripts de creación de base de datos
+- **`/SQL_FILES/01_creacion_desde_cero/`** - Scripts de creación de base de datos desde cero (orquestados por `crear_base_datos.sql`).
 - **`/SQL_FILES/02_actualizaciones/`** - Scripts de actualización de esquema
 
 ---
