@@ -8,9 +8,17 @@
 -- FECHA      : 2026-03-23
 -- BD         : tns_cool_track
 -- AUTOR      : Equipo TNS
--- PRECONDICIÓN: La BD debe tener ejecutados los archivos 01 al 04 de esta carpeta.
+-- ALCANCE    : SOLO bases de datos que AÚN tienen el grupo y rutas OpenAI_API
+--              (instalación antigua). Si creaste la BD con 04_inserts_base.sql
+--              ya actualizado (Gemini_API + 9 parámetros), NO ejecutes este script:
+--              aplicaría 0 filas en UPDATEs y el BLOQUE 4 fallaría por UNIQUE en
+--              ruta_completa. En instalación nueva: tras 01–04, ejecutar en local
+--              04_valores_reales.sql (gitignored) para la API key y secretos.
+-- PRECONDICIÓN: La BD debe tener ejecutados los archivos 01 al 04 **antiguos**
+--              (con grupo OpenAI_API) antes de migrar.
 -- PRECONDICIÓN: Reemplazar [CONFIGURAR_GEMINI_API_KEY] con la API Key real antes
---              de ejecutar en cada entorno (dev/producción).
+--              de ejecutar en cada entorno (dev/producción), o dejar placeholder
+--              y fijar la clave con 04_valores_reales.sql.
 -- ==============================================================================
 
 -- ==============================================================================
@@ -89,12 +97,12 @@ WHERE  p.ruta_completa = 'Gemini_API.GEMINI_API_KEY';
 
 UPDATE gen_cofiguracion_valores v
 JOIN   gen_cofiguracion_parametros p ON v.id_cofiguracion_parametros = p.id_cofiguracion_parametros
-SET    v.valor = 'gemini-2.0-flash-lite'
+SET    v.valor = 'gemini-pro-latest'
 WHERE  p.ruta_completa = 'Gemini_API.GEMINI_MODEL';
 
 UPDATE gen_cofiguracion_valores v
 JOIN   gen_cofiguracion_parametros p ON v.id_cofiguracion_parametros = p.id_cofiguracion_parametros
-SET    v.valor = '2000'
+SET    v.valor = '16384'
 WHERE  p.ruta_completa = 'Gemini_API.GEMINI_MAX_TOKENS';
 
 -- ==============================================================================
@@ -149,3 +157,10 @@ WHERE  p.ruta_completa LIKE 'Gemini_API%'
   AND  p.activo = 1
   AND  v.activo = 1
 ORDER BY p.id_cofiguracion_parametros;
+
+-- ==============================================================================
+-- VERIFICACIÓN OPCIONAL: no deben quedar referencias OpenAI en configuración
+-- Nota: en gen_cofiguracion_grupos la columna se llama `nombre`, NO `nombre_grupo`.
+-- ==============================================================================
+-- SELECT * FROM gen_cofiguracion_parametros WHERE ruta_completa LIKE '%OpenAI%';
+-- SELECT * FROM gen_cofiguracion_grupos WHERE nombre LIKE '%OpenAI%';
