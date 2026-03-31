@@ -75,7 +75,7 @@ class DeviceController {
       const query = `
         SELECT 
             cur.id_ubicacion_real AS idcatalogo_ubicaciones_reales,
-            cur.nombre AS nombre_ubicacion,
+            cur.nombre,
             d.shelly_id,
             d.id_grupo,
             m.potencia_activa,
@@ -109,7 +109,7 @@ class DeviceController {
 
         return {
           deviceId: deviceId,
-          location: row.nombre_ubicacion,
+          location: row.nombre,
           activePower: activePower,
           lastUpdate: row.timestamp_local,
           category: category // Dato unificado para el frontend
@@ -159,8 +159,8 @@ class DeviceController {
         sd.shelly_id,
         sd.nombre as dispositivo_nombre,
         sd.activo,
-        sd.grupo_id,
-        cur.nombre AS ubicacion_nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
+        sd.id_grupo,
+        cur.nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
         cur.id_ubicacion_real AS ubicacion_id,
         sg.nombre as grupo_nombre,
         sd.fecha_creacion,
@@ -172,7 +172,7 @@ class DeviceController {
       JOIN
         gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
       LEFT JOIN 
-        sem_grupos sg ON sd.grupo_id = sg.id
+        sem_grupos sg ON sd.id_grupo = sg.id_grupo
       LEFT JOIN (
         SELECT 
           shelly_id,
@@ -189,7 +189,7 @@ class DeviceController {
       WHERE 
         sd.activo = 1
       ORDER BY 
-        cur.nombre_ubicacion ASC,
+        cur.nombre ASC,
         sd.nombre ASC
     `;
 
@@ -212,16 +212,16 @@ class DeviceController {
       const devices = rows.map((row) => ({
         shelly_id: row.shelly_id,
         dispositivo_nombre: row.dispositivo_nombre,
-        ubicacion_nombre: row.ubicacion_nombre,
+        nombre: row.nombre,
         ubicacion_id: row.ubicacion_id,
-        grupo_id: row.grupo_id,
+        grupo_id: row.id_grupo,
         grupo_nombre: row.grupo_nombre || "Sin Grupo",
         activo: row.activo,
         estado_conexion: row.estado_conexion,
         ultima_medicion: row.ultima_medicion,
         fecha_creacion: row.fecha_creacion,
         fecha_actualizacion: row.fecha_actualizacion,
-        display_name: row.ubicacion_nombre,
+        display_name: row.nombre,
         display_subtitle: row.dispositivo_nombre,
       }));
 
@@ -273,8 +273,8 @@ class DeviceController {
           sd.shelly_id,
           sd.nombre as dispositivo_nombre,
           sd.activo,
-          sd.grupo_id,
-          cur.nombre AS ubicacion_nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
+          sd.id_grupo,
+          cur.nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
           cur.id_ubicacion_real AS ubicacion_id,
           sg.nombre as grupo_nombre,
           sd.fecha_creacion,
@@ -293,7 +293,7 @@ class DeviceController {
         JOIN
           gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
         LEFT JOIN 
-          sem_grupos sg ON sd.grupo_id = sg.id
+          sem_grupos sg ON sd.id_grupo = sg.id_grupo
         LEFT JOIN (
           -- Estadísticas del dispositivo
           SELECT 
@@ -329,9 +329,9 @@ class DeviceController {
       const deviceData = {
         shelly_id: device.shelly_id,
         dispositivo_nombre: device.dispositivo_nombre,
-        ubicacion_nombre: device.ubicacion_nombre,
+        nombre: device.nombre,
         ubicacion_id: device.ubicacion_id,
-        grupo_id: device.grupo_id,
+        grupo_id: device.id_grupo,
         grupo_nombre: device.grupo_nombre || "Sin Grupo",
         activo: device.activo,
         estado_conexion: device.estado_conexion,
@@ -342,7 +342,7 @@ class DeviceController {
         },
         fecha_creacion: device.fecha_creacion,
         fecha_actualizacion: device.fecha_actualizacion,
-        display_name: device.ubicacion_nombre,
+        display_name: device.nombre,
         display_subtitle: device.dispositivo_nombre,
       };
 
