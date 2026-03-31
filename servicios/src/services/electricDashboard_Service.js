@@ -91,7 +91,7 @@ class ElectricDashboardService {
       SELECT 
         d.shelly_id as deviceId,
         d.nombre as deviceName,
-        cur.nombre_ubicacion as location,
+        cur.nombre as location,
         d.id_grupo AS grupo_id,
         sg.nombre as groupName,
         COALESCE(latest.potencia_activa, 0) as activePower,
@@ -126,11 +126,11 @@ class ElectricDashboardService {
       WHERE d.activo = 1
       ORDER BY 
         CASE 
-          WHEN cur.nombre_ubicacion LIKE 'Cámara%' THEN 1
-          WHEN cur.nombre_ubicacion LIKE 'Reefer%' THEN 2
+          WHEN cur.nombre LIKE 'Cámara%' THEN 1
+          WHEN cur.nombre LIKE 'Reefer%' THEN 2
           ELSE 3
         END,
-        cur.nombre_ubicacion ASC, 
+        cur.nombre ASC, 
         d.nombre ASC
     `;
 
