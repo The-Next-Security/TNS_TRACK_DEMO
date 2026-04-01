@@ -38,15 +38,15 @@ async function getOrigenesValidos() {
 /**
  * Retorna todas las suscripciones push activas e inactivas del usuario.
  * @param {number} idUsuario
- * @returns {Promise<Array>} [{id_suscripcion_notificacion, id_tipo_alerta, id_tipo_origen, activo}, ...]
+ * @returns {Promise<Array>} [{id_suscripcion_notificacion, id_tipo_alerta, id_origen_tipo, activo}, ...]
  */
 async function getSuscripcionesUsuario(idUsuario) {
   const pool = await _pool();
   const [rows] = await pool.execute(
-    `SELECT id_suscripcion_notificacion, id_tipo_alerta, id_tipo_origen, activo
+    `SELECT id_suscripcion_notificacion, id_tipo_alerta, id_origen_tipo, activo
      FROM ale_suscripciones_notificacion
      WHERE id_usuario = ? AND canal = 'push'
-     ORDER BY id_tipo_alerta, id_tipo_origen`,
+     ORDER BY id_tipo_alerta, id_origen_tipo`,
     [idUsuario]
   );
   return rows;
@@ -54,7 +54,7 @@ async function getSuscripcionesUsuario(idUsuario) {
 
 /**
  * Inserta o actualiza una suscripción push para el usuario.
- * Usa ON DUPLICATE KEY para la clave única (id_usuario, id_tipo_alerta, id_tipo_origen, canal).
+ * Usa ON DUPLICATE KEY para la clave única (id_usuario, id_tipo_alerta, id_origen_tipo, canal).
  * @param {number} idUsuario - Extraído siempre del JWT en el controller
  * @param {object} params
  * @param {number} params.idTipoAlerta
@@ -65,7 +65,7 @@ async function getSuscripcionesUsuario(idUsuario) {
 async function upsertSuscripcion(idUsuario, { idTipoAlerta, idOrigenTipo, activo }) {
   const pool = await _pool();
   await pool.execute(
-    `INSERT INTO ale_suscripciones_notificacion (id_usuario, id_tipo_alerta, id_tipo_origen, canal, activo)
+    `INSERT INTO ale_suscripciones_notificacion (id_usuario, id_tipo_alerta, id_origen_tipo, canal, activo)
      VALUES (?, ?, ?, 'push', ?)
      ON DUPLICATE KEY UPDATE activo = VALUES(activo), fecha_actualizacion = CURRENT_TIMESTAMP`,
     [idUsuario, idTipoAlerta, idOrigenTipo, activo ? 1 : 0]
