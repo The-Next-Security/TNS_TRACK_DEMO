@@ -137,6 +137,13 @@ const AlertNotificationConfigV2 = () => {
   const [hasChanges, setHasChanges] = useState(false);
   const [originalPreferences, setOriginalPreferences] = useState(null);
 
+  // Matriz de suscripciones por tipo de alerta × origen (ale_suscripciones_notificacion)
+  const [tiposAlerta, setTiposAlerta] = useState([]);
+  const [origenes, setOrigenes] = useState([]);
+  const [matrizSubs, setMatrizSubs] = useState({}); // clave: `${idTipoAlerta}_${idOrigenTipo}` → bool
+  const [matrizLoading, setMatrizLoading] = useState(false);
+  const [matrizSaving, setMatrizSaving] = useState(false);
+
   // Mis horarios de envío (ale_horarios_usuario)
   const [misHorarios, setMisHorarios] = useState([]);
   const [misHorariosLoading, setMisHorariosLoading] = useState(false);
@@ -170,6 +177,75 @@ const AlertNotificationConfigV2 = () => {
   useEffect(() => {
     loadMisHorarios();
   }, []);
+
+  // ---------- Matriz de suscripciones por tipo de alerta × origen ----------
+
+  const loadMatrizSuscripciones = async () => {
+    setMatrizLoading(true);
+    try {
+      const [lookupsRes, subsRes] = await Promise.all([
+        axios.get('/api/alerts/subscriptions/lookups'),
+        axios.get('/api/alerts/subscriptions')
+      ]);
+      if (lookupsRes.data.success) {
+        setTiposAlerta(lookupsRes.data.data.tiposAlerta || []);
+        setOrigenes(lookupsRes.data.data.origenes || []);
+      }
+      if (subsRes.data.success) {
+        const mapa = {};
+        (subsRes.data.data || []).forEach(row => {
+          mapa[`${row.id_tipo_alerta}_${row.id_tipo_origen}`] = !!row.activo;
+        });
+        setMatrizSubs(mapa);
+      }
+    } catch (e) {
+      console.error("[AlertNotificationConfig] loadMatrizSuscripciones:", e);
+      toast({ title: "Error", description: "No se pudieron cargar las suscripciones de alerta", variant: "destructive" });
+    } finally {
+      setMatrizLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadMatrizSuscripciones();
+  }, []);
+
+  const handleMatrizToggle = async (idTipoAlerta, idOrigenTipo) => {
+    const key = `${idTipoAlerta}_${idOrigenTipo}`;
+    const nuevoValor = !matrizSubs[key];
+    // Optimistic update
+    setMatrizSubs(prev => ({ ...prev, [key]: nuevoValor }));
+    try {
+      await axios.post('/api/alerts/subscriptions/toggle', {
+        idTipoAlerta,
+        idOrigenTipo,
+        activo: nuevoValor
+      });
+    } catch (e) {
+      // Revertir si falla
+      setMatrizSubs(prev => ({ ...prev, [key]: !nuevoValor }));
+      toast({ title: "Error", description: "No se pudo actualizar la suscripción", variant: "destructive" });
+    }
+  };
+
+  const handleMatrizBatchSave = async () => {
+    setMatrizSaving(true);
+    try {
+      const items = [];
+      tiposAlerta.forEach(tipo => {
+        origenes.forEach(origen => {
+          const key = `${tipo.id_tipo_alerta}_${origen.id_tipo_origen}`;
+          items.push({ idTipoAlerta: tipo.id_tipo_alerta, idOrigenTipo: origen.id_tipo_origen, activo: !!matrizSubs[key] });
+        });
+      });
+      await axios.post('/api/alerts/subscriptions/batch', { items });
+      toast({ title: "Guardado", description: "Suscripciones de alerta actualizadas" });
+    } catch (e) {
+      toast({ title: "Error", description: "No se pudieron guardar las suscripciones", variant: "destructive" });
+    } finally {
+      setMatrizSaving(false);
+    }
+  };
 
   /**
    * ✅ iOS FIX: Listener para detectar cuando se guarda subscriptionId
@@ -971,6 +1047,85 @@ const AlertNotificationConfigV2 = () => {
             requieren que haya otorgado permisos al navegador.
           </AlertDescription>
         </Alert>
+
+        {/* Separador */}
+        <div className="my-8 border-t border-gray-300"></div>
+
+        {/* Sección de Suscripciones por Tipo de Alerta y Origen */}
+        <Card className="border-indigo-200/60">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Bell className="h-5 w-5 text-indigo-600" />
+              Suscripciones de Alerta Push
+            </CardTitle>
+            <p className="text-sm text-gray-600 mt-2">
+              Selecciona qué tipos de alerta quieres recibir por push según el origen del dispositivo.
+              Debes activar al menos una para recibir notificaciones en tiempo real.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {matrizLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ) : tiposAlerta.length === 0 || origenes.length === 0 ? (
+              <p className="text-sm text-gray-500 text-center py-4">
+                No hay tipos de alerta u orígenes disponibles.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr>
+                      <th className="text-left font-medium text-gray-700 py-2 pr-4">Tipo de alerta</th>
+                      {origenes.map(origen => (
+                        <th key={origen.id_tipo_origen} className="text-center font-medium text-gray-700 py-2 px-4 capitalize">
+                          {origen.nombre}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {tiposAlerta.map(tipo => (
+                      <tr key={tipo.id_tipo_alerta} className="border-t border-gray-100">
+                        <td className="py-3 pr-4 font-medium text-gray-800 capitalize">
+                          {tipo.nombre}
+                        </td>
+                        {origenes.map(origen => {
+                          const key = `${tipo.id_tipo_alerta}_${origen.id_tipo_origen}`;
+                          return (
+                            <td key={origen.id_tipo_origen} className="py-3 px-4 text-center">
+                              <Checkbox
+                                id={`subs-${key}`}
+                                checked={!!matrizSubs[key]}
+                                onCheckedChange={() => handleMatrizToggle(tipo.id_tipo_alerta, origen.id_tipo_origen)}
+                                disabled={matrizSaving}
+                              />
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+
+                <div className="flex justify-end mt-4">
+                  <Button
+                    onClick={handleMatrizBatchSave}
+                    disabled={matrizSaving}
+                    className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                    size="sm"
+                  >
+                    <Save className="h-4 w-4" />
+                    {matrizSaving ? "Guardando..." : "Guardar todo"}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Separador */}
         <div className="my-8 border-t border-gray-300"></div>
