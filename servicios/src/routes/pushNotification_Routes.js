@@ -429,13 +429,6 @@ router.get('/preferences/:subscriptionId',
         // Obtener preferencias del servicio
         const preferences = await pushNotificationService.getPreferences(parsedId);
 
-        if (!preferences) {
-            return res.status(404).json({
-                success: false,
-                message: 'No se encontraron preferencias para esta suscripción'
-            });
-        }
-
         console.log(`[PushRoutes] Preferencias obtenidas para suscripción ${subscriptionId}`);
 
         res.json({
