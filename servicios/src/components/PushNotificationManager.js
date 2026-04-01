@@ -383,7 +383,8 @@ const usePushNotifications = () => {
             const response = await fetch(`${apiBaseUrl}/api/push/test-notification`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('accessToken')}`
                 },
                 body: JSON.stringify({
                     title: '🔔 Notificación de Prueba',
