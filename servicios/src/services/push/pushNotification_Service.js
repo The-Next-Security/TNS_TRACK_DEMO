@@ -1056,11 +1056,11 @@ class PushNotificationService {
      * @private
      */
     _detectDeviceType(userAgent) {
-        if (!userAgent) return 'unknown';
+        if (!userAgent) return 'desconocido';
         const ua = userAgent.toLowerCase();
-        if (/mobile|android|iphone|ipad|ipod/.test(ua)) return 'mobile';
+        if (/mobile|android|iphone|ipad|ipod/.test(ua)) return 'movil';
         if (/tablet/.test(ua)) return 'tablet';
-        return 'desktop';
+        return 'escritorio';
     }
 
     /**
