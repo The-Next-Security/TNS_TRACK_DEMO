@@ -56,8 +56,8 @@ const usuariosController = require("./src/controllers/usuarios_Controller");
 const authMiddleware = require("./src/middlewares/auth_Middleware");
 const alertTrackingService = require("./src/services/alertTracking_Service");
 
-// Importar job de agregación de métricas de alertas
-const metricsAggregationJob = require('./src/jobs/metricsAggregation_Job');
+// Métricas horarias en ale_metricas_resumen: MySQL (evn_actualizar_totales_metricas → stpr_calculate_hourly_metrics).
+// No duplicar con cron en Node; ver SQL_FILES/05_Eventos/05_04_evn_actualizar_totales_metricas.sql
 
 // Importar job de limpieza de reportes expirados (Phase 5 - T045)
 const reportCleanupJob = require('./src/jobs/reportCleanup_Job');
@@ -330,16 +330,8 @@ class Server {
         throw controllerError; // Relanzar para detener el arranque
       }
 
-      // 7. Inicializar job de agregación de métricas de alertas
-      console.log("  [Server] Iniciando MetricsAggregationJob...");
-      try {
-        metricsAggregationJob.start();
-        console.log("  [Server] MetricsAggregationJob iniciado (cron: minuto 5 de cada hora).");
-      } catch (jobError) {
-        console.error("  [Server] ⚠️ Error al iniciar MetricsAggregationJob:", jobError);
-        // No lanzar error - el job no es crítico para el funcionamiento del servidor
-        console.warn("  [Server] El servidor continuará sin agregación automática de métricas.");
-      }
+      // 7. Agregación de métricas de alertas: la ejecuta el evento MySQL (no MetricsAggregationJob en Node).
+      console.log("  [Server] Métricas horarias: delegadas al scheduler MySQL (evn_actualizar_totales_metricas).");
 
       // 8. Inicializar scheduler de reportes (Phase 4 - T030)
       console.log("  [Server] Cargando schedules activos de reportes...");
@@ -428,10 +420,6 @@ class Server {
       console.log("  ✅ [Server] ShellyCollector detenido.");
       if (this.ubibotCollector?.stop) this.ubibotCollector.stop();
       console.log("  ✅ [Server] UbibotCollector detenido.");
-
-      console.log("  [Server] Deteniendo MetricsAggregationJob...");
-      if (metricsAggregationJob?.stop) metricsAggregationJob.stop();
-      console.log("  ✅ [Server] MetricsAggregationJob detenido.");
 
       console.log("  [Server] Deteniendo ReportCleanupJob...");
       if (reportCleanupJob?.stop) reportCleanupJob.stop();
