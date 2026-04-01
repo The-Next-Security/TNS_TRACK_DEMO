@@ -246,6 +246,12 @@ class PushNotificationService {
             this.stats.totalSubscriptions++;
             console.log(`✅ [PushNotificationService] Nueva suscripción guardada: ${result.insertId}`);
 
+            // Crear fila de preferencias con valores por defecto
+            await connection.query(
+                'INSERT IGNORE INTO ale_preferencias_push (id_suscripcion) VALUES (?)',
+                [result.insertId]
+            );
+
             return { success: true, subscriptionId: result.insertId, updated: false };
 
         } catch (error) {
@@ -430,8 +436,17 @@ class PushNotificationService {
             );
 
             if (rows.length === 0) {
-                console.log(`[PushNotificationService] No se encontraron preferencias para suscripción ${subscriptionId}`);
-                return null;
+                console.log(`[PushNotificationService] Sin preferencias en BD para suscripción ${subscriptionId}, retornando defaults`);
+                return {
+                    preferenceId: null,
+                    subscriptionId: parseInt(subscriptionId),
+                    dndEnabled: false,
+                    dndStartTime: '22:00',
+                    dndEndTime: '08:00',
+                    dndDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                    allowCriticalAlerts: true,
+                    enabledAlertTypes: ['temperature', 'disconnection']
+                };
             }
 
             const preferences = rows[0];
