@@ -194,7 +194,7 @@ const AlertNotificationConfigV2 = () => {
       if (subsRes.data.success) {
         const mapa = {};
         (subsRes.data.data || []).forEach(row => {
-          mapa[`${row.id_tipo_alerta}_${row.id_tipo_origen}`] = !!row.activo;
+          mapa[`${row.id_tipo_alerta}_${row.id_origen_tipo}`] = !!row.activo;
         });
         setMatrizSubs(mapa);
       }
