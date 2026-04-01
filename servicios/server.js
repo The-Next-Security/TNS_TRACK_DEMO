@@ -35,6 +35,7 @@ const personalRoutes = require('./src/routes/personal_Routes');
 const gpsRoutes = require('./src/routes/gps_Routes');
 const blindSpotRoutes = require('./src/routes/blindSpot_Routes');
 const pushNotificationRoutes = require('./src/routes/pushNotification_Routes');
+const alertSubscriptionRoutes = require('./src/routes/alertSubscription_Routes');
 
 // Importar Config Loader (¡Importante!)
 const configLoader = require('./src/config/js_files/configLoader_Config');
@@ -191,6 +192,7 @@ class Server {
     mountApiRoute('/api/gps', gpsRoutes);
     mountApiRoute('/api/blindspot', blindSpotRoutes);
     mountApiRoute('/api/push', pushNotificationRoutes);
+    mountApiRoute('/api/alerts/subscriptions', alertSubscriptionRoutes);
     const authRoutes = require('./src/routes/auth_Routes');
     mountApiRoute('/api/auth', authRoutes);
 
