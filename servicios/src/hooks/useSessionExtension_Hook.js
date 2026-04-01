@@ -35,11 +35,17 @@ export function useSessionExtension() {
     setError(null);
 
     try {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) {
+        throw new Error('No hay refresh token disponible');
+      }
+
       const response = await authenticatedFetch('/api/auth/extend-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({ refreshToken })
       });
 
       if (!response.ok) {
@@ -49,6 +55,10 @@ export function useSessionExtension() {
 
       const data = await response.json();
 
+      // Guardar los nuevos tokens inmediatamente
+      if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
+      if (data.refreshToken) localStorage.setItem('refreshToken', data.refreshToken);
+
       // Track session extension in analytics
       analyticsService.trackEvent('session_extended', {
         expiresAt: data.expiresAt,
@@ -56,10 +66,12 @@ export function useSessionExtension() {
         timestamp: Date.now()
       });
 
-      console.log('[useSessionExtension] Session extended successfully:', data);
+      console.log('[useSessionExtension] Sesión extendida correctamente:', data);
 
       return {
         success: true,
+        accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
         expiresAt: data.expiresAt,
         expiresIn: data.expiresIn,
         message: data.message
