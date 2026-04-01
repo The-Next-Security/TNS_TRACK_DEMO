@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bell, BellOff, BellRing, Smartphone, AlertCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Detecta si es iOS (mejorado para evitar falsos positivos de emulación)
@@ -56,6 +57,7 @@ const isPWAInstalled = () => {
  * Hook personalizado para gestionar Push Notifications
  */
 const usePushNotifications = () => {
+    const { isAuthenticated } = useAuth();
     const [permission, setPermission] = useState('default'); // 'default', 'granted', 'denied'
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -253,21 +255,32 @@ const usePushNotifications = () => {
 
             console.log('[PushManager] Suscripción creada:', pushSubscription);
 
-            // 6. Enviar suscripción al servidor
+            // 6. Verificar sesión activa antes de llamar al servidor
+            const token = localStorage.getItem('accessToken');
+            if (!token || !isAuthenticated) {
+                throw new Error('Debes iniciar sesión para activar las notificaciones');
+            }
+
+            // 7. Enviar suscripción al servidor con token de autenticación
             const subscribeResponse = await fetch(`${apiBaseUrl}/api/push/subscribe`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({
                     subscription: pushSubscription.toJSON(),
-                    // ✅ NUEVO: Enviar subscriptionId existente si hay
-                    existingSubscriptionId: localStorage.getItem('pushSubscriptionId') || null,
-                    // Opcional: incluir userId o userEmail si tienes sistema de autenticación
-                    // userId: currentUser?.id,
-                    // userEmail: currentUser?.email
+                    // ✅ Enviar subscriptionId existente si hay
+                    existingSubscriptionId: localStorage.getItem('pushSubscriptionId') || null
+                    // userId NO se envía en el body — el backend lo extrae del JWT
                 })
             });
+
+            // Manejar token expirado
+            if (subscribeResponse.status === 401) {
+                window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+                throw new Error('Tu sesión expiró. Vuelve a iniciar sesión para activar las notificaciones');
+            }
 
             const subscribeData = await subscribeResponse.json();
 
@@ -331,10 +344,12 @@ const usePushNotifications = () => {
 
             // 2. Notificar al servidor
             const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:1337' : '';
+            const token = localStorage.getItem('accessToken');
             await fetch(`${apiBaseUrl}/api/push/unsubscribe`, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    ...(token ? { 'Authorization': `Bearer ${token}` } : {})
                 },
                 body: JSON.stringify({
                     endpoint: subscription.endpoint
