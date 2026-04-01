@@ -1,5 +1,7 @@
 // src/jobs/metricsAggregation_Job.js
-// Job para agregar métricas de alertas cada hora
+// Job opcional de agregación de métricas (ya no se arranca desde server.js).
+// La agregación horaria en producción la ejecuta MySQL: evn_actualizar_totales_metricas → stpr_calculate_hourly_metrics.
+// Se mantiene el módulo por si se usa executeNow() manualmente en mantenimiento.
 
 const cron = require('node-cron');
 const databaseService = require('../services/database_Service');
@@ -7,9 +9,8 @@ const databaseService = require('../services/database_Service');
 /**
  * Clase para gestionar el job de agregación de métricas de alertas
  *
- * Este job se ejecuta cada hora (minuto 5) y llama al stored procedure
- * sp_calculate_hourly_metrics para calcular y almacenar métricas agregadas
- * en la tabla alert_metrics_summary.
+ * Llama a stpr_calculate_hourly_metrics y escribe en ale_metricas_resumen.
+ * El arranque automático vive en el evento MySQL; este cron queda desligado del servidor.
  *
  * Funcionalidad:
  * - Ejecuta a las XX:05 de cada hora
