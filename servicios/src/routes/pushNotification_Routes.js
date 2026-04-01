@@ -4,6 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const pushNotificationService = require('../services/push/pushNotification_Service');
+const authMiddleware = require('../middlewares/auth_Middleware');
 
 /**
  * Helper para asegurar que el servicio esté inicializado antes de usarlo
@@ -79,9 +80,9 @@ router.get('/vapid-public-key', async (req, res) => {
 /**
  * POST /api/push/subscribe
  * Registra una nueva suscripción de push notification
- * Body: { subscription: {...}, userId?, userEmail?, userAgent? }
+ * Body: { subscription: {...}, existingSubscriptionId? }
  */
-router.post('/subscribe', async (req, res) => {
+router.post('/subscribe', authMiddleware.authenticate.bind(authMiddleware), async (req, res) => {
     try {
         // Verificar y asegurar que el servicio esté inicializado
         const isInitialized = await ensureInitialized(res);
@@ -89,7 +90,16 @@ router.post('/subscribe', async (req, res) => {
             return; // ensureInitialized ya envió la respuesta HTTP 503
         }
 
-        const { subscription, userId, userEmail, existingSubscriptionId } = req.body;
+        const { subscription, existingSubscriptionId } = req.body;
+        const userId = req.user.userId || req.user.id;
+        const userEmail = req.user.email || null;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message: 'No se pudo identificar al usuario del token'
+            });
+        }
 
         if (!subscription || !subscription.endpoint || !subscription.keys) {
             return res.status(400).json({
@@ -153,10 +163,10 @@ router.post('/subscribe', async (req, res) => {
 
 /**
  * POST /api/push/unsubscribe
- * Elimina o desactiva una suscripción
+ * Elimina o desactiva una suscripción (solo el propietario)
  * Body: { endpoint: string, hardDelete?: boolean }
  */
-router.post('/unsubscribe', async (req, res) => {
+router.post('/unsubscribe', authMiddleware.authenticate.bind(authMiddleware), async (req, res) => {
     try {
         // Verificar y asegurar que el servicio esté inicializado
         const isInitialized = await ensureInitialized(res);
@@ -165,12 +175,22 @@ router.post('/unsubscribe', async (req, res) => {
         }
 
         const { endpoint, hardDelete = false } = req.body;
+        const userId = req.user.userId || req.user.id;
 
         if (!endpoint) {
             return res.status(400).json({
                 success: false,
                 message: 'Endpoint requerido'
             });
+        }
+
+        // Verificar que el endpoint pertenece al usuario autenticado
+        const sub = await pushNotificationService.getSubscriptionByEndpoint(endpoint);
+        if (!sub) {
+            return res.status(404).json({ success: false, message: 'Suscripción no encontrada' });
+        }
+        if (parseInt(sub.id_usuario) !== parseInt(userId)) {
+            return res.status(403).json({ success: false, message: 'No tienes permiso para eliminar esta suscripción' });
         }
 
         const removed = await pushNotificationService.removeSubscription(endpoint, hardDelete);
@@ -202,7 +222,7 @@ router.post('/unsubscribe', async (req, res) => {
  * GET /api/push/stats
  * Obtiene estadísticas del servicio de push notifications
  */
-router.get('/stats', async (req, res) => {
+router.get('/stats', authMiddleware.authenticate.bind(authMiddleware), async (req, res) => {
     try {
         const stats = pushNotificationService.getStats();
 
@@ -226,7 +246,7 @@ router.get('/stats', async (req, res) => {
  * Envía una notificación de prueba (solo para desarrollo/testing)
  * Body: { title, body, userId? }
  */
-router.post('/test-notification', async (req, res) => {
+router.post('/test-notification', authMiddleware.authenticate.bind(authMiddleware), async (req, res) => {
     try {
         // Verificar y asegurar que el servicio esté inicializado
         const isInitialized = await ensureInitialized(res);
@@ -277,7 +297,10 @@ router.post('/test-notification', async (req, res) => {
  * Limpia suscripciones inactivas (admin/cron)
  * Body: { daysInactive?: number }
  */
-router.post('/cleanup', async (req, res) => {
+router.post('/cleanup',
+    authMiddleware.authenticate.bind(authMiddleware),
+    authMiddleware.requireAdmin.bind(authMiddleware),
+    async (req, res) => {
     try {
         // Verificar y asegurar que el servicio esté inicializado
         const isInitialized = await ensureInitialized(res);
@@ -312,7 +335,10 @@ router.post('/cleanup', async (req, res) => {
  * Obtiene lista de suscripciones activas (admin)
  * Query params: userId?, deviceType?
  */
-router.get('/subscriptions', async (req, res) => {
+router.get('/subscriptions',
+    authMiddleware.authenticate.bind(authMiddleware),
+    authMiddleware.requireAdmin.bind(authMiddleware),
+    async (req, res) => {
     try {
         // Verificar y asegurar que el servicio esté inicializado
         const isInitialized = await ensureInitialized(res);
@@ -365,11 +391,13 @@ router.get('/subscriptions', async (req, res) => {
 
 /**
  * GET /api/push/preferences/:subscriptionId
- * Obtiene las preferencias de DND de una suscripción
+ * Obtiene las preferencias de DND de una suscripción (solo el propietario)
  * Params:
  *   - subscriptionId: number
  */
-router.get('/preferences/:subscriptionId', async (req, res) => {
+router.get('/preferences/:subscriptionId',
+    authMiddleware.authenticate.bind(authMiddleware),
+    async (req, res) => {
     try {
         // Verificar y asegurar que el servicio esté inicializado
         const isInitialized = await ensureInitialized(res);
@@ -386,6 +414,16 @@ router.get('/preferences/:subscriptionId', async (req, res) => {
                 success: false,
                 message: 'subscriptionId inválido'
             });
+        }
+
+        // Verificar propiedad de la suscripción
+        const userId = req.user.userId || req.user.id;
+        const sub = await pushNotificationService.getSubscriptionById(parsedId);
+        if (!sub) {
+            return res.status(404).json({ success: false, message: 'Suscripción no encontrada' });
+        }
+        if (parseInt(sub.id_usuario) !== parseInt(userId)) {
+            return res.status(403).json({ success: false, message: 'No tienes permiso para acceder a esta suscripción' });
         }
 
         // Obtener preferencias del servicio
@@ -429,7 +467,9 @@ router.get('/preferences/:subscriptionId', async (req, res) => {
  *   enabledAlertTypes?: string[] (tipos de alerta habilitados)
  * }
  */
-router.post('/preferences/:subscriptionId', async (req, res) => {
+router.post('/preferences/:subscriptionId',
+    authMiddleware.authenticate.bind(authMiddleware),
+    async (req, res) => {
     try {
         // Verificar y asegurar que el servicio esté inicializado
         const isInitialized = await ensureInitialized(res);
@@ -447,6 +487,16 @@ router.post('/preferences/:subscriptionId', async (req, res) => {
                 success: false,
                 message: 'subscriptionId inválido'
             });
+        }
+
+        // Verificar propiedad de la suscripción
+        const userId = req.user.userId || req.user.id;
+        const sub = await pushNotificationService.getSubscriptionById(parsedId);
+        if (!sub) {
+            return res.status(404).json({ success: false, message: 'Suscripción no encontrada' });
+        }
+        if (parseInt(sub.id_usuario) !== parseInt(userId)) {
+            return res.status(403).json({ success: false, message: 'No tienes permiso para acceder a esta suscripción' });
         }
 
         // ✅ MEJORADO: Validar y normalizar formato de tiempo (HH:mm → HH:mm:ss)
@@ -520,7 +570,9 @@ router.post('/preferences/:subscriptionId', async (req, res) => {
  * Params:
  *   - subscriptionId: number
  */
-router.delete('/preferences/:subscriptionId', async (req, res) => {
+router.delete('/preferences/:subscriptionId',
+    authMiddleware.authenticate.bind(authMiddleware),
+    async (req, res) => {
     try {
         // Verificar y asegurar que el servicio esté inicializado
         const isInitialized = await ensureInitialized(res);
@@ -537,6 +589,16 @@ router.delete('/preferences/:subscriptionId', async (req, res) => {
                 success: false,
                 message: 'subscriptionId inválido'
             });
+        }
+
+        // Verificar propiedad de la suscripción
+        const userId = req.user.userId || req.user.id;
+        const sub = await pushNotificationService.getSubscriptionById(parsedId);
+        if (!sub) {
+            return res.status(404).json({ success: false, message: 'Suscripción no encontrada' });
+        }
+        if (parseInt(sub.id_usuario) !== parseInt(userId)) {
+            return res.status(403).json({ success: false, message: 'No tienes permiso para acceder a esta suscripción' });
         }
 
         // Resetear preferencias a valores por defecto
