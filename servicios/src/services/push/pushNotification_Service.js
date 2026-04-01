@@ -205,6 +205,9 @@ class PushNotificationService {
 
             // Extraer metadata
             const userId = metadata.userId || null;
+            if (!userId) {
+                throw new Error('userId es requerido para guardar una suscripción push');
+            }
             const userEmail = metadata.userEmail || null;
             const userAgent = metadata.userAgent || null;
             const deviceType = this._detectDeviceType(userAgent);
@@ -222,9 +225,10 @@ class PushNotificationService {
                 await connection.query(
                     `UPDATE ale_push_suscripciones
                      SET p256dh = ?, auth = ?, activo = TRUE,
-                         ultima_conexion = NOW(), tipo_dispositivo = ?
+                         ultima_conexion = NOW(), tipo_dispositivo = ?,
+                         id_usuario = ?
                      WHERE id_suscripcion = ?`,
-                    [p256dh, auth, deviceType, subscriptionId]
+                    [p256dh, auth, deviceType, userId, subscriptionId]
                 );
 
                 console.log(`[PushNotificationService] Suscripción actualizada: ${subscriptionId}`);
@@ -285,6 +289,48 @@ class PushNotificationService {
         } catch (error) {
             console.error("❌ [PushNotificationService] Error eliminando suscripción:", error.message);
             throw error;
+        } finally {
+            connection.release();
+        }
+    }
+
+    /**
+     * Obtiene datos básicos de una suscripción por endpoint (para verificación de propiedad)
+     * @param {string} endpoint
+     * @returns {Promise<{id_suscripcion, id_usuario}|null>}
+     */
+    async getSubscriptionByEndpoint(endpoint) {
+        if (!this.initialized || !this.pool) {
+            throw new Error('Servicio no inicializado');
+        }
+        const connection = await this.pool.getConnection();
+        try {
+            const [rows] = await connection.query(
+                'SELECT id_suscripcion, id_usuario FROM ale_push_suscripciones WHERE endpoint = ?',
+                [endpoint]
+            );
+            return rows.length > 0 ? rows[0] : null;
+        } finally {
+            connection.release();
+        }
+    }
+
+    /**
+     * Obtiene datos básicos de una suscripción por id (para verificación de propiedad)
+     * @param {number} subscriptionId
+     * @returns {Promise<{id_suscripcion, id_usuario}|null>}
+     */
+    async getSubscriptionById(subscriptionId) {
+        if (!this.initialized || !this.pool) {
+            throw new Error('Servicio no inicializado');
+        }
+        const connection = await this.pool.getConnection();
+        try {
+            const [rows] = await connection.query(
+                'SELECT id_suscripcion, id_usuario FROM ale_push_suscripciones WHERE id_suscripcion = ?',
+                [subscriptionId]
+            );
+            return rows.length > 0 ? rows[0] : null;
         } finally {
             connection.release();
         }
