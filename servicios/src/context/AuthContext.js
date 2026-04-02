@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import axios from 'axios';
 
 const AuthContext = createContext(null);
 
@@ -63,16 +64,9 @@ export function AuthProvider({ children }) {
       return;
     }
     try {
-      const res = await fetch('/api/auth/validate', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.valid && data.user) {
-          setAuthData(data.user);
-        } else {
-          clearAuth();
-        }
+      const { data } = await axios.get('/api/auth/validate');
+      if (data.valid && data.user) {
+        setAuthData(data.user);
       } else {
         clearAuth();
       }
