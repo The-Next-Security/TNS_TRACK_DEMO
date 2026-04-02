@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-04-02 — @dependabot[bot] ([#85](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/85))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group across 1 directory with 3 updates
+
+
 ### 2026-03-20 — @felipecleverox ([#69](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/69))
 - **chore** `back-end, front-end` | [BUG] Corrección de bugs bloqueantes en módulo de análisis IA
 
