@@ -35,6 +35,7 @@ const personalRoutes = require('./src/routes/personal_Routes');
 const gpsRoutes = require('./src/routes/gps_Routes');
 const blindSpotRoutes = require('./src/routes/blindSpot_Routes');
 const pushNotificationRoutes = require('./src/routes/pushNotification_Routes');
+const alertSubscriptionRoutes = require('./src/routes/alertSubscription_Routes');
 
 // Importar Config Loader (¡Importante!)
 const configLoader = require('./src/config/js_files/configLoader_Config');
@@ -48,14 +49,15 @@ const notificationService = require("./src/services/notification_Service");
 const ubibotService = require("./src/services/ubibot/ubibot_Service");
 const shellyApiAdapter = require("./src/services/api/shellyApi_Adapter");
 const mapboxApiAdapter = require("./src/services/api/mapboxApi_Adapter");
-const openaiService = require("./src/services/openai_Service");
+const geminiService = require("./src/services/gemini_Service");
+const agentOrchestrator = require("./src/services/aiAgentOrchestrator_Service");
 const ubibotServiceAdapter = require("./src/services/ubibot/ubibot_Adapter");
 const usuariosController = require("./src/controllers/usuarios_Controller");
 const authMiddleware = require("./src/middlewares/auth_Middleware");
 const alertTrackingService = require("./src/services/alertTracking_Service");
 
-// Importar job de agregación de métricas de alertas
-const metricsAggregationJob = require('./src/jobs/metricsAggregation_Job');
+// Métricas horarias en ale_metricas_resumen: MySQL (evn_actualizar_totales_metricas → stpr_calculate_hourly_metrics).
+// No duplicar con cron en Node; ver SQL_FILES/05_Eventos/05_04_evn_actualizar_totales_metricas.sql
 
 // Importar job de limpieza de reportes expirados (Phase 5 - T045)
 const reportCleanupJob = require('./src/jobs/reportCleanup_Job');
@@ -91,6 +93,11 @@ class Server {
    */
   setupMiddleware() {
     console.log("[Server] setupMiddleware: Configurando middleware...");
+
+    // Confiar en el primer proxy (nginx) para leer la IP real del cliente desde X-Forwarded-For
+    // Necesario para que express-rate-limit identifique usuarios correctamente en producción
+    this.app.set('trust proxy', 1);
+
     const corsOptions = {
       // Ajustar origins según sea necesario para producción
       origin: ["http://localhost:3000", "http://localhost:8080", "https://tns.thenextsecurity.cl" ],
@@ -105,6 +112,15 @@ class Server {
     // 🔥 Logging básico de requests (ANTES de todo para capturar TODAS las requests)
     this.app.use((req, res, next) => {
       console.log(`[1] [Request] 🔥 ${new Date().toISOString()} - ${req.method} ${req.originalUrl}`); // Usar originalUrl
+      next();
+    });
+
+    // Normalizar doble slash en URLs — protección ante proxy/nginx que pueda insertar slashes extra
+    // req.originalUrl queda intacto (inmutable) para que los logs sigan mostrando la URL original
+    this.app.use((req, res, next) => {
+      if (req.url && req.url.includes('//')) {
+        req.url = req.url.replace(/\/\/+/g, '/');
+      }
       next();
     });
 
@@ -176,6 +192,7 @@ class Server {
     mountApiRoute('/api/gps', gpsRoutes);
     mountApiRoute('/api/blindspot', blindSpotRoutes);
     mountApiRoute('/api/push', pushNotificationRoutes);
+    mountApiRoute('/api/alerts/subscriptions', alertSubscriptionRoutes);
     const authRoutes = require('./src/routes/auth_Routes');
     mountApiRoute('/api/auth', authRoutes);
 
@@ -313,16 +330,8 @@ class Server {
         throw controllerError; // Relanzar para detener el arranque
       }
 
-      // 7. Inicializar job de agregación de métricas de alertas
-      console.log("  [Server] Iniciando MetricsAggregationJob...");
-      try {
-        metricsAggregationJob.start();
-        console.log("  [Server] MetricsAggregationJob iniciado (cron: minuto 5 de cada hora).");
-      } catch (jobError) {
-        console.error("  [Server] ⚠️ Error al iniciar MetricsAggregationJob:", jobError);
-        // No lanzar error - el job no es crítico para el funcionamiento del servidor
-        console.warn("  [Server] El servidor continuará sin agregación automática de métricas.");
-      }
+      // 7. Agregación de métricas de alertas: la ejecuta el evento MySQL (no MetricsAggregationJob en Node).
+      console.log("  [Server] Métricas horarias: delegadas al scheduler MySQL (evn_actualizar_totales_metricas).");
 
       // 8. Inicializar scheduler de reportes (Phase 4 - T030)
       console.log("  [Server] Cargando schedules activos de reportes...");
@@ -412,10 +421,6 @@ class Server {
       if (this.ubibotCollector?.stop) this.ubibotCollector.stop();
       console.log("  ✅ [Server] UbibotCollector detenido.");
 
-      console.log("  [Server] Deteniendo MetricsAggregationJob...");
-      if (metricsAggregationJob?.stop) metricsAggregationJob.stop();
-      console.log("  ✅ [Server] MetricsAggregationJob detenido.");
-
       console.log("  [Server] Deteniendo ReportCleanupJob...");
       if (reportCleanupJob?.stop) reportCleanupJob.stop();
       console.log("  ✅ [Server] ReportCleanupJob detenido.");
@@ -455,7 +460,8 @@ async function boot() {
   ubibotService.init();
   shellyApiAdapter.init();
   mapboxApiAdapter.init();
-  openaiService.init();
+  geminiService.init();
+  agentOrchestrator.init();
   await ubibotServiceAdapter.init();
   reportCleanupJob.init();
   usuariosController.init();

@@ -118,12 +118,12 @@ const ReportGeneratorV2 = ({ userPermissions = [] }) => {
         });
         
         // Map to consistent format: { id, name }
-        // Response from /api/devices/active returns { success, data: [{ shelly_id, dispositivo_nombre, ubicacion_nombre, ... }] }
+        // Response from /api/energia/dispositivos/activos returns { success, data: [{ shelly_id, dispositivo_nombre, nombre, ... }] }
         const devicesData = response.data?.data || response.data || [];
         devices = devicesData.map(device => ({
           id: device.shelly_id || device.id,
           name: device.dispositivo_nombre || device.nombre || `Dispositivo ${device.shelly_id || device.id}`,
-          location: device.ubicacion_nombre || device.location
+          location: device.nombre || device.location
         }));
       } else {
         // Get Ubibot temperature devices for other report types

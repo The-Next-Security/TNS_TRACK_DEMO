@@ -1,7 +1,38 @@
+# ============================================
+# SERVICIOS - Node / artefactos de build
+# ============================================
+
 servicios/node_modules/
-servicios/src/config/jsons/connection-config.json
-servicios/src/config/token_id.txt
 servicios/public/
+servicios/public/bundle.js
+servicios/.nvm/
+servicios/.npm/
+.cache/
+
+# ============================================
+# SERVICIOS - Configuración sensible (JSON / claves)
+# ============================================
+
+servicios/src/config/token_id.txt
+servicios/src/config/jsons/connection-config.json
+servicios/src/config/jsons/ai-pricing.json
+servicios/src/config/jsons/api-credentials.json
+servicios/src/config/jsons/config.json
+servicios/src/config/jsons/database.json
+servicios/src/config/jsons/ddbb_produccion.json
+servicios/src/config/jsons/destinatariosSmsUbibot.json
+servicios/src/config/jsons/jwt-config.json
+servicios/src/config/jsons/jwt.json
+servicios/src/config/jsons/posthog-config.json
+servicios/src/config/jsons/precios_energia.json
+servicios/src/config/jsons/sgMailConfig.json
+servicios/src/config/jsons/smsConfig.json
+servicios/src/config/jsons/smsConfig.json.backup
+servicios/src/config/jsons/smsServiceConfig.json
+servicios/src/config/jsons/twilio.json
+servicios/src/config/jsons/ubibot_account_info.json
+servicios/src/config/jsons/unified-config.json
+
 # ============================================
 # PUSH NOTIFICATIONS - Archivos sensibles
 # ============================================
@@ -18,24 +49,35 @@ push-notification-test.log
 .env.push
 .env.vapid
 
-# Archivos de sistema
-.claude
-.playwright-mcp
-.specify
-
-
-# Lecciones aprendidas del proyecto
-LECCIONES_APRENDIDAS.md
-
+# ============================================
 # Archivos SQL con credenciales reales (nunca subir a git)
+# ============================================
+
 SQL_FILES/01_creacion_desde_cero/04_valores_reales.sql
 SQL_FILES/01_creacion_desde_cero/04_valores_produccion.sql
 
-SPRINGBOOT_MIGRATION_CONTEXT.md
-.cursor/rules/no-crear-archivos-sin-consentimiento.mdc
+# ============================================
+# Documentación interna / notas técnicas
+# ============================================
 
-# Script de migración (herramienta interna, no va a GitHub)
+LECCIONES_APRENDIDAS.md
+SPRINGBOOT_MIGRATION_CONTEXT.md
+CLAUDE.md
+
+# ============================================
+# Archivos de sistema / herramientas
+# ============================================
+
+.claude
+.playwright-mcp
+.specify
+.cursor/rules/no-crear-archivos-sin-consentimiento.mdc
 migracion/
-servicios/public/bundle.jsservicios/.nvm/
-.cache/
-servicios/.npm/
+
+# ============================================
+# Archivos de sistema operativo
+# ============================================
+
+**/.DS_Store
+Thumbs.db
+SQL_FILES/log_ejecucion.log

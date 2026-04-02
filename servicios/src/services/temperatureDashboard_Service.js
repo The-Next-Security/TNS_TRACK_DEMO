@@ -1,5 +1,6 @@
 // src/services/temperatureDashboardService.js
 const databaseService = require("./database_Service");
+const consumoCategoriaService = require("./consumoCategoria_Service");
 const { DateTime } = require("luxon");
 
 /**
@@ -167,7 +168,8 @@ class TemperatureDashboardService {
             try {
               category = await this.getElectricCategory(
                 electricDevice.activePower,
-                electricDevice.deviceId
+                electricDevice.deviceId,
+                electricDevice.grupo_id
               );
             } catch (error) {
               console.error(
@@ -207,35 +209,51 @@ class TemperatureDashboardService {
 
   /**
    * Obtiene datos eléctricos más recientes
-   * Usa la API existente en lugar de consultar directamente la BD
+   * Consulta directa a BD para evitar HTTP loopback interno
    * @returns {Array} Datos eléctricos
    */
   async getElectricData() {
     try {
-      // Usar la API existente /api/devices/latest-measurements
-      const axios = require("axios");
-      const response = await axios.get(
-        `${
-          process.env.API_BASE_URL || "http://localhost:3000"
-        }/api/devices/latest-measurements`,
-        {
-          timeout: 10000,
-        }
-      );
+      const query = `
+        SELECT
+            cur.id_ubicacion_real AS idcatalogo_ubicaciones_reales,
+            cur.nombre,
+            d.shelly_id,
+            d.id_grupo,
+            m.potencia_activa,
+            m.timestamp_local
+        FROM gen_ubicaciones_reales cur
+        LEFT JOIN sem_dispositivos d ON cur.id_ubicacion_real = d.id_ubicacion_real AND d.activo = 1
+        LEFT JOIN LATERAL (
+            SELECT potencia_activa, timestamp_local
+            FROM sem_mediciones
+            WHERE shelly_id = d.shelly_id
+              AND fase = 'TOTAL'
+              AND timestamp_local > DATE_SUB(NOW(), INTERVAL 7 DAY)
+            ORDER BY timestamp_local DESC
+            LIMIT 1
+        ) m ON TRUE
+        WHERE cur.nombre LIKE '%Camara%'
+           OR cur.nombre LIKE '%Cámara%'
+           OR cur.nombre LIKE '%Reefer%'
+        ORDER BY cur.nombre
+      `;
 
-      if (response.data?.success && Array.isArray(response.data.data)) {
-        console.log(
-          `[TemperatureDashboardService] Obtenidos ${response.data.data.length} dispositivos eléctricos via API`
-        );
-
-        // La API devuelve: { deviceId, location, activePower, lastUpdate }
-        return response.data.data;
-      }
+      const rows = await databaseService.query(query);
+      const devices = rows.map((row) => ({
+        deviceId:
+          row.shelly_id || `ubicacion_${row.idcatalogo_ubicaciones_reales}`,
+        location: row.nombre,
+        activePower:
+          row.potencia_activa !== null ? parseFloat(row.potencia_activa) : 0,
+        lastUpdate: row.timestamp_local,
+        grupo_id: row.id_grupo || 1,
+      }));
 
       console.log(
-        "[TemperatureDashboardService] No se obtuvieron datos eléctricos válidos"
+        `[TemperatureDashboardService] Obtenidos ${devices.length} dispositivos eléctricos desde BD`
       );
-      return [];
+      return devices;
     } catch (error) {
       console.error(
         "[TemperatureDashboardService] Error obteniendo datos eléctricos:",
@@ -247,37 +265,20 @@ class TemperatureDashboardService {
 
   /**
    * Obtiene la categoría de consumo eléctrico para un dispositivo
-   * Usa las mismas rutas que ya existen: /api/devices/latest-measurements y /api/consumo/categoria
    * @param {number} activePower - Potencia activa en vatios
    * @param {string} deviceId - ID del dispositivo
+   * @param {number} groupId - ID de grupo del dispositivo
    * @returns {number} Categoría (0=apagado, 1=bajo, 2=medio, 3=alto)
    */
-  async getElectricCategory(activePower, deviceId) {
+  async getElectricCategory(activePower, deviceId, groupId = null) {
     try {
-      // Hacer petición a la API existente de categorías
-      const axios = require("axios");
-      const response = await axios.get(
-        `${
-          process.env.API_BASE_URL || "http://localhost:3000"
-        }/api/consumo/categoria`,
-        {
-          params: {
-            valor: activePower,
-            deviceId: deviceId,
-          },
-          timeout: 5000,
-        }
+      const resolvedGroupId =
+        groupId || (await consumoCategoriaService.getGrupoIdForDevice(deviceId));
+      const category = await consumoCategoriaService.categorizarConsumo(
+        activePower,
+        resolvedGroupId
       );
-
-      if (
-        response.data?.success &&
-        response.data.data?.categoria !== undefined
-      ) {
-        return parseInt(response.data.data.categoria) || 0;
-      }
-
-      // Fallback: categorización genérica si no hay configuración específica
-      return this.getCategoryByPowerRange(activePower);
+      return parseInt(category, 10) || 0;
     } catch (error) {
       console.error(
         `[TemperatureDashboardService] Error obteniendo categoría para deviceId ${deviceId}:`,

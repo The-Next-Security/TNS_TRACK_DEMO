@@ -253,7 +253,7 @@ export const useConsumptionCategories = () => {
             const devices = requestQueueRef.current.splice(0); // Vaciar la cola
 
             // Obtener datos eléctricos una sola vez
-            const electricResponse = await axios.get('/api/devices/latest-measurements');
+            const electricResponse = await axios.get('/api/energia/dispositivos/ultimas-mediciones');
 
             if (!electricResponse.data?.success || !Array.isArray(electricResponse.data.data)) {
                 return;

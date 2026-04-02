@@ -1,4 +1,5 @@
 const databaseService = require("../services/database_Service");
+const consumoCategoriaService = require("../services/consumoCategoria_Service");
 const { DeviceError, NotFoundError } = require("../utils/errors_Utils");
 const transformUtils = require("../utils/transform_Utils");
 
@@ -63,69 +64,57 @@ class DeviceController {
     }
   }
 
+  /**
+   * Obtiene las últimas mediciones de todos los dispositivos eléctricos (Cámaras/Reefers)
+   * Optimizado para MySQL 8.4+ usando LATERAL JOIN y unificación de categorías en backend.
+   */
   async getLatestDevicesMeasurements(req, res, next) {
     try {
-      // Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales; aliases preservan nombres JS
-      const queryUbicaciones = `
-        SELECT
+      // Query optimizada: busca directamente el último registro cronológico por dispositivo
+      // filtrando por los últimos 7 días para evitar escaneos pesados de tabla.
+      const query = `
+        SELECT 
             cur.id_ubicacion_real AS idcatalogo_ubicaciones_reales,
-            cur.nombre AS nombre_ubicacion,
-            d.shelly_id
+            cur.nombre,
+            d.shelly_id,
+            d.id_grupo,
+            m.potencia_activa,
+            m.timestamp_local
         FROM gen_ubicaciones_reales cur
         LEFT JOIN sem_dispositivos d ON cur.id_ubicacion_real = d.id_ubicacion_real AND d.activo = 1
-        WHERE cur.nombre LIKE '%Camara%'
-           OR cur.nombre LIKE '%Cámara%'
+        LEFT JOIN LATERAL (
+            SELECT potencia_activa, timestamp_local
+            FROM sem_mediciones
+            WHERE shelly_id = d.shelly_id 
+              AND fase = 'TOTAL'
+              AND timestamp_local > DATE_SUB(NOW(), INTERVAL 7 DAY)
+            ORDER BY timestamp_local DESC
+            LIMIT 1
+        ) m ON TRUE
+        WHERE cur.nombre LIKE '%Camara%' 
+           OR cur.nombre LIKE '%Cámara%' 
            OR cur.nombre LIKE '%Reefer%'
         ORDER BY cur.nombre`;
 
-      const [ubicaciones] = await databaseService.pool.query(queryUbicaciones);
+      const [rows] = await databaseService.pool.query(query);
 
-      // Consulta para obtener las últimas mediciones
-      const queryMeasurements = `
-        SELECT 
-            m.shelly_id,
-            m.potencia_activa,
-            m.timestamp_local
-        FROM sem_mediciones m
-        INNER JOIN (
-            SELECT 
-                shelly_id,
-                MAX(timestamp_local) as max_timestamp
-            FROM sem_mediciones
-            WHERE fase = 'TOTAL'
-            GROUP BY shelly_id
-        ) m2 ON m.shelly_id = m2.shelly_id AND m.timestamp_local = m2.max_timestamp
-        WHERE m.fase = 'TOTAL'`;
-
-      const [measurements] = await databaseService.pool.query(
-        queryMeasurements
-      );
-
-      // Crear un mapa de mediciones por shelly_id
-      const measurementsMap = {};
-      measurements.forEach((m) => {
-        measurementsMap[m.shelly_id] = {
-          activePower:
-            m.potencia_activa !== null ? parseFloat(m.potencia_activa) : 0,
-          lastUpdate: m.timestamp_local,
-        };
-      });
-
-      // Construir el array de dispositivos con sus mediciones (si existen)
-      const devices = ubicaciones.map((ubicacion) => {
-        // Si la ubicación no tiene un dispositivo asignado, crear un ID único basado en la ubicación
-        const deviceId =
-          ubicacion.shelly_id ||
-          `ubicacion_${ubicacion.idcatalogo_ubicaciones_reales}`;
-        const measurement = measurementsMap[deviceId] || {};
+      // Mapeo y categorización instantánea en backend para reducir tráfico de red
+      const devices = await Promise.all(rows.map(async (row) => {
+        const deviceId = row.shelly_id || `ubicacion_${row.idcatalogo_ubicaciones_reales}`;
+        const activePower = row.potencia_activa !== null ? parseFloat(row.potencia_activa) : 0;
+        
+        // Determinar categoría de consumo usando el servicio (usa caché interna de 30 min)
+        // Si no hay grupo asignado, se utiliza grupo 1 (General) por defecto.
+        const category = await consumoCategoriaService.categorizarConsumo(activePower, row.id_grupo || 1);
 
         return {
           deviceId: deviceId,
-          location: ubicacion.nombre_ubicacion,
-          activePower: measurement.activePower || 0,
-          lastUpdate: measurement.lastUpdate || null,
+          location: row.nombre,
+          activePower: activePower,
+          lastUpdate: row.timestamp_local,
+          category: category // Dato unificado para el frontend
         };
-      });
+      }));
 
       res.json({
         success: true,
@@ -133,7 +122,7 @@ class DeviceController {
         timestamp: new Date(),
       });
     } catch (error) {
-      console.error("Error al obtener mediciones de dispositivos:", error);
+      console.error("Error al obtener mediciones unificadas de dispositivos:", error);
       next(error);
     }
   }
@@ -170,8 +159,8 @@ class DeviceController {
         sd.shelly_id,
         sd.nombre as dispositivo_nombre,
         sd.activo,
-        sd.grupo_id,
-        cur.nombre AS ubicacion_nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
+        sd.id_grupo,
+        cur.nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
         cur.id_ubicacion_real AS ubicacion_id,
         sg.nombre as grupo_nombre,
         sd.fecha_creacion,
@@ -183,7 +172,7 @@ class DeviceController {
       JOIN
         gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
       LEFT JOIN 
-        sem_grupos sg ON sd.grupo_id = sg.id
+        sem_grupos sg ON sd.id_grupo = sg.id_grupo
       LEFT JOIN (
         SELECT 
           shelly_id,
@@ -200,7 +189,7 @@ class DeviceController {
       WHERE 
         sd.activo = 1
       ORDER BY 
-        cur.nombre_ubicacion ASC,
+        cur.nombre ASC,
         sd.nombre ASC
     `;
 
@@ -223,16 +212,16 @@ class DeviceController {
       const devices = rows.map((row) => ({
         shelly_id: row.shelly_id,
         dispositivo_nombre: row.dispositivo_nombre,
-        ubicacion_nombre: row.ubicacion_nombre,
+        nombre: row.nombre,
         ubicacion_id: row.ubicacion_id,
-        grupo_id: row.grupo_id,
+        grupo_id: row.id_grupo,
         grupo_nombre: row.grupo_nombre || "Sin Grupo",
         activo: row.activo,
         estado_conexion: row.estado_conexion,
         ultima_medicion: row.ultima_medicion,
         fecha_creacion: row.fecha_creacion,
         fecha_actualizacion: row.fecha_actualizacion,
-        display_name: row.ubicacion_nombre,
+        display_name: row.nombre,
         display_subtitle: row.dispositivo_nombre,
       }));
 
@@ -284,8 +273,8 @@ class DeviceController {
           sd.shelly_id,
           sd.nombre as dispositivo_nombre,
           sd.activo,
-          sd.grupo_id,
-          cur.nombre AS ubicacion_nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
+          sd.id_grupo,
+          cur.nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
           cur.id_ubicacion_real AS ubicacion_id,
           sg.nombre as grupo_nombre,
           sd.fecha_creacion,
@@ -304,7 +293,7 @@ class DeviceController {
         JOIN
           gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
         LEFT JOIN 
-          sem_grupos sg ON sd.grupo_id = sg.id
+          sem_grupos sg ON sd.id_grupo = sg.id_grupo
         LEFT JOIN (
           -- Estadísticas del dispositivo
           SELECT 
@@ -340,9 +329,9 @@ class DeviceController {
       const deviceData = {
         shelly_id: device.shelly_id,
         dispositivo_nombre: device.dispositivo_nombre,
-        ubicacion_nombre: device.ubicacion_nombre,
+        nombre: device.nombre,
         ubicacion_id: device.ubicacion_id,
-        grupo_id: device.grupo_id,
+        grupo_id: device.id_grupo,
         grupo_nombre: device.grupo_nombre || "Sin Grupo",
         activo: device.activo,
         estado_conexion: device.estado_conexion,
@@ -353,7 +342,7 @@ class DeviceController {
         },
         fecha_creacion: device.fecha_creacion,
         fecha_actualizacion: device.fecha_actualizacion,
-        display_name: device.ubicacion_nombre,
+        display_name: device.nombre,
         display_subtitle: device.dispositivo_nombre,
       };
 

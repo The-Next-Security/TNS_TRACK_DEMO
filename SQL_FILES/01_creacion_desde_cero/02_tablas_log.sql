@@ -160,6 +160,24 @@ CREATE TABLE `log_ale_suscripciones_notificacion` (
   PRIMARY KEY (`id_log_ale_suscripciones_notificacion`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log de cambios en suscripciones unificadas de notificaciones';
 
+-- Log de eventos del ciclo de análisis de notificaciones de temperatura
+-- Sin FKs: tabla independiente de infraestructura del servicio de notificaciones
+CREATE TABLE `log_notification_analysis` (
+  `id_log_notification_analysis` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `analysis_timestamp`    DATETIME NOT NULL        COMMENT 'Inicio del ciclo de análisis',
+  `analysis_window_start` DATETIME NULL            COMMENT 'Inicio de la ventana de datos analizada',
+  `analysis_window_end`   DATETIME NULL            COMMENT 'Fin de la ventana de datos analizada',
+  `channel_id`            VARCHAR(100) NULL        COMMENT 'ID del canal analizado (NULL = log de ciclo general)',
+  `log_level`             ENUM('DEBUG','INFO','WARN','ERROR') NOT NULL DEFAULT 'INFO',
+  `message`               VARCHAR(1024) NOT NULL   COMMENT 'Mensaje del evento de análisis',
+  `details`               JSON NULL                COMMENT 'Datos adicionales del evento en JSON',
+  PRIMARY KEY (`id_log_notification_analysis`),
+  INDEX `idx_log_notification_analysis_analysis_timestamp` (`analysis_timestamp`),
+  INDEX `idx_log_notification_analysis_channel_id`         (`channel_id`),
+  INDEX `idx_log_notification_analysis_log_level`          (`log_level`),
+  INDEX `idx_log_notification_analysis_level_ts`           (`log_level`, `analysis_timestamp`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Log detallado de eventos del ciclo de análisis de notificaciones de temperatura';
+
 -- ============================================
 -- LOG DE DATOS BASE (log_[tabla])
 -- Registran INSERT/UPDATE/DELETE en tablas con datos seed.

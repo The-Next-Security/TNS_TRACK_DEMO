@@ -104,10 +104,10 @@ async function createSchedule(req, res) {
       deviceIds,
       options: options || {},
       active: active !== false, // Default true
-      createdBy: req.user.id // Desde el middleware de autenticación
+      createdBy: req.user.userId // Desde el middleware de autenticación
     });
 
-    console.log(`[SchedulerController] Schedule created: #${result.scheduleId} by user ${req.user.id}`);
+    console.log(`[SchedulerController] Schedule created: #${result.scheduleId} by user ${req.user.userId}`);
 
     res.status(201).json({
       success: true,
@@ -140,7 +140,7 @@ async function listSchedules(req, res) {
     // Filtrar por usuario creador (a menos que sea admin)
     const filters = {
       activeOnly: activeOnly === 'true',
-      createdBy: req.user.id // Los usuarios solo ven sus propios schedules
+      createdBy: req.user.userId // Los usuarios solo ven sus propios schedules
       // TODO: Si el usuario es admin, permitir ver todos (requiere rol en req.user)
     };
 
@@ -238,7 +238,7 @@ async function updateSchedule(req, res) {
     // Actualizar el schedule
     const result = await reportSchedulerService.updateSchedule(scheduleId, updates);
 
-    console.log(`[SchedulerController] Schedule #${scheduleId} updated by user ${req.user.id}`);
+    console.log(`[SchedulerController] Schedule #${scheduleId} updated by user ${req.user.userId}`);
 
     res.json({
       success: true,
@@ -285,11 +285,11 @@ async function deleteSchedule(req, res) {
     }
 
     // TODO: Verificar que el usuario es el creador del schedule (o admin)
-    // Requiere obtener el schedule primero y comparar created_by con req.user.id
+    // Requiere obtener el schedule primero y comparar created_by con req.user.userId
 
     await reportSchedulerService.deleteSchedule(scheduleId);
 
-    console.log(`[SchedulerController] Schedule #${scheduleId} deleted by user ${req.user.id}`);
+    console.log(`[SchedulerController] Schedule #${scheduleId} deleted by user ${req.user.userId}`);
 
     res.json({
       success: true,
@@ -338,7 +338,7 @@ async function toggleSchedule(req, res) {
 
     const result = await reportSchedulerService.toggleSchedule(scheduleId, active);
 
-    console.log(`[SchedulerController] Schedule #${scheduleId} toggled to ${active} by user ${req.user.id}`);
+    console.log(`[SchedulerController] Schedule #${scheduleId} toggled to ${active} by user ${req.user.userId}`);
 
     res.json({
       success: true,

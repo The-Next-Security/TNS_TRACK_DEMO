@@ -162,7 +162,7 @@ const TemperaturePowerAnalysisV2 = () => {
 
     try {
       const location = locations.find(loc => loc.id === parseInt(selectedLocation));
-      const formattedDate = DateTime.fromISO(selectedDate).toFormat('yyyy-MM-dd');
+      const formattedDate = DateTime.fromJSDate(selectedDate).toFormat('yyyy-MM-dd');
 
       const response = await axios.get(
         `/api/analisis/temperatura-potencia/${formattedDate}`,

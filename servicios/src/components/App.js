@@ -11,6 +11,7 @@ import { LogoutReason } from "../constants/logoutReason_Constants";
 import { setLogoutReason } from "../utils/session_Utils";
 import { setupAxiosInterceptor } from "../utils/axiosInterceptor_Utils";
 import { AuthProvider } from "../context/AuthContext";
+import axios from "axios";
 
 function App() {
   useEffect(() => {
@@ -33,13 +34,11 @@ function App() {
       localStorage.removeItem('refreshToken');
 
       // Notificar al servidor para revocar refresh token (fire and forget)
-      fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(refreshToken ? { refreshToken } : {})
-      }).catch((error) => {
-        console.error('[App] Error calling /logout:', error);
-      });
+      axios
+        .post('/api/auth/logout', refreshToken ? { refreshToken } : {})
+        .catch((error) => {
+          console.error('[App] Error calling /logout:', error);
+        });
 
       // Track logout en analytics
       analyticsService.trackEvent('session_expired_401', {

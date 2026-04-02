@@ -322,7 +322,7 @@ INSERT INTO `gen_cofiguracion_grupos` (`id_cofiguracion_grupos`, `nombre`, `desc
 (13, 'alertSystem',           'Configuración del sistema de alertas de temperatura',                    13, 1),
 (14, 'pushNotifications',     'Configuración de notificaciones push PWA (claves VAPID)',                14, 1),
 (15, 'reports_module_config', 'Configuración del módulo de generación de reportes PDF',                 15, 1),
-(16, 'OpenAI_API',            'Configuración de la API de OpenAI para módulo de análisis AI',          16, 1),
+(16, 'Gemini_API',            'Configuración de la API de Google Gemini para módulo de análisis AI',   16, 1),
 (17, 'twilio',                'Configuración de Twilio como proveedor SMS alternativo',                 17, 1),
 (18, 'appInfo',               'Información de la aplicación (nombre, empresa, versión)',                19, 1);
 
@@ -420,8 +420,16 @@ INSERT INTO `gen_cofiguracion_parametros`
 (66, 15, 7, 'reports_module_config.retention_days',             'retention_days',         2, 'reports_module_config', 0, 'Días de retención de reportes PDF antes de eliminación automática',           '90',                 0, 1),
 (67, 15, 7, 'reports_module_config.max_concurrent_reports',     'max_concurrent_reports', 2, 'reports_module_config', 0, 'Máximo de reportes que pueden generarse en paralelo',                         '5',                  0, 1),
 
--- ── Grupo OpenAI_API (id_grupo=16) → id 68 ───────────────────────────────────
-(68, 16, 1, 'OpenAI_API.OPENAI_API_KEY',                        'OPENAI_API_KEY', 2, 'OpenAI_API', 1, 'API Key de OpenAI para módulo de análisis AI de cámaras',                                         '[CONFIGURAR]', 0, 1),
+-- ── Grupo Gemini_API (id_grupo=16) → ids 68, 79-86 (Issue #70 / migración Slack 2026-03) ──
+(68, 16, 1, 'Gemini_API.GEMINI_API_KEY',                     'GEMINI_API_KEY',              2, 'Gemini_API', 1, 'API Key de Google Gemini para módulo de análisis AI',                          '[CONFIGURAR]',          0, 1),
+(79, 16, 1, 'Gemini_API.GEMINI_MODEL',                      'GEMINI_MODEL',               2, 'Gemini_API', 0, 'Modelo de IA Gemini (ej: gemini-pro-latest)',                                 'gemini-pro-latest',   1, 1),
+(80, 16, 7, 'Gemini_API.GEMINI_MAX_TOKENS',                  'GEMINI_MAX_TOKENS',          2, 'Gemini_API', 0, 'Tokens máximos de respuesta por turno',                                         '16384',               1, 1),
+(81, 16, 7, 'Gemini_API.AI_SESSION_TIMEOUT_MINUTES',        'AI_SESSION_TIMEOUT_MINUTES', 2, 'Gemini_API', 0, 'Duración máxima de sesión de costo IA (minutos)',                              '30',                  0, 1),
+(82, 16, 6, 'Gemini_API.AI_COST_ALERT_THRESHOLD',            'AI_COST_ALERT_THRESHOLD',    2, 'Gemini_API', 0, 'Umbral de alerta de costo acumulado (moneda según billing)',                   '50',                  0, 1),
+(83, 16, 2, 'Gemini_API.ENABLE_AI_ANALYSIS',                 'ENABLE_AI_ANALYSIS',         2, 'Gemini_API', 0, 'Habilitar módulo de análisis IA de cámaras',                                    'true',                0, 1),
+(84, 16, 7, 'Gemini_API.GEMINI_MAX_ITERATIONS',              'GEMINI_MAX_ITERATIONS',      2, 'Gemini_API', 0, 'Iteraciones máximas del loop agentic ReAct',                                    '5',                   0, 1),
+(85, 16, 7, 'Gemini_API.GEMINI_MAX_INPUT_TOKENS',            'GEMINI_MAX_INPUT_TOKENS',    2, 'Gemini_API', 0, 'Tokens input acumulados máx antes de forzar cierre del agente',                '50000',               0, 1),
+(86, 16, 6, 'Gemini_API.GEMINI_COST_WARNING_USD',            'GEMINI_COST_WARNING_USD',    2, 'Gemini_API', 0, 'Umbral de advertencia de costo por consulta en USD',                           '0.15',                0, 1),
 
 -- ── Grupo twilio (id_grupo=17) → ids 69-73 ───────────────────────────────────
 (69, 17, 1, 'twilio.accountSid',                                'accountSid',    2, 'twilio', 1, 'SID de la cuenta Twilio (comienza con AC)',                                            '[CONFIGURAR]', 1, 1),
@@ -444,6 +452,8 @@ INSERT INTO `gen_cofiguracion_parametros`
 -- 11. gen_cofiguracion_valores
 --     Valores activos iniciales para cada parámetro definido.
 --     ⚠️  Reemplazar todos los '[CONFIGURAR]' antes de desplegar en producción.
+--     ⚠️  Tras crear_base_datos (o 01–04), ejecutar 04_valores_reales.sql en local:
+--         incluye GEMINI_API_KEY y el resto de secretos (archivo gitignored).
 -- ==============================================================================
 
 -- ⚠️  Todos los valores '[CONFIGURAR]' deben ser reemplazados antes de desplegar.
@@ -516,8 +526,16 @@ INSERT INTO `gen_cofiguracion_valores` (`id_cofiguracion_parametros`, `valor`, `
 (65, 'America/Santiago',                                           1, 1),
 (66, '90',                                                         1, 1),
 (67, '5',                                                          1, 1),
--- OpenAI_API (id 68)
+-- Gemini_API (ids 68, 79-86)
 (68, '[CONFIGURAR]',                                               1, 1),
+(79, 'gemini-pro-latest',                                        1, 1),
+(80, '16384',                                                      1, 1),
+(81, '30',                                                         1, 1),
+(82, '50',                                                         1, 1),
+(83, 'true',                                                       1, 1),
+(84, '5',                                                          1, 1),
+(85, '50000',                                                      1, 1),
+(86, '0.15',                                                       1, 1),
 -- twilio (ids 69-73)
 (69, '[CONFIGURAR]',                                               1, 1),
 (70, '[CONFIGURAR]',                                               1, 1),

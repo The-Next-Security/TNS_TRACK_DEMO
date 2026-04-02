@@ -7,6 +7,7 @@ import { parseLogoutBroadcast } from '../utils/crossTabSync_Utils';
 import { setLogoutReason } from '../utils/session_Utils';
 import { LogoutReason } from '../constants/logoutReason_Constants';
 import analyticsService from '../services/analytics_Service';
+import axios from 'axios';
 
 /**
  * Cross-tab logout synchronization hook
@@ -43,13 +44,11 @@ export function useCrossTabLogout(onLogout) {
       const _rt = localStorage.getItem('refreshToken');
       localStorage.removeItem('accessToken');
       localStorage.removeItem('refreshToken');
-      fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(_rt ? { refreshToken: _rt } : {})
-      }).catch((error) => {
-        console.error('[useCrossTabLogout] Error calling /logout:', error);
-      });
+      axios
+        .post('/api/auth/logout', _rt ? { refreshToken: _rt } : {})
+        .catch((error) => {
+          console.error('[useCrossTabLogout] Error calling /logout:', error);
+        });
 
       // Trigger callback (typically redirect to login)
       if (onLogout) {

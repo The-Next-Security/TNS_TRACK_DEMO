@@ -17,6 +17,54 @@
 
 ## Unreleased
 
+### 2026-04-02 — @dependabot[bot] ([#85](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/85))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group across 1 directory with 3 updates
+
+
+### 2026-03-20 — @felipecleverox ([#69](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/69))
+- **chore** `back-end, front-end` | [BUG] Corrección de bugs bloqueantes en módulo de análisis IA
+
+
+### 2026-03-20 — @dependabot[bot] ([#67](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/67))
+- **chore** `back-end, dependencies, npm, security` | bump pdfkit from 0.16.0 to 0.18.0 in /servicios
+
+
+### 2026-03-20 — @dependabot[bot] ([#66](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/66))
+- **chore** `back-end, dependencies, npm, security` | bump react-router-dom from 7.12.0 to 7.13.1 in /servicios
+
+
+### 2026-03-20 — @dependabot[bot] ([#65](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/65))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.362.0 to 1.363.0 in /servicios
+
+
+### 2026-03-20 — @dependabot[bot] ([#64](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/64))
+- **chore** `back-end, dependencies, npm, security` | bump puppeteer from 24.39.1 to 24.40.0 in /servicios
+
+
+### 2026-03-20 — @dependabot[bot] ([#63](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/63))
+- **chore** `back-end, dependencies, npm, security` | bump baseline-browser-mapping from 2.10.8 to 2.10.9 in /servicios in the security-updates group
+
+
+### 2026-03-19 — @dependabot[bot] ([#58](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/58))
+- **chore** `back-end, dependencies, npm, security` | bump framer-motion from 12.23.26 to 12.38.0 in /servicios
+
+
+### 2026-03-19 — @dependabot[bot] ([#59](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/59))
+- **chore** `back-end, dependencies, npm, security` | bump mapbox-gl from 3.17.0 to 3.20.0 in /servicios
+
+
+### 2026-03-19 — @dependabot[bot] ([#60](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/60))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.361.1 to 1.362.0 in /servicios
+
+
+### 2026-03-19 — @dependabot[bot] ([#61](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/61))
+- **chore** `back-end, dependencies, npm, security` | bump baseline-browser-mapping from 2.9.8 to 2.10.8 in /servicios
+
+
+### 2026-03-19 — @dependabot[bot] ([#57](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/57))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 3 updates
+
+
 ### 2026-03-18 — @dependabot[bot] ([#56](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/56))
 - **chore** `back-end, dependencies, npm, security` | bump puppeteer from 24.33.0 to 24.39.1 in /servicios
 

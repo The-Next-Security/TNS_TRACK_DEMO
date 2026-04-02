@@ -1,83 +1,128 @@
-// src/services/consumo-categoria-service.js (versión corregida)
 const databaseService = require('./database_Service');
-const config = require('../config/js_files/configLoader_Config');
 
 class ConsumoCategoriaService {
     constructor() {
         this.cache = {
             umbrales: null,
-            lastUpdate: null
+            lastUpdate: null,
+            configLastUpdate: null
         };
-        this.CACHE_TTL = 24 * 60 * 60 * 1000; // 24 horas en milisegundos
+        // TTL de 30 minutos — igual que electricDashboard_Service
+        this.CACHE_TTL = 30 * 60 * 1000;
     }
 
     /**
-     * Obtiene los umbrales de consumo para todos los grupos desde la base de datos o caché
+     * Consulta el MAX(fecha_actualizacion) de los parámetros de consumo en sem_configuracion.
+     * Permite detectar si la configuración cambió sin invalidar la caché por tiempo.
+     * Usa JOIN por nombre para no depender de IDs generados automáticamente.
+     * @returns {Promise<Date|null>}
+     */
+    async getLastConfigUpdate() {
+        try {
+            const query = `
+                SELECT MAX(sc.fecha_actualizacion) AS ultima_actualizacion
+                FROM sem_configuracion sc
+                JOIN sem_tipos_parametros stp ON sc.id_tipo_parametro = stp.id_tipo_parametro
+                WHERE stp.nombre IN ('LIMITE APAGADO', 'CONSUMO BAJO', 'CONSUMO MEDIO', 'CONSUMO ALTO')
+                  AND sc.activo = 1
+                  AND sc.valido_desde <= NOW()
+                  AND (sc.valido_hasta IS NULL OR sc.valido_hasta > NOW())
+            `;
+            const [rows] = await databaseService.pool.query(query);
+            return rows?.[0]?.ultima_actualizacion || null;
+        } catch (error) {
+            console.error('[ConsumoCategoriaService] Error al verificar fecha de configuración:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Obtiene los umbrales de consumo para todos los grupos desde la base de datos o caché.
+     * Usa JOIN con sem_tipos_parametros filtrando por nombre para no depender de IDs.
+     * Respeta la vigencia temporal (valido_desde / valido_hasta) de cada registro.
      * @returns {Promise<Object>} Objeto con los umbrales por grupo
      */
-    // src/services/consumo-categoria-service.js (método getUmbralesConsumo corregido)
     async getUmbralesConsumo() {
-        // Verificar si la caché es válida
-        if (this.cache.umbrales && this.cache.lastUpdate && (Date.now() - this.cache.lastUpdate < this.CACHE_TTL)) {
-            return this.cache.umbrales;
+        // Verificar si la caché TTL sigue vigente
+        const cacheVigente = this.cache.umbrales
+            && this.cache.lastUpdate
+            && (Date.now() - this.cache.lastUpdate < this.CACHE_TTL);
+
+        if (cacheVigente) {
+            // Verificar adicionalmente si la configuración cambió en BD
+            try {
+                const dbLastUpdate = await this.getLastConfigUpdate();
+                const cacheLastUpdate = this.cache.configLastUpdate;
+
+                if (dbLastUpdate && cacheLastUpdate) {
+                    const dbTime = new Date(dbLastUpdate).getTime();
+                    const cacheTime = new Date(cacheLastUpdate).getTime();
+                    if (dbTime <= cacheTime) {
+                        return this.cache.umbrales; // Caché válida
+                    }
+                    console.log('[ConsumoCategoriaService] Configuración actualizada en BD, invalidando caché');
+                } else {
+                    return this.cache.umbrales; // Sin datos de comparación, usar caché
+                }
+            } catch {
+                return this.cache.umbrales; // Error verificando, usar caché existente
+            }
         }
 
+        const defaultUmbrales = {
+            limiteApagado: 500,
+            cuartilBajo:  { '1': { valor: 3000, nombre_grupo: 'General' } },
+            cuartilMedio: { '1': { valor: 4000, nombre_grupo: 'General' } },
+            cuartilAlto:  { '1': { valor: 5000, nombre_grupo: 'General' } }
+        };
+
         try {
-            // Consulta para obtener el límite de dispositivo apagado
-            const queryLimiteApagado = 'SELECT valor FROM sem_configuracion WHERE tipo_parametro_id = 10 AND activo = 1 LIMIT 1';
-
-            // Usar pool.query directamente, siguiendo el patrón del DeviceController
-            const [rowsLimiteApagado] = await databaseService.pool.query(queryLimiteApagado);
-
-            // Valor predeterminado en caso de no encontrar registros
-            const limiteApagado = rowsLimiteApagado && rowsLimiteApagado.length > 0 && rowsLimiteApagado[0].valor ?
-                parseFloat(rowsLimiteApagado[0].valor) : 500;
-
-            // Consulta para obtener todos los umbrales por grupo
+            // Query unificada: JOIN por nombre, sin IDs hardcodeados, con vigencia temporal
             const query = `
-        SELECT sc.tipo_parametro_id, sc.valor 
-        FROM sem_configuracion sc
-        WHERE sc.tipo_parametro_id IN (11, 12, 13) 
-        AND sc.activo = 1
-      `;
+                SELECT stp.nombre AS parametro_nombre, sc.valor, sc.fecha_actualizacion
+                FROM sem_configuracion sc
+                JOIN sem_tipos_parametros stp ON sc.id_tipo_parametro = stp.id_tipo_parametro
+                WHERE stp.nombre IN ('LIMITE APAGADO', 'CONSUMO BAJO', 'CONSUMO MEDIO', 'CONSUMO ALTO')
+                  AND sc.activo = 1
+                  AND sc.valido_desde <= NOW()
+                  AND (sc.valido_hasta IS NULL OR sc.valido_hasta > NOW())
+                ORDER BY stp.nombre
+            `;
 
-            // Usar pool.query y la desestructuración de array
             const [rows] = await databaseService.pool.query(query);
 
-            // Verificar si hay resultados
             if (!rows || rows.length === 0) {
-                const defaultUmbrales = {
-                    limiteApagado,
-                    cuartilBajo: { '1': { valor: 3000, nombre_grupo: 'General' } },
-                    cuartilMedio: { '1': { valor: 4000, nombre_grupo: 'General' } },
-                    cuartilAlto: { '1': { valor: 5000, nombre_grupo: 'General' } }
-                };
-
+                console.warn('[ConsumoCategoriaService] Sin configuración en BD, usando valores predeterminados');
                 this.cache.umbrales = defaultUmbrales;
                 this.cache.lastUpdate = Date.now();
-
                 return defaultUmbrales;
             }
 
-            // Procesar los resultados
-            const umbrales = {
-                limiteApagado
-            };
+            let limiteApagado = 500;
+            const umbrales = { cuartilBajo: {}, cuartilMedio: {}, cuartilAlto: {} };
+            let maxFechaActualizacion = null;
 
-            // Inicializar objetos de cuartiles
-            umbrales.cuartilBajo = {};
-            umbrales.cuartilMedio = {};
-            umbrales.cuartilAlto = {};
-
-            // Procesamos cada tipo de umbral
             for (const row of rows) {
-                if (!row || !row.valor || !row.tipo_parametro_id) continue;
+                if (!row || !row.valor || !row.parametro_nombre) continue;
 
+                // Rastrear la fecha de actualización más reciente para la caché
+                if (row.fecha_actualizacion) {
+                    const rowTime = new Date(row.fecha_actualizacion).getTime();
+                    if (!maxFechaActualizacion || rowTime > new Date(maxFechaActualizacion).getTime()) {
+                        maxFechaActualizacion = row.fecha_actualizacion;
+                    }
+                }
+
+                const nombre = row.parametro_nombre;
+
+                if (nombre === 'LIMITE APAGADO') {
+                    limiteApagado = parseFloat(row.valor) || 500;
+                    continue;
+                }
+
+                // CONSUMO BAJO / MEDIO / ALTO — valor es JSON con estructura por grupo
                 try {
-                    const tipoParametroId = parseInt(row.tipo_parametro_id, 10);
                     let valorJSON;
-
-                    // Intentar parsear el valor como JSON
                     if (typeof row.valor === 'string') {
                         valorJSON = JSON.parse(row.valor);
                     } else if (typeof row.valor === 'object') {
@@ -86,13 +131,9 @@ class ConsumoCategoriaService {
                         continue;
                     }
 
-                    // Extraer los valores por grupo del JSON
                     const gruposData = {};
-
-                    // Recorrer todas las propiedades excepto "metadatos"
                     for (const key in valorJSON) {
                         if (key !== 'metadatos' && valorJSON[key] && typeof valorJSON[key] === 'object') {
-                            // El key es el ID del grupo
                             gruposData[key] = {
                                 valor: parseFloat(valorJSON[key].valor) || 0,
                                 nombre_grupo: valorJSON[key].nombre_grupo || 'Desconocido'
@@ -100,180 +141,120 @@ class ConsumoCategoriaService {
                         }
                     }
 
-                    // Asignar al objeto de umbrales según el tipo
-                    switch (tipoParametroId) {
-                        case 11:
-                            umbrales.cuartilBajo = { ...umbrales.cuartilBajo, ...gruposData };
-                            break;
-                        case 12:
-                            umbrales.cuartilMedio = { ...umbrales.cuartilMedio, ...gruposData };
-                            break;
-                        case 13:
-                            umbrales.cuartilAlto = { ...umbrales.cuartilAlto, ...gruposData };
-                            break;
+                    switch (nombre) {
+                        case 'CONSUMO BAJO':  umbrales.cuartilBajo  = { ...umbrales.cuartilBajo,  ...gruposData }; break;
+                        case 'CONSUMO MEDIO': umbrales.cuartilMedio = { ...umbrales.cuartilMedio, ...gruposData }; break;
+                        case 'CONSUMO ALTO':  umbrales.cuartilAlto  = { ...umbrales.cuartilAlto,  ...gruposData }; break;
                     }
                 } catch (error) {
-                    console.error('Error al procesar JSON para fila:', error);
-                    // Continuar con la siguiente fila
+                    console.error('[ConsumoCategoriaService] Error al procesar JSON para', nombre, ':', error);
                 }
             }
 
-            // Verificar que todos los cuartiles tengan al menos el grupo 1
-            if (Object.keys(umbrales.cuartilBajo).length === 0) {
-                umbrales.cuartilBajo['1'] = { valor: 3000, nombre_grupo: 'General' };
-            }
-            if (Object.keys(umbrales.cuartilMedio).length === 0) {
-                umbrales.cuartilMedio['1'] = { valor: 4000, nombre_grupo: 'General' };
-            }
-            if (Object.keys(umbrales.cuartilAlto).length === 0) {
-                umbrales.cuartilAlto['1'] = { valor: 5000, nombre_grupo: 'General' };
-            }
+            umbrales.limiteApagado = limiteApagado;
 
-            // Actualizar la caché
+            // Fallback por grupo si algún cuartil quedó vacío
+            if (Object.keys(umbrales.cuartilBajo).length === 0)  umbrales.cuartilBajo['1']  = { valor: 3000, nombre_grupo: 'General' };
+            if (Object.keys(umbrales.cuartilMedio).length === 0) umbrales.cuartilMedio['1'] = { valor: 4000, nombre_grupo: 'General' };
+            if (Object.keys(umbrales.cuartilAlto).length === 0)  umbrales.cuartilAlto['1']  = { valor: 5000, nombre_grupo: 'General' };
+
             this.cache.umbrales = umbrales;
             this.cache.lastUpdate = Date.now();
+            this.cache.configLastUpdate = maxFechaActualizacion;
 
             return umbrales;
         } catch (error) {
-            console.error('Error al obtener umbrales de consumo:', error);
-
-            // En caso de error, devolver valores predeterminados
-            const defaultUmbrales = {
-                limiteApagado: 500,
-                cuartilBajo: { '1': { valor: 3000, nombre_grupo: 'General' } },
-                cuartilMedio: { '1': { valor: 4000, nombre_grupo: 'General' } },
-                cuartilAlto: { '1': { valor: 5000, nombre_grupo: 'General' } }
-            };
-
+            console.error('[ConsumoCategoriaService] Error al obtener umbrales de consumo:', error);
             return defaultUmbrales;
         }
     }
 
     /**
-     * Determina la categoría de consumo para un valor en watts y un grupo específico
+     * Determina la categoría de consumo para un valor en watts y un grupo específico.
      * @param {number} valorWatts - El valor de consumo en watts
      * @param {number} grupoId - ID del grupo al que pertenece el dispositivo
-     * @returns {Promise<number>} Categoría de consumo (0, 1, 2, 3)
+     * @returns {Promise<number>} Categoría de consumo (0=apagado, 1=bajo, 2=medio, 3=alto)
      */
     async categorizarConsumo(valorWatts, grupoId) {
         try {
-            // Convertir a números para asegurar comparaciones correctas
             valorWatts = parseFloat(valorWatts);
             grupoId = parseInt(grupoId, 10);
 
-            // Si el valor es 0 o no es un número válido, considerarlo como apagado directamente
             if (isNaN(valorWatts) || valorWatts === 0) {
                 return 0; // Apagado
             }
 
             if (isNaN(grupoId)) {
-                console.warn('El ID de grupo proporcionado no es válido, usando grupo 1 por defecto');
-                grupoId = 1; // Usar grupo General como fallback
+                console.warn('[ConsumoCategoriaService] ID de grupo no válido, usando grupo 1 por defecto');
+                grupoId = 1;
             }
 
-            // Obtener los umbrales
             const umbrales = await this.getUmbralesConsumo();
 
-            // Verificar si el dispositivo está apagado (esto es redundante con la verificación anterior, pero lo mantenemos por claridad)
             if (valorWatts <= umbrales.limiteApagado) {
                 return 0; // Apagado
             }
 
-            // Obtener los umbrales específicos para el grupo
             const grupoIdStr = grupoId.toString();
 
-            // CORRECCIÓN: Verificar si existen umbrales para este grupo
-            // Si no existen, usar los del grupo 1 (General) como fallback
-            if (!umbrales.cuartilBajo[grupoIdStr] ||
-                !umbrales.cuartilMedio[grupoIdStr] ||
-                !umbrales.cuartilAlto[grupoIdStr]) {
+            // Si no hay umbrales para este grupo, usar grupo 1 (General) como fallback
+            if (!umbrales.cuartilBajo[grupoIdStr] || !umbrales.cuartilMedio[grupoIdStr] || !umbrales.cuartilAlto[grupoIdStr]) {
+                console.warn(`[ConsumoCategoriaService] Sin umbrales para grupo ${grupoId}, usando grupo 1`);
 
-                console.warn(`No se encontraron umbrales para el grupo ${grupoId}, usando grupo 1 (General)`);
-
-                // Verificar si existen umbrales para el grupo 1
-                if (!umbrales.cuartilBajo['1'] ||
-                    !umbrales.cuartilMedio['1'] ||
-                    !umbrales.cuartilAlto['1']) {
-
-                    // Si tampoco hay umbrales para el grupo 1, usar valores predeterminados
-                    const cuartilBajo = 3000;
-                    const cuartilAlto = 5000;
-
-                    if (valorWatts <= cuartilBajo) {
-                        return 1; // Bajo consumo
-                    } else if (valorWatts <= cuartilAlto) {
-                        return 2; // Consumo normal
-                    } else {
-                        return 3; // Consumo alto
-                    }
+                if (!umbrales.cuartilBajo['1'] || !umbrales.cuartilMedio['1'] || !umbrales.cuartilAlto['1']) {
+                    // Sin umbrales para grupo 1 tampoco → valores hardcodeados de emergencia
+                    if (valorWatts <= 3000) return 1;
+                    if (valorWatts <= 5000) return 2;
+                    return 3;
                 }
 
-                // Usar umbrales del grupo 1
                 const cuartilBajo = umbrales.cuartilBajo['1'].valor;
                 const cuartilAlto = umbrales.cuartilAlto['1'].valor;
-
-                // Categorizar según los umbrales
-                if (valorWatts <= cuartilBajo) {
-                    return 1; // Bajo consumo
-                } else if (valorWatts <= cuartilAlto) {
-                    return 2; // Consumo normal
-                } else {
-                    return 3; // Consumo alto
-                }
+                if (valorWatts <= cuartilBajo) return 1;
+                if (valorWatts <= cuartilAlto) return 2;
+                return 3;
             }
 
-            // Usar umbrales del grupo específico
             const cuartilBajo = umbrales.cuartilBajo[grupoIdStr].valor;
             const cuartilAlto = umbrales.cuartilAlto[grupoIdStr].valor;
-
-            // Categorizar según los umbrales
-            if (valorWatts <= cuartilBajo) {
-                return 1; // Bajo consumo
-            } else if (valorWatts <= cuartilAlto) {
-                return 2; // Consumo normal
-            } else {
-                return 3; // Consumo alto
-            }
+            if (valorWatts <= cuartilBajo) return 1;
+            if (valorWatts <= cuartilAlto) return 2;
+            return 3;
         } catch (error) {
-            console.error('Error al categorizar consumo:', error);
-            // En caso de error, devolver 0 como valor predeterminado
+            console.error('[ConsumoCategoriaService] Error al categorizar consumo:', error);
             return 0;
         }
     }
 
     /**
-     * Obtiene la información del grupo al que pertenece un dispositivo
-     * @param {string} deviceId - ID del dispositivo (shelly_id)
-     * @returns {Promise<number>} ID del grupo al que pertenece el dispositivo
+     * Obtiene el id_grupo del dispositivo en sem_dispositivos por su shelly_id.
+     * @param {string} deviceId - shelly_id del dispositivo
+     * @returns {Promise<number>} id_grupo o 1 si no se encuentra
      */
     async getGrupoIdForDevice(deviceId) {
         try {
-            // Verificar que deviceId es válido
             if (!deviceId) {
-                console.warn('Se proporcionó un deviceId vacío o inválido');
-                return 1; // Retornar grupo General como fallback
+                console.warn('[ConsumoCategoriaService] deviceId vacío o inválido');
+                return 1;
             }
 
             const query = `
-            SELECT grupo_id 
-            FROM sem_dispositivos 
-            WHERE shelly_id = ? AND activo = 1
-            LIMIT 1
-          `;
+                SELECT id_grupo
+                FROM sem_dispositivos
+                WHERE shelly_id = ? AND activo = 1
+                LIMIT 1
+            `;
 
-            // Usar pool.query y desestructuración de array
             const [rows] = await databaseService.pool.query(query, [deviceId]);
 
-            // Verificar si hay resultados
-            if (!rows || rows.length === 0 || !rows[0] || typeof rows[0].grupo_id === 'undefined') {
-                console.warn(`No se encontró información del grupo para el dispositivo ${deviceId}, usando grupo 1 (General)`);
-                return 1; // Retornar grupo General como fallback
+            if (!rows || rows.length === 0 || !rows[0] || typeof rows[0].id_grupo === 'undefined') {
+                console.warn(`[ConsumoCategoriaService] Sin grupo para dispositivo ${deviceId}, usando grupo 1`);
+                return 1;
             }
 
-            return parseInt(rows[0].grupo_id, 10) || 1; // Asegurar que es un número y fallback a 1
+            return parseInt(rows[0].id_grupo, 10) || 1;
         } catch (error) {
-            console.error('Error al obtener grupo para el dispositivo:', error);
-            // Si no se puede obtener el grupo, asumimos que pertenece al grupo general (1)
+            console.error('[ConsumoCategoriaService] Error al obtener grupo para el dispositivo:', error);
             return 1;
         }
     }
