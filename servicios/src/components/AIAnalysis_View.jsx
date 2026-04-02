@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from "./ui/alert";
 import { Checkbox } from "./ui/checkbox";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "../lib/utils";
+import axios from "axios";
 import {
   Brain,
   Send,
@@ -62,17 +63,8 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
   const fetchChambers = async () => {
     try {
       setLoadingChambers(true);
-      const _tok = localStorage.getItem('accessToken');
-      const response = await fetch('/api/ia/camaras', {
-        headers: _tok ? { Authorization: `Bearer ${_tok}` } : {}
-      });
+      const { data } = await axios.get('/api/ia/camaras');
 
-      if (!response.ok) {
-        throw new Error('Error al obtener cámaras');
-      }
-
-      const data = await response.json();
-      
       if (data.success && data.chambers) {
         setChambers(data.chambers);
         // Preseleccionar las primeras 3 cámaras por defecto
@@ -128,23 +120,8 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
 
       console.log('[AIAnalysis] Enviando query avanzada:', requestBody);
 
-      const _tok2 = localStorage.getItem('accessToken');
-      const response = await fetch('/api/ia/consulta-avanzada', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(_tok2 ? { Authorization: `Bearer ${_tok2}` } : {})
-        },
-        body: JSON.stringify(requestBody)
-      });
+      const { data } = await axios.post('/api/ia/consulta-avanzada', requestBody);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al ejecutar análisis');
-      }
-
-      const data = await response.json();
-      
       if (data.success) {
         setAnalysis(data.response);
         setSessionInfo({
@@ -155,7 +132,9 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
       }
     } catch (err) {
       console.error('[AIAnalysis] Error en query:', err);
-      setError(err.message || 'Error al ejecutar análisis');
+      setError(
+        err.response?.data?.message || err.message || 'Error al ejecutar análisis'
+      );
     } finally {
       setLoading(false);
     }
