@@ -122,16 +122,19 @@ const AlertNotificationConfigV2 = () => {
   const deviceInfo = getDeviceInfo();
   const DeviceIcon = deviceInfo.icon;
 
-  // Estados del componente
-  const [subscriptionId, setSubscriptionId] = useState(null);
-  const [preferences, setPreferences] = useState({
+  // Valores por defecto — usados en el estado inicial y como fallback al normalizar la respuesta del API
+  const PREF_DEFAULTS = {
     dndEnabled: false,
     dndStartTime: "22:00",
     dndEndTime: "08:00",
     dndDays: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
     allowCriticalAlerts: true,
     enabledAlertTypes: ["temperature", "disconnection"]
-  });
+  };
+
+  // Estados del componente
+  const [subscriptionId, setSubscriptionId] = useState(null);
+  const [preferences, setPreferences] = useState(PREF_DEFAULTS);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -330,10 +333,17 @@ const AlertNotificationConfigV2 = () => {
       const response = await axios.get(`/api/push/preferences/${subId}`);
 
       if (response.data && response.data.success && response.data.preferences) {
-        const loadedPrefs = response.data.preferences;
-        console.log('[AlertNotificationConfigV2] ✅ Preferencias cargadas:', loadedPrefs);
-        setPreferences(loadedPrefs);
-        setOriginalPreferences(loadedPrefs);
+        const raw = response.data.preferences;
+        // Fusionar con defaults para garantizar que dndDays y enabledAlertTypes sean siempre arrays
+        const normalized = {
+          ...PREF_DEFAULTS,
+          ...raw,
+          dndDays: Array.isArray(raw.dndDays) ? raw.dndDays : PREF_DEFAULTS.dndDays,
+          enabledAlertTypes: Array.isArray(raw.enabledAlertTypes) ? raw.enabledAlertTypes : PREF_DEFAULTS.enabledAlertTypes,
+        };
+        console.log('[AlertNotificationConfigV2] ✅ Preferencias cargadas:', normalized);
+        setPreferences(normalized);
+        setOriginalPreferences(normalized);
       } else {
         // Si no hay preferencias guardadas, usar las predeterminadas
         console.log('[AlertNotificationConfigV2] Usando preferencias predeterminadas');
