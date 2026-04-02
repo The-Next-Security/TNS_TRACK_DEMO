@@ -1,7 +1,7 @@
 // HeaderV2.js - Migrado a Shadcn/UI
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { io } from "socket.io-client";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import analyticsService from "../services/analytics_Service";
@@ -12,8 +12,6 @@ import { broadcastLogout } from "../utils/crossTabSync_Utils";
 // Assets
 import homeIcon from "../assets/images/home_white.png";
 import tnsTrackLogo from "../assets/images/TNS Track White.png";
-import alertGif from "../assets/images/alert.gif";
-import sirenaGif from "../assets/images/Sirena.gif";
 
 /**
  * Header - Navegación Global
@@ -21,7 +19,6 @@ import sirenaGif from "../assets/images/Sirena.gif";
  * Componente de cabecera principal de la aplicación con:
  * - Logo y navegación home
  * - Título dinámico de la página
- * - Notificaciones en tiempo real (SMS, Incidencias)
  * - Botón de logout
  * - Diseño responsive
  *
@@ -30,8 +27,6 @@ import sirenaGif from "../assets/images/Sirena.gif";
  * @param {string} [props.image] - URL del ícono de la rutina (opcional)
  */
 const HeaderV2 = ({ title, image }) => {
-  const [newSms, setNewSms] = useState(false);
-  const [newIncidencia, setNewIncidencia] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -40,39 +35,12 @@ const HeaderV2 = ({ title, image }) => {
   const routineImage = state?.image || image;
 
   useEffect(() => {
-    // Socket.IO para notificaciones en tiempo real
-    // Solo conectar en producción, deshabilitado en desarrollo local
-    const isProduction = window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1';
-
-    if (!isProduction) {
-      console.log('[Dev] Socket.IO deshabilitado en desarrollo local');
-      return; // No conectar en desarrollo
-    }
-
-    const socket = io('https://tns.thenextsecurity.cl:1337');
-
-    socket.on("new_sms", (data) => {
-      setNewSms(true);
-    });
-
-    socket.on("nueva_incidencia", (data) => {
-      setNewIncidencia(true);
-    });
-
-    // Detección responsive
     const checkMobile = () => {
       setIsMobile(window.innerWidth <= 768);
     };
-
     checkMobile();
     window.addEventListener("resize", checkMobile);
-
-    return () => {
-      if (isProduction) {
-        socket.disconnect();
-      }
-      window.removeEventListener("resize", checkMobile);
-    };
+    return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
   const handleHomeClick = () => {
@@ -102,27 +70,13 @@ const HeaderV2 = ({ title, image }) => {
     localStorage.removeItem("permissions");
 
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(refreshToken ? { refreshToken } : {})
-      });
+      await axios.post('/api/auth/logout', refreshToken ? { refreshToken } : {});
     } catch (error) {
       console.error('[Header] Error calling /logout:', error);
     }
 
     // Redirect to login
     navigate("/");
-  };
-
-  const handleSmsClick = () => {
-    setNewSms(false);
-    navigate("/sms-data");
-  };
-
-  const handleIncidenciaClick = () => {
-    setNewIncidencia(false);
-    navigate("/blind-spot-intrusions");
   };
 
   return (
@@ -184,36 +138,8 @@ const HeaderV2 = ({ title, image }) => {
         </h1>
       </div>
 
-      {/* Right Section - Notifications & Logout */}
+      {/* Right Section - Logout */}
       <div className="flex items-center gap-1.5 sm:gap-2.5 flex-none justify-end">
-        {/* SMS Notification */}
-        {newSms && (
-          <img
-            src={alertGif}
-            alt="New SMS"
-            className={cn(
-              "cursor-pointer transition-opacity hover:opacity-80",
-              "h-7 sm:h-8",
-              "w-auto object-contain"
-            )}
-            onClick={handleSmsClick}
-          />
-        )}
-
-        {/* Incidencia Notification */}
-        {newIncidencia && (
-          <img
-            src={sirenaGif}
-            alt="Nueva Incidencia"
-            className={cn(
-              "cursor-pointer transition-opacity hover:opacity-80",
-              "h-7 sm:h-8",
-              "w-auto object-contain"
-            )}
-            onClick={handleIncidenciaClick}
-          />
-        )}
-
         {/* Logout Button - Using Shadcn Button */}
         <Button
           variant="destructive"
