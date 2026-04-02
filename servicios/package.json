@@ -4,13 +4,14 @@
   "description": "Demo de TNS Track",
   "main": "src/js/main.js",
   "scripts": {
-    "start": "webpack serve --mode development",
+    "start": "webpack serve",
     "start-server": "node server.js",
     "start-all": "concurrently \"npm run start\" \"npm run start-server\"",
     "build": "webpack",
     "clean": "rimraf dist",
     "install-deps": "npm install",
-    "comenzar": "npm run clean && npm run install-deps && npm run build && npm run start-all"
+    "launch": "node -e \"let p=false;try{p=require('./src/config/jsons/connection-config.json').environment===1;}catch(e){console.warn('[NPM] AVISO: connection-config.json no accesible, iniciando en DESARROLLO.');}console.log('[NPM] Entorno detectado: '+(p?'PRODUCCION':'DESARROLLO'));const{spawnSync:s}=require('child_process');process.exit(s('npm',['run',p?'start-server':'start-all'],{stdio:'inherit',shell:true}).status||0)\"",
+    "comenzar": "npm run clean && npm run install-deps && npm run build && npm run launch"
   },
   "keywords": [
     "shelly",
