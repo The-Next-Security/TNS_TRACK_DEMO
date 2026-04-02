@@ -2,7 +2,7 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-03-11
+> **Última actualización**: 2026-04-02
 > **Versión**: 2.1.0
 > **Propósito**: Documentar todas las decisiones arquitectónicas y técnicas del proyecto
 
@@ -16,11 +16,14 @@
 4. [Express 5.1.0 (versión moderna)](#4-express-510-versión-moderna)
 5. [NO uso de Variables de Entorno](#5-no-uso-de-variables-de-entorno)
 6. [Zona Horaria Base: America/Santiago](#6-zona-horaria-base-americasantiago)
-7. [DeepSeek como Provider de IA](#7-deepseek-como-provider-de-ia)
+7. [Google Gemini como Provider de IA](#7-google-gemini-como-provider-de-ia)
 8. [Notificaciones: Email + Push (NO SMS)](#8-notificaciones-email--push-no-sms)
 9. [MySQL como Base de Datos Principal](#9-mysql-como-base-de-datos-principal)
 10. [Estandarización de Librería de Fechas con Luxon](#10-estandarización-de-librería-de-fechas-con-luxon)
 11. [Modelo unificado de notificaciones y horarios](#11-modelo-unificado-de-notificaciones-y-horarios)
+15. [Unificación del cliente HTTP en axios (Issue #81)](#15-unificación-del-cliente-http-en-axios-issue-81)
+16. [Eliminación de Socket.IO y wrapper fetch legacy (Issue #81)](#16-eliminación-de-socketio-y-wrapper-fetch-legacy-issue-81)
+17. [Webpack y entorno vía connection-config (Issue #81)](#17-webpack-y-entorno-vía-connection-config-issue-81)
 
 ---
 
@@ -169,22 +172,39 @@ DateTime.now().setZone('America/Santiago');
 
 ---
 
-## 7. DeepSeek como Provider de IA
+## 7. Google Gemini como Provider de IA
 
 ### Contexto
-El sistema requiere capacidades de IA para análisis de datos y generación de insights.
+El sistema requiere capacidades de IA para análisis de datos y generación de insights. Inicialmente se usó DeepSeek (vía compatibilidad OpenAI), pero fue reemplazado por Google Gemini en el Issue #70 para habilitar el agente autónomo ReAct y mejorar la calidad de respuestas.
 
 ### Decisión
-Usar **DeepSeek** como proveedor de servicios de IA.
+Usar **Google Gemini 2.0 Flash** como proveedor de servicios de IA.
+
+### Rationale
+- Costo estimado por consulta compleja: ~$0.008 USD (15x por debajo del límite de negocio $0.20)
+- Compatible con OpenAI function calling API (sin cambio de SDK)
+- Soporte nativo de tool calling para el patrón ReAct
+- Mejor razonamiento autónomo para consultas cruzadas (temperatura + consumo)
 
 ### Implementación
 ```javascript
-// Configuración DeepSeek en base de datos
-aiProvider: 'deepseek'
+// Configuración Gemini leída desde BD vía configLoader
+const config = configLoader.getConfig();
+this.client = new OpenAI({
+  apiKey: config.Gemini_API?.GEMINI_API_KEY,
+  baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai'
+});
+this.model = config.Gemini_API?.GEMINI_MODEL || 'gemini-2.0-flash';
 ```
 
+### Historial del Provider IA
+| Período | Provider | Modelo | Issue |
+|---------|---------|--------|-------|
+| Inicial → 2026-03-23 | DeepSeek | deepseek-chat | — |
+| 2026-03-23 → hoy | Google Gemini | gemini-2.0-flash | #70 |
+
 ### Estado Actual
-✅ **Implementado** - DeepSeek configurado como provider de IA
+✅ **Implementado** - Google Gemini 2.0 Flash configurado como provider de IA (Issue #70)
 
 ---
 
@@ -389,12 +409,59 @@ Tras la limpieza inicial de rutas legacy (Decisión #11), el backend mantenía u
 
 ---
 
+## 15. Unificación del cliente HTTP en axios (Issue #81)
+
+### Contexto
+Varias llamadas con `fetch` a rutas `/api/...` no pasaban por el mismo mecanismo que el resto del front: en producción nginx expone la app bajo `/TNSTrack`, y el interceptor global de axios aplica el prefijo, el JWT y el refresh ante 401. El servicio `reportsApi_Service` además usaba base `/api/reports` (inglés) mientras el backend expone `/api/reportes` con segmentos en español. Existía referencia rota a `httpInterceptor_Utils.js` (eliminado) desde `useSessionExtension_Hook.js`.
+
+### Decisión
+Migrar todas las llamadas de aplicación afectadas a `axios` (instancia global ya configurada en `setupAxiosInterceptor` desde `App.js`). Corregir rutas del cliente de reportes al contrato real (`/api/reportes`, `plantillas`, `generar`, `historial`, `descargar`, `programados`, `enviar-email`). No duplicar lógica en un segundo wrapper de fetch.
+
+### Archivos tocados (entrega)
+`servicios/src/hooks/useSessionExtension_Hook.js`, `App.js`, `useCrossTabLogout_Hook.js`, `AIAnalysis_View.jsx`, `ReportDashboard_View.jsx`, `ReportDashboard_View_Enhanced.jsx`, `EmailModal.jsx`, `reportsApi_Service.js`, `PushNotificationManager.js`.
+
+### Exclusiones deliberadas
+`fetch` se mantiene para URLs externas (p. ej. geocoding en `aiTools_Service.js`), assets estáticos (`analytics_Service.js`) y carga de imágenes por URL en utilidades de análisis.
+
+### Estado Actual
+✅ Implementado — Issue #81.
+
+---
+
+## 16. Eliminación de Socket.IO y wrapper fetch legacy (Issue #81)
+
+### Contexto
+El plan de estabilización en producción contemplaba retirar `socket.io-client` por no existir servidor Socket.IO homólogo y por solaparse el caso de uso con Push Notifications. El header y dependencias ya no incluyen Socket.IO; la deuda restante era unificar HTTP y retirar el patrón `authenticatedFetch` asociado al módulo eliminado.
+
+### Decisión
+Confirmar arquitectura sin Socket.IO en el front. Centralizar autenticación de peticiones en interceptores axios; no reintroducir `httpInterceptor_Utils.js`.
+
+### Estado Actual
+✅ Alineado con código actual; documentado en Issue #81.
+
+---
+
+## 17. Webpack y entorno vía connection-config (Issue #81)
+
+### Contexto
+El build no debe depender de flags distintos de `npm run comenzar`: el entorno ya se distingue en `connection-config.json` (`environment`: 0 desarrollo, 1 producción) para coherencia con el servidor.
+
+### Decisión
+Webpack lee el mismo `servicios/src/config/jsons/connection-config.json`: producción implica `mode: production`, sin `devtool` de source-map, y nombre de salida `bundle.[contenthash].js`; desarrollo mantiene `bundle.js` y source maps. El comando de arranque único sigue siendo `npm run comenzar`.
+
+### Estado Actual
+✅ Implementado en `servicios/webpack.config.js` — Issue #81 (verificación documental).
+
+---
+
 ## 📝 Historial de Cambios
 
 > **Nota**: Para historial detallado de cambios del proyecto, ver [CHANGELOG.md](./CHANGELOG.md)
 
 | Fecha | Decisión | Responsable |
 |-------|----------|-------------|
+| 2026-04-02 | Unificación HTTP axios, rutas reportes, sin Socket.IO, webpack por `connection-config` (DT-15–17, Issue #81) | andresTNS, Bufigol |
+| 2026-03-23 | Migración provider IA: DeepSeek → Google Gemini 2.0 Flash. Agente autónomo ReAct, 9 parámetros en BD, renombrado grupo `OpenAI_API` → `Gemini_API` (Issue #70) | andresTNS, Bufigol |
 | 2026-03-17 | Reorganización completa de endpoints por dominios de negocio (Issue #11 — Fase final): 13 dominios, 28 componentes sincronizados, 4 controladores muertos eliminados | andresTNS, Bufigol |
 | 2026-03-12 | Alineación endpoints con BD: ubi_canal+id_preset (Opción A), rep_plantillas/rep_reportes_generados, presets | andresTNS, Bufigol |
 | 2026-03-11 | Modelo unificado de notificaciones: ale_suscripciones_notificacion, horarios base/custom, servicio único de decisión; eliminación ale_suscripciones_email | Plan Notificaciones unificadas |
@@ -415,4 +482,4 @@ Tras la limpieza inicial de rutas legacy (Decisión #11), el backend mantenía u
 ---
 
 **Mantenido por**: andresTNS (Jefe de Desarrolladores), Bufigol (Developer)
-**Última revisión**: 2026-03-17
+**Última revisión**: 2026-04-02

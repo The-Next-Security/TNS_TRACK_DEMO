@@ -7,11 +7,11 @@ class PowerAnalysisController {
     try {
       // Migrado: channels_ubibot → ubi_canal; catalogo_ubicaciones_reales → gen_ubicaciones_reales;
       // sem_dispositivos.ubicacion → sem_dispositivos.id_ubicacion_real
-      // Aliases preservan nombres JS: nombre_ubicacion, channel_id, channel_name, esOperativa
+      // Se preservan aliases solo para campos computados o de formato API
       const query = `
                 SELECT DISTINCT
                     c.id_ubicacion_real AS ubicacion_id,
-                    cat.nombre AS nombre_ubicacion,
+                    cat.nombre,
                     c.canal_id AS channel_id,
                     c.nombre AS channel_name,
                     c.activo AS esOperativa,
@@ -31,7 +31,7 @@ class PowerAnalysisController {
         if (!acc[item.ubicacion_id]) {
           acc[item.ubicacion_id] = {
             id: item.ubicacion_id,
-            nombre: item.nombre_ubicacion,
+            nombre: item.nombre,
             shellyDevice: {
               id: item.shelly_id,
               name: item.shelly_name,
@@ -101,7 +101,7 @@ class PowerAnalysisController {
         )
         SELECT
           m.intervalo_tiempo,
-          cat.nombre AS nombre_ubicacion,
+          cat.nombre,
           ROUND(t.temperatura_promedio, 2) as promedio_temperatura_externa,
           ROUND(m.potencia_promedio, 3) as promedio_potencia_kw,
           t.lecturas_temperatura,

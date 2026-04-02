@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from "./ui/alert";
 import { Checkbox } from "./ui/checkbox";
 import { ScrollArea } from "./ui/scroll-area";
 import { cn } from "../lib/utils";
+import axios from "axios";
 import {
   Brain,
   Send,
@@ -27,7 +28,13 @@ import {
   CheckCircle2,
   Clock,
   Thermometer,
-  Sparkles
+  Sparkles,
+  Wrench,
+  DollarSign,
+  RotateCw,
+  Copy,
+  Check,
+  ShieldAlert
 } from "lucide-react";
 
 /**
@@ -43,6 +50,7 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
   const [error, setError] = useState(null);
   const [sessionInfo, setSessionInfo] = useState(null);
   const [loadingChambers, setLoadingChambers] = useState(true);
+  const [copied, setCopied] = useState(false);
 
   // Cargar cámaras al montar
   useEffect(() => {
@@ -55,17 +63,8 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
   const fetchChambers = async () => {
     try {
       setLoadingChambers(true);
-      const _tok = localStorage.getItem('accessToken');
-      const response = await fetch('/api/ia/camaras', {
-        headers: _tok ? { Authorization: `Bearer ${_tok}` } : {}
-      });
+      const { data } = await axios.get('/api/ia/camaras');
 
-      if (!response.ok) {
-        throw new Error('Error al obtener cámaras');
-      }
-
-      const data = await response.json();
-      
       if (data.success && data.chambers) {
         setChambers(data.chambers);
         // Preseleccionar las primeras 3 cámaras por defecto
@@ -103,34 +102,26 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
     setAnalysis(null);
 
     try {
+      // Endpoint agéntico con contexto completo de cámaras (canal_id + shellyId)
+      const selectedChamberInfo = chambers
+        .filter(c => finalChambers.includes(c.id))
+        .map(c => ({
+          id: c.id,
+          name: c.name,
+          ubicacionId: c.ubicacionId,
+          shellyId: c.shellyId || null
+        }));
+
       const requestBody = {
         query: finalQuery,
         chambers: finalChambers,
-        dateRange: customDateRange || {
-          start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-          end: new Date().toISOString().split('T')[0]
-        }
+        chamberInfo: selectedChamberInfo
       };
 
-      console.log('[AIAnalysis] Enviando query:', requestBody);
+      console.log('[AIAnalysis] Enviando query avanzada:', requestBody);
 
-      const _tok2 = localStorage.getItem('accessToken');
-      const response = await fetch('/api/ia/consulta', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(_tok2 ? { Authorization: `Bearer ${_tok2}` } : {})
-        },
-        body: JSON.stringify(requestBody)
-      });
+      const { data } = await axios.post('/api/ia/consulta-avanzada', requestBody);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error al ejecutar análisis');
-      }
-
-      const data = await response.json();
-      
       if (data.success) {
         setAnalysis(data.response);
         setSessionInfo({
@@ -141,7 +132,9 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
       }
     } catch (err) {
       console.error('[AIAnalysis] Error en query:', err);
-      setError(err.message || 'Error al ejecutar análisis');
+      setError(
+        err.response?.data?.message || err.message || 'Error al ejecutar análisis'
+      );
     } finally {
       setLoading(false);
     }
@@ -171,6 +164,25 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
    */
   const clearChambers = () => {
     setSelectedChambers([]);
+  };
+
+  /**
+   * Copia el markdown crudo al clipboard
+   */
+  const handleCopyMarkdown = async () => {
+    const markdownText = typeof analysis === 'object' && analysis?.summary
+      ? analysis.summary
+      : typeof analysis === 'string' ? analysis : '';
+
+    if (!markdownText) return;
+
+    try {
+      await navigator.clipboard.writeText(markdownText);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('[AIAnalysis] Error copiando markdown:', err);
+    }
   };
 
   return (
@@ -204,6 +216,14 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
           </Alert>
         )}
 
+
+        {/* Política de uso */}
+        <div className="mb-6 flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl">
+          <ShieldAlert className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            <strong>Política de uso:</strong> Este módulo es exclusivamente para análisis de temperaturas de cámaras de frío, reefers y consumo eléctrico. Las consultas fuera de este ámbito no serán procesadas.
+          </p>
+        </div>
 
         {/* Chamber Selection - Diseño mejorado */}
         <motion.div
@@ -497,17 +517,66 @@ const AIAnalysisV2 = ({ userPermissions = [] }) => {
                     <CheckCircle2 className="w-5 h-5 text-green-500" />
                     Resultado del Análisis
                   </CardTitle>
-                  {sessionInfo && sessionInfo.executionTime && (
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <Clock className="w-4 h-4" />
-                      <span>{sessionInfo.executionTime}ms</span>
-                    </div>
-                  )}
+                  <div className="flex items-center gap-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyMarkdown}
+                      className="flex items-center gap-1.5 text-xs"
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-green-500" />
+                          Copiado
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          Copiar Markdown
+                        </>
+                      )}
+                    </Button>
+                    {sessionInfo && sessionInfo.executionTime && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+                        <Clock className="w-4 h-4" />
+                        <span>{sessionInfo.executionTime}ms</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardHeader>
+              {/* Agent metadata: tools, iterations, cost */}
+              {sessionInfo && (
+                <div className="px-6 pb-3 flex flex-wrap gap-2">
+                  {analysis?.toolsUsed && analysis.toolsUsed.length > 0 && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <Wrench className="w-3 h-3" />
+                      {analysis.toolsUsed.length} fuente{analysis.toolsUsed.length > 1 ? 's' : ''} consultada{analysis.toolsUsed.length > 1 ? 's' : ''}
+                    </Badge>
+                  )}
+                  {analysis?.iterations && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <RotateCw className="w-3 h-3" />
+                      {analysis.iterations} iteracion{analysis.iterations > 1 ? 'es' : ''}
+                    </Badge>
+                  )}
+                  {sessionInfo.cost && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <DollarSign className="w-3 h-3" />
+                      ${sessionInfo.cost.queryCost} USD
+                    </Badge>
+                  )}
+                  {sessionInfo.cost && (
+                    <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                      <Brain className="w-3 h-3" />
+                      {sessionInfo.cost.inputTokens + sessionInfo.cost.outputTokens} tokens
+                    </Badge>
+                  )}
+                </div>
+              )}
               <CardContent>
-                <div className="prose dark:prose-invert max-w-none">
-                  <ReactMarkdown className="text-gray-700 dark:text-gray-300">
+                <div className="prose prose-lg dark:prose-invert max-w-none text-gray-700 dark:text-gray-300 prose-headings:text-blue-700 dark:prose-headings:text-blue-400 prose-h2:border-b prose-h2:border-blue-200 dark:prose-h2:border-blue-800 prose-h2:pb-2 prose-h2:mb-4 prose-h3:text-blue-600 dark:prose-h3:text-blue-300 prose-strong:text-gray-900 dark:prose-strong:text-white prose-table:border-collapse prose-th:bg-blue-50 dark:prose-th:bg-blue-950 prose-th:border prose-th:border-blue-200 dark:prose-th:border-blue-800 prose-th:px-3 prose-th:py-2 prose-td:border prose-td:border-gray-200 dark:prose-td:border-gray-700 prose-td:px-3 prose-td:py-2 prose-hr:border-blue-200 dark:prose-hr:border-blue-800">
+                  <ReactMarkdown>
                     {typeof analysis === 'object' && analysis !== null && analysis.summary
                       ? analysis.summary
                       : typeof analysis === 'string'

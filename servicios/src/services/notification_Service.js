@@ -136,7 +136,7 @@ class NotificationService {
     }
 
     /**
-      * Registra un evento detallado del análisis en la tabla notification_analysis_log.
+      * Registra un evento detallado del análisis en la tabla log_notification_analysis.
       * @private
       * @param {string} level - 'DEBUG', 'INFO', 'WARN', 'ERROR'.
       * @param {string|null} channelId - ID del canal asociado, o null para logs generales.
@@ -194,11 +194,11 @@ class NotificationService {
                 return;
             }
 
-            await connection.query("INSERT INTO notification_analysis_log SET ?", logEntry);
+            await connection.query("INSERT INTO log_notification_analysis SET ?", logEntry);
 
         } catch (dbError) {
             // Evitar bucle infinito si el log falla por problema de conexión
-            console.error(`❌ Error al registrar en notification_analysis_log: ${dbError.message}`);
+            console.error(`❌ Error al registrar en log_notification_analysis: ${dbError.message}`);
             console.error(`   -> Mensaje original (${level}): Ch=${channelId} Msg=${message}`);
             // No intentar loguear el error a la misma tabla
         } finally {
@@ -241,7 +241,7 @@ class NotificationService {
 
     /**
      * Analiza los datos de temperatura de los canales operativos en una ventana de tiempo dada.
-     * Incluye logging detallado a la tabla 'notification_analysis_log'.
+     * Incluye logging detallado a la tabla 'log_notification_analysis'.
      * @param {string} startTimeStr - Hora de inicio ('YYYY-MM-DD HH:mm:ss').
      * @param {string} endTimeStr - Hora de fin ('YYYY-MM-DD HH:mm:ss').
      * @returns {Promise<Array<Object>>} Lista de canales en alerta.

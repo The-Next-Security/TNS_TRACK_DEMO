@@ -5,7 +5,6 @@ const { DateTime } = require('luxon');
 const axios = require('axios');
 
 // Configuración global
-let io;
 const RSSI_THRESHOLD = -90;
 const INTERVALO_ENTRE_SMS = 35;
 const COOLDOWN_PERIODO = 35; // segundos para nueva inserción
@@ -31,11 +30,6 @@ function getPool() {
     });
   }
   return pool;
-}
-
-// Función de inicialización de Socket.IO
-function init(socketIo) {
-  io = socketIo;
 }
 
 // Funciones de utilidad
@@ -303,15 +297,6 @@ async function insertarIncidencia(dispositivo, detector_id) {
       tipoDeteccion
     ]);
 
-    if (io) {
-      io.emit('nueva_incidencia', { 
-        mensaje: 'Nueva incidencia registrada', 
-        dispositivo, 
-        detector_id,
-        tipo_deteccion: tipoDeteccion,
-        timestamp: new Date()
-      });
-    }
   } catch (error) {
     console.error(`Error en insertarIncidencia:`, error);
     throw error;
@@ -489,4 +474,4 @@ async function enviarSMSIncidencia(dispositivo, detector_id) {
   }
   
   // Exportación del módulo
-  module.exports = { init, procesarPosibleIncidencia };
+  module.exports = { procesarPosibleIncidencia };

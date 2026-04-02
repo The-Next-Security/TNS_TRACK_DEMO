@@ -2,32 +2,36 @@ CREATE PROCEDURE `tns_cool_track`.`stpr_sync_alert_temperature_historical`(IN p_
 BEGIN
   DECLARE v_processed INT DEFAULT 0;
 
-  IF p_sobreescribir_existentes THEN
-    UPDATE ale_seguimiento
-    SET
-      valor_temperatura = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.averageTemperature')) AS DECIMAL(5,2)),
-      umbral_minimo     = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.minThreshold'))      AS DECIMAL(5,2)),
-      umbral_maximo     = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.maxThreshold'))      AS DECIMAL(5,2))
-    WHERE
-      (tipo_alerta = 'temperatura' OR tipo_alerta IS NULL)
-      AND JSON_EXTRACT(datos_alerta, '$.connectionStatus') IS NULL
-      AND JSON_EXTRACT(datos_alerta, '$.averageTemperature') IS NOT NULL
-      AND JSON_EXTRACT(datos_alerta, '$.minThreshold')      IS NOT NULL
-      AND JSON_EXTRACT(datos_alerta, '$.maxThreshold')      IS NOT NULL;
-  ELSE
-    UPDATE ale_seguimiento
-    SET
-      valor_temperatura = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.averageTemperature')) AS DECIMAL(5,2)),
-      umbral_minimo     = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.minThreshold'))      AS DECIMAL(5,2)),
-      umbral_maximo     = CAST(JSON_UNQUOTE(JSON_EXTRACT(datos_alerta, '$.maxThreshold'))      AS DECIMAL(5,2))
-    WHERE
-      (tipo_alerta = 'temperatura' OR tipo_alerta IS NULL)
-      AND JSON_EXTRACT(datos_alerta, '$.connectionStatus') IS NULL
-      AND JSON_EXTRACT(datos_alerta, '$.averageTemperature') IS NOT NULL
-      AND JSON_EXTRACT(datos_alerta, '$.minThreshold')      IS NOT NULL
-      AND JSON_EXTRACT(datos_alerta, '$.maxThreshold')      IS NOT NULL
-      AND (valor_temperatura IS NULL OR umbral_minimo IS NULL OR umbral_maximo IS NULL);
-  END IF;
+  INSERT INTO ale_datos_temperatura (id_alerta, id_canal, valor_temperatura, umbral_minimo, umbral_maximo)
+  SELECT
+    s.id_alerta,
+    s.origen_id,
+    CAST(JSON_UNQUOTE(JSON_EXTRACT(s.datos_alerta, '$.averageTemperature')) AS DECIMAL(5,2)),
+    CAST(JSON_UNQUOTE(JSON_EXTRACT(s.datos_alerta, '$.minThreshold'))      AS DECIMAL(5,2)),
+    CAST(JSON_UNQUOTE(JSON_EXTRACT(s.datos_alerta, '$.maxThreshold'))      AS DECIMAL(5,2))
+  FROM ale_seguimiento s
+  INNER JOIN ale_tipo_alerta ta ON ta.id_tipo_alerta = s.id_tipo_alerta AND ta.nombre = 'temperatura'
+  WHERE JSON_EXTRACT(s.datos_alerta, '$.connectionStatus') IS NULL
+    AND JSON_EXTRACT(s.datos_alerta, '$.averageTemperature') IS NOT NULL
+    AND JSON_EXTRACT(s.datos_alerta, '$.minThreshold')      IS NOT NULL
+    AND JSON_EXTRACT(s.datos_alerta, '$.maxThreshold')      IS NOT NULL
+  ON DUPLICATE KEY UPDATE
+    id_canal = COALESCE(VALUES(id_canal), ale_datos_temperatura.id_canal),
+    valor_temperatura = IF(
+      p_sobreescribir_existentes,
+      VALUES(valor_temperatura),
+      IF(ale_datos_temperatura.valor_temperatura IS NULL, VALUES(valor_temperatura), ale_datos_temperatura.valor_temperatura)
+    ),
+    umbral_minimo = IF(
+      p_sobreescribir_existentes,
+      VALUES(umbral_minimo),
+      IF(ale_datos_temperatura.umbral_minimo IS NULL, VALUES(umbral_minimo), ale_datos_temperatura.umbral_minimo)
+    ),
+    umbral_maximo = IF(
+      p_sobreescribir_existentes,
+      VALUES(umbral_maximo),
+      IF(ale_datos_temperatura.umbral_maximo IS NULL, VALUES(umbral_maximo), ale_datos_temperatura.umbral_maximo)
+    );
 
   SET v_processed = ROW_COUNT();
   SELECT v_processed AS rows_updated;

@@ -38,10 +38,9 @@ class TotalesController {
 
       const query = `
                 SELECT 
-                    dispo.ubicacion,
                     dispo.nombre as dispositivo_nombre,
-                    cur.nombre_ubicacion as ubicacion_nombre,
-                    dispo.grupo_id,
+                    cur.nombre,
+                    dispo.id_grupo AS grupo_id,
                     sg.nombre as grupo_nombre,
                     tot.shelly_id,
                     tot.hora_local,
@@ -68,7 +67,7 @@ class TotalesController {
                 JOIN 
                     gen_ubicaciones_reales AS cur ON dispo.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
                 LEFT JOIN 
-                    sem_grupos AS sg ON dispo.grupo_id = sg.id
+                    sem_grupos AS sg ON dispo.id_grupo = sg.id_grupo
                 WHERE 
                     DATE(tot.hora_local) = ?
                     AND tot.shelly_id = ?
@@ -96,7 +95,7 @@ class TotalesController {
       res.json(
         transformUtils.transformApiResponse(processedData, {
           includeMetadata: true,
-          message: `Datos diarios procesados para ${rows[0].ubicacion_nombre}`,
+          message: `Datos diarios procesados para ${rows[0].nombre}`,
         })
       );
     } catch (error) {
@@ -148,9 +147,9 @@ class TotalesController {
         std.costo_total,
         std.precio_kwh_promedio,
         std.horas_con_datos,
-        cur.nombre_ubicacion as ubicacion_nombre,
+        cur.nombre,
         sd.nombre as dispositivo_nombre,
-        sd.grupo_id,
+        sd.id_grupo AS grupo_id,
         sg.nombre as grupo_nombre,
         lu.ultima_actualizacion as fecha_actualizacion,
         std.lecturas_limite_apagado,
@@ -161,7 +160,7 @@ class TotalesController {
       FROM sem_totales_dia std
       JOIN sem_dispositivos sd ON std.shelly_id = sd.shelly_id
       JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
-      LEFT JOIN sem_grupos sg ON sd.grupo_id = sg.id
+      LEFT JOIN sem_grupos sg ON sd.id_grupo = sg.id_grupo
       CROSS JOIN LatestUpdate lu
       WHERE
         YEAR(std.fecha_local) = YEAR(?) 
@@ -199,7 +198,7 @@ class TotalesController {
       res.json(
         transformUtils.transformApiResponse(processedData, {
           includeMetadata: true,
-          message: `Datos mensuales procesados para ${rows[0].ubicacion_nombre}`,
+          message: `Datos mensuales procesados para ${rows[0].nombre}`,
         })
       );
     } catch (error) {
@@ -238,7 +237,6 @@ class TotalesController {
 
       const query = `
                 SELECT 
-                    stm.id,
                     stm.shelly_id,
                     stm.año as anio,
                     stm.mes,
@@ -252,9 +250,9 @@ class TotalesController {
                     stm.horas_con_datos,
                     stm.fecha_creacion,
                     stm.fecha_actualizacion,
-                    cur.nombre_ubicacion as ubicacion_nombre,
+                    cur.nombre,
                     sd.nombre as dispositivo_nombre,
-                    sd.grupo_id,
+                    sd.id_grupo AS grupo_id,
                     sg.nombre as grupo_nombre,
                     stm.lecturas_limite_apagado,
                     stm.lecturas_consumo_bajo,
@@ -268,7 +266,7 @@ class TotalesController {
                 JOIN
                     gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
                 LEFT JOIN
-                    sem_grupos sg ON sd.grupo_id = sg.id
+                    sem_grupos sg ON sd.id_grupo = sg.id_grupo
                 WHERE
                     stm.año = ?
                     AND stm.shelly_id = ?
@@ -299,7 +297,7 @@ class TotalesController {
       res.json(
         transformUtils.transformApiResponse(processedData, {
           includeMetadata: true,
-          message: `Datos anuales procesados para ${rows[0].ubicacion_nombre}`,
+          message: `Datos anuales procesados para ${rows[0].nombre}`,
         })
       );
     } catch (error) {
@@ -321,7 +319,7 @@ class TotalesController {
                 SELECT 
                     sd.shelly_id,
                     sd.activo,
-                    cur.nombre AS nombre_ubicacion -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales; nombre_ubicacion → nombre aliasado
+                    cur.nombre -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
                 FROM sem_dispositivos sd
                 JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
                 WHERE sd.shelly_id = ?
@@ -371,7 +369,7 @@ class TotalesController {
           periodo: row.hora_local,
           periodo_tipo: "daily",
           shelly_id: row.shelly_id,
-          ubicacion_nombre: row.ubicacion_nombre,
+          nombre: row.nombre,
           dispositivo_nombre: row.dispositivo_nombre,
           grupo_id: row.grupo_id,
           grupo_nombre: row.grupo_nombre || "Sin Grupo",
@@ -414,7 +412,7 @@ class TotalesController {
           periodo: row.fecha_local,
           periodo_tipo: "monthly",
           shelly_id: row.shelly_id,
-          ubicacion_nombre: row.ubicacion_nombre,
+          nombre: row.nombre,
           dispositivo_nombre: row.dispositivo_nombre,
           grupo_id: row.grupo_id,
           grupo_nombre: row.grupo_nombre || "Sin Grupo",
@@ -472,7 +470,7 @@ class TotalesController {
             mes: mes,
             anio: parseInt(year),
             shelly_id: row.shelly_id,
-            ubicacion_nombre: row.ubicacion_nombre,
+            nombre: row.nombre,
             dispositivo_nombre: row.dispositivo_nombre,
             grupo_id: row.grupo_id,
             grupo_nombre: row.grupo_nombre || "Sin Grupo",
@@ -525,7 +523,7 @@ class TotalesController {
         periodo: `${date} ${hourString}:00:00`,
         periodo_tipo: "daily",
         shelly_id: deviceId,
-        ubicacion_nombre: deviceInfo.ubicacion_nombre || "Desconocido",
+        nombre: deviceInfo.nombre || "Desconocido",
         dispositivo_nombre: deviceInfo.dispositivo_nombre || "Desconocido",
         grupo_id: deviceInfo.grupo_id || 1,
         grupo_nombre: deviceInfo.grupo_nombre || "Sin Grupo",
@@ -564,7 +562,7 @@ class TotalesController {
           .padStart(2, "0")}-${dayString}`,
         periodo_tipo: "monthly",
         shelly_id: deviceId,
-        ubicacion_nombre: deviceInfo.ubicacion_nombre || "Desconocido",
+        nombre: deviceInfo.nombre || "Desconocido",
         dispositivo_nombre: deviceInfo.dispositivo_nombre || "Desconocido",
         grupo_id: deviceInfo.grupo_id || 1,
         grupo_nombre: deviceInfo.grupo_nombre || "Sin Grupo",
@@ -610,7 +608,7 @@ class TotalesController {
   async _createEmptyMonthData(year, mes, deviceInfo = null) {
     if (!deviceInfo) {
       deviceInfo = {
-        ubicacion_nombre: "Desconocido",
+        nombre: "Desconocido",
         dispositivo_nombre: "Desconocido",
       };
     }
@@ -621,7 +619,7 @@ class TotalesController {
       mes: mes,
       anio: parseInt(year),
       shelly_id: deviceInfo.shelly_id || "unknown",
-      ubicacion_nombre: deviceInfo.ubicacion_nombre || "Desconocido",
+      nombre: deviceInfo.nombre || "Desconocido",
       dispositivo_nombre: deviceInfo.dispositivo_nombre || "Desconocido",
       grupo_id: deviceInfo.grupo_id || 1,
       grupo_nombre: deviceInfo.grupo_nombre || "Sin Grupo",
@@ -649,12 +647,12 @@ class TotalesController {
                 SELECT 
                     sd.shelly_id,
                     sd.nombre as dispositivo_nombre,
-                    sd.grupo_id,
-                    cur.nombre AS nombre_ubicacion, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales; nombre_ubicacion → nombre aliasado
+                    sd.id_grupo AS grupo_id,
+                    cur.nombre, -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
                     sg.nombre as grupo_nombre
                 FROM sem_dispositivos sd
                 JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
-                LEFT JOIN sem_grupos sg ON sd.grupo_id = sg.id
+                LEFT JOIN sem_grupos sg ON sd.id_grupo = sg.id_grupo
                 WHERE sd.shelly_id = ?
                 LIMIT 1
             `;
@@ -665,7 +663,7 @@ class TotalesController {
         return {
           shelly_id: rows[0].shelly_id,
           dispositivo_nombre: rows[0].dispositivo_nombre,
-          ubicacion_nombre: rows[0].nombre_ubicacion,
+          nombre: rows[0].nombre,
           grupo_id: rows[0].grupo_id,
           grupo_nombre: rows[0].grupo_nombre,
         };
@@ -674,7 +672,7 @@ class TotalesController {
       return {
         shelly_id: deviceId,
         dispositivo_nombre: "Desconocido",
-        ubicacion_nombre: "Desconocido",
+        nombre: "Desconocido",
         grupo_id: 1,
         grupo_nombre: "Sin Grupo",
       };
@@ -683,7 +681,7 @@ class TotalesController {
       return {
         shelly_id: deviceId,
         dispositivo_nombre: "Desconocido",
-        ubicacion_nombre: "Desconocido",
+        nombre: "Desconocido",
         grupo_id: 1,
         grupo_nombre: "Sin Grupo",
       };

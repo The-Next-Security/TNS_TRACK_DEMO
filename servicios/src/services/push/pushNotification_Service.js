@@ -205,6 +205,9 @@ class PushNotificationService {
 
             // Extraer metadata
             const userId = metadata.userId || null;
+            if (!userId) {
+                throw new Error('userId es requerido para guardar una suscripción push');
+            }
             const userEmail = metadata.userEmail || null;
             const userAgent = metadata.userAgent || null;
             const deviceType = this._detectDeviceType(userAgent);
@@ -222,9 +225,10 @@ class PushNotificationService {
                 await connection.query(
                     `UPDATE ale_push_suscripciones
                      SET p256dh = ?, auth = ?, activo = TRUE,
-                         ultima_conexion = NOW(), tipo_dispositivo = ?
+                         ultima_conexion = NOW(), tipo_dispositivo = ?,
+                         id_usuario = ?
                      WHERE id_suscripcion = ?`,
-                    [p256dh, auth, deviceType, subscriptionId]
+                    [p256dh, auth, deviceType, userId, subscriptionId]
                 );
 
                 console.log(`[PushNotificationService] Suscripción actualizada: ${subscriptionId}`);
@@ -241,6 +245,18 @@ class PushNotificationService {
 
             this.stats.totalSubscriptions++;
             console.log(`✅ [PushNotificationService] Nueva suscripción guardada: ${result.insertId}`);
+
+            // Crear fila de preferencias con valores por defecto — campos JSON explícitos para evitar NULLs en BD
+            await connection.query(
+                `INSERT IGNORE INTO ale_preferencias_push
+                 (id_suscripcion, dias_dnd, tipos_alerta_habilitados)
+                 VALUES (?, ?, ?)`,
+                [
+                    result.insertId,
+                    JSON.stringify(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
+                    JSON.stringify(['temperature', 'disconnection'])
+                ]
+            );
 
             return { success: true, subscriptionId: result.insertId, updated: false };
 
@@ -285,6 +301,48 @@ class PushNotificationService {
         } catch (error) {
             console.error("❌ [PushNotificationService] Error eliminando suscripción:", error.message);
             throw error;
+        } finally {
+            connection.release();
+        }
+    }
+
+    /**
+     * Obtiene datos básicos de una suscripción por endpoint (para verificación de propiedad)
+     * @param {string} endpoint
+     * @returns {Promise<{id_suscripcion, id_usuario}|null>}
+     */
+    async getSubscriptionByEndpoint(endpoint) {
+        if (!this.initialized || !this.pool) {
+            throw new Error('Servicio no inicializado');
+        }
+        const connection = await this.pool.getConnection();
+        try {
+            const [rows] = await connection.query(
+                'SELECT id_suscripcion, id_usuario FROM ale_push_suscripciones WHERE endpoint = ?',
+                [endpoint]
+            );
+            return rows.length > 0 ? rows[0] : null;
+        } finally {
+            connection.release();
+        }
+    }
+
+    /**
+     * Obtiene datos básicos de una suscripción por id (para verificación de propiedad)
+     * @param {number} subscriptionId
+     * @returns {Promise<{id_suscripcion, id_usuario}|null>}
+     */
+    async getSubscriptionById(subscriptionId) {
+        if (!this.initialized || !this.pool) {
+            throw new Error('Servicio no inicializado');
+        }
+        const connection = await this.pool.getConnection();
+        try {
+            const [rows] = await connection.query(
+                'SELECT id_suscripcion, id_usuario FROM ale_push_suscripciones WHERE id_suscripcion = ?',
+                [subscriptionId]
+            );
+            return rows.length > 0 ? rows[0] : null;
         } finally {
             connection.release();
         }
@@ -384,14 +442,23 @@ class PushNotificationService {
             );
 
             if (rows.length === 0) {
-                console.log(`[PushNotificationService] No se encontraron preferencias para suscripción ${subscriptionId}`);
-                return null;
+                console.log(`[PushNotificationService] Sin preferencias en BD para suscripción ${subscriptionId}, retornando defaults`);
+                return {
+                    preferenceId: null,
+                    subscriptionId: parseInt(subscriptionId),
+                    dndEnabled: false,
+                    dndStartTime: '22:00',
+                    dndEndTime: '08:00',
+                    dndDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                    allowCriticalAlerts: true,
+                    enabledAlertTypes: ['temperature', 'disconnection']
+                };
             }
 
             const preferences = rows[0];
 
-            // Parsear campos JSON
-            if (preferences.dndDays && typeof preferences.dndDays === 'string') {
+            // Parsear campos JSON — sin cortocircuito && para manejar null correctamente
+            if (typeof preferences.dndDays === 'string') {
                 try {
                     preferences.dndDays = JSON.parse(preferences.dndDays);
                 } catch (e) {
@@ -399,12 +466,20 @@ class PushNotificationService {
                 }
             }
 
-            if (preferences.enabledAlertTypes && typeof preferences.enabledAlertTypes === 'string') {
+            if (typeof preferences.enabledAlertTypes === 'string') {
                 try {
                     preferences.enabledAlertTypes = JSON.parse(preferences.enabledAlertTypes);
                 } catch (e) {
                     preferences.enabledAlertTypes = ['temperature', 'disconnection'];
                 }
+            }
+
+            // Garantía final: nunca retornar null en campos array (ej: filas creadas sin defaults)
+            if (!Array.isArray(preferences.dndDays)) {
+                preferences.dndDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            }
+            if (!Array.isArray(preferences.enabledAlertTypes)) {
+                preferences.enabledAlertTypes = ['temperature', 'disconnection'];
             }
 
             return preferences;
@@ -1010,11 +1085,11 @@ class PushNotificationService {
      * @private
      */
     _detectDeviceType(userAgent) {
-        if (!userAgent) return 'unknown';
+        if (!userAgent) return 'desconocido';
         const ua = userAgent.toLowerCase();
-        if (/mobile|android|iphone|ipad|ipod/.test(ua)) return 'mobile';
+        if (/mobile|android|iphone|ipad|ipod/.test(ua)) return 'movil';
         if (/tablet/.test(ua)) return 'tablet';
-        return 'desktop';
+        return 'escritorio';
     }
 
     /**

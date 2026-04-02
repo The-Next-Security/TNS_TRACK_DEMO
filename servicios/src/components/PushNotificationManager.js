@@ -3,6 +3,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Bell, BellOff, BellRing, Smartphone, AlertCircle } from 'lucide-react';
+import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Detecta si es iOS (mejorado para evitar falsos positivos de emulación)
@@ -56,6 +58,7 @@ const isPWAInstalled = () => {
  * Hook personalizado para gestionar Push Notifications
  */
 const usePushNotifications = () => {
+    const { isAuthenticated } = useAuth();
     const [permission, setPermission] = useState('default'); // 'default', 'granted', 'denied'
     const [isSubscribed, setIsSubscribed] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -230,10 +233,8 @@ const usePushNotifications = () => {
                 throw new Error('Permiso de notificaciones denegado');
             }
 
-            // 3. Obtener clave pública VAPID del servidor
-            const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:1337' : '';
-            const response = await fetch(`${apiBaseUrl}/api/push/vapid-public-key`);
-            const data = await response.json();
+            // 3. Obtener clave pública VAPID del servidor (proxy /api en dev)
+            const { data } = await axios.get('/api/push/vapid-public-key');
 
             if (!data.success || !data.publicKey) {
                 throw new Error('No se pudo obtener la clave pública VAPID');
@@ -253,23 +254,17 @@ const usePushNotifications = () => {
 
             console.log('[PushManager] Suscripción creada:', pushSubscription);
 
-            // 6. Enviar suscripción al servidor
-            const subscribeResponse = await fetch(`${apiBaseUrl}/api/push/subscribe`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    subscription: pushSubscription.toJSON(),
-                    // ✅ NUEVO: Enviar subscriptionId existente si hay
-                    existingSubscriptionId: localStorage.getItem('pushSubscriptionId') || null,
-                    // Opcional: incluir userId o userEmail si tienes sistema de autenticación
-                    // userId: currentUser?.id,
-                    // userEmail: currentUser?.email
-                })
-            });
+            // 6. Verificar sesión activa antes de llamar al servidor
+            const token = localStorage.getItem('accessToken');
+            if (!token || !isAuthenticated) {
+                throw new Error('Debes iniciar sesión para activar las notificaciones');
+            }
 
-            const subscribeData = await subscribeResponse.json();
+            // 7. Enviar suscripción al servidor (JWT vía interceptor axios)
+            const { data: subscribeData } = await axios.post('/api/push/subscribe', {
+                subscription: pushSubscription.toJSON(),
+                existingSubscriptionId: localStorage.getItem('pushSubscriptionId') || null
+            });
 
             if (!subscribeData.success) {
                 throw new Error('Error guardando suscripción en el servidor');
@@ -330,15 +325,8 @@ const usePushNotifications = () => {
             await subscription.unsubscribe();
 
             // 2. Notificar al servidor
-            const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:1337' : '';
-            await fetch(`${apiBaseUrl}/api/push/unsubscribe`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    endpoint: subscription.endpoint
-                })
+            await axios.post('/api/push/unsubscribe', {
+                endpoint: subscription.endpoint
             });
 
             // ✅ NUEVO: Limpiar subscriptionId de localStorage y estado
@@ -364,19 +352,10 @@ const usePushNotifications = () => {
      */
     const sendTestNotification = async () => {
         try {
-            const apiBaseUrl = window.location.hostname === 'localhost' ? 'http://localhost:1337' : '';
-            const response = await fetch(`${apiBaseUrl}/api/push/test-notification`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    title: '🔔 Notificación de Prueba',
-                    body: 'Si ves esto, las notificaciones funcionan correctamente'
-                })
+            const { data } = await axios.post('/api/push/test-notification', {
+                title: '🔔 Notificación de Prueba',
+                body: 'Si ves esto, las notificaciones funcionan correctamente'
             });
-
-            const data = await response.json();
 
             if (data.success) {
                 console.log('[PushManager] Notificación de prueba enviada:', data);

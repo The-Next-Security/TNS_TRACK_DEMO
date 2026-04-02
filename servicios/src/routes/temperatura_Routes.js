@@ -12,6 +12,7 @@ const presetsController = require('../controllers/presets_Controller');
 router.get('/dashboard', ubibotController.getTemperatureDashboardData.bind(ubibotController));
 router.get('/camaras', ubibotController.getTemperatureCamarasData.bind(ubibotController));
 router.get('/rango', ubibotController.getTemperatureRangeData.bind(ubibotController));
+router.get('/rango-dispositivo', ubibotController.getTemperatureRangeByDeviceData.bind(ubibotController));
 router.get('/dispositivos', ubibotController.getTemperatureDevices.bind(ubibotController));
 
 // --- Canales ---

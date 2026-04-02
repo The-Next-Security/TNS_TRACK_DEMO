@@ -62,6 +62,7 @@ SQL_FILES/01_creacion_desde_cero/04_valores_produccion.sql
 
 LECCIONES_APRENDIDAS.md
 SPRINGBOOT_MIGRATION_CONTEXT.md
+CLAUDE.md
 
 # ============================================
 # Archivos de sistema / herramientas
@@ -79,3 +80,4 @@ migracion/
 
 **/.DS_Store
 Thumbs.db
+SQL_FILES/log_ejecucion.log

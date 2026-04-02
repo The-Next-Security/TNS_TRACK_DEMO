@@ -201,7 +201,7 @@ async function getDeviceStatistics(deviceIds, startDate, endDate, tariffs = DEFA
       SELECT
         sd.shelly_id as device_id,
         sd.nombre as device_name,
-        cur.nombre_ubicacion as location,
+        cur.nombre as location,
         
         SUM(m.potencia_activa * COALESCE(m.intervalo_segundos, 60)) / (3600 * 1000) as totalKWh,
         MAX(m.potencia_activa / 1000) as maxDemandKW,

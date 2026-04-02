@@ -23,6 +23,7 @@ import { Alert, AlertDescription } from "../../ui/alert";
 import { Badge } from "../../ui/badge";
 import { Loader2, AlertCircle, Mail, X, Plus } from "lucide-react";
 import { cn } from "../../../lib/utils";
+import axios from "axios";
 
 // Email regex validation (RFC 5322 compliant - simplified)
 const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
@@ -174,24 +175,14 @@ const EmailModal = ({ isOpen, onClose, report, onSuccess }) => {
     setIsSending(true);
 
     try {
-      const response = await fetch('/api/reportes/enviar-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}`
-        },
-        body: JSON.stringify({
-          reportId: report.id,
-          recipients: recipients,
-          subject: subject.trim(),
-          message: message.trim() || null,
-        }),
+      const { data } = await axios.post('/api/reportes/enviar-email', {
+        reportId: report.id,
+        recipients: recipients,
+        subject: subject.trim(),
+        message: message.trim() || null,
       });
 
-      const data = await response.json();
-
-      if (response.ok && data.success) {
-        // Success
+      if (data.success) {
         if (onSuccess) {
           onSuccess({
             sentCount: data.sentCount,
@@ -201,12 +192,15 @@ const EmailModal = ({ isOpen, onClose, report, onSuccess }) => {
         }
         onClose();
       } else {
-        // Server error
         setServerError(data.error || 'Error al enviar el email');
       }
     } catch (error) {
       console.error('[EmailModal] Send error:', error);
-      setServerError('Error de conexión. Por favor intenta nuevamente.');
+      setServerError(
+        error.response?.data?.error ||
+          error.message ||
+          'Error de conexión. Por favor intenta nuevamente.'
+      );
     } finally {
       setIsSending(false);
     }

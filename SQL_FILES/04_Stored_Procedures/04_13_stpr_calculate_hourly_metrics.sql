@@ -38,7 +38,7 @@ BEGIN
             0 AS total_alertas,
             'Sin alertas en este período' AS mensaje;
     ELSE
-        -- UPSERT con datos reales
+        -- UPSERT con datos reales (esquema: id_tipo_alerta + ale_tipo_alerta; origen_id sustituye id_canal legacy)
         INSERT INTO ale_metricas_resumen (
             `fecha`,
             `hora`,
@@ -66,48 +66,43 @@ BEGIN
             p_fecha_objetivo AS `fecha`,
             p_hora_objetivo AS `hora`,
 
-            -- Volumen de alertas (COALESCE para evitar NULL)
-            COALESCE(SUM(CASE WHEN tipo_alerta = 'temperatura' THEN 1 ELSE 0 END), 0) AS total_alertas_temperatura,
-            COALESCE(SUM(CASE WHEN tipo_alerta = 'desconexion' THEN 1 ELSE 0 END), 0) AS total_alertas_desconexion,
+            COALESCE(SUM(CASE WHEN ta.nombre = 'temperatura' THEN 1 ELSE 0 END), 0) AS total_alertas_temperatura,
+            COALESCE(SUM(CASE WHEN ta.nombre = 'desconexion' THEN 1 ELSE 0 END), 0) AS total_alertas_desconexion,
 
-            -- Tiempos de respuesta y resolución
-            ROUND(AVG(tiempo_respuesta_minutos), 2) AS promedio_tiempo_respuesta,
-            ROUND(AVG(tiempo_resolucion_minutos), 2) AS promedio_tiempo_resolucion,
-            MIN(tiempo_respuesta_minutos) AS minimo_tiempo_respuesta,
-            MAX(tiempo_respuesta_minutos) AS maximo_tiempo_respuesta,
+            ROUND(AVG(s.tiempo_respuesta_minutos), 2) AS promedio_tiempo_respuesta,
+            ROUND(AVG(s.tiempo_resolucion_minutos), 2) AS promedio_tiempo_resolucion,
+            MIN(s.tiempo_respuesta_minutos) AS minimo_tiempo_respuesta,
+            MAX(s.tiempo_respuesta_minutos) AS maximo_tiempo_respuesta,
 
-            -- Distribución por estado
-            COALESCE(SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END), 0) AS alertas_pendientes,
-            COALESCE(SUM(CASE WHEN estado = 'confirmado' THEN 1 ELSE 0 END), 0) AS alertas_confirmadas,
-            COALESCE(SUM(CASE WHEN estado = 'resuelto' THEN 1 ELSE 0 END), 0) AS alertas_resueltas,
-            COALESCE(SUM(CASE WHEN estado = 'falsa_alarma' OR es_falsa_alarma = 1 THEN 1 ELSE 0 END), 0) AS alertas_falsa_alarma,
+            COALESCE(SUM(CASE WHEN s.estado = 'pendiente' THEN 1 ELSE 0 END), 0) AS alertas_pendientes,
+            COALESCE(SUM(CASE WHEN s.estado = 'confirmado' THEN 1 ELSE 0 END), 0) AS alertas_confirmadas,
+            COALESCE(SUM(CASE WHEN s.estado = 'resuelto' THEN 1 ELSE 0 END), 0) AS alertas_resueltas,
+            COALESCE(SUM(CASE WHEN s.estado = 'falsa_alarma' OR s.es_falsa_alarma = 1 THEN 1 ELSE 0 END), 0) AS alertas_falsa_alarma,
 
-            -- Métricas de notificaciones push
-            COALESCE(SUM(CASE WHEN notificado_push = 1 THEN 1 ELSE 0 END), 0) AS push_enviados,
-            COALESCE(SUM(CASE WHEN notificado_push = 0 THEN 1 ELSE 0 END), 0) AS push_fallidos,
+            COALESCE(SUM(CASE WHEN s.notificado_push = 1 THEN 1 ELSE 0 END), 0) AS push_enviados,
+            COALESCE(SUM(CASE WHEN s.notificado_push = 0 THEN 1 ELSE 0 END), 0) AS push_fallidos,
             CASE
                 WHEN COUNT(*) > 0
                 THEN ROUND(
-                    SUM(CASE WHEN notificado_push = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+                    SUM(CASE WHEN s.notificado_push = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
                     2
                 )
                 ELSE NULL
             END AS tasa_entrega_push,
 
-            -- Métricas de alertas críticas
-            COALESCE(SUM(CASE WHEN severidad = 'critica' THEN 1 ELSE 0 END), 0) AS total_alertas_criticas,
+            COALESCE(SUM(CASE WHEN s.severidad = 'critica' THEN 1 ELSE 0 END), 0) AS total_alertas_criticas,
             ROUND(
-                AVG(CASE WHEN severidad = 'critica' THEN tiempo_respuesta_minutos ELSE NULL END),
+                AVG(CASE WHEN s.severidad = 'critica' THEN s.tiempo_respuesta_minutos ELSE NULL END),
                 2
             ) AS promedio_tiempo_respuesta_critica,
 
-            -- Métricas de canales
-            COALESCE(COUNT(DISTINCT id_canal), 0) AS canales_alertados_unicos,
+            COALESCE(COUNT(DISTINCT s.origen_id), 0) AS canales_alertados_unicos,
             (
-                SELECT s2.id_canal
+                SELECT s2.origen_id
                 FROM ale_seguimiento s2
                 WHERE s2.fecha_alerta BETWEEN v_inicio_hora AND v_fin_hora
-                GROUP BY s2.id_canal
+                  AND s2.origen_id IS NOT NULL
+                GROUP BY s2.origen_id
                 ORDER BY COUNT(*) DESC
                 LIMIT 1
             ) AS id_canal_top,
@@ -115,15 +110,17 @@ BEGIN
                 SELECT COUNT(*)
                 FROM ale_seguimiento s3
                 WHERE s3.fecha_alerta BETWEEN v_inicio_hora AND v_fin_hora
-                GROUP BY s3.id_canal
+                  AND s3.origen_id IS NOT NULL
+                GROUP BY s3.origen_id
                 ORDER BY COUNT(*) DESC
                 LIMIT 1
             ) AS alertas_canal_top,
 
             NOW() AS fecha_actualizacion
 
-        FROM ale_seguimiento
-        WHERE fecha_alerta BETWEEN v_inicio_hora AND v_fin_hora
+        FROM ale_seguimiento s
+        INNER JOIN ale_tipo_alerta ta ON ta.id_tipo_alerta = s.id_tipo_alerta
+        WHERE s.fecha_alerta BETWEEN v_inicio_hora AND v_fin_hora
 
         ON DUPLICATE KEY UPDATE
             total_alertas_temperatura = VALUES(total_alertas_temperatura),
@@ -146,7 +143,6 @@ BEGIN
             alertas_canal_top = VALUES(alertas_canal_top),
             fecha_actualizacion = NOW();
 
-        -- Retornar estadísticas
         SELECT
             p_fecha_objetivo AS fecha_objetivo,
             p_hora_objetivo AS hora_objetivo,

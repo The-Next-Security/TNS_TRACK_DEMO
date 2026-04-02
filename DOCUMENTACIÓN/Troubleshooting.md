@@ -2,7 +2,7 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-01-26
+> **Última actualización**: 2026-04-02
 > **Versión**: 2.0.0
 > **Propósito**: Soluciones a problemas comunes del sistema
 
@@ -22,6 +22,7 @@
 - [Configuración no se carga](#-problema-configuración-no-se-carga)
 
 ### Problemas de Producción
+- [Deploy en Producción (checklist)](#deploy-en-producción)
 - [Rendimiento lento](#diagnóstico-general)
 - [Conexión BD perdida](#-problema-cannot-connect-to-database)
 - [Tokens expiran rápido](#-problema-session-expires-too-quickly)
@@ -203,6 +204,26 @@ npm run start-server
 ---
 
 ## Problemas de Producción
+
+### Deploy en Producción
+
+Checklist previo al despliegue:
+
+1. En `servicios/src/config/jsons/connection-config.json`, establecer `"environment": 1` para generar build de producción (minificado, sin source maps en el bundle principal, nombre `bundle.[contenthash].js`).
+2. Arrancar con el flujo estándar del proyecto: desde `servicios/`, `npm run comenzar` (no se depende de flags extra de webpack).
+3. Confirmar que el backend escucha en el puerto esperado (p. ej. 1337) y que el proxy o nginx del entorno real enruta `/TNSTrack` hacia los estáticos y las rutas de API según la documentación de infraestructura.
+
+Verificación en el navegador:
+
+- En la pestaña **Network**, el script principal debe nombrarse como `bundle.<hash>.js` (no un único `bundle.js` fijo sin hash en entornos de prod recién generados).
+- No deben cargarse artefactos evidentes de React en modo desarrollo (p. ej. evitar dependencias de `react-dom.development.js` en la red).
+- Las peticiones a la API deben resolverse con el prefijo de aplicación cuando la app está servida bajo `/TNSTrack`: las URLs que en código empiezan por `/api/...` deben verse en red como `/TNSTrack/api/...` (o el equivalente que muestre el stack con base path).
+
+Configuración sin `.env`:
+
+- La configuración de negocio y conexión vive en base de datos y en archivos JSON locales; `connection-config.json` (no versionar secretos) es la referencia para entorno **0/1** que webpack y el servidor deben compartir.
+
+---
 
 ### 🔍 Checklist de Diagnóstico
 
