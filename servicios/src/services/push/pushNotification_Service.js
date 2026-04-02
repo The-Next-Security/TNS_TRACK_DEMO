@@ -246,10 +246,16 @@ class PushNotificationService {
             this.stats.totalSubscriptions++;
             console.log(`✅ [PushNotificationService] Nueva suscripción guardada: ${result.insertId}`);
 
-            // Crear fila de preferencias con valores por defecto
+            // Crear fila de preferencias con valores por defecto — campos JSON explícitos para evitar NULLs en BD
             await connection.query(
-                'INSERT IGNORE INTO ale_preferencias_push (id_suscripcion) VALUES (?)',
-                [result.insertId]
+                `INSERT IGNORE INTO ale_preferencias_push
+                 (id_suscripcion, dias_dnd, tipos_alerta_habilitados)
+                 VALUES (?, ?, ?)`,
+                [
+                    result.insertId,
+                    JSON.stringify(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']),
+                    JSON.stringify(['temperature', 'disconnection'])
+                ]
             );
 
             return { success: true, subscriptionId: result.insertId, updated: false };
@@ -451,8 +457,8 @@ class PushNotificationService {
 
             const preferences = rows[0];
 
-            // Parsear campos JSON
-            if (preferences.dndDays && typeof preferences.dndDays === 'string') {
+            // Parsear campos JSON — sin cortocircuito && para manejar null correctamente
+            if (typeof preferences.dndDays === 'string') {
                 try {
                     preferences.dndDays = JSON.parse(preferences.dndDays);
                 } catch (e) {
@@ -460,12 +466,20 @@ class PushNotificationService {
                 }
             }
 
-            if (preferences.enabledAlertTypes && typeof preferences.enabledAlertTypes === 'string') {
+            if (typeof preferences.enabledAlertTypes === 'string') {
                 try {
                     preferences.enabledAlertTypes = JSON.parse(preferences.enabledAlertTypes);
                 } catch (e) {
                     preferences.enabledAlertTypes = ['temperature', 'disconnection'];
                 }
+            }
+
+            // Garantía final: nunca retornar null en campos array (ej: filas creadas sin defaults)
+            if (!Array.isArray(preferences.dndDays)) {
+                preferences.dndDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+            }
+            if (!Array.isArray(preferences.enabledAlertTypes)) {
+                preferences.enabledAlertTypes = ['temperature', 'disconnection'];
             }
 
             return preferences;
