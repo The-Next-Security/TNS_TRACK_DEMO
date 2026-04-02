@@ -3,7 +3,7 @@
 // Feature: 003-fix-session-expiry-handling
 
 import { useState } from 'react';
-import { authenticatedFetch } from '../utils/httpInterceptor_Utils';
+import axios from 'axios';
 import analyticsService from '../services/analytics_Service';
 
 /**
@@ -40,20 +40,7 @@ export function useSessionExtension() {
         throw new Error('No hay refresh token disponible');
       }
 
-      const response = await authenticatedFetch('/api/auth/extend-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ refreshToken })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
-        throw new Error(errorData.error || `HTTP ${response.status}`);
-      }
-
-      const data = await response.json();
+      const { data } = await axios.post('/api/auth/extend-session', { refreshToken });
 
       // Guardar los nuevos tokens inmediatamente
       if (data.accessToken) localStorage.setItem('accessToken', data.accessToken);
@@ -77,19 +64,24 @@ export function useSessionExtension() {
         message: data.message
       };
     } catch (err) {
+      const message =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Error al extender la sesión';
       console.error('[useSessionExtension] Error extending session:', err);
 
       // Track extension failure in analytics
       analyticsService.trackEvent('session_extension_failed', {
-        error: err.message,
+        error: message,
         timestamp: Date.now()
       });
 
-      setError(err.message);
+      setError(message);
 
       return {
         success: false,
-        error: err.message
+        error: message
       };
     } finally {
       setIsExtending(false);
