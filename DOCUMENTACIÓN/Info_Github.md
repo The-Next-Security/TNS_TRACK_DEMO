@@ -260,16 +260,24 @@ Closes #[numero]
 
 ## 📊 Listado de Issues
 
-### Issues Principales
+### Issues Abiertos — FASE 1 (próximo release)
 
 | Número del Issue | Estado | Descripción Breve | Labels | Branch de Trabajo |
 |------------------|--------|-------------------|--------|-------------------|
-| [#2](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/2) | 🟡 OPEN | Documentación Inicial | `documentation`, `good first issue` | `chore/documentacion-inicial` |
-| [#1](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/1) | 🟡 OPEN | Creación de BD desde cero | `good first issue`, `SQL - BBDD` | Por definir |
-| [#3](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/3) | 🟡 OPEN | Tabla de configuración centralizada | `SQL - BBDD`, `enhancement` | Por definir |
-| [#4](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/4) | 🟡 OPEN | Estructura de carpetas servicios | `architecture`, `refactoring` | Por definir |
-| [#8](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/8) | 🟡 OPEN | Mejoras UX Dashboard | `front-end`, `enhancement` | Por definir |
-| [#9](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/9) | 🟡 OPEN | FASE 0 - Planificación | `documentation`, `IMPORTANT` | `chore/documentacion-inicial` |
+| [#83](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/83) | 🟡 OPEN | Mejoras arquitectura agente IA | `architecture`, `enhancement` | Por definir |
+| [#46](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/46) | 🟡 OPEN | Warning dependencia react-datepicker | `bug`, `dependencies`, `technical-debt` | Por definir |
+| [#33](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/33) | 🟡 OPEN | Fallo runtime updateChannelThresholds | `bug`, `back-end` | Por definir |
+| [#32](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/32) | 🟡 OPEN | Migrar parametrizaciones a ubi_presets | `refactoring`, `SQL - BBDD` | Por definir |
+| [#26](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/26) | 🟡 OPEN | Endpoints Sectores y Beacons Teltonika | `feature`, `back-end` | Por definir |
+
+### Issues Cerrados en v1.1.0
+
+| Número del Issue | Descripción Breve | Release |
+|------------------|-------------------|---------|
+| [#81](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/81) | ✅ Bugs varios fix/bugs-varios (axios, SQL, push, sesión) | v1.1.0 |
+| [#80](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/80) | ✅ Cuartiles de consumo y evento trimestral | v1.1.0 |
+| [#79](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/79) | ✅ DEFINER MySQL desalineado dev↔prod | v1.1.0 |
+| [#70](https://github.com/andresTNS/TNS_TRACK_DEMO/issues/70) | ✅ Módulo IA migrado a Google Gemini 2.0 Flash | v1.1.0 |
 
 > **Nota**: Para ver la lista completa actualizada de issues, visitar [Issues del repositorio](https://github.com/andresTNS/TNS_TRACK_DEMO/issues)
 
@@ -367,5 +375,5 @@ Thumbs.db
 
 ---
 
-**Última actualización**: 2026-01-22
-**Versión**: 2.0.0
+**Última actualización**: 2026-04-03
+**Versión**: 2.1.0
