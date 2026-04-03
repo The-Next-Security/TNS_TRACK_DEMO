@@ -2,8 +2,8 @@
 
 **The Next Security - TNS Track Demo**
 
-> **Última actualización**: 2026-03-18
-> **Versión**: 3.0.0
+> **Última actualización**: 2026-04-03
+> **Versión**: 1.1.0
 > **Propósito**: Planificación estratégica del ciclo de vida del producto
 
 ---
@@ -39,6 +39,20 @@ Fase enfocada en establecer una base técnica profesional y documentada.
 - **Issue #5**: Unificación de manejo de fechas con Luxon.
 - **Issue #6**: Limpieza profunda de código legacy y dependencias.
 - **Issue #8**: Gestión de secretos alineada con la arquitectura de BD.
+
+---
+
+### ✅ FASE 0.5: Estabilización y Mejoras (COMPLETADO)
+**Release**: [v1.1.0] - 2026-04-03
+
+Fase enfocada en estabilización post-v1.0.0, migración tecnológica y nuevas capacidades de IA.
+
+**Hitos alcanzados**:
+- **Issue #81**: Corrección de bugs en módulos de consumo eléctrico, energía, sesión y push.
+- **Issue #80**: Inicialización de cuartiles de consumo y evento trimestral automático.
+- **Issue #79**: Resolución de desalineación DEFINER en objetos MySQL dev↔prod.
+- **Issue #70**: Migración IA de DeepSeek/OpenAI a Google Gemini 2.0 Flash con agente ReAct.
+- **Migración Axios**: Eliminación de socket.io y fetch nativo en toda la aplicación.
 
 ---
 
