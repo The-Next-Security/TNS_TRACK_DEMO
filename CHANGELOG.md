@@ -7,6 +7,52 @@
 
 ---
 
+## [1.1.0] - 2026-04-03
+
+### Added
+- **Módulo IA con Google Gemini**: Migración completa de DeepSeek/OpenAI a Google Gemini 2.0 Flash.
+  Nuevo orquestador ReAct con retry y backoff exponencial, herramientas de consulta cruzada y endpoint
+  `POST /api/ia/consulta-avanzada` (#70, PR #69).
+- **Sistema de Suscripciones Push**: Nueva tabla `ale_suscripciones_notificacion` con matriz Tipo×Origen,
+  rutas bajo `/api/alerts/subscriptions` y UI de configuración por tipo y canal (#81).
+- **Cuartiles de Consumo Eléctrico**: SP `stpr_calcular_cuartiles_consumo` y evento trimestral
+  `evn_recalcular_cuartiles_consumo` para recalcular CONSUMO BAJO/MEDIO/ALTO cada 3 meses (#80).
+- **Detección de Entorno Webpack**: Build automático producción/desarrollo según `NODE_ENV` (#81).
+- **Endpoint temperatura por dispositivo**: `GET /api/temperatura/dispositivo/:id` (#81).
+- **Log de análisis IA**: Nueva tabla `log_notification_analysis` para trazabilidad de análisis (#81).
+
+### Changed
+- **Migración completa a Axios**: Eliminado `httpInterceptor_Utils` y `socket.io-client`. Todas las
+  llamadas HTTP migradas a axios en componentes, hooks y servicios (#81).
+- **Métricas SQL alineadas al esquema real**: `stpr_calculate_hourly_metrics` y
+  `stpr_generate_daily_metrics` actualizados para usar `ale_tipo_alerta` y `origen_id` (#81).
+- **Sincronización temperatura**: `stpr_sync_alert_temperature_by_id` y
+  `stpr_sync_alert_temperature_historical` usan upsert en `ale_datos_temperatura` (#81).
+- **Backend IA sin loopback HTTP**: `temperatureDashboard_Service` consulta BD directamente,
+  sin llamadas HTTP internas (#70).
+- **Scripts de arranque**: `npm run comenzar` con detección automática de entorno (#81).
+
+### Fixed
+- Columnas de grupo alineadas: `sd.grupo_id` → `sd.id_grupo`, joins `sg.id` → `sg.id_grupo`
+  en `device_Controller` y `totales_Controller` (#81).
+- `DateTime.fromISO()` → `DateTime.fromSQL()` con zona `America/Santiago` en consumo eléctrico (#81).
+- DatePicker oculto por stacking context (Framer Motion + backdrop-blur) → resuelto con `portalId` (#81).
+- `userId` en `notificationHorarios_Controller` y `reportScheduler_Controller` (#81).
+- Modal de sesión por expirar traducido al español (#81).
+- `refreshToken` enviado correctamente en body al extender sesión (#81).
+- Preferencias push normalizadas al cargar y al suscribir (#81).
+- `MetricsAggregationJob` duplicado eliminado del arranque del servidor (#81).
+- DEFINER incorrecto (`root@%`) corregido en todos los objetos MySQL de desarrollo:
+  6 funciones, 26 SPs, 7 eventos recreados desde el repositorio (#79).
+
+### Security
+- **Dependencias actualizadas**: 30+ PRs de Dependabot aplicados post-v1.0.0
+  ([#57], [#58], [#59], [#60], [#61], [#63], [#64], [#65], [#66], [#67], [#71], [#72], [#73], [#85]).
+- Parches de seguridad: axios, webpack-bundle-analyzer, baseline-browser-mapping, pdfkit,
+  react-router-dom, posthog-js, puppeteer, framer-motion, mapbox-gl.
+
+---
+
 ## [1.0.0] - 2026-03-18
 
 ### Added

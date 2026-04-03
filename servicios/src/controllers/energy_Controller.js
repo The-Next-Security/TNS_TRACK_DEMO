@@ -93,7 +93,7 @@ class EnergyController {
                 SELECT
                     d.shelly_id,
                     d.nombre as device_name,
-                    cur.nombre_ubicacion as location,
+                    cur.nombre as location,
                     DATE_FORMAT(
                         DATE_SUB(m.timestamp_local, 
                             INTERVAL MOD(MINUTE(m.timestamp_local), 5) MINUTE

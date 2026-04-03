@@ -11,7 +11,6 @@ import mapImage from '../assets/images/map-of-a-map.jpeg';
 import tnsTrackLogo from '../assets/images/TNS Track blue.png';
 import tnsLogo from '../assets/images/tns_logo_blanco.png';
 import theNextLogo from '../assets/images/thenextlogo.png';
-import storageImage from '../assets/images/storage-logo.png';
 import thermometerIcon from '../assets/images/thermometer.png';
 import axios from 'axios';
 import analyticsService from '../services/analytics_Service';
@@ -139,9 +138,9 @@ const LandingPageV2 = () => {
           {/* Top Section - Client Logo & Company Logo */}
           <div className="flex justify-between items-center">
             <img
-              src={storageImage}
-              alt="Storage Logo"
-              className="h-32 w-auto drop-shadow-lg"
+              src={tnsTrackLogo}
+              alt="TNS Track"
+              className="h-16 w-auto drop-shadow-2xl bg-white/90 px-4 py-2 rounded-lg"
             />
             <img
               src={tnsLogo}
@@ -153,11 +152,6 @@ const LandingPageV2 = () => {
           {/* Middle Section - Product Branding */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <img
-                src={tnsTrackLogo}
-                alt="TNS Track"
-                className="h-20 w-auto drop-shadow-2xl bg-white/90 px-6 py-3 rounded-lg"
-              />
               <h1 className="text-4xl font-bold leading-tight">
                 Sistema de Monitoreo<br />y Control Inteligente
               </h1>
@@ -205,11 +199,6 @@ const LandingPageV2 = () => {
         <div className="w-full max-w-md">
           {/* Mobile Logos */}
           <div className="lg:hidden flex flex-col items-center gap-4 mb-8">
-            <img
-              src={storageImage}
-              alt="Storage Logo"
-              className="h-16 w-auto"
-            />
             <img
               src={theNextLogo}
               alt="The Next Security"

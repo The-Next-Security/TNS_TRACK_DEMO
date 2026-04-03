@@ -277,7 +277,7 @@ const ConsumoTotalAnualV2 = () => {
           mes: monthNum,
           anio: parseInt(selectedYear),
           shelly_id: selectedDevice.shelly_id,
-          ubicacion_nombre: selectedDevice.ubicacion_nombre,
+          nombre: selectedDevice.nombre,
           dispositivo_nombre: selectedDevice.dispositivo_nombre,
           grupo_id: selectedDevice.grupo_id,
           grupo_nombre: selectedDevice.grupo_nombre,

@@ -30,7 +30,7 @@ class DeviceUtils {
         return devicesCache;
       }
 
-      const response = await axios.get("/api/devices/active");
+      const response = await axios.get("/api/energia/dispositivos/activos");
 
       if (!response.data || !response.data.success) {
         throw new Error("Respuesta inválida del servidor");
@@ -41,7 +41,7 @@ class DeviceUtils {
       // Validar estructura de dispositivos
       const validDevices = devices.filter(
         (device) =>
-          device.shelly_id && device.ubicacion_nombre && device.activo === 1
+          device.shelly_id && device.nombre && device.activo === 1
       );
 
       if (validDevices.length === 0) {
@@ -179,7 +179,7 @@ class DeviceUtils {
           this.clearSavedDevice();
 
           toast.info(
-            `El dispositivo seleccionado anteriormente ya no está disponible. Seleccionado: ${devices[0].ubicacion_nombre}`,
+            `El dispositivo seleccionado anteriormente ya no está disponible. Seleccionado: ${devices[0].nombre}`,
             { autoClose: 5000 }
           );
         }
@@ -235,7 +235,7 @@ class DeviceUtils {
       this.saveSelectedDevice(newDeviceId);
 
       console.log(
-        `Dispositivo cambiado a: ${device.ubicacion_nombre} (${newDeviceId})`
+        `Dispositivo cambiado a: ${device.nombre} (${newDeviceId})`
       );
 
       return device;

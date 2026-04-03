@@ -160,11 +160,11 @@ const DashboardTemperaturaV2 = () => {
                 });
 
                 setTemperatureData(formattedData);
-                setIsLoading(false);
 
                 // Una vez que tenemos los datos, obtener las categorías de consumo
                 fetchCategoriasPorNombre(formattedData);
             }
+            setIsLoading(false);
         } catch (error) {
             console.error("Error fetching temperature data:", error);
             setError("Error al cargar los datos de temperatura");
@@ -198,44 +198,41 @@ const DashboardTemperaturaV2 = () => {
 
             const categoriasTemp = {};
 
-            // Para cada dispositivo de temperatura, buscar el dispositivo eléctrico correspondiente
+            // Separar dispositivos con y sin potencia activa
+            const devicesConPotencia = [];
             for (const device of devices) {
-                if (!device.name) continue;
-
-                // Normalizar el nombre para la búsqueda
+                if (!device.name) {
+                    categoriasTemp[device.channel_id] = 0;
+                    continue;
+                }
                 const normalizedName = device.name.trim().toLowerCase().replace(/\s+/g, '');
                 const electricDevice = electricDeviceMap[normalizedName];
 
-                // Si no encontramos un dispositivo eléctrico correspondiente, usar categoría 0 (apagado)
-                if (!electricDevice) {
+                if (!electricDevice || !electricDevice.activePower || electricDevice.activePower === 0) {
                     categoriasTemp[device.channel_id] = 0;
-                    continue;
+                } else {
+                    devicesConPotencia.push({ device, electricDevice });
                 }
+            }
 
-                // Si el dispositivo no tiene potencia activa, asignarle categoría 0 (apagado)
-                if (!electricDevice.activePower || electricDevice.activePower === 0) {
-                    categoriasTemp[device.channel_id] = 0;
-                    continue;
-                }
-
-                // Consultar la API para obtener la categoría
-                try {
-                    const response = await axios.get('/api/energia/consumo/categorias', {
+            // Llamadas en paralelo para los dispositivos con potencia activa
+            if (devicesConPotencia.length > 0) {
+                const requests = devicesConPotencia.map(({ device, electricDevice }) =>
+                    axios.get('/api/energia/consumo/categorias', {
                         params: {
                             valor: electricDevice.activePower,
                             deviceId: electricDevice.deviceId
                         }
-                    });
+                    }).then(res => ({
+                        channelId: device.channel_id,
+                        categoria: res.data?.data?.categoria ?? 0
+                    })).catch(() => ({ channelId: device.channel_id, categoria: 0 }))
+                );
 
-                    if (response.data && response.data.success && response.data.data) {
-                        categoriasTemp[device.channel_id] = response.data.data.categoria;
-                    } else {
-                        categoriasTemp[device.channel_id] = 0; // Valor por defecto: apagado
-                    }
-                } catch (deviceError) {
-                    console.error(`Error al obtener categoría para el dispositivo ${device.name}:`, deviceError);
-                    categoriasTemp[device.channel_id] = 0; // Valor por defecto: apagado
-                }
+                const results = await Promise.all(requests);
+                results.forEach(({ channelId, categoria }) => {
+                    categoriasTemp[channelId] = categoria;
+                });
             }
 
             setCategorias(categoriasTemp);

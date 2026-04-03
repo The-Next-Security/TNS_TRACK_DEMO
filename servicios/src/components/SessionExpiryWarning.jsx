@@ -28,8 +28,8 @@ export function SessionExpiryWarning({ timeRemaining, onLogoutClick, onExtended 
 
     // Show persistent toast with actions
     const toastInstance = toast({
-      title: "⏰ Session Expiring Soon",
-      description: "Your session will expire in less than 2 minutes. Please extend your session or save your work.",
+      title: "⏰ Sesión por expirar",
+      description: "Tu sesión expirará en menos de 2 minutos. Extiende tu sesión o guarda tu trabajo.",
       duration: Infinity, // Persist indefinitely
       variant: "destructive",
       action: (
@@ -43,8 +43,8 @@ export function SessionExpiryWarning({ timeRemaining, onLogoutClick, onExtended 
 
                 // Show success toast
                 toast({
-                  title: "✅ Session Extended",
-                  description: "Your session has been extended",
+                  title: "✅ Sesión extendida",
+                  description: "Tu sesión ha sido extendida correctamente",
                   duration: 3000,
                   variant: "default"
                 });
@@ -56,8 +56,8 @@ export function SessionExpiryWarning({ timeRemaining, onLogoutClick, onExtended 
               } else {
                 // Show error toast
                 toast({
-                  title: "❌ Extension Failed",
-                  description: result.error || "Could not extend session",
+                  title: "❌ Error al extender sesión",
+                  description: result.error || "No se pudo extender la sesión",
                   duration: 5000,
                   variant: "destructive"
                 });
@@ -66,7 +66,7 @@ export function SessionExpiryWarning({ timeRemaining, onLogoutClick, onExtended 
             disabled={isExtending}
             className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors hover:bg-secondary focus:outline-none focus:ring-1 focus:ring-ring disabled:pointer-events-none disabled:opacity-50"
           >
-            {isExtending ? 'Extending...' : 'Extend Session'}
+            {isExtending ? 'Extendiendo...' : 'Extender sesión'}
           </button>
 
           <button
@@ -85,7 +85,7 @@ export function SessionExpiryWarning({ timeRemaining, onLogoutClick, onExtended 
             }}
             className="inline-flex h-8 shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors hover:bg-secondary focus:outline-none focus:ring-1 focus:ring-ring"
           >
-            Logout Now
+            Cerrar sesión
           </button>
         </div>
       )

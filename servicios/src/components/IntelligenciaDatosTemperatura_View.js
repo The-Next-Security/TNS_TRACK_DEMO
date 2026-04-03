@@ -127,19 +127,6 @@ const IntelligenciaDatosTemperaturaV2 = () => {
   };
 
   /**
-   * Calcula la diferencia en días entre dos fechas
-   *
-   * @function getDaysDifference
-   * @param {Date} date1 - Primera fecha
-   * @param {Date} date2 - Segunda fecha
-   * @returns {number} Diferencia en días
-   */
-  const getDaysDifference = (date1, date2) => {
-    const diffTime = Math.abs(date2 - date1);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  };
-
-  /**
    * Obtiene datos de temperatura para el rango de fechas seleccionado
    *
    * @async
@@ -157,21 +144,8 @@ const IntelligenciaDatosTemperaturaV2 = () => {
       return;
     }
 
-    // Validación de 45 días
-    const daysDifference = getDaysDifference(startDate, endDate);
-    if (daysDifference > 45) {
-      setError(
-        "Si desea datos de mas de 45 días de antigüedad, contacte a The Next Security"
-      );
-      return;
-    }
-
-    // Validar que la fecha de inicio no sea más antigua que 45 días desde hoy
-    const daysFromToday = getDaysDifference(startDate, today);
-    if (daysFromToday > 45) {
-      setError(
-        "Si desea datos de mas de 45 días de antigüedad, contacte a The Next Security"
-      );
+    if (startDate > endDate) {
+      setError("La fecha de inicio no puede ser mayor que la fecha de fin.");
       return;
     }
 
@@ -186,7 +160,7 @@ const IntelligenciaDatosTemperaturaV2 = () => {
         "and device:",
         selectedDevice
       );
-      const response = await axios.get("/api/temperatura/rango", {
+      const response = await axios.get("/api/temperatura/rango-dispositivo", {
         params: {
           startDate: startFormatted,
           endDate: endFormatted,
@@ -194,14 +168,15 @@ const IntelligenciaDatosTemperaturaV2 = () => {
         },
       });
       console.log("Datos recibidos:", response.data);
-      const device = devices.find(
-        (device) => device.channel_id == selectedDevice
-      );
+      const deviceName =
+        response?.data?.meta?.deviceName ||
+        devices.find((device) => device.channel_id == selectedDevice)?.name;
+      const series = Array.isArray(response?.data?.series) ? response.data.series : [];
       setData([
         {
           channel_id: selectedDevice,
-          name: device?.name,
-          data: response.data.map((item) => ({
+          name: deviceName,
+          data: series.map((item) => ({
             timestamp: item.timestamp,
             external_temperature: item.external_temperature,
           })),

@@ -48,6 +48,7 @@ router.use(requireAIPermission);
 
 router.get('/camaras', aiAnalysisController.getChambers.bind(aiAnalysisController));
 router.post('/consulta', aiAnalysisController.query.bind(aiAnalysisController));
+router.post('/consulta-avanzada', aiAnalysisController.queryAvanzada.bind(aiAnalysisController));
 router.get('/sesiones', aiAnalysisController.getSessions.bind(aiAnalysisController));
 router.get('/preguntas-sugeridas', aiAnalysisController.getSuggestedQuestions.bind(aiAnalysisController));
 

@@ -1,7 +1,9 @@
-const openaiService = require('../services/openai_Service');
+const geminiService = require('../services/gemini_Service');
 const aiDataService = require('../services/aiData_Service');
 const costTracker = require('../services/aiCostTracker_Service');
+const agentOrchestrator = require('../services/aiAgentOrchestrator_Service');
 const databaseService = require('../services/database_Service');
+const configLoader = require('../config/js_files/configLoader_Config');
 const { DateTime } = require('../utils/date_Utils');
 
 class AIAnalysisController {
@@ -61,7 +63,7 @@ class AIAnalysisController {
         finalChambers,
         finalDateRange.start,
         finalDateRange.end,
-        true  // Force daily aggregation to stay under OpenAI token limits
+        true  // Force daily aggregation to stay under Gemini token limits
       );
 
       if (!historicalData || historicalData.length === 0) {
@@ -74,7 +76,7 @@ class AIAnalysisController {
 
       // Analyze with AI
       console.log(`[AIAnalysisController] Analyzing ${historicalData.length} data points with AI`);
-      const aiResponse = await openaiService.analyzeChamberData(queryText, historicalData);
+      const aiResponse = await geminiService.analyzeChamberData(queryText, historicalData);
       
       // Log response summary
       console.log(`[AIAnalysisController] ✅ AI Response received (${aiResponse.response?.length || 0} chars)`);
@@ -123,6 +125,112 @@ class AIAnalysisController {
   }
 
   /**
+   * Consulta avanzada con agente autónomo (Gemini Flash + ReAct loop)
+   * POST /api/ia/consulta-avanzada
+   */
+  async queryAvanzada(req, res) {
+    const startTime = Date.now();
+
+    try {
+      const { query: queryText, sessionId, chambers: chamberIds, chamberInfo } = req.body;
+      const userId = req.user.userId || req.user.id_Usuario || req.user.id;
+
+      if (!queryText) {
+        return res.status(400).json({
+          success: false,
+          error: 'Bad Request',
+          message: 'Query text is required'
+        });
+      }
+
+      // Verificar que el agente esté disponible
+      if (!agentOrchestrator.isAvailable()) {
+        const config = configLoader.getConfig();
+        if (!config.Gemini_API?.GEMINI_API_KEY) {
+          return res.status(503).json({
+            success: false,
+            error: 'Service Unavailable',
+            message: 'GEMINI_API_KEY not configured. Please contact your administrator.'
+          });
+        }
+        // Intentar reinicializar
+        agentOrchestrator.init();
+        if (!agentOrchestrator.isAvailable()) {
+          return res.status(503).json({
+            success: false,
+            error: 'Service Unavailable',
+            message: 'AI Agent could not be initialized. Please try again later.'
+          });
+        }
+      }
+
+      // Create or resume session
+      let activeSessionId = sessionId;
+      if (!activeSessionId) {
+        activeSessionId = await costTracker.getActiveSession(userId);
+        if (!activeSessionId) {
+          activeSessionId = await costTracker.createSession(userId);
+        }
+      }
+
+      // Ejecutar agente autónomo
+      console.log(`[AIAnalysisController] Starting advanced query for user ${userId}`);
+      const agentResult = await agentOrchestrator.run(queryText, userId, {
+        chambers: chamberIds || [],
+        chamberInfo: chamberInfo || []
+      });
+
+      const executionTimeMs = Date.now() - startTime;
+
+      // Registrar costos (adaptar formato para costTracker)
+      const aiResponse = {
+        model: agentResult.model,
+        usage: {
+          prompt_tokens: agentResult.usage.prompt_tokens,
+          completion_tokens: agentResult.usage.completion_tokens
+        },
+        response: agentResult.response
+      };
+
+      const queryCost = await costTracker.logQuery(
+        activeSessionId,
+        userId,
+        { query: queryText, chambers: chamberIds || [], dateRange: null },
+        aiResponse,
+        executionTimeMs
+      );
+
+      const sessionTotal = await costTracker.getSessionTotal(activeSessionId);
+
+      res.json({
+        success: true,
+        sessionId: activeSessionId,
+        response: {
+          summary: agentResult.response,
+          toolsUsed: agentResult.toolsUsed,
+          iterations: agentResult.iterations
+        },
+        cost: {
+          queryCost: parseFloat(queryCost.toFixed(4)),
+          sessionTotal: parseFloat(sessionTotal.toFixed(4)),
+          inputTokens: agentResult.usage.prompt_tokens,
+          outputTokens: agentResult.usage.completion_tokens,
+          model: agentResult.model
+        },
+        executionTime: executionTimeMs
+      });
+
+    } catch (error) {
+      console.error('[AIAnalysisController] Advanced query error:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Internal Server Error',
+        message: error.message || 'An error occurred while processing the advanced query'
+      });
+    }
+  }
+
+  /**
    * Get user's session history
    * GET /api/ia/analisis/sessions
    */
@@ -132,41 +240,41 @@ class AIAnalysisController {
       const { limit = 20, offset = 0, startDate, endDate } = req.query;
 
       let query = `
-        SELECT 
-          id,
-          user_id as userId,
-          session_start as sessionStart,
-          session_end as sessionEnd,
-          model_used as modelUsed,
-          total_cost_usd as totalCostUsd,
-          query_count as queryCount,
-          chambers_queried as chambersQueried,
-          success
-        FROM ai_session_costs
-        WHERE user_id = ?
+        SELECT
+          id_sesion as id,
+          id_usuario as userId,
+          fecha_inicio as sessionStart,
+          fecha_fin as sessionEnd,
+          modelo_utilizado as modelUsed,
+          costo_total_usd as totalCostUsd,
+          cantidad_consultas as queryCount,
+          camaras_consultadas as chambersQueried,
+          exitoso as success
+        FROM ai_costos_sesion
+        WHERE id_usuario = ?
       `;
 
       const params = [userId];
 
       if (startDate && endDate) {
-        query += ' AND session_start BETWEEN ? AND ?';
+        query += ' AND fecha_inicio BETWEEN ? AND ?';
         params.push(startDate, endDate);
       }
 
-      query += ' ORDER BY session_start DESC LIMIT ? OFFSET ?';
+      query += ' ORDER BY fecha_inicio DESC LIMIT ? OFFSET ?';
       params.push(parseInt(limit), parseInt(offset));
 
       const sessions = await databaseService.query(query, params);
 
       // Get total count
       let countQuery = `
-        SELECT COUNT(*) as total 
-        FROM ai_session_costs 
-        WHERE user_id = ?
+        SELECT COUNT(*) as total
+        FROM ai_costos_sesion
+        WHERE id_usuario = ?
       `;
       const countParams = [userId];
       if (startDate && endDate) {
-        countQuery += ' AND session_start BETWEEN ? AND ?';
+        countQuery += ' AND fecha_inicio BETWEEN ? AND ?';
         countParams.push(startDate, endDate);
       }
       const [{ total }] = await databaseService.query(countQuery, countParams);
@@ -202,26 +310,31 @@ class AIAnalysisController {
    */
   async getChambers(req, res) {
     try {
-      // Migrado: channels_ubibot → ubi_canal; sensor_readings_ubibot → ubi_lecturas_sensor;
-      // parametrizaciones → ubi_grupo
+      // Pivote: gen_ubicaciones_reales une temperatura (ubi_canal) y energía (sem_dispositivos)
       // Lógica dual: COALESCE(c.umbral_min, g.temperatura_minima) — override individual tiene prioridad sobre el grupo.
-      // group_name: ubi_grupo no tiene columna nombre_parametro; se retorna g.nombre_preset como group_name.
       const query = `
         SELECT
+          u.id_ubicacion_real,
+          u.nombre AS name,
           c.canal_id AS id,
-          c.nombre AS name,
           COALESCE(c.umbral_min, g.temperatura_minima) AS threshold_min,
           COALESCE(c.umbral_max, g.temperatura_maxima) AS threshold_max,
-          c.id_preset,
           g.nombre_preset AS group_name,
-          COUNT(DISTINCT DATE(sr.fecha_lectura_externa)) as days_with_data
-        FROM ubi_canal c
+          d.shelly_id,
+          d.tipo AS shelly_tipo,
+          COUNT(DISTINCT DATE(sr.fecha_lectura_externa)) AS days_with_data
+        FROM gen_ubicaciones_reales u
+        JOIN ubi_canal c ON c.id_ubicacion_real = u.id_ubicacion_real
         LEFT JOIN ubi_grupo g ON c.id_preset = g.id_preset
         LEFT JOIN ubi_lecturas_sensor sr ON c.id_canal = sr.id_canal
           AND sr.fecha_lectura_externa >= DATE_SUB(NOW(), INTERVAL 30 DAY)
-        GROUP BY c.canal_id, c.nombre, c.umbral_min, c.umbral_max, g.temperatura_minima, g.temperatura_maxima, c.id_preset, g.nombre_preset
+        LEFT JOIN sem_dispositivos d ON d.id_ubicacion_real = u.id_ubicacion_real
+          AND d.activo = 1 AND d.tipo IS NOT NULL
+        WHERE u.activo = 1
+        GROUP BY u.id_ubicacion_real, u.nombre, c.canal_id, c.umbral_min, c.umbral_max,
+                 g.temperatura_minima, g.temperatura_maxima, g.nombre_preset, d.shelly_id, d.tipo
         HAVING days_with_data > 0
-        ORDER BY c.nombre
+        ORDER BY u.nombre
       `;
 
       const chambers = await databaseService.query(query);
@@ -231,6 +344,9 @@ class AIAnalysisController {
         chambers: chambers.map(ch => ({
           id: ch.id,
           name: ch.name,
+          ubicacionId: ch.id_ubicacion_real,
+          shellyId: ch.shelly_id || null,
+          shellyTipo: ch.shelly_tipo || null,
           thresholdMin: ch.threshold_min,
           thresholdMax: ch.threshold_max,
           groupName: ch.group_name,

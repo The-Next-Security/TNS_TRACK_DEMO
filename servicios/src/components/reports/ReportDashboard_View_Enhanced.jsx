@@ -56,6 +56,7 @@ import {
   Bell
 } from "lucide-react";
 import { useToast } from "../ui/use-toast";
+import axios from "axios";
 
 // Componentes internos
 import ReportCard from "./components/ReportCard";
@@ -524,16 +525,7 @@ const ReportDashboardV2Enhanced = ({ userPermissions = [] }) => {
 
   const fetchActiveSchedulesCount = async () => {
     try {
-      const response = await fetch('/api/reportes/programados/conteo', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
-      });
-
-      if (!response.ok) {
-        console.error('[ReportDashboard] Error fetching active schedules count');
-        return;
-      }
-
-      const data = await response.json();
+      const { data } = await axios.get('/api/reportes/programados/conteo');
       setStats(prev => ({
         ...prev,
         activeSchedules: data.count || 0
@@ -545,15 +537,7 @@ const ReportDashboardV2Enhanced = ({ userPermissions = [] }) => {
 
   const fetchReportTemplates = async () => {
     try {
-      const response = await fetch('/api/reportes/plantillas', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al cargar templates de reportes');
-      }
-
-      const data = await response.json();
+      const { data } = await axios.get('/api/reportes/plantillas');
       setReportTemplates(data.templates || []);
     } catch (err) {
       console.error('[ReportDashboard] Error fetching templates:', err);
@@ -563,15 +547,7 @@ const ReportDashboardV2Enhanced = ({ userPermissions = [] }) => {
 
   const fetchRecentReports = async () => {
     try {
-      const response = await fetch('/api/reportes/historial?limit=10', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('accessToken') || ''}` }
-      });
-
-      if (!response.ok) {
-        throw new Error('Error al cargar reportes recientes');
-      }
-
-      const data = await response.json();
+      const { data } = await axios.get('/api/reportes/historial', { params: { limit: 10 } });
 
       const mappedReports = (data.reports || []).map(report => ({
         id: report.id,

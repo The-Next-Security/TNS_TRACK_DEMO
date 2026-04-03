@@ -1,10 +1,24 @@
 const path = require("path");
+const fs = require("fs");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const webpack = require("webpack");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 
+// Detectar entorno leyendo connection-config.json (mismo archivo que usa el servidor)
+// environment: 0 → desarrollo | environment: 1 → producción
+let isProduction = false;
+try {
+  const connectionConfig = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, "src/config/jsons/connection-config.json"), "utf8")
+  );
+  isProduction = connectionConfig.environment === 1;
+  console.log(`[webpack] Entorno detectado: ${isProduction ? "PRODUCCIÓN" : "DESARROLLO"}`);
+} catch (e) {
+  console.warn("[webpack] connection-config.json no encontrado — usando modo desarrollo");
+}
+
 module.exports = {
-  mode: "development", // O 'production' al desplegar
+  mode: isProduction ? "production" : "development",
   entry: path.resolve(__dirname, "src", "index.js"),
   // Suprimir warning de require() dinámico en react-datepicker (issue conocido del paquete)
   ignoreWarnings: [
@@ -55,10 +69,10 @@ module.exports = {
       ],
     }),
   ],
-  devtool: "source-map",
+  devtool: isProduction ? false : "source-map",
   output: {
     path: path.resolve(__dirname, "public"),
-    filename: "bundle.js",
+    filename: isProduction ? "bundle.[contenthash].js" : "bundle.js",
     publicPath: "/TNSTrack/",
   },
   module: {
