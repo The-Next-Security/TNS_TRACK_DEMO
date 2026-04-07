@@ -64,7 +64,9 @@ export function AuthProvider({ children }) {
       return;
     }
     try {
-      const { data } = await axios.get('/api/auth/validate');
+      const { data } = await axios.get('/api/auth/validate', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (data.valid && data.user) {
         setAuthData(data.user);
       } else {
