@@ -79,7 +79,7 @@ async function generateReport(reportType, config, userId) {
 
     // Get template configuration
     const [templateRows] = await connection.execute(
-      'SELECT * FROM report_templates WHERE template_key = ? AND active = 1',
+      'SELECT id_plantilla, nombre, clave_plantilla, admite_comparativo FROM rep_plantillas WHERE clave_plantilla = ? AND activo = 1',
       [reportType]
     );
 
@@ -91,19 +91,19 @@ async function generateReport(reportType, config, userId) {
 
     // Create pending report record in database
     // Use scheduleName if provided (for scheduled reports), otherwise use generic name
-    const reportName = config.scheduleName || `${template.name} - ${config.startDate} a ${config.endDate}`;
-    const source = config.scheduleId ? 'scheduled' : 'manual';
+    const reportName = config.scheduleName || `${template.nombre} - ${config.startDate} a ${config.endDate}`;
+    const source = config.scheduleId ? 'programado' : 'manual';
     const scheduleId = config.scheduleId || null;
 
     const [insertResult] = await connection.execute(
-      `INSERT INTO generated_reports
-        (template_id, report_name, file_path, report_config, period_start_date, period_end_date,
-         device_ids, generation_status, created_by, source, schedule_id)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'generating', ?, ?, ?)`,
+      `INSERT INTO rep_reportes_generados
+        (id_plantilla, nombre_reporte, ruta_archivo, config_reporte, fecha_inicio_periodo, fecha_fin_periodo,
+         ids_dispositivos, estado_generacion, id_usuario, fuente, id_reporte_programado)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 'generando', ?, ?, ?)`,
       [
-        template.id,
+        template.id_plantilla,
         reportName,
-        'pending', // Will be updated with actual path
+        'pendiente', // Will be updated with actual path
         JSON.stringify(config),
         config.startDate,
         config.endDate,
@@ -119,8 +119,8 @@ async function generateReport(reportType, config, userId) {
 
     // Update status to generating
     await connection.execute(
-      'UPDATE generated_reports SET generation_status = ? WHERE id = ?',
-      ['generating', reportId]
+      'UPDATE rep_reportes_generados SET estado_generacion = ? WHERE id_reporte_generado = ?',
+      ['generando', reportId]
     );
 
     // Step 1: Fetch data and calculate KPIs (based on report type)
@@ -425,10 +425,10 @@ async function generateReport(reportType, config, userId) {
     const generationTimeSeconds = Math.round((Date.now() - startTime) / 1000);
 
     await connection.execute(
-      `UPDATE generated_reports
-       SET file_path = ?, file_size_bytes = ?, generation_status = 'completed',
-           generation_time_seconds = ?
-       WHERE id = ?`,
+      `UPDATE rep_reportes_generados
+       SET ruta_archivo = ?, tamanio_bytes = ?, estado_generacion = 'completado',
+           tiempo_generacion_segundos = ?
+       WHERE id_reporte_generado = ?`,
       [fileName, pdfResult.fileSize, generationTimeSeconds, reportId]
     );
 
@@ -439,7 +439,7 @@ async function generateReport(reportType, config, userId) {
       reportId,
       reportName,
       filePath: fileName,
-      fileUrl: `/api/reports/download/${reportId}`,
+      fileUrl: `/api/reportes/descargar/${reportId}`,
       fileSize: pdfResult.fileSize,
       generatedAt: new Date().toISOString(),
       generationTimeSeconds,
@@ -462,18 +462,18 @@ async function generateReport(reportType, config, userId) {
       try {
         // Try to find the report record that was being generated
         const [rows] = await connection.execute(
-          `SELECT id FROM generated_reports
-           WHERE created_by = ? AND generation_status = 'generating'
-           ORDER BY created_at DESC LIMIT 1`,
+          `SELECT id_reporte_generado FROM rep_reportes_generados
+           WHERE id_usuario = ? AND estado_generacion = 'generando'
+           ORDER BY fecha_creacion DESC LIMIT 1`,
           [userId]
         );
 
         if (rows.length > 0) {
           await connection.execute(
-            `UPDATE generated_reports
-             SET generation_status = 'failed', generation_error = ?
-             WHERE id = ?`,
-            [error.message, rows[0].id]
+            `UPDATE rep_reportes_generados
+             SET estado_generacion = 'fallido', mensaje_error_generacion = ?
+             WHERE id_reporte_generado = ?`,
+            [error.message, rows[0].id_reporte_generado]
           );
         }
       } catch (dbError) {
@@ -512,32 +512,32 @@ async function getReportHistory(filters = {}, pagination = {}) {
     const params = [];
 
     if (reportType) {
-      conditions.push('rt.template_key = ?');
+      conditions.push('rt.clave_plantilla = ?');
       params.push(reportType);
     }
 
     if (startDate && endDate) {
       // Adjust end date to include the entire day (23:59:59)
       const endDateTime = `${endDate} 23:59:59`;
-      conditions.push('gr.created_at BETWEEN ? AND ?');
+      conditions.push('gr.fecha_creacion BETWEEN ? AND ?');
       params.push(startDate, endDateTime);
     }
 
     if (generatedBy) {
-      conditions.push('gr.created_by = ?');
+      conditions.push('gr.id_usuario = ?');
       params.push(generatedBy);
     }
 
     if (search) {
-      conditions.push('gr.report_name LIKE ?');
+      conditions.push('gr.nombre_reporte LIKE ?');
       params.push(`%${search}%`);
     }
 
     if (status) {
       if (status === 'new') {
-        conditions.push('gr.downloaded_at IS NULL');
+        conditions.push('gr.fecha_descarga IS NULL');
       } else if (status === 'downloaded') {
-        conditions.push('gr.downloaded_at IS NOT NULL');
+        conditions.push('gr.fecha_descarga IS NOT NULL');
       }
     }
 
@@ -545,9 +545,9 @@ async function getReportHistory(filters = {}, pagination = {}) {
 
     // Build ORDER BY clause
     const allowedSortFields = {
-      'created_at': 'gr.created_at',
-      'report_name': 'gr.report_name',
-      'file_size': 'gr.file_size_bytes'
+      'created_at': 'gr.fecha_creacion',
+      'report_name': 'gr.nombre_reporte',
+      'file_size': 'gr.tamanio_bytes'
     };
     const sortField = allowedSortFields[sortBy] || 'gr.created_at';
     const sortDirection = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
@@ -556,8 +556,8 @@ async function getReportHistory(filters = {}, pagination = {}) {
     // Get total count
     const countQuery = `
       SELECT COUNT(*) as total
-      FROM generated_reports gr
-      LEFT JOIN report_templates rt ON gr.template_id = rt.id
+      FROM rep_reportes_generados gr
+      LEFT JOIN rep_plantillas rt ON gr.id_plantilla = rt.id_plantilla
       ${whereClause}
     `;
 
@@ -568,27 +568,27 @@ async function getReportHistory(filters = {}, pagination = {}) {
     // Note: LIMIT and OFFSET cannot be parameterized in mysql2, must be interpolated
     const dataQuery = `
       SELECT
-        gr.id,
-        gr.report_name,
-        rt.name as template_name,
-        rt.template_key,
-        gr.created_at,
-        gr.downloaded_at,
-        gr.period_start_date,
-        gr.period_end_date,
-        gr.device_ids,
-        gr.file_size_bytes,
-        gr.generation_status,
-        gr.generation_time_seconds,
-        gr.created_by,
+        gr.id_reporte_generado,
+        gr.nombre_reporte,
+        rt.nombre AS template_nombre,
+        rt.clave_plantilla,
+        gr.fecha_creacion,
+        gr.fecha_descarga,
+        gr.fecha_inicio_periodo,
+        gr.fecha_fin_periodo,
+        gr.ids_dispositivos,
+        gr.tamanio_bytes,
+        gr.estado_generacion,
+        gr.tiempo_generacion_segundos,
+        gr.id_usuario,
         u.email,
-        gr.source,
-        gr.schedule_id,
-        sr.name as schedule_name
-      FROM generated_reports gr
-      LEFT JOIN report_templates rt ON gr.template_id = rt.id
-      LEFT JOIN gen_usuario u ON gr.created_by = u.id_usuario
-      LEFT JOIN scheduled_reports sr ON gr.schedule_id = sr.id
+        gr.fuente,
+        gr.id_reporte_programado,
+        sr.nombre AS schedule_nombre
+      FROM rep_reportes_generados gr
+      LEFT JOIN rep_plantillas rt ON gr.id_plantilla = rt.id_plantilla
+      LEFT JOIN gen_usuario u ON gr.id_usuario = u.id_usuario
+      LEFT JOIN rep_reportes_programados sr ON gr.id_reporte_programado = sr.id_reporte_programado
       ${whereClause}
       ${orderByClause}
       LIMIT ${parseInt(limit)} OFFSET ${parseInt(offset)}
@@ -597,44 +597,44 @@ async function getReportHistory(filters = {}, pagination = {}) {
     const [rows] = await connection.execute(dataQuery, params);
 
     const reports = rows.map(row => {
-      // Parse device_ids safely
+      // Parse ids_dispositivos safely
       let devices = [];
       try {
-        if (row.device_ids) {
+        if (row.ids_dispositivos) {
           // Check if it's already an array or needs parsing
-          devices = typeof row.device_ids === 'string'
-            ? JSON.parse(row.device_ids)
-            : row.device_ids;
+          devices = typeof row.ids_dispositivos === 'string'
+            ? JSON.parse(row.ids_dispositivos)
+            : row.ids_dispositivos;
         }
       } catch (parseError) {
-        console.error('[ReportHistory] Error parsing device_ids for report', row.id, ':', parseError.message);
-        console.error('[ReportHistory] Raw device_ids value:', row.device_ids);
+        console.error('[ReportHistory] Error parsing ids_dispositivos for report', row.id_reporte_generado, ':', parseError.message);
+        console.error('[ReportHistory] Raw ids_dispositivos value:', row.ids_dispositivos);
         // Fallback to empty array if parsing fails
         devices = [];
       }
 
       return {
-        id: row.id,
-        name: row.report_name,
-        type: row.template_name,
-        templateKey: row.template_key,  // Changed from typeKey to templateKey for consistency
-        template_key: row.template_key, // Added snake_case version for compatibility
-        createdAt: row.created_at,
-        downloadedAt: row.downloaded_at,
+        id: row.id_reporte_generado,
+        name: row.nombre_reporte,
+        type: row.template_nombre,
+        templateKey: row.clave_plantilla,
+        template_key: row.clave_plantilla,
+        createdAt: row.fecha_creacion,
+        downloadedAt: row.fecha_descarga,
         period: {
-          start: row.period_start_date,
-          end: row.period_end_date
+          start: row.fecha_inicio_periodo,
+          end: row.fecha_fin_periodo
         },
-        periodStartDate: row.period_start_date, // Added for EmailModal compatibility
-        periodEndDate: row.period_end_date,     // Added for EmailModal compatibility
+        periodStartDate: row.fecha_inicio_periodo,
+        periodEndDate: row.fecha_fin_periodo,
         devices: devices,
-        fileSize: row.file_size_bytes,
-        status: row.generation_status,
-        generationTime: row.generation_time_seconds,
+        fileSize: row.tamanio_bytes,
+        status: row.estado_generacion,
+        generationTime: row.tiempo_generacion_segundos,
         generatedBy: row.email || 'Sistema',
-        source: row.source,
-        scheduleId: row.schedule_id,
-        scheduleName: row.schedule_name
+        source: row.fuente,
+        scheduleId: row.id_reporte_programado,
+        scheduleName: row.schedule_nombre
       };
     });
 
