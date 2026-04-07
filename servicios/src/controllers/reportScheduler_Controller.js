@@ -10,7 +10,7 @@ const reportSchedulerService = require('../services/reports/reportScheduler_Serv
 const { DateTime } = require('luxon');
 
 /**
- * POST /api/reports/scheduled - Crear un nuevo schedule
+ * POST /api/reportes/programados - Crear un nuevo schedule
  * @param {Object} req.body - Configuración del schedule
  * @param {string} req.body.name - Nombre del schedule
  * @param {string} req.body.reportType - Tipo de reporte
@@ -130,7 +130,7 @@ async function createSchedule(req, res) {
 }
 
 /**
- * GET /api/reports/scheduled - Listar schedules
+ * GET /api/reportes/programados - Listar schedules
  * @query {boolean} activeOnly - Solo schedules activos
  */
 async function listSchedules(req, res) {
@@ -189,7 +189,7 @@ async function listSchedules(req, res) {
 }
 
 /**
- * PUT /api/reports/scheduled/:id - Actualizar un schedule
+ * PUT /api/reportes/programados/:id - Actualizar un schedule
  * @param {number} req.params.id - ID del schedule
  * @param {Object} req.body - Campos a actualizar
  */
@@ -270,7 +270,7 @@ async function updateSchedule(req, res) {
 }
 
 /**
- * DELETE /api/reports/scheduled/:id - Eliminar un schedule
+ * DELETE /api/reportes/programados/:id - Eliminar un schedule
  * @param {number} req.params.id - ID del schedule
  */
 async function deleteSchedule(req, res) {
@@ -313,7 +313,7 @@ async function deleteSchedule(req, res) {
 }
 
 /**
- * PATCH /api/reports/scheduled/:id/toggle - Activar/desactivar un schedule
+ * PATCH /api/reportes/programados/:id/toggle - Activar/desactivar un schedule
  * @param {number} req.params.id - ID del schedule
  * @param {boolean} req.body.active - Estado activo
  */
@@ -366,7 +366,7 @@ async function toggleSchedule(req, res) {
 }
 
 /**
- * GET /api/reports/scheduled/count - Obtener contador de schedules activos
+ * GET /api/reportes/programados/conteo - Obtener contador de schedules activos
  */
 async function getActiveCount(req, res) {
   try {
