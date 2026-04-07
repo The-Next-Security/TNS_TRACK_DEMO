@@ -51,7 +51,8 @@ INSERT INTO `gen_permiso` (`id_permiso`, `nombre`, `descripcion`, `activo`) VALU
 (21, 'view_defrost_analysis',             'Permiso para acceder al módulo Análisis de Deshielo', 1),
 (22, 'config_notifications',              'Permiso para acceder al módulo Config. Alertas', 1),
 (23, 'view_temp_params',                  'Permiso para acceder al módulo Parámetros Temperatura Cámaras', 1),
-(24, 'create_users',                      'Permiso para acceder al módulo Registrar Usuario', 1);
+(24, 'create_users',                      'Permiso para acceder al módulo Registrar Usuario', 1),
+(25, 'view_beacon_temperature',           'Permiso para acceder al módulo Temperatura (Beacons)', 1);
 
 INSERT INTO `gen_usuario_permisos` (`id_usuario`, `id_permiso`) VALUES
 (1 ,1 ),(1 ,2 ),(1 ,3 ),(1 ,4 ),
@@ -59,35 +60,35 @@ INSERT INTO `gen_usuario_permisos` (`id_usuario`, `id_permiso`) VALUES
 (1 ,9 ),(1 ,10 ),(1 ,11 ),(1 ,12 ),
 (1 ,13 ),(1 ,14 ),(1 ,15 ),(1 ,16 ),
 (1 ,17 ),(1 ,18 ),(1 ,19 ),(1 ,20 ),
-(1 ,21 ),(1 ,22 ),(1 ,23 ),(1 ,24 ),
+(1 ,21 ),(1 ,22 ),(1 ,23 ),(1 ,24 ),(1 ,25 ),
 
 (2 ,1 ),(2 ,2 ),(2 ,3 ),(2 ,4 ),
 (2 ,5 ),(2 ,6 ),(2 ,7 ),(2 ,8 ),
 (2 ,9 ),(2 ,10 ),(2 ,11 ),(2 ,12 ),
 (2 ,13 ),(2 ,14 ),(2 ,15 ),(2 ,16 ),
 (2 ,17 ),(2 ,18 ),(2 ,19 ),(2 ,20 ),
-(2 ,21 ),(2 ,22 ),(2 ,23 ),(2 ,24 ),
+(2 ,21 ),(2 ,22 ),(2 ,23 ),(2 ,24 ),(2 ,25 ),
 
 (3 ,1 ),(3 ,2 ),(3 ,3 ),(3 ,4 ),
 (3 ,5 ),(3 ,6 ),(3 ,7 ),(3 ,8 ),
 (3 ,9 ),(3 ,10 ),(3 ,11 ),(3 ,12 ),
 (3 ,13 ),(3 ,14 ),(3 ,15 ),(3 ,16 ),
 (3 ,17 ),(3 ,18 ),(3 ,19 ),(3 ,20 ),
-(3 ,21 ),(3 ,22 ),(3 ,23 ),(3 ,24 ),
+(3 ,21 ),(3 ,22 ),(3 ,23 ),(3 ,24 ),(3 ,25 ),
 
 (4 ,1 ),(4 ,2 ),(4 ,3 ),(4 ,4 ),
 (4 ,5 ),(4 ,6 ),(4 ,7 ),(4 ,8 ),
 (4 ,9 ),(4 ,10 ),(4 ,11 ),(4 ,12 ),
 (4 ,13 ),(4 ,14 ),(4 ,15 ),(4 ,16 ),
 (4 ,17 ),(4 ,18 ),(4 ,19 ),(4 ,20 ),
-(4 ,21 ),(4 ,22 ),(4 ,23 ),(4 ,24 ),
+(4 ,21 ),(4 ,22 ),(4 ,23 ),(4 ,24 ),(4 ,25 ),
 
 (99 ,1 ),(99 ,2 ),(99 ,3 ),(99 ,4 ),
 (99 ,5 ),(99 ,6 ),(99 ,7 ),(99 ,8 ),
 (99 ,9 ),(99 ,10 ),(99 ,11 ),(99 ,12 ),
 (99 ,13 ),(99 ,14 ),(99 ,15 ),(99 ,16 ),
 (99 ,17 ),(99 ,18 ),(99 ,19 ),(99 ,20 ),
-(99 ,21 ),(99 ,22 ),(99 ,23 ),(99 ,24 );
+(99 ,21 ),(99 ,22 ),(99 ,23 ),(99 ,24 ),(99 ,25 );
 
 INSERT INTO `gen_feriados_cl` (`fecha`, `nombre`) VALUES
 ('2026-01-01' , 'Año Nuevo'),
