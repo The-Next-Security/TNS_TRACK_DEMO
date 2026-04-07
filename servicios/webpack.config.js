@@ -76,6 +76,9 @@ module.exports = {
     publicPath: "/TNSTrack/",
   },
   module: {
+    // mapbox-gl/dist es un bundle precompilado que usa dynamic imports internos para workers.
+    // noParse evita que webpack lo reanalice, eliminando el warning "Critical dependency".
+    noParse: /(mapbox-gl)/,
     rules: [
       {
         test: /\.(js|jsx)$/,
