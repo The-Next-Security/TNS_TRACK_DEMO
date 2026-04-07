@@ -67,7 +67,7 @@ const useReportGeneration = () => {
 
       setProgress(100);
       setReportData(result.data || result);
-      setReportUrl(result.data?.downloadUrl || `/api/reports/download/${result.data?.reportId}`);
+      setReportUrl(result.data?.downloadUrl || `/api/reportes/descargar/${result.data?.reportId}`);
 
       // Mostrar notificación de éxito
       toast({
