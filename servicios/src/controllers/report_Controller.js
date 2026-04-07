@@ -24,7 +24,7 @@ const unifiedDbConfig = {
 };
 
 /**
- * POST /api/reports/generate
+ * POST /api/reportes/generar
  * Generate a new report manually
  */
 async function generateReport(req, res) {
@@ -156,7 +156,7 @@ async function generateReport(req, res) {
 }
 
 /**
- * GET /api/reports/templates
+ * GET /api/reportes/plantillas
  * Get available report templates
  */
 async function getTemplates(req, res) {
@@ -174,25 +174,33 @@ async function getTemplates(req, res) {
     });
 
     const [rows] = await connection.execute(
-      `SELECT id, template_key, name, description, report_type,
-              estimated_time_seconds, max_devices, max_days, supports_comparative
-       FROM report_templates
-       WHERE active = 1
-       ORDER BY name`
+      `SELECT p.id_plantilla,
+              p.clave_plantilla,
+              p.nombre,
+              p.descripcion,
+              t.nombre AS tipo_nombre,
+              p.tiempo_estimado_segundos,
+              p.max_dispositivos,
+              p.max_dias,
+              p.admite_comparativo
+       FROM rep_plantillas p
+       JOIN rep_tipo_reporte t ON p.id_tipo_reporte = t.id_tipo_reporte
+       WHERE p.activo = 1
+       ORDER BY p.nombre`
     );
 
     await connection.end();
 
     const templates = rows.map(row => ({
-      id: row.id,
-      key: row.template_key,
-      name: row.name,
-      description: row.description,
-      type: row.report_type,
-      estimatedTime: row.estimated_time_seconds,
-      maxDevices: row.max_devices,
-      maxDays: row.max_days,
-      supportsComparative: row.supports_comparative === 1
+      id: row.id_plantilla,
+      key: row.clave_plantilla,
+      name: row.nombre,
+      description: row.descripcion,
+      type: row.tipo_nombre,
+      estimatedTime: row.tiempo_estimado_segundos,
+      maxDevices: row.max_dispositivos,
+      maxDays: row.max_dias,
+      supportsComparative: row.admite_comparativo === 1
     }));
 
     res.json({
@@ -210,7 +218,7 @@ async function getTemplates(req, res) {
 }
 
 /**
- * GET /api/reports/history
+ * GET /api/reportes/historial
  * Get report history with filters and pagination
  */
 async function getHistory(req, res) {
@@ -273,7 +281,7 @@ async function getHistory(req, res) {
 }
 
 /**
- * GET /api/reports/download/:id
+ * GET /api/reportes/descargar/:id
  * Download a generated report PDF
  */
 async function downloadReport(req, res) {
@@ -303,9 +311,9 @@ async function downloadReport(req, res) {
     const connection = await mysql.createConnection(unifiedDbConfig);
 
     const [rows] = await connection.execute(
-      `SELECT file_path, report_name, generation_status, created_by, expired_at
-       FROM generated_reports
-       WHERE id = ?`,
+      `SELECT ruta_archivo, nombre_reporte, estado_generacion, id_usuario, fecha_expiracion
+       FROM rep_reportes_generados
+       WHERE id_reporte_generado = ?`,
       [reportId]
     );
 
@@ -321,7 +329,7 @@ async function downloadReport(req, res) {
     const report = rows[0];
 
     // Check permissions (users can only download their own reports unless admin)
-    if (userRole !== 'admin' && report.created_by !== userId) {
+    if (userRole !== 'admin' && report.id_usuario !== userId) {
       return res.status(403).json({
         success: false,
         error: 'No tienes permisos para descargar este reporte'
@@ -329,25 +337,25 @@ async function downloadReport(req, res) {
     }
 
     // Check if expired
-    if (report.expired_at) {
+    if (report.fecha_expiracion) {
       return res.status(410).json({
         success: false,
         error: 'Archivo expirado - no disponible',
-        expiredAt: report.expired_at
+        expiredAt: report.fecha_expiracion
       });
     }
 
     // Check generation status
-    if (report.generation_status !== 'completed') {
+    if (report.estado_generacion !== 'completado') {
       return res.status(400).json({
         success: false,
-        error: `Reporte no disponible. Estado: ${report.generation_status}`
+        error: `Reporte no disponible. Estado: ${report.estado_generacion}`
       });
     }
 
     // Build file path
     const storagePath = process.env.REPORTS_STORAGE_PATH || '../storage/reports';
-    const absolutePath = path.resolve(__dirname, '../../', storagePath, report.file_path);
+    const absolutePath = path.resolve(__dirname, '../../', storagePath, report.ruta_archivo);
 
     // Check if file exists
     try {
@@ -364,19 +372,19 @@ async function downloadReport(req, res) {
     try {
       const connection2 = await mysql.createConnection(unifiedDbConfig);
       await connection2.execute(
-        `UPDATE generated_reports
-         SET downloaded_at = COALESCE(downloaded_at, NOW())
-         WHERE id = ?`,
+        `UPDATE rep_reportes_generados
+         SET fecha_descarga = COALESCE(fecha_descarga, NOW())
+         WHERE id_reporte_generado = ?`,
         [reportId]
       );
       await connection2.end();
     } catch (updateError) {
-      console.error('[ReportController] Error updating downloaded_at:', updateError);
+      console.error('[ReportController] Error updating fecha_descarga:', updateError);
       // Don't fail the download if this update fails
     }
 
     // Stream file to response
-    const fileName = `${report.report_name.replace(/[^a-z0-9]/gi, '_')}.pdf`;
+    const fileName = `${report.nombre_reporte.replace(/[^a-z0-9]/gi, '_')}.pdf`;
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
@@ -394,7 +402,7 @@ async function downloadReport(req, res) {
 }
 
 /**
- * POST /api/reports/send-email
+ * POST /api/reportes/enviar-email
  * Send a generated report via email
  * Feature: 004-reportes-base-core (T070)
  */
@@ -431,15 +439,15 @@ async function sendEmail(req, res) {
     try {
       const [rows] = await connection.execute(
         `SELECT
-          file_path,
-          report_name,
-          file_size_bytes,
-          period_start_date,
-          period_end_date,
-          template_id,
-          report_config
-         FROM generated_reports
-         WHERE id = ? AND generation_status = 'completed'`,
+          ruta_archivo,
+          nombre_reporte,
+          tamanio_bytes,
+          fecha_inicio_periodo,
+          fecha_fin_periodo,
+          id_plantilla,
+          config_reporte
+         FROM rep_reportes_generados
+         WHERE id_reporte_generado = ? AND estado_generacion = 'completado'`,
         [reportId]
       );
 
@@ -454,25 +462,28 @@ async function sendEmail(req, res) {
 
       // Check file size (max 25MB for email - SendGrid limit is 30MB)
       const maxSizeBytes = 25 * 1024 * 1024; // 25MB
-      if (report.file_size_bytes && report.file_size_bytes > maxSizeBytes) {
+      if (report.tamanio_bytes && report.tamanio_bytes > maxSizeBytes) {
         return res.status(400).json({
           success: false,
-          error: `El reporte es demasiado grande para enviar por email (${(report.file_size_bytes / (1024 * 1024)).toFixed(2)}MB). Máximo permitido: 25MB. Por favor descarga el archivo directamente.`
+          error: `El reporte es demasiado grande para enviar por email (${(report.tamanio_bytes / (1024 * 1024)).toFixed(2)}MB). Máximo permitido: 25MB. Por favor descarga el archivo directamente.`
         });
       }
 
       // Get template info for report type
       const [templateRows] = await connection.execute(
-        `SELECT report_type FROM report_templates WHERE id = ?`,
-        [report.template_id]
+        `SELECT t.nombre AS tipo_nombre
+         FROM rep_plantillas p
+         JOIN rep_tipo_reporte t ON p.id_tipo_reporte = t.id_tipo_reporte
+         WHERE p.id_plantilla = ?`,
+        [report.id_plantilla]
       );
 
-      const reportType = templateRows.length > 0 ? templateRows[0].report_type : null;
+      const reportType = templateRows.length > 0 ? templateRows[0].tipo_nombre : null;
 
       // Build file path
       const reportsConfig = configLoader.getValue('reports') || {};
       const storagePath = reportsConfig.storage_path || '../storage/reports';
-      const pdfPath = path.resolve(__dirname, '../../', storagePath, report.file_path);
+      const pdfPath = path.resolve(__dirname, '../../', storagePath, report.ruta_archivo);
 
       // Verify file exists
       try {
@@ -487,14 +498,14 @@ async function sendEmail(req, res) {
 
       // Prepare report metadata for enhanced email template
       const reportMetadata = {
-        reportName: report.report_name,
-        periodStart: DateTime.fromJSDate(report.period_start_date).toFormat('dd/MM/yyyy'),
-        periodEnd: DateTime.fromJSDate(report.period_end_date).toFormat('dd/MM/yyyy'),
+        reportName: report.nombre_reporte,
+        periodStart: DateTime.fromJSDate(report.fecha_inicio_periodo).toFormat('dd/MM/yyyy'),
+        periodEnd: DateTime.fromJSDate(report.fecha_fin_periodo).toFormat('dd/MM/yyyy'),
         reportType: reportType
       };
 
       // Send email using enhanced template
-      const emailSubject = validatedData.subject || `Reporte: ${report.report_name}`;
+      const emailSubject = validatedData.subject || `Reporte: ${report.nombre_reporte}`;
       const success = await emailService.sendReportEmail(
         validatedData.recipients,
         emailSubject,
@@ -517,7 +528,7 @@ async function sendEmail(req, res) {
           success: true,
           sentCount: validatedData.recipients.length,
           recipients: validatedData.recipients,
-          reportName: report.report_name
+          reportName: report.nombre_reporte
         });
       } else {
         console.error(`[ReportController/SendEmail] ❌ Failed to send email for report ${reportId}`);
