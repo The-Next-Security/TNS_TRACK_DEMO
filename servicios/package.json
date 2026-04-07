@@ -1,6 +1,6 @@
 {
   "name": "TNS Track Demo",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Demo de TNS Track",
   "main": "src/js/main.js",
   "scripts": {
