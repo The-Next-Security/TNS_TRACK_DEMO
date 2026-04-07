@@ -81,7 +81,7 @@ const routines = [
     title: "Temperatura",
     image: temperaturaImage,
     route: "/temperatura",
-    permission: "view_temperature",
+    permission: "view_beacon_temperature",
   },
   {
     title: "Dashboard Temperatura",

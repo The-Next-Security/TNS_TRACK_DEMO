@@ -165,10 +165,10 @@ const routines = [
     permission: "view_sms" 
   },
   {
-    title: "Temperatura", 
-    image: temperaturaImage, 
-    route: "/temperatura", 
-    permission: "view_temperature" 
+    title: "Temperatura",
+    image: temperaturaImage,
+    route: "/temperatura",
+    permission: "view_beacon_temperature"
   },
   {
     title: "Display Temperatura Cámaras",
