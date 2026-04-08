@@ -18,7 +18,7 @@
 const checkGenerateReports = async (req, res, next) => {
   try {
     // Verify user is authenticated
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({
         success: false,
         error: 'No autenticado. Por favor inicia sesión.'
@@ -58,7 +58,7 @@ const checkGenerateReports = async (req, res, next) => {
 const checkScheduleReports = async (req, res, next) => {
   try {
     // Verify user is authenticated
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({
         success: false,
         error: 'No autenticado. Por favor inicia sesión.'
@@ -97,7 +97,7 @@ const checkScheduleReports = async (req, res, next) => {
 const checkSendReports = async (req, res, next) => {
   try {
     // Verify user is authenticated
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({
         success: false,
         error: 'No autenticado. Por favor inicia sesión.'
