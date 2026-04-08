@@ -25,12 +25,8 @@ const checkGenerateReports = async (req, res, next) => {
       });
     }
 
-    // Check if user has generate_reports permission
-    // Assuming req.user.permissions is an array or object with permissions
-    const hasPermission = req.user.permissions?.includes('generate_reports') ||
-                         req.user.permissions?.generate_reports === true ||
-                         req.user.role === 'admin' ||
-                         req.user.role === 'supervisor';
+    // req.user.permissions es un string de GROUP_CONCAT (ej: "view_dashboard,manage_reports")
+    const hasPermission = req.user.permissions?.includes('manage_reports');
 
     if (!hasPermission) {
       return res.status(403).json({
@@ -65,11 +61,8 @@ const checkScheduleReports = async (req, res, next) => {
       });
     }
 
-    // Check if user has schedule_reports permission
-    const hasPermission = req.user.permissions?.includes('schedule_reports') ||
-                         req.user.permissions?.schedule_reports === true ||
-                         req.user.role === 'admin' ||
-                         req.user.role === 'supervisor';
+    // req.user.permissions es un string de GROUP_CONCAT (ej: "view_dashboard,manage_reports")
+    const hasPermission = req.user.permissions?.includes('manage_reports');
 
     if (!hasPermission) {
       return res.status(403).json({
@@ -104,12 +97,8 @@ const checkSendReports = async (req, res, next) => {
       });
     }
 
-    // Check if user has send_reports permission
-    const hasPermission = req.user.permissions?.includes('send_reports') ||
-                         req.user.permissions?.send_reports === true ||
-                         req.user.role === 'admin' ||
-                         req.user.role === 'supervisor' ||
-                         req.user.role === 'manager';
+    // req.user.permissions es un string de GROUP_CONCAT (ej: "view_dashboard,manage_reports")
+    const hasPermission = req.user.permissions?.includes('manage_reports');
 
     if (!hasPermission) {
       return res.status(403).json({
