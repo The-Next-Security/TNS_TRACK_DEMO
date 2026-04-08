@@ -235,6 +235,15 @@ async function updateSchedule(req, res) {
       });
     }
 
+    // Verificar ownership antes de actualizar
+    const existing = await reportSchedulerService.getScheduleById(scheduleId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Not Found', message: 'Schedule no encontrado' });
+    }
+    if (existing.id_usuario_creador !== null && existing.id_usuario_creador !== req.user.userId) {
+      return res.status(403).json({ error: 'Forbidden', message: 'No puedes modificar un schedule que no creaste' });
+    }
+
     // Actualizar el schedule
     const result = await reportSchedulerService.updateSchedule(scheduleId, updates);
 
@@ -249,7 +258,9 @@ async function updateSchedule(req, res) {
         frequency: result.frequency,
         active: result.active,
         nextExecution: result.nextExecution,
-        nextExecutionFormatted: DateTime.fromJSDate(result.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
+        nextExecutionFormatted: result.nextExecution
+          ? DateTime.fromJSDate(result.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
+          : null
       }
     });
   } catch (error) {
@@ -284,8 +295,14 @@ async function deleteSchedule(req, res) {
       });
     }
 
-    // TODO: Verificar que el usuario es el creador del schedule (o admin)
-    // Requiere obtener el schedule primero y comparar created_by con req.user.userId
+    // Verificar ownership antes de eliminar
+    const existing = await reportSchedulerService.getScheduleById(scheduleId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Not Found', message: 'Schedule no encontrado' });
+    }
+    if (existing.id_usuario_creador !== null && existing.id_usuario_creador !== req.user.userId) {
+      return res.status(403).json({ error: 'Forbidden', message: 'No puedes eliminar un schedule que no creaste' });
+    }
 
     await reportSchedulerService.deleteSchedule(scheduleId);
 
