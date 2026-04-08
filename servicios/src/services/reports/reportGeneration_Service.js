@@ -97,13 +97,13 @@ async function generateReport(reportType, config, userId) {
 
     const [insertResult] = await connection.execute(
       `INSERT INTO rep_reportes_generados
-        (id_plantilla, nombre_reporte, ruta_archivo, config_reporte, fecha_inicio_periodo, fecha_fin_periodo,
+        (id_plantilla, nombre_reporte, ruta_archivo, tamanio_bytes, config_reporte, fecha_inicio_periodo, fecha_fin_periodo,
          ids_dispositivos, estado_generacion, id_usuario, fuente, id_reporte_programado)
-       VALUES (?, ?, ?, ?, ?, ?, ?, 'generando', ?, ?, ?)`,
+       VALUES (?, ?, ?, 0, ?, ?, ?, ?, 'generando', ?, ?, ?)`,
       [
         template.id_plantilla,
         reportName,
-        'pendiente', // Will be updated with actual path
+        'pendiente', // Will be updated with actual path after PDF generation
         JSON.stringify(config),
         config.startDate,
         config.endDate,
