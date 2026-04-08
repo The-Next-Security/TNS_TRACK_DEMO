@@ -32,7 +32,7 @@ async function generateReport(req, res) {
     console.log('[ReportController] Request body received:', JSON.stringify(req.body));
 
     const { reportType, startDate, endDate, deviceIds, includeComparative } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     console.log('[ReportController] Extracted reportType:', reportType);
 
@@ -235,7 +235,7 @@ async function getHistory(req, res) {
       limit = 20
     } = req.query;
 
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const userRole = req.user?.role;
 
     // Filters
@@ -289,7 +289,7 @@ async function downloadReport(req, res) {
 
   try {
     const reportId = parseInt(req.params.id);
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     const userRole = req.user?.role;
 
     if (!reportId || isNaN(reportId)) {
@@ -411,7 +411,7 @@ async function sendEmail(req, res) {
 
   try {
     const { reportId, recipients, subject, message } = req.body;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     console.log(`[ReportController/SendEmail] Request from user ${userId} for report ${reportId}`);
 
