@@ -11,17 +11,26 @@ const emailValidator = require('../services/reports/emailValidator_Utils');
 const path = require('path');
 const fs = require('fs').promises;
 const { DateTime } = require('luxon');
+const mysql = require('mysql2/promise');
 const configLoader = require('../config/js_files/configLoader_Config');
 
-// Database configuration aligned with unified-config.json (same as services)
-const dbConfigRaw = configLoader.getValue('database') || {};
-const unifiedDbConfig = {
-  host: dbConfigRaw.host,
-  port: dbConfigRaw.port,
-  user: dbConfigRaw.username,
-  password: dbConfigRaw.password,
-  database: dbConfigRaw.database
-};
+// Patrón lazy-cached igual que reportGeneration_Service y aggregation services.
+// Se evalúa en tiempo de ejecución (no en tiempo de require) para garantizar
+// que configLoader.initialize() ya haya corrido.
+let _dbConfig = null;
+function getDbConfig() {
+  if (!_dbConfig) {
+    const raw = configLoader.getValue('database');
+    _dbConfig = {
+      host: raw.host,
+      port: raw.port,
+      user: raw.username,
+      password: raw.password,
+      database: raw.database
+    };
+  }
+  return _dbConfig;
+}
 
 /**
  * POST /api/reportes/generar
@@ -87,8 +96,7 @@ async function generateReport(req, res) {
         const deviceIdsAsStrings = deviceIds.map(id => String(id));
         console.log('[ReportController] Converted deviceIds to strings:', deviceIdsAsStrings);
         
-        const mysql = require('mysql2/promise');
-        const connection = await mysql.createConnection(unifiedDbConfig);
+        const connection = await mysql.createConnection(getDbConfig());
 
         // Verify all devices are Shelly devices (from sem_dispositivos table)
         const placeholders = deviceIdsAsStrings.map(() => '?').join(',');
@@ -160,18 +168,8 @@ async function generateReport(req, res) {
  * Get available report templates
  */
 async function getTemplates(req, res) {
-  const mysql = require('mysql2/promise');
-  const configLoader = require('../config/js_files/configLoader_Config');
-
   try {
-    const dbConfigRaw = configLoader.getValue('database');
-    const connection = await mysql.createConnection({
-      host: dbConfigRaw.host,
-      port: dbConfigRaw.port,
-      user: dbConfigRaw.username,
-      password: dbConfigRaw.password,
-      database: dbConfigRaw.database
-    });
+    const connection = await mysql.createConnection(getDbConfig());
 
     const [rows] = await connection.execute(
       `SELECT p.id_plantilla,
@@ -285,8 +283,6 @@ async function getHistory(req, res) {
  * Download a generated report PDF
  */
 async function downloadReport(req, res) {
-  const mysql = require('mysql2/promise');
-
   try {
     const reportId = parseInt(req.params.id);
     const userId = req.user?.userId;
@@ -299,16 +295,7 @@ async function downloadReport(req, res) {
       });
     }
 
-    // Log which DB config will be used (without password)
-    console.log('[ReportController] Using DB config for download:', {
-      host: unifiedDbConfig.host,
-      port: unifiedDbConfig.port,
-      user: unifiedDbConfig.user,
-      database: unifiedDbConfig.database
-    });
-
-    // Get report from database using unified configuration
-    const connection = await mysql.createConnection(unifiedDbConfig);
+    const connection = await mysql.createConnection(getDbConfig());
 
     const [rows] = await connection.execute(
       `SELECT ruta_archivo, nombre_reporte, estado_generacion, id_usuario, fecha_expiracion
@@ -370,7 +357,7 @@ async function downloadReport(req, res) {
 
     // Mark as downloaded (only on first download)
     try {
-      const connection2 = await mysql.createConnection(unifiedDbConfig);
+      const connection2 = await mysql.createConnection(getDbConfig());
       await connection2.execute(
         `UPDATE rep_reportes_generados
          SET fecha_descarga = COALESCE(fecha_descarga, NOW())
@@ -407,8 +394,6 @@ async function downloadReport(req, res) {
  * Feature: 004-reportes-base-core (T070)
  */
 async function sendEmail(req, res) {
-  const mysql = require('mysql2/promise');
-
   try {
     const { reportId, recipients, subject, message } = req.body;
     const userId = req.user?.userId;
@@ -433,8 +418,8 @@ async function sendEmail(req, res) {
 
     const validatedData = validationResult.validated;
 
-    // Get report from database using unified config
-    const connection = await mysql.createConnection(unifiedDbConfig);
+    // Get report from database
+    const connection = await mysql.createConnection(getDbConfig());
 
     try {
       const [rows] = await connection.execute(
