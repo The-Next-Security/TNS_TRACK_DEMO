@@ -33,6 +33,17 @@ function getDbConfig() {
   return _dbConfig;
 }
 
+// Intervalo de muestreo Shelly en segundos, leído desde configuración BD.
+// Ruta: api.shelly_cloud.collection_interval (milisegundos → convertir a segundos).
+let _shellyIntervalSeconds = null;
+function getShellyIntervalSeconds() {
+  if (_shellyIntervalSeconds === null) {
+    const intervalMs = configLoader.getValue('api.shelly_cloud.collection_interval') || 60000;
+    _shellyIntervalSeconds = Math.round(Number(intervalMs) / 1000);
+  }
+  return _shellyIntervalSeconds;
+}
+
 // Timezone for calculations
 const TIMEZONE = 'America/Santiago';
 
@@ -83,36 +94,39 @@ async function calculateKPIs(deviceIds, startDate, endDate, tariffs = DEFAULT_TA
     const end = DateTime.fromFormat(endDate, 'yyyy-MM-dd', { zone: TIMEZONE });
     const daysDiff = Math.floor(end.diff(start, 'days').days) + 1;
 
+    // Intervalo de muestreo desde config BD (api.shelly_cloud.collection_interval en ms → segundos)
+    const shellyInterval = getShellyIntervalSeconds();
+
     // Query to calculate comprehensive consumption KPIs
-    // Using sem_mediciones table with formula: (potencia_activa * intervalo_segundos) / (3600 * 1000)
+    // Formula de energía: (potencia_activa_W * intervalo_s) / (3600 * 1000) = kWh
     const query = `
       SELECT
-        -- Total energy consumption (kWh) - calculated from potencia_activa and intervalo_segundos
-        SUM(potencia_activa * COALESCE(intervalo_segundos, 60)) / (3600 * 1000) as totalKWh,
-        
+        -- Total energy consumption (kWh)
+        SUM(potencia_activa * ${shellyInterval}) / (3600 * 1000) as totalKWh,
+
         -- Maximum demand (kW) - potencia_activa is in W, convert to kW
         MAX(potencia_activa / 1000) as maxDemandKW,
-        
+
         -- Average power demand (kW)
         AVG(potencia_activa / 1000) as avgDemandKW,
-        
+
         -- Total number of readings
         COUNT(*) as totalReadings,
-        
+
         -- Readings count per hour for peak hour calculation
         COUNT(CASE WHEN HOUR(timestamp_local) BETWEEN 18 AND 22 THEN 1 END) as peakHourReadings,
-        
+
         -- Sum of power during peak hours for analysis
-        SUM(CASE WHEN HOUR(timestamp_local) BETWEEN 18 AND 22 
-            THEN (potencia_activa * COALESCE(intervalo_segundos, 60)) / (3600 * 1000)
+        SUM(CASE WHEN HOUR(timestamp_local) BETWEEN 18 AND 22
+            THEN (potencia_activa * ${shellyInterval}) / (3600 * 1000)
             ELSE 0 END) as peakHourKWh
-        
+
       FROM sem_mediciones
       WHERE shelly_id IN (${placeholders})
         AND fase = 'TOTAL'
         AND DATE(timestamp_local) BETWEEN ? AND ?
         AND potencia_activa IS NOT NULL
-        AND calidad_lectura IN ('NORMAL', 'INTERPOLADA')
+        AND calidad_lectura IN ('NORMAL', 'ESTIMADO')
     `;
 
     const params = [...deviceIds, startDate, endDate];
@@ -197,27 +211,29 @@ async function getDeviceStatistics(deviceIds, startDate, endDate, tariffs = DEFA
 
     const placeholders = deviceIds.map(() => '?').join(',');
 
+    const shellyInterval = getShellyIntervalSeconds();
+
     const query = `
       SELECT
         sd.shelly_id as device_id,
         sd.nombre as device_name,
         cur.nombre as location,
-        
-        SUM(m.potencia_activa * COALESCE(m.intervalo_segundos, 60)) / (3600 * 1000) as totalKWh,
+
+        SUM(m.potencia_activa * ${shellyInterval}) / (3600 * 1000) as totalKWh,
         MAX(m.potencia_activa / 1000) as maxDemandKW,
         AVG(m.potencia_activa / 1000) as avgPowerKW,
         COUNT(*) as readingsCount,
-        
+
         MAX(m.timestamp_local) as peakDemandTimestamp
-        
+
       FROM sem_dispositivos sd
       INNER JOIN sem_mediciones m ON sd.shelly_id = m.shelly_id
-      LEFT JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real -- Migrado: catalogo_ubicaciones_reales → gen_ubicaciones_reales
+      LEFT JOIN gen_ubicaciones_reales cur ON sd.id_ubicacion_real = cur.id_ubicacion_real
       WHERE sd.shelly_id IN (${placeholders})
         AND m.fase = 'TOTAL'
         AND DATE(m.timestamp_local) BETWEEN ? AND ?
         AND m.potencia_activa IS NOT NULL
-        AND m.calidad_lectura IN ('NORMAL', 'INTERPOLADA')
+        AND m.calidad_lectura IN ('NORMAL', 'ESTIMADO')
       GROUP BY sd.shelly_id, sd.nombre, cur.nombre
       ORDER BY totalKWh DESC
     `;
@@ -281,18 +297,20 @@ async function getHourlyConsumption(deviceIds, startDate, endDate) {
 
     const placeholders = deviceIds.map(() => '?').join(',');
 
+    const shellyInterval = getShellyIntervalSeconds();
+
     const query = `
       SELECT
         HOUR(timestamp_local) as hour,
         AVG(potencia_activa / 1000) as avgKW,
-        SUM(potencia_activa * COALESCE(intervalo_segundos, 60)) / (3600 * 1000) as totalKWh,
+        SUM(potencia_activa * ${shellyInterval}) / (3600 * 1000) as totalKWh,
         COUNT(*) as readingsCount
       FROM sem_mediciones
       WHERE shelly_id IN (${placeholders})
         AND fase = 'TOTAL'
         AND DATE(timestamp_local) BETWEEN ? AND ?
         AND potencia_activa IS NOT NULL
-        AND calidad_lectura IN ('NORMAL', 'INTERPOLADA')
+        AND calidad_lectura IN ('NORMAL', 'ESTIMADO')
       GROUP BY HOUR(timestamp_local)
       ORDER BY hour
     `;
@@ -358,10 +376,12 @@ async function getDailyConsumption(deviceIds, startDate, endDate) {
 
     const placeholders = deviceIds.map(() => '?').join(',');
 
+    const shellyInterval = getShellyIntervalSeconds();
+
     const query = `
       SELECT
         DATE(timestamp_local) as date,
-        SUM(potencia_activa * COALESCE(intervalo_segundos, 60)) / (3600 * 1000) as totalKWh,
+        SUM(potencia_activa * ${shellyInterval}) / (3600 * 1000) as totalKWh,
         MAX(potencia_activa / 1000) as maxDemandKW,
         AVG(potencia_activa / 1000) as avgDemandKW
       FROM sem_mediciones
@@ -369,7 +389,7 @@ async function getDailyConsumption(deviceIds, startDate, endDate) {
         AND fase = 'TOTAL'
         AND DATE(timestamp_local) BETWEEN ? AND ?
         AND potencia_activa IS NOT NULL
-        AND calidad_lectura IN ('NORMAL', 'INTERPOLADA')
+        AND calidad_lectura IN ('NORMAL', 'ESTIMADO')
       GROUP BY DATE(timestamp_local)
       ORDER BY date
     `;
@@ -421,17 +441,19 @@ async function calculateCost(deviceIds, startDate, endDate, tariffs = DEFAULT_TA
 
     const placeholders = deviceIds.map(() => '?').join(',');
 
+    const shellyInterval = getShellyIntervalSeconds();
+
     // Query to get hourly consumption grouped by tariff periods
     const query = `
       SELECT
         HOUR(timestamp_local) as hour,
-        SUM(potencia_activa * COALESCE(intervalo_segundos, 60)) / (3600 * 1000) as kWh
+        SUM(potencia_activa * ${shellyInterval}) / (3600 * 1000) as kWh
       FROM sem_mediciones
       WHERE shelly_id IN (${placeholders})
         AND fase = 'TOTAL'
         AND DATE(timestamp_local) BETWEEN ? AND ?
         AND potencia_activa IS NOT NULL
-        AND calidad_lectura IN ('NORMAL', 'INTERPOLADA')
+        AND calidad_lectura IN ('NORMAL', 'ESTIMADO')
       GROUP BY HOUR(timestamp_local)
     `;
 
