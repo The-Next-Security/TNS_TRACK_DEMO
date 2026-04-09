@@ -17,10 +17,6 @@
 
 ## Unreleased
 
-### 2026-04-09 — @Bufigol ([#101](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/101))
-- **chore** `SQL - BBDD, back-end, analytics, front-end` | [FEATURE] Reportería: permisos, migraciones SQL, scheduler y fixes asociados
-
-
 _Sin cambios pendientes._
 
 
