@@ -15,7 +15,7 @@
  */
 
 const cron = require('node-cron');
-const cronParser = require('cron-parser');
+const { CronExpressionParser } = require('cron-parser');
 const mysql = require('mysql2/promise');
 const configLoader = require('../../config/js_files/configLoader_Config');
 const reportGenerationService = require('./reportGeneration_Service');
@@ -55,15 +55,48 @@ const TIMEZONE = 'America/Santiago';
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Código de error para que el controller responda 422 */
+const ERR_NO_NEXT_EXECUTION = 'NO_NEXT_EXECUTION';
+
 /**
- * Calcula la próxima ejecución de una expresión cron.
+ * Normaliza `parametros_ejecucion` desde mysql2: columna JSON puede llegar como objeto o string.
+ * @param {unknown} raw
+ * @returns {Object}
+ */
+function parseParametrosEjecucion(raw) {
+  if (raw == null || raw === '') return {};
+  if (typeof raw === 'object' && !Array.isArray(raw)) return { ...raw };
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      return typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed) ? parsed : {};
+    } catch (e) {
+      console.error('[Scheduler] parametros_ejecucion JSON inválido:', e.message);
+      return {};
+    }
+  }
+  return {};
+}
+
+/**
+ * Serializa parámetros para guardar en columna JSON (siempre string JSON para consistencia).
+ * @param {Object} obj
+ * @returns {string|null}
+ */
+function stringifyParametrosEjecucion(obj) {
+  if (obj == null) return null;
+  return JSON.stringify(obj);
+}
+
+/**
+ * Calcula la próxima ejecución de una expresión cron (cron-parser v5).
  * @param {string} cronExpression
  * @returns {Date|null}
  */
 function calculateNextExecution(cronExpression) {
   try {
-    const interval = cronParser.parseExpression(cronExpression, { tz: TIMEZONE });
-    return interval.next().toDate();
+    const expr = CronExpressionParser.parse(cronExpression, { tz: TIMEZONE });
+    return expr.next().toDate();
   } catch (error) {
     console.error(`[Scheduler] Expresión cron inválida "${cronExpression}":`, error.message);
     return null;
@@ -156,6 +189,12 @@ async function createSchedule({ name, reportType, frequency, dayOfWeek, time, pa
   }
 
   const proxima_ejecucion = calculateNextExecution(expresion_cron);
+  if (active && !proxima_ejecucion) {
+    const err = new Error('No se pudo calcular la próxima ejecución con la expresión cron indicada.');
+    err.code = ERR_NO_NEXT_EXECUTION;
+    throw err;
+  }
+
   const parametrosJson = parametrosEjecucion ? JSON.stringify(parametrosEjecucion) : null;
 
   const connection = await getPool().getConnection();
@@ -238,11 +277,16 @@ async function updateSchedule(id, updates) {
 
     const nuevoNombre     = updates.name              ?? current.nombre;
     const nuevoActivo     = updates.active             !== undefined ? updates.active : Boolean(current.activo);
-    const nuevosParametros = updates.parametrosEjecucion
+    const nuevosParametros = updates.parametrosEjecucion != null
       ? JSON.stringify(updates.parametrosEjecucion)
-      : current.parametros_ejecucion;
+      : stringifyParametrosEjecucion(parseParametrosEjecucion(current.parametros_ejecucion));
 
     const proxima_ejecucion = calculateNextExecution(nuevaCron);
+    if (nuevoActivo && !proxima_ejecucion) {
+      const err = new Error('No se pudo calcular la próxima ejecución con la expresión cron indicada.');
+      err.code = ERR_NO_NEXT_EXECUTION;
+      throw err;
+    }
 
     await connection.execute(
       `UPDATE rep_reportes_programados
@@ -346,7 +390,7 @@ async function listSchedules(filters = {}) {
 
     return schedules.map(s => {
       const { frequency, dayOfWeek, executionTime } = parseCronExpression(s.expresion_cron);
-      const parametros = s.parametros_ejecucion ? JSON.parse(s.parametros_ejecucion) : {};
+      const parametros = parseParametrosEjecucion(s.parametros_ejecucion);
 
       return {
         id:              s.id_reporte_programado,
@@ -468,9 +512,7 @@ async function executeScheduledReport(id, options) {
     const schedule = await getScheduleById(id);
     if (!schedule) throw new Error(`Schedule #${id} no encontrado en BD`);
 
-    const parametros = schedule.parametros_ejecucion
-      ? JSON.parse(schedule.parametros_ejecucion)
-      : {};
+    const parametros = parseParametrosEjecucion(schedule.parametros_ejecucion);
 
     const periodType = parametros.periodType ?? 'last_day';
     const { startDate, endDate } = calcDateRange(periodType);
@@ -508,7 +550,7 @@ async function executeScheduledReport(id, options) {
       proxima_ejecucion: null,
       incrementarConteo: false
     });
-    throw error;
+    // No re-lanzar: evita doble log en node-cron; el fallo ya quedó en BD y en consola arriba
   }
 }
 
@@ -521,7 +563,7 @@ async function loadActiveSchedules() {
   try {
     const [schedules] = await connection.execute(
       `SELECT r.id_reporte_programado, r.nombre, r.id_plantilla,
-              r.expresion_cron, r.parametros_ejecucion
+              r.expresion_cron, r.parametros_ejecucion, r.proxima_ejecucion
        FROM rep_reportes_programados r
        WHERE r.activo = 1`
     );
@@ -530,10 +572,30 @@ async function loadActiveSchedules() {
 
     for (const s of schedules) {
       try {
+        let proxima = s.proxima_ejecucion;
+        if (!proxima && s.expresion_cron) {
+          const calculated = calculateNextExecution(s.expresion_cron);
+          if (calculated) {
+            await connection.execute(
+              'UPDATE rep_reportes_programados SET proxima_ejecucion = ? WHERE id_reporte_programado = ?',
+              [calculated, s.id_reporte_programado]
+            );
+            proxima = calculated;
+            console.log(`[Scheduler] Reconciliada proxima_ejecucion para #${s.id_reporte_programado}`);
+          } else {
+            console.error(
+              `[Scheduler] Omitiendo job #${s.id_reporte_programado}: no se pudo calcular proxima_ejecucion para "${s.expresion_cron}"`
+            );
+            continue;
+          }
+        }
+
+        const parametrosStr = stringifyParametrosEjecucion(parseParametrosEjecucion(s.parametros_ejecucion));
+
         startCronJob(s.id_reporte_programado, s.expresion_cron, {
           nombre:               s.nombre,
           id_plantilla:         s.id_plantilla,
-          parametros_ejecucion: s.parametros_ejecucion
+          parametros_ejecucion: parametrosStr
         });
       } catch (error) {
         console.error(`[Scheduler] Error al cargar schedule #${s.id_reporte_programado}:`, error);
@@ -560,5 +622,7 @@ module.exports = {
   executeScheduledReport,
   updateEjecucion,
   startCronJob,
-  stopCronJob
+  stopCronJob,
+  parseParametrosEjecucion,
+  ERR_NO_NEXT_EXECUTION
 };
