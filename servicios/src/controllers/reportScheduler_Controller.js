@@ -9,6 +9,14 @@
 const reportSchedulerService = require('../services/reports/reportScheduler_Service');
 const { DateTime } = require('luxon');
 
+const DUPLICATE_SCHEDULE_NAME_CODE = 'DUPLICATE_SCHEDULE_NAME';
+
+/** MySQL 1062 en uk_rep_reportes_programados_nombre */
+function isDuplicateScheduleNameError(error) {
+  return error.code === 'ER_DUP_ENTRY' &&
+    String(error.sqlMessage || '').includes('uk_rep_reportes_programados_nombre');
+}
+
 /**
  * POST /api/reportes/programados - Crear un nuevo schedule
  * @param {Object} req.body - Configuración del schedule
@@ -124,6 +132,23 @@ async function createSchedule(req, res) {
     });
   } catch (error) {
     console.error('[SchedulerController] Error creating schedule:', error);
+
+    if (isDuplicateScheduleNameError(error)) {
+      return res.status(409).json({
+        error: 'Conflict',
+        code: DUPLICATE_SCHEDULE_NAME_CODE,
+        message: 'Ya existe un reporte programado con ese nombre. Elige otro nombre o edita el existente.'
+      });
+    }
+
+    if (error.code === reportSchedulerService.ERR_NO_NEXT_EXECUTION) {
+      return res.status(422).json({
+        error: 'Unprocessable Entity',
+        code: error.code,
+        message: error.message
+      });
+    }
+
     res.status(500).json({
       error: 'Internal Server Error',
       message: error.message || 'Error al crear el schedule'
@@ -251,9 +276,7 @@ async function updateSchedule(req, res) {
 
     // Traducir campos planos a parametrosEjecucion si el cliente los envía
     if (updates.deviceIds !== undefined || updates.periodType !== undefined || updates.options !== undefined) {
-      const existingParametros = existing.parametros_ejecucion
-        ? JSON.parse(existing.parametros_ejecucion)
-        : {};
+      const existingParametros = reportSchedulerService.parseParametrosEjecucion(existing.parametros_ejecucion);
       updates.parametrosEjecucion = {
         ...existingParametros,
         ...(updates.periodType !== undefined ? { periodType: updates.periodType } : {}),
@@ -290,6 +313,22 @@ async function updateSchedule(req, res) {
     if (error.message.includes('no encontrado')) {
       return res.status(404).json({
         error: 'Not Found',
+        message: error.message
+      });
+    }
+
+    if (isDuplicateScheduleNameError(error)) {
+      return res.status(409).json({
+        error: 'Conflict',
+        code: DUPLICATE_SCHEDULE_NAME_CODE,
+        message: 'Ya existe un reporte programado con ese nombre. Elige otro nombre o edita el existente.'
+      });
+    }
+
+    if (error.code === reportSchedulerService.ERR_NO_NEXT_EXECUTION) {
+      return res.status(422).json({
+        error: 'Unprocessable Entity',
+        code: error.code,
         message: error.message
       });
     }
