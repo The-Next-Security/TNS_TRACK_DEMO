@@ -81,3 +81,4 @@ migracion/
 **/.DS_Store
 Thumbs.db
 SQL_FILES/log_ejecucion.log
+storage/reports/
