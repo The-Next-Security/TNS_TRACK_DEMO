@@ -214,6 +214,7 @@ class usuariosController {
         'view_blind_spot_intrusions',
         'view_door_status',
         'view_temperature',
+        'view_beacon_temperature',
         'view_temperature_camaras',
         'view_temperature_dashboard',
         'view_temp_params',
@@ -224,7 +225,8 @@ class usuariosController {
         'view_sms',
         'view_alerts',
         'manage_alerts',
-        'config_notifications'
+        'config_notifications',
+        'manage_reports'
       ];
       const requestedPermissions = permissions.split(',').map(p => p.trim()).filter(p => p); // Filtrar vacíos
       const invalidPermissions = requestedPermissions.filter(p => !validPermissions.includes(p));
@@ -392,6 +394,7 @@ class usuariosController {
         'view_blind_spot_intrusions',
         'view_door_status',
         'view_temperature',
+        'view_beacon_temperature',
         'view_temperature_camaras',
         'view_temperature_dashboard',
         'view_temp_params',
@@ -402,7 +405,8 @@ class usuariosController {
         'view_sms',
         'view_alerts',
         'manage_alerts',
-        'config_notifications'
+        'config_notifications',
+        'manage_reports'
       ];
       const requestedPermissions = permissions.split(',').map(p => p.trim()).filter(p => p); // Filtrar vacíos
       const invalidPermissions = requestedPermissions.filter(p => !validPermissions.includes(p));

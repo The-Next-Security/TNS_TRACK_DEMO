@@ -33,7 +33,7 @@ import paramTempIcon from "../assets/images/param_temp.png";
 import frostIcon from "../assets/images/frost.png";
 import thermo_electricImage from "../assets/images/thermo_electric.png";
 import dashboard_electricImage from "../assets/images/dashboarelectrcio.png";
-import reportsImage from "../assets/images/data_intelligence.png";
+import reportsImage from "../assets/images/reporteria.jpeg";
 import consumototaldiario_electricImage from "../assets/images/consumototaldiario.png";
 import consumoelectrico_electricImage from "../assets/images/consumoelectrico.png";
 import consumototalmes_electricImage from "../assets/images/consumototalmes.png";
@@ -165,10 +165,10 @@ const routines = [
     permission: "view_sms" 
   },
   {
-    title: "Temperatura", 
-    image: temperaturaImage, 
-    route: "/temperatura", 
-    permission: "view_temperature" 
+    title: "Temperatura",
+    image: temperaturaImage,
+    route: "/temperatura",
+    permission: "view_beacon_temperature"
   },
   {
     title: "Display Temperatura Cámaras",

@@ -9,8 +9,16 @@
 const reportSchedulerService = require('../services/reports/reportScheduler_Service');
 const { DateTime } = require('luxon');
 
+const DUPLICATE_SCHEDULE_NAME_CODE = 'DUPLICATE_SCHEDULE_NAME';
+
+/** MySQL 1062 en uk_rep_reportes_programados_nombre */
+function isDuplicateScheduleNameError(error) {
+  return error.code === 'ER_DUP_ENTRY' &&
+    String(error.sqlMessage || '').includes('uk_rep_reportes_programados_nombre');
+}
+
 /**
- * POST /api/reports/scheduled - Crear un nuevo schedule
+ * POST /api/reportes/programados - Crear un nuevo schedule
  * @param {Object} req.body - Configuración del schedule
  * @param {string} req.body.name - Nombre del schedule
  * @param {string} req.body.reportType - Tipo de reporte
@@ -100,9 +108,11 @@ async function createSchedule(req, res) {
       frequency,
       dayOfWeek,
       time,
-      periodType,
-      deviceIds,
-      options: options || {},
+      parametrosEjecucion: {
+        periodType,
+        deviceIds,
+        options: options || {}
+      },
       active: active !== false, // Default true
       createdBy: req.user.userId // Desde el middleware de autenticación
     });
@@ -122,6 +132,23 @@ async function createSchedule(req, res) {
     });
   } catch (error) {
     console.error('[SchedulerController] Error creating schedule:', error);
+
+    if (isDuplicateScheduleNameError(error)) {
+      return res.status(409).json({
+        error: 'Conflict',
+        code: DUPLICATE_SCHEDULE_NAME_CODE,
+        message: 'Ya existe un reporte programado con ese nombre. Elige otro nombre o edita el existente.'
+      });
+    }
+
+    if (error.code === reportSchedulerService.ERR_NO_NEXT_EXECUTION) {
+      return res.status(422).json({
+        error: 'Unprocessable Entity',
+        code: error.code,
+        message: error.message
+      });
+    }
+
     res.status(500).json({
       error: 'Internal Server Error',
       message: error.message || 'Error al crear el schedule'
@@ -130,7 +157,7 @@ async function createSchedule(req, res) {
 }
 
 /**
- * GET /api/reports/scheduled - Listar schedules
+ * GET /api/reportes/programados - Listar schedules
  * @query {boolean} activeOnly - Solo schedules activos
  */
 async function listSchedules(req, res) {
@@ -147,30 +174,33 @@ async function listSchedules(req, res) {
     const schedules = await reportSchedulerService.listSchedules(filters);
 
     // Formatear fechas para mejor legibilidad
-    const formattedSchedules = schedules.map(schedule => ({
-      id: schedule.id,
-      name: schedule.name,
-      reportType: schedule.reportType,
-      frequency: schedule.frequency,
-      dayOfWeek: schedule.dayOfWeek,
-      executionTime: schedule.executionTime,
-      periodType: schedule.periodType,
-      deviceCount: schedule.deviceIds.length,
-      deviceIds: schedule.deviceIds,
-      options: schedule.options,
-      active: schedule.active,
-      nextExecution: schedule.nextExecution,
-      nextExecutionFormatted: schedule.nextExecution
-        ? DateTime.fromJSDate(schedule.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
-        : null,
-      lastExecution: schedule.lastExecution,
-      lastExecutionFormatted: schedule.lastExecution
-        ? DateTime.fromJSDate(schedule.lastExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
-        : null,
-      executionCount: schedule.executionCount,
-      isRunning: schedule.isRunning,
-      createdAt: schedule.createdAt
-    }));
+    const formattedSchedules = schedules.map(schedule => {
+      const parametros = schedule.parametrosEjecucion || {};
+      return {
+        id: schedule.id,
+        name: schedule.name,
+        reportType: schedule.reportType,
+        frequency: schedule.frequency,
+        dayOfWeek: schedule.dayOfWeek,
+        executionTime: schedule.executionTime,
+        periodType: parametros.periodType || null,
+        deviceCount: Array.isArray(parametros.deviceIds) ? parametros.deviceIds.length : 0,
+        deviceIds: parametros.deviceIds || [],
+        options: parametros.options || {},
+        active: schedule.active,
+        nextExecution: schedule.nextExecution,
+        nextExecutionFormatted: schedule.nextExecution
+          ? DateTime.fromJSDate(schedule.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
+          : null,
+        lastExecution: schedule.lastExecution,
+        lastExecutionFormatted: schedule.lastExecution
+          ? DateTime.fromJSDate(schedule.lastExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
+          : null,
+        executionCount: schedule.executionCount,
+        isRunning: schedule.isRunning,
+        createdAt: schedule.createdAt
+      };
+    });
 
     res.json({
       success: true,
@@ -189,7 +219,7 @@ async function listSchedules(req, res) {
 }
 
 /**
- * PUT /api/reports/scheduled/:id - Actualizar un schedule
+ * PUT /api/reportes/programados/:id - Actualizar un schedule
  * @param {number} req.params.id - ID del schedule
  * @param {Object} req.body - Campos a actualizar
  */
@@ -235,6 +265,29 @@ async function updateSchedule(req, res) {
       });
     }
 
+    // Verificar ownership antes de actualizar
+    const existing = await reportSchedulerService.getScheduleById(scheduleId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Not Found', message: 'Schedule no encontrado' });
+    }
+    if (existing.id_usuario_creador !== null && existing.id_usuario_creador !== req.user.userId) {
+      return res.status(403).json({ error: 'Forbidden', message: 'No puedes modificar un schedule que no creaste' });
+    }
+
+    // Traducir campos planos a parametrosEjecucion si el cliente los envía
+    if (updates.deviceIds !== undefined || updates.periodType !== undefined || updates.options !== undefined) {
+      const existingParametros = reportSchedulerService.parseParametrosEjecucion(existing.parametros_ejecucion);
+      updates.parametrosEjecucion = {
+        ...existingParametros,
+        ...(updates.periodType !== undefined ? { periodType: updates.periodType } : {}),
+        ...(updates.deviceIds  !== undefined ? { deviceIds:  updates.deviceIds  } : {}),
+        ...(updates.options    !== undefined ? { options:    updates.options    } : {}),
+      };
+      delete updates.deviceIds;
+      delete updates.periodType;
+      delete updates.options;
+    }
+
     // Actualizar el schedule
     const result = await reportSchedulerService.updateSchedule(scheduleId, updates);
 
@@ -249,7 +302,9 @@ async function updateSchedule(req, res) {
         frequency: result.frequency,
         active: result.active,
         nextExecution: result.nextExecution,
-        nextExecutionFormatted: DateTime.fromJSDate(result.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
+        nextExecutionFormatted: result.nextExecution
+          ? DateTime.fromJSDate(result.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
+          : null
       }
     });
   } catch (error) {
@@ -262,6 +317,22 @@ async function updateSchedule(req, res) {
       });
     }
 
+    if (isDuplicateScheduleNameError(error)) {
+      return res.status(409).json({
+        error: 'Conflict',
+        code: DUPLICATE_SCHEDULE_NAME_CODE,
+        message: 'Ya existe un reporte programado con ese nombre. Elige otro nombre o edita el existente.'
+      });
+    }
+
+    if (error.code === reportSchedulerService.ERR_NO_NEXT_EXECUTION) {
+      return res.status(422).json({
+        error: 'Unprocessable Entity',
+        code: error.code,
+        message: error.message
+      });
+    }
+
     res.status(500).json({
       error: 'Internal Server Error',
       message: error.message || 'Error al actualizar el schedule'
@@ -270,7 +341,7 @@ async function updateSchedule(req, res) {
 }
 
 /**
- * DELETE /api/reports/scheduled/:id - Eliminar un schedule
+ * DELETE /api/reportes/programados/:id - Eliminar un schedule
  * @param {number} req.params.id - ID del schedule
  */
 async function deleteSchedule(req, res) {
@@ -284,8 +355,14 @@ async function deleteSchedule(req, res) {
       });
     }
 
-    // TODO: Verificar que el usuario es el creador del schedule (o admin)
-    // Requiere obtener el schedule primero y comparar created_by con req.user.userId
+    // Verificar ownership antes de eliminar
+    const existing = await reportSchedulerService.getScheduleById(scheduleId);
+    if (!existing) {
+      return res.status(404).json({ error: 'Not Found', message: 'Schedule no encontrado' });
+    }
+    if (existing.id_usuario_creador !== null && existing.id_usuario_creador !== req.user.userId) {
+      return res.status(403).json({ error: 'Forbidden', message: 'No puedes eliminar un schedule que no creaste' });
+    }
 
     await reportSchedulerService.deleteSchedule(scheduleId);
 
@@ -313,7 +390,7 @@ async function deleteSchedule(req, res) {
 }
 
 /**
- * PATCH /api/reports/scheduled/:id/toggle - Activar/desactivar un schedule
+ * PATCH /api/reportes/programados/:id/toggle - Activar/desactivar un schedule
  * @param {number} req.params.id - ID del schedule
  * @param {boolean} req.body.active - Estado activo
  */
@@ -366,7 +443,7 @@ async function toggleSchedule(req, res) {
 }
 
 /**
- * GET /api/reports/scheduled/count - Obtener contador de schedules activos
+ * GET /api/reportes/programados/conteo - Obtener contador de schedules activos
  */
 async function getActiveCount(req, res) {
   try {

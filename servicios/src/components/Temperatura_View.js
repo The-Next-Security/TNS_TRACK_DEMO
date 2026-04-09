@@ -50,7 +50,8 @@ const Temperatura = () => {
         params: { date: formattedDate },
       });
       console.log("Datos recibidos:", response.data);
-      setData(response.data);
+      const payload = response.data;
+      setData(Array.isArray(payload) ? payload : []);
       setLoading(false);
       setError(null);
     } catch (error) {

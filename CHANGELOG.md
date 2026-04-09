@@ -7,6 +7,29 @@
 
 ---
 
+## [1.1.1] - 2026-04-07
+
+### Added
+- **Permiso `view_beacon_temperature`**: Nuevo permiso específico para el módulo
+  Temperatura (Beacons), desacoplado de `view_temperature`. Creado en `gen_permiso`
+  con ID 25 y asignado a los usuarios iniciales.
+
+### Fixed
+- **Auth race condition en page refresh**: `checkAuth()` ahora pasa el header
+  `Authorization` explícitamente en la llamada a `/api/auth/validate`, eliminando
+  la dependencia del interceptor de axios que se inicializa en el componente padre.
+  Al hacer F5, ya no se pierden los permisos del usuario.
+- **Crash en módulo Temperatura**: Guard defensivo `Array.isArray()` en `setData()`
+  previene `TypeError: data.map is not a function` cuando el endpoint retorna un
+  objeto en lugar de un array.
+
+### Security
+- **Dependencias actualizadas** — 5 PRs de Dependabot incorporados (#88, #89, #90, #91, #92):
+  axios 1.14.0, dotenv 17.4.0, react-router 7.14.0, react-router-dom 7.14.0,
+  mapbox-gl 3.21.0.
+
+---
+
 ## [1.1.0] - 2026-04-03
 
 ### Added
