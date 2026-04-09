@@ -67,8 +67,12 @@ async function generateReport(reportType, config, userId) {
 
   try {
     // Validate inputs
-    if (!reportType || !config || !userId) {
-      throw new Error('Missing required parameters: reportType, config, or userId');
+    if (!reportType || !config) {
+      throw new Error('Missing required parameters: reportType or config');
+    }
+
+    if (userId === undefined) {
+      throw new Error('Missing required parameter: userId');
     }
 
     if (!config.startDate || !config.endDate || !config.deviceIds || config.deviceIds.length === 0) {
