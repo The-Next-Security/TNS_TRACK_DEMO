@@ -126,8 +126,9 @@ const ReportSchedulerV2 = ({ userPermissions = [] }) => {
       fetchSchedules();
     } catch (err) {
       console.error('[Scheduler] Error saving schedule:', err);
+      const conflictName = err.apiCode === 'DUPLICATE_SCHEDULE_NAME';
       toast({
-        title: "Error",
+        title: conflictName ? "Nombre ya en uso" : "Error",
         description: err.message || 'No se pudo guardar el schedule',
         variant: "destructive",
       });
