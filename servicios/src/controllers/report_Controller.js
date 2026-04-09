@@ -341,7 +341,7 @@ async function downloadReport(req, res) {
     }
 
     // Build file path
-    const storagePath = process.env.REPORTS_STORAGE_PATH || '../storage/reports';
+    const storagePath = configLoader.getValue('reports_module_config.reports_storage_path') || '../storage/reports';
     const absolutePath = path.resolve(__dirname, '../../', storagePath, report.ruta_archivo);
 
     // Check if file exists
