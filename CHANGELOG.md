@@ -185,3 +185,11 @@ Ver [ROADMAP.md](./ROADMAP.md) para la planificación de las siguientes versione
 ---
 
 **Última actualización**: 2026-03-18
+
+---
+## Releases
+
+- [1.2.1](https://github.com/andresTNS/TNS_TRACK_DEMO/releases/tag/v1.2.0)
+- [1.1.1](https://github.com/andresTNS/TNS_TRACK_DEMO/releases/tag/v1.1.1)
+- [1.1.0](https://github.com/andresTNS/TNS_TRACK_DEMO/releases/tag/v1.1.0)
+- [1.0.0](https://github.com/andresTNS/TNS_TRACK_DEMO/releases/tag/v1.0.0)
