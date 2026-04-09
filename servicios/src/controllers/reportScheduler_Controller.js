@@ -100,9 +100,11 @@ async function createSchedule(req, res) {
       frequency,
       dayOfWeek,
       time,
-      periodType,
-      deviceIds,
-      options: options || {},
+      parametrosEjecucion: {
+        periodType,
+        deviceIds,
+        options: options || {}
+      },
       active: active !== false, // Default true
       createdBy: req.user.userId // Desde el middleware de autenticación
     });
@@ -147,30 +149,33 @@ async function listSchedules(req, res) {
     const schedules = await reportSchedulerService.listSchedules(filters);
 
     // Formatear fechas para mejor legibilidad
-    const formattedSchedules = schedules.map(schedule => ({
-      id: schedule.id,
-      name: schedule.name,
-      reportType: schedule.reportType,
-      frequency: schedule.frequency,
-      dayOfWeek: schedule.dayOfWeek,
-      executionTime: schedule.executionTime,
-      periodType: schedule.periodType,
-      deviceCount: schedule.deviceIds.length,
-      deviceIds: schedule.deviceIds,
-      options: schedule.options,
-      active: schedule.active,
-      nextExecution: schedule.nextExecution,
-      nextExecutionFormatted: schedule.nextExecution
-        ? DateTime.fromJSDate(schedule.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
-        : null,
-      lastExecution: schedule.lastExecution,
-      lastExecutionFormatted: schedule.lastExecution
-        ? DateTime.fromJSDate(schedule.lastExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
-        : null,
-      executionCount: schedule.executionCount,
-      isRunning: schedule.isRunning,
-      createdAt: schedule.createdAt
-    }));
+    const formattedSchedules = schedules.map(schedule => {
+      const parametros = schedule.parametrosEjecucion || {};
+      return {
+        id: schedule.id,
+        name: schedule.name,
+        reportType: schedule.reportType,
+        frequency: schedule.frequency,
+        dayOfWeek: schedule.dayOfWeek,
+        executionTime: schedule.executionTime,
+        periodType: parametros.periodType || null,
+        deviceCount: Array.isArray(parametros.deviceIds) ? parametros.deviceIds.length : 0,
+        deviceIds: parametros.deviceIds || [],
+        options: parametros.options || {},
+        active: schedule.active,
+        nextExecution: schedule.nextExecution,
+        nextExecutionFormatted: schedule.nextExecution
+          ? DateTime.fromJSDate(schedule.nextExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
+          : null,
+        lastExecution: schedule.lastExecution,
+        lastExecutionFormatted: schedule.lastExecution
+          ? DateTime.fromJSDate(schedule.lastExecution).setZone('America/Santiago').toFormat('dd/MM/yyyy HH:mm')
+          : null,
+        executionCount: schedule.executionCount,
+        isRunning: schedule.isRunning,
+        createdAt: schedule.createdAt
+      };
+    });
 
     res.json({
       success: true,
@@ -242,6 +247,22 @@ async function updateSchedule(req, res) {
     }
     if (existing.id_usuario_creador !== null && existing.id_usuario_creador !== req.user.userId) {
       return res.status(403).json({ error: 'Forbidden', message: 'No puedes modificar un schedule que no creaste' });
+    }
+
+    // Traducir campos planos a parametrosEjecucion si el cliente los envía
+    if (updates.deviceIds !== undefined || updates.periodType !== undefined || updates.options !== undefined) {
+      const existingParametros = existing.parametros_ejecucion
+        ? JSON.parse(existing.parametros_ejecucion)
+        : {};
+      updates.parametrosEjecucion = {
+        ...existingParametros,
+        ...(updates.periodType !== undefined ? { periodType: updates.periodType } : {}),
+        ...(updates.deviceIds  !== undefined ? { deviceIds:  updates.deviceIds  } : {}),
+        ...(updates.options    !== undefined ? { options:    updates.options    } : {}),
+      };
+      delete updates.deviceIds;
+      delete updates.periodType;
+      delete updates.options;
     }
 
     // Actualizar el schedule
