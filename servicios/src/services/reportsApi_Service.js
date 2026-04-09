@@ -14,6 +14,18 @@ function mapAxiosError(err) {
   if (err.response) {
     const status = err.response.status;
     const d = err.response.data;
+
+    if (status === 409 && d && typeof d === 'object' && (d.message || d.error)) {
+      const e = new Error(d.message || d.error);
+      if (d.code) e.apiCode = d.code;
+      return e;
+    }
+    if (status === 422 && d && typeof d === 'object' && (d.message || d.error)) {
+      const e = new Error(d.message || d.error);
+      if (d.code) e.apiCode = d.code;
+      return e;
+    }
+
     const msg =
       d && typeof d === 'object' && (d.message || d.error)
         ? d.message || d.error

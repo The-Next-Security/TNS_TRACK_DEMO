@@ -511,6 +511,7 @@ class NotificationController {
             // JOIN usa id_canal (PK), no canal_id (API ID)
             const [currentStatus] = await connection.query(`
                 SELECT
+                    c.id_canal,
                     c.canal_id,
                     c.nombre,
                     c.id_producto,
@@ -519,7 +520,7 @@ class NotificationController {
                 FROM ubi_canal c
                 LEFT JOIN ubi_lecturas_sensor sr ON c.id_canal = sr.id_canal
                 WHERE c.activo = 1
-                GROUP BY c.canal_id, c.nombre, c.id_producto
+                GROUP BY c.id_canal, c.canal_id, c.nombre, c.id_producto
             `);
 
             // Separar en DESCONECTADOS vs CONECTADOS
@@ -596,9 +597,15 @@ class NotificationController {
                     console.log(`[NotificationCtrl] ${reconnectedAlerts.length} canales RECONECTADOS detectados`);
 
                     for (const alert of reconnectedAlerts) {
-                        // Migrado: channel_id → canal_id, alert.channel_id → alert.origen_id
-                        const channel = currentlyConnected.find(ch => ch.canal_id === alert.origen_id);
-                        const horaReconexion = DateTime.fromJSDate(channel.last_reading).setZone(this.timeZone).toFormat("dd/MM HH:mm:ss");
+                        // alert.origen_id = id_canal (PK interna) — comparar con id_canal, no canal_id
+                        const channel = currentlyConnected.find(ch => ch.id_canal === alert.origen_id);
+                        if (!channel) {
+                            console.warn(`[NotificationCtrl] Canal con id_canal=${alert.origen_id} no encontrado en currentlyConnected. Omitiendo alerta de reconexión.`);
+                            continue;
+                        }
+                        const horaReconexion = channel.last_reading
+                            ? DateTime.fromJSDate(channel.last_reading).setZone(this.timeZone).toFormat("dd/MM HH:mm:ss")
+                            : 'Sin lecturas';
 
                         // Agregar a results como CONECTADO
                         results.formattedAlerts.push({

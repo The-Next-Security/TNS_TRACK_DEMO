@@ -118,12 +118,12 @@ class ReportCleanupJob {
 
                 // Query expired reports
                 const [expiredReports] = await connection.query(
-                    `SELECT id, file_path, report_name, created_at
-                     FROM generated_reports
-                     WHERE generation_status = 'completed'
-                       AND created_at < ?
-                       AND expired_at IS NULL
-                     ORDER BY created_at ASC`,
+                    `SELECT id_reporte_generado, ruta_archivo, nombre_reporte, fecha_creacion
+                     FROM rep_reportes_generados
+                     WHERE estado_generacion = 'completado'
+                       AND fecha_creacion < ?
+                       AND fecha_expiracion IS NULL
+                     ORDER BY fecha_creacion ASC`,
                     [cutoffDate]
                 );
 
@@ -147,15 +147,15 @@ class ReportCleanupJob {
                 for (const report of expiredReports) {
                     try {
                         // Validate file path (prevent path traversal)
-                        if (report.file_path.includes('..')) {
-                            console.error(`[ReportCleanup] 🚨 Path traversal detectado: ${report.file_path}. Saltando.`);
+                        if (report.ruta_archivo.includes('..')) {
+                            console.error(`[ReportCleanup] 🚨 Path traversal detectado: ${report.ruta_archivo}. Saltando.`);
                             failedCount++;
                             continue;
                         }
 
                         // Construct full file path
                         const storagePathResolved = path.resolve(__dirname, '../../..', this.storagePath);
-                        const fullPath = path.join(storagePathResolved, report.file_path);
+                        const fullPath = path.join(storagePathResolved, report.ruta_archivo);
 
                         // Try to get file size before deleting
                         let fileSize = 0;
@@ -164,7 +164,7 @@ class ReportCleanupJob {
                             fileSize = stats.size;
                         } catch (statError) {
                             if (statError.code === 'ENOENT') {
-                                console.warn(`[ReportCleanup] ⚠️ Archivo ya no existe: ${report.file_path}`);
+                                console.warn(`[ReportCleanup] ⚠️ Archivo ya no existe: ${report.ruta_archivo}`);
                             } else {
                                 console.warn(`[ReportCleanup] ⚠️ Error al obtener stats del archivo: ${statError.message}`);
                             }
@@ -174,28 +174,28 @@ class ReportCleanupJob {
                         try {
                             await fs.unlink(fullPath);
                             freedBytes += fileSize;
-                            console.log(`[ReportCleanup] 🗑️ Eliminado: ${report.file_path} (${this.formatBytes(fileSize)})`);
+                            console.log(`[ReportCleanup] 🗑️ Eliminado: ${report.ruta_archivo} (${this.formatBytes(fileSize)})`);
                         } catch (unlinkError) {
                             if (unlinkError.code === 'ENOENT') {
-                                console.warn(`[ReportCleanup] ⚠️ Archivo ya fue eliminado: ${report.file_path}`);
+                                console.warn(`[ReportCleanup] ⚠️ Archivo ya fue eliminado: ${report.ruta_archivo}`);
                             } else {
-                                console.error(`[ReportCleanup] ❌ Error al eliminar archivo ${report.file_path}:`, unlinkError.message);
+                                console.error(`[ReportCleanup] ❌ Error al eliminar archivo ${report.ruta_archivo}:`, unlinkError.message);
                             }
                         }
 
                         // Update database record (always, even if file deletion failed)
                         await connection.query(
-                            `UPDATE generated_reports
-                             SET generation_status = 'expired',
-                                 expired_at = NOW()
-                             WHERE id = ?`,
-                            [report.id]
+                            `UPDATE rep_reportes_generados
+                             SET estado_generacion = 'expirado',
+                                 fecha_expiracion = NOW()
+                             WHERE id_reporte_generado = ?`,
+                            [report.id_reporte_generado]
                         );
 
                         deletedCount++;
 
                     } catch (reportError) {
-                        console.error(`[ReportCleanup] ❌ Error procesando reporte ID ${report.id}:`, reportError.message);
+                        console.error(`[ReportCleanup] ❌ Error procesando reporte ID ${report.id_reporte_generado}:`, reportError.message);
                         failedCount++;
                     }
                 }
