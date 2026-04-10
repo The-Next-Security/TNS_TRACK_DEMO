@@ -86,7 +86,7 @@
     "regenerator-runtime": "^0.14.1",
     "serve": "^14.2.4",
     "stream-browserify": "^3.0.0",
-    "styled-components": "^6.3.12",
+    "styled-components": "^6.4.0",
     "tiktoken": "^1.0.22",
     "twilio": "^5.13.1",
     "util": "^0.12.5",
