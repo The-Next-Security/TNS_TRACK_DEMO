@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-04-09 — @dependabot[bot] ([#100](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/100))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group across 1 directory with 5 updates
+
+
 ### 2026-04-09 — @dependabot[bot] ([#99](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/99))
 - **chore** `back-end, dependencies, npm, security` | bump joi from 18.0.2 to 18.1.2 in /servicios
 
