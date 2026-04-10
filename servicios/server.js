@@ -236,11 +236,15 @@ class Server {
   setupErrorHandling() {
     // Middleware de manejo de errores (debe definirse DESPUÉS de todas las rutas)
     this.app.use((err, req, res, next) => {
-      // Loguear el error completo en el servidor
-      console.error("💥 [Error Handler] Error no controlado:", err.stack || err);
-
       const status = err.statusCode || err.status || 500;
       const isKnown = !!(err.statusCode || err.status);
+
+      // 5xx → error real inesperado; 4xx → error esperado (auth, validación, etc.)
+      if (status >= 500) {
+        console.error("💥 [Error Handler] Error interno:", err.stack || err);
+      } else {
+        console.warn(`⚠️ [Error Handler] Error ${status}:`, err.message);
+      }
 
       res.status(status).json({
         error: err.name || (isKnown ? "Error" : "Internal Server Error"),

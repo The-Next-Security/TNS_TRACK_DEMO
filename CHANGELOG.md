@@ -7,6 +7,52 @@
 
 ---
 
+## [1.2.0] - 2026-04-09
+
+### Added
+- **Permiso `manage_reports`**: nuevo permiso para generar, programar y enviar reportes.
+  Asignado a todos los usuarios activos vía `INSERT IGNORE` idempotente (script `06_02`).
+- **Scheduler de reportes**: servicio completo con cron-parser v5, cálculo y persistencia
+  de `proxima_ejecucion`, reconciliación al arranque del proceso.
+- **Recurso visual módulo Reportes**: ícono `reporteria.jpeg` en la barra lateral.
+- **`04_inserts_base.sql`**: incluye `manage_reports` en el seed para instalaciones desde cero.
+- **`.gitignore`**: excluye `storage/reports/` del repositorio.
+
+### Fixed
+- **Scheduler**: lectura correcta de parámetros JSON cuando `mysql2` devuelve objeto o string;
+  respuesta 409 por nombre duplicado con toast "Nombre ya en uso" en UI; respuesta 422 cuando
+  no hay próxima ejecución calculable; manejo de errores en el job para no duplicar trazas en
+  log; contrato alineado entre controlador y servicio en `createSchedule`, `listSchedules` y
+  `updateSchedule`.
+- **`reportsApi_Service`**: `mapAxiosError` extrae correctamente mensaje y `apiCode` de
+  respuestas 409 y 422 para diferenciar errores en cliente.
+- **`report_Controller`**: queries SQL, tablas, columnas y ENUM corregidos; ruta de
+  almacenamiento unificada vía `configLoader`; `userId null` permitido en reportes programados
+  sin usuario; patrón `getDbConfig()` lazy-cached; `req.user.id` → `req.user.userId`.
+- **`reportGeneration_Service`**: corrección de queries SQL, campos y `tamanio_bytes=0`
+  en INSERT inicial.
+- **`reportCleanup_Job`**: queries SQL, campos y ENUM corregidos.
+- **`consumptionAggregation_Service`**: corregidos `intervalo_segundos` y `calidad_lectura`.
+- **`reportPermissions_Middleware`**: reemplazados permisos inexistentes por `manage_reports`;
+  `req.user.id` → `req.user.userId`.
+- **`reportes_Routes`**: `authenticate` puesto como primer middleware en rutas protegidas.
+- **`notification_Controller`**: crash en `processHourlyDisconnectionAlerts` corregido.
+- **Error handler global** (`server.js`): diferenciación de logs 4xx vs 5xx para no
+  spamear como 5xx los errores de cliente.
+- **`mapbox-gl`**: downgrade a 3.20.0; eliminado `noParse` que rompía ESM en bundle;
+  suprimido `Critical dependency warning` de webpack.
+- **`basic-ftp`**: actualizado a 5.2.1 en `package-lock.json`.
+- **`useReportGeneration_Hook`** y **`ResponsiveTableExample`**: URL de descarga corregida.
+
+### DB / Migraciones
+- **`06_01`** — `rep_plantillas`: columna `id_tipo_origen` (FK a `gen_tipos_origen`).
+  `rep_reportes_programados`: columnas `parametros_ejecucion` (JSON), `id_usuario_creador`
+  (FK a `gen_usuario`), `conteo_ejecuciones`.
+- **`06_02`** — `gen_permiso` y `gen_usuario_permisos`: permiso `manage_reports` creado
+  y asignado a usuarios activos.
+
+---
+
 ## [1.1.1] - 2026-04-07
 
 ### Added
@@ -139,3 +185,11 @@ Ver [ROADMAP.md](./ROADMAP.md) para la planificación de las siguientes versione
 ---
 
 **Última actualización**: 2026-03-18
+
+---
+## Releases
+
+- [1.2.1](https://github.com/andresTNS/TNS_TRACK_DEMO/releases/tag/v1.2.0)
+- [1.1.1](https://github.com/andresTNS/TNS_TRACK_DEMO/releases/tag/v1.1.1)
+- [1.1.0](https://github.com/andresTNS/TNS_TRACK_DEMO/releases/tag/v1.1.0)
+- [1.0.0](https://github.com/andresTNS/TNS_TRACK_DEMO/releases/tag/v1.0.0)

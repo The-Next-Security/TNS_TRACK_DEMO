@@ -98,7 +98,7 @@ const ResponsiveTableExample = () => {
       title: 'Descargando reporte',
       description: `Iniciando descarga de "${report.report_name}"...`,
     });
-    window.open(`/api/reports/download/${report.id}`, '_blank');
+    window.open(`/api/reportes/descargar/${report.id}`, '_blank');
   };
 
   const clearFilters = () => {

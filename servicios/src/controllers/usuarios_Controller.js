@@ -225,7 +225,8 @@ class usuariosController {
         'view_sms',
         'view_alerts',
         'manage_alerts',
-        'config_notifications'
+        'config_notifications',
+        'manage_reports'
       ];
       const requestedPermissions = permissions.split(',').map(p => p.trim()).filter(p => p); // Filtrar vacíos
       const invalidPermissions = requestedPermissions.filter(p => !validPermissions.includes(p));
@@ -404,7 +405,8 @@ class usuariosController {
         'view_sms',
         'view_alerts',
         'manage_alerts',
-        'config_notifications'
+        'config_notifications',
+        'manage_reports'
       ];
       const requestedPermissions = permissions.split(',').map(p => p.trim()).filter(p => p); // Filtrar vacíos
       const invalidPermissions = requestedPermissions.filter(p => !validPermissions.includes(p));

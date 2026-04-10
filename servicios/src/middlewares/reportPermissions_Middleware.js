@@ -18,19 +18,15 @@
 const checkGenerateReports = async (req, res, next) => {
   try {
     // Verify user is authenticated
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({
         success: false,
         error: 'No autenticado. Por favor inicia sesión.'
       });
     }
 
-    // Check if user has generate_reports permission
-    // Assuming req.user.permissions is an array or object with permissions
-    const hasPermission = req.user.permissions?.includes('generate_reports') ||
-                         req.user.permissions?.generate_reports === true ||
-                         req.user.role === 'admin' ||
-                         req.user.role === 'supervisor';
+    // req.user.permissions es un string de GROUP_CONCAT (ej: "view_dashboard,manage_reports")
+    const hasPermission = req.user.permissions?.includes('manage_reports');
 
     if (!hasPermission) {
       return res.status(403).json({
@@ -58,18 +54,15 @@ const checkGenerateReports = async (req, res, next) => {
 const checkScheduleReports = async (req, res, next) => {
   try {
     // Verify user is authenticated
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({
         success: false,
         error: 'No autenticado. Por favor inicia sesión.'
       });
     }
 
-    // Check if user has schedule_reports permission
-    const hasPermission = req.user.permissions?.includes('schedule_reports') ||
-                         req.user.permissions?.schedule_reports === true ||
-                         req.user.role === 'admin' ||
-                         req.user.role === 'supervisor';
+    // req.user.permissions es un string de GROUP_CONCAT (ej: "view_dashboard,manage_reports")
+    const hasPermission = req.user.permissions?.includes('manage_reports');
 
     if (!hasPermission) {
       return res.status(403).json({
@@ -97,19 +90,15 @@ const checkScheduleReports = async (req, res, next) => {
 const checkSendReports = async (req, res, next) => {
   try {
     // Verify user is authenticated
-    if (!req.user || !req.user.id) {
+    if (!req.user || !req.user.userId) {
       return res.status(401).json({
         success: false,
         error: 'No autenticado. Por favor inicia sesión.'
       });
     }
 
-    // Check if user has send_reports permission
-    const hasPermission = req.user.permissions?.includes('send_reports') ||
-                         req.user.permissions?.send_reports === true ||
-                         req.user.role === 'admin' ||
-                         req.user.role === 'supervisor' ||
-                         req.user.role === 'manager';
+    // req.user.permissions es un string de GROUP_CONCAT (ej: "view_dashboard,manage_reports")
+    const hasPermission = req.user.permissions?.includes('manage_reports');
 
     if (!hasPermission) {
       return res.status(403).json({
