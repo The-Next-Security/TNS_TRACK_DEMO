@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-04-09 — @dependabot[bot] ([#99](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/99))
+- **chore** `back-end, dependencies, npm, security` | bump joi from 18.0.2 to 18.1.2 in /servicios
+
+
 ### 2026-04-09 — @dependabot[bot] ([#98](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/98))
 - **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.363.5 to 1.365.3 in /servicios
 
