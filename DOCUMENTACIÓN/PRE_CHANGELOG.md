@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-04-09 — @dependabot[bot] ([#96](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/96))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.32.0 to 6.33.0 in /servicios
+
+
 _Sin cambios pendientes._
 
 
