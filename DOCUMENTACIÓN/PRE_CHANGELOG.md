@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-04-09 — @dependabot[bot] ([#98](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/98))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.363.5 to 1.365.3 in /servicios
+
+
 ### 2026-04-09 — @dependabot[bot] ([#97](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/97))
 - **chore** `back-end, dependencies, npm, security` | bump lucide-react from 0.577.0 to 1.7.0 in /servicios
 
