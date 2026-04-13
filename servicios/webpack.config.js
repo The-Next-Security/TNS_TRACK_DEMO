@@ -41,11 +41,11 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: 'public/manifest.json',
+          from: 'src/manifest.json',
           to: 'manifest.json'
         },
         {
-          from: 'public/service-worker.js',
+          from: 'src/service-worker.js',
           to: 'service-worker.js'
         },
         {
