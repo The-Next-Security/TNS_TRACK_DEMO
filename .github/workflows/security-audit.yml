@@ -135,7 +135,7 @@ jobs:
 
       - name: Comentar en PR con contexto completo
         if: always() && github.event_name == 'pull_request'
-        uses: actions/github-script@v8
+        uses: actions/github-script@v9
         env:
           CRITICAL: ${{ steps.check-critical.outputs.critical }}
           HIGH: ${{ steps.check-critical.outputs.high }}
