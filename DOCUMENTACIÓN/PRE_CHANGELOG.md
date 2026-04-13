@@ -17,6 +17,26 @@
 
 ## Unreleased
 
+### 2026-04-09 — @dependabot[bot] ([#100](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/100))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group across 1 directory with 5 updates
+
+
+### 2026-04-09 — @dependabot[bot] ([#99](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/99))
+- **chore** `back-end, dependencies, npm, security` | bump joi from 18.0.2 to 18.1.2 in /servicios
+
+
+### 2026-04-09 — @dependabot[bot] ([#98](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/98))
+- **chore** `back-end, dependencies, npm, security` | bump posthog-js from 1.363.5 to 1.365.3 in /servicios
+
+
+### 2026-04-09 — @dependabot[bot] ([#97](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/97))
+- **chore** `back-end, dependencies, npm, security` | bump lucide-react from 0.577.0 to 1.7.0 in /servicios
+
+
+### 2026-04-09 — @dependabot[bot] ([#96](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/96))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.32.0 to 6.33.0 in /servicios
+
+
 _Sin cambios pendientes._
 
 
