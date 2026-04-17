@@ -41,20 +41,36 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: 'public/manifest.json',
+          from: 'src/manifest.json',
           to: 'manifest.json'
         },
         {
-          from: 'public/service-worker.js',
+          from: 'src/service-worker.js',
           to: 'service-worker.js'
         },
         {
           from: 'public/browserconfig.xml',
           to: 'browserconfig.xml'
         },
+        // Íconos iOS → icons/icon-{N}x{N}.png (cubre tamaños pequeños: 16, 32, 128, 152, etc.)
         {
-          from: 'public/icons',
-          to: 'icons'
+          from: 'src/assets/icons/ios',
+          to({ absoluteFilename }) {
+            const size = path.basename(absoluteFilename, '.png');
+            return `icons/icon-${size}x${size}.png`;
+          },
+          globOptions: {
+            ignore: ['**/*.json']
+          }
+        },
+        // Íconos Android → icons/icon-{W}x{H}.png (reemplaza iOS en tamaños compartidos: 72, 96, 144, 192, 512)
+        {
+          from: 'src/assets/icons/android',
+          to({ absoluteFilename }) {
+            const filename = path.basename(absoluteFilename);
+            return `icons/${filename.replace('launchericon-', 'icon-')}`;
+          },
+          force: true
         },
         {
           from: 'public/favicon.png',
