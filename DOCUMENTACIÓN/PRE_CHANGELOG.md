@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-05-16 — @dependabot[bot] ([#104](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/104))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.33.0 to 6.34.0 in /servicios
+
+
 ### 2026-04-09 — @dependabot[bot] ([#100](https://github.com/andresTNS/TNS_TRACK_DEMO/pull/100))
 - **chore** `back-end, dependencies, npm, security` | bump the security-updates group across 1 directory with 5 updates
 
