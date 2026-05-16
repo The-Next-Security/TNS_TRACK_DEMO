@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-05-16 — @dependabot[bot] ([#108](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/108))
+- **chore** `dependencies, github-actions` | bump actions/github-script from 8 to 9
+
+
 ### 2026-05-16 — @dependabot[bot] ([#106](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/106))
 - **chore** `back-end, dependencies, npm, security` | bump styled-components from 6.3.12 to 6.4.0 in /servicios
 
