@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-05-16 — @dependabot[bot] ([#114](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/114))
+- **chore** `back-end, dependencies, npm, security` | bump the development-dependencies group across 1 directory with 3 updates
+
+
 ### 2026-05-16 — @dependabot[bot] ([#109](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/109))
 - **chore** `back-end, dependencies, npm, security` | bump mapbox-gl from 3.20.0 to 3.22.0 in /servicios
 
