@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-05-20 — @dependabot[bot] ([#116](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/116))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 8 updates
+
+
 ### 2026-05-16 — @dependabot[bot] ([#110](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/110))
 - **chore** `back-end, dependencies, npm, security` | bump mysql2 from 3.20.0 to 3.22.3 in /servicios
 
