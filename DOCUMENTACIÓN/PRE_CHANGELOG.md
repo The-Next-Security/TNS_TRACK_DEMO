@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-05-20 — @dependabot[bot] ([#119](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/119))
+- **chore** `back-end, dependencies, npm, security` | bump tailwindcss from 4.2.2 to 4.3.0 in /servicios
+
+
 ### 2026-05-20 — @dependabot[bot] ([#118](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/118))
 - **chore** `back-end, dependencies, npm, security` | bump express-rate-limit from 8.3.2 to 8.5.2 in /servicios
 
