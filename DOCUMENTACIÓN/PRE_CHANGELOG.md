@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-05-20 — @dependabot[bot] ([#120](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/120))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.34.0 to 6.38.0 in /servicios
+
+
 ### 2026-05-20 — @dependabot[bot] ([#119](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/119))
 - **chore** `back-end, dependencies, npm, security` | bump tailwindcss from 4.2.2 to 4.3.0 in /servicios
 
