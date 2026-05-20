@@ -20,11 +20,18 @@ try {
 module.exports = {
   mode: isProduction ? "production" : "development",
   entry: path.resolve(__dirname, "src", "index.js"),
-  // Suprimir warning de require() dinámico en react-datepicker (issue conocido del paquete)
+  // Suprimir warning conocido de require() dinámico en react-datepicker/date-fns locales.
+  // Webpack no siempre adjunta el warning al módulo react-datepicker, por eso se filtra
+  // también por el mensaje y el origen del módulo cuando está disponible.
   ignoreWarnings: [
-    {
-      module: /react-datepicker/,
-      message: /Critical dependency/,
+    (warning) => {
+      const message = warning.message || "";
+      const moduleResource = warning.module?.resource || warning.module?.identifier?.() || "";
+
+      return (
+        /Critical dependency: the request of a dependency is an expression/.test(message) &&
+        /(react-datepicker|date-fns[\\/]locale)/.test(moduleResource)
+      );
     },
   ],
   plugins: [
@@ -35,8 +42,8 @@ module.exports = {
       process: "process/browser",
       Buffer: ["buffer", "Buffer"],
     }),
-    // Limita los locales de date-fns al español — evita require() dinámico de react-datepicker
-    new webpack.ContextReplacementPlugin(/date-fns\/locale/, /es/),
+    // Limita los locales de date-fns al español — reduce el contexto dinámico que dispara react-datepicker.
+    new webpack.ContextReplacementPlugin(/date-fns[\\/]locale$/, /^\.\/(es)$/),
     // Plugin para copiar archivos PWA
     new CopyWebpackPlugin({
       patterns: [
