@@ -17,6 +17,10 @@
 
 ## Unreleased
 
+### 2026-05-20 — @dependabot[bot] ([#118](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/118))
+- **chore** `back-end, dependencies, npm, security` | bump express-rate-limit from 8.3.2 to 8.5.2 in /servicios
+
+
 ### 2026-05-20 — @dependabot[bot] ([#117](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/117))
 - **chore** `back-end, dependencies, npm, security` | bump mapbox-gl from 3.22.0 to 3.24.0 in /servicios
 
