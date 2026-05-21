@@ -17,6 +17,26 @@
 
 ## Unreleased
 
+### 2026-05-20 — @dependabot[bot] ([#120](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/120))
+- **chore** `back-end, dependencies, npm, security` | bump openai from 6.34.0 to 6.38.0 in /servicios
+
+
+### 2026-05-20 — @dependabot[bot] ([#119](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/119))
+- **chore** `back-end, dependencies, npm, security` | bump tailwindcss from 4.2.2 to 4.3.0 in /servicios
+
+
+### 2026-05-20 — @dependabot[bot] ([#118](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/118))
+- **chore** `back-end, dependencies, npm, security` | bump express-rate-limit from 8.3.2 to 8.5.2 in /servicios
+
+
+### 2026-05-20 — @dependabot[bot] ([#117](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/117))
+- **chore** `back-end, dependencies, npm, security` | bump mapbox-gl from 3.22.0 to 3.24.0 in /servicios
+
+
+### 2026-05-20 — @dependabot[bot] ([#116](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/116))
+- **chore** `back-end, dependencies, npm, security` | bump the security-updates group in /servicios with 8 updates
+
+
 ### 2026-05-16 — @dependabot[bot] ([#110](https://github.com/The-Next-Security/TNS_TRACK_DEMO/pull/110))
 - **chore** `back-end, dependencies, npm, security` | bump mysql2 from 3.20.0 to 3.22.3 in /servicios
 
