@@ -149,6 +149,7 @@ jobs:
           always() &&
           github.event_name == 'pull_request' &&
           (steps.check-commits.outputs.invalid != '0' || steps.check-issues.outputs.has_missing == 'true')
+        continue-on-error: true
         uses: actions/github-script@v9
         with:
           script: |
